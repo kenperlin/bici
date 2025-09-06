@@ -7,6 +7,8 @@ In Chineses bici ( 彼此 ) means "each other".
 This first version works with the "share screen" option in video chat programs like Zoom.
 Eventually bici will become stand-alone.
 
+It works best if there is a white wall behind you.
+
 Usage:
 1. In a console window, start a local web server from within the bici/ folder.
 2. Launch http://localhost:8000 in your web browser.
