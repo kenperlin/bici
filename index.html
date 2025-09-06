@@ -1,0 +1,148 @@
+<script src=js/webgl.js></script>
+<script src=js/webcam.js></script>
+<script src=js/pen.js></script>
+<script src=js/matchCurves.js></script>
+<script src=js/glyphs.js></script>
+<script src=js/chalktalk.js></script>
+<script src=js/codeArea.js></script>
+
+<script src=scenes/scene1.js></script>
+<script src=scenes/scene2.js></script>
+
+<canvas id=canvas2D style="position:absolute;top:0;left:0;"></canvas>
+<canvas id=canvas3D style="position:absolute;top:470;left:-2000;" width=500 height=500></canvas>
+<script>
+
+let codeArea = new CodeArea(-2000, 20), scene;
+
+let setScene = s => {
+   scene = s;
+   gl_start(canvas3D, scene.vertexShader, scene.fragmentShader);
+   if (scene.init)
+      scene.init();
+   codeArea.getElement().value = scene.fragmentShader;
+}
+
+setScene(scene1);
+
+let pen = new Pen();
+let chalktalk = new Chalktalk();
+let isLightPen = true, isHelp = false;
+
+codeArea.callback = () => {
+   scene.fragmentShader = codeArea.getElement().value;
+   gl_start(canvas3D, scene.vertexShader, scene.fragmentShader);
+}
+
+let w = canvas2D.width = screen.width;
+let h = canvas2D.height = screen.height;
+let ctx = canvas2D.getContext('2d');
+let isMove = false, isScene = false, isCode = false, isDrag = false;
+pen.setContext(ctx);
+
+let movePen = (x,y) => {
+   pen.move(x,y);
+   if (isMove)
+      chalktalk.move(x,y);
+   if (isDrag)
+      chalktalk.drag(x,y);
+}
+
+document.addEventListener('mousemove', e => movePen(e.x,e.y));
+
+let isPenKey = (e,key) => document.activeElement != codeArea.getElement() && e.key == key;
+document.addEventListener('keydown', e => {
+   if (document.activeElement == codeArea.getElement())
+      return;
+   if (e.key.indexOf('Arrow') == 0) e.preventDefault();
+   switch (e.key) {
+   case '/': pen.down(); break;
+   case ';': isDrag = true; break;
+   case 'm':
+      if (! isMove)
+         chalktalk.moveStart(pen.x,pen.y);
+      isMove = true;
+      break;
+   }
+});
+document.addEventListener('keyup'  , e => {
+   if (document.activeElement == codeArea.getElement())
+      return;
+   if (e.key.indexOf('Arrow') == 0) e.preventDefault();
+   switch (e.key) {
+   case '1': setScene(scene1); break;
+   case '2': setScene(scene2); break;
+   case '\'': chalktalk.add(pen.strokes,pen.x,pen.y); break;
+   case ',' : pen.width *= .707; break;
+   case '.' : pen.width /= .707; break;
+   case '/' : pen.up(); break;
+   case ';' : isDrag = false; break;
+   case 'ArrowDown' : webcam.A /= 1.1; console.log('webcam.A', webcam.A >> 0); break;
+   case 'ArrowLeft' : webcam.B /= 1.1; console.log('webcam.B', webcam.B >> 0); break;
+   case 'ArrowRight': webcam.B *= 1.1; console.log('webcam.B', webcam.B >> 0); break;
+   case 'ArrowUp'   : webcam.A *= 1.1; console.log('webcam.A', webcam.A >> 0); break;
+   case 'Backspace' : if (! chalktalk.delete(pen.x,pen.y)) pen.delete(); break;
+   case 'b' : webcam.captureBG(); break;
+   case 'c' : codeArea.getElement().style.left = (isCode = ! isCode) ? 20 : -2000; break;
+   case 'f' : webcam.isFloaters = ! webcam.isFloaters; break;
+   case 'h' : isHelp = ! isHelp; break;
+   case 'l' : isLightPen = ! isLightPen; break;
+   case 'm' : isMove = false; break;
+   case 'p' : webcam.isPen = ! webcam.isPen; break;
+   case 's' : canvas3D.style.left = (isScene = ! isScene) ? 500 : -2000; break;
+   case 't' : webcam.opacity = 1.5 - webcam.opacity; break;
+   case 'u' : webcam.ufoTime = webcam.ufoTime ? 0 : Date.now() / 1000; break;
+   case 'w' : webcam.isWorld = ! webcam.isWorld; break;
+   }
+});
+
+animate = gl => {
+   let p = webcam.update();
+   codeArea.update();
+   ctx.drawImage(webcam.canvas, 0,0,640,440, 0,0,w,h);
+   if (isLightPen && p)
+      movePen(p.x * w / 640, p.y * h / 440);
+   pen.draw(pen.strokes);
+   chalktalk.update(pen.draw);
+   scene.update();
+
+   if (isHelp) {
+      ctx.fillStyle = '#ffffff80';      
+      ctx.fillRect(18, 20, 447, 35 * helpText.length);
+      ctx.fillStyle = 'black';      
+      ctx.font = 'bold 40px Arial';
+      ctx.fillText(helpText[0], 26, 60);
+      for (let n = 1 ; n < helpText.length ; n++) {
+         let ch = helpText[n].substring(0, 1);
+         ctx.font = 'bold 30px Arial';
+         let w = ctx.measureText(ch).width;
+         ctx.fillText(ch, 38 - w/2, 75 + 35 * n);
+         ctx.font = '25px Arial';
+         ctx.fillText(helpText[n].substring(1), 53, 75 + 35 * n);
+      }
+   }
+}
+
+let helpText = `\
+Hot keys
+b Capture bg to enable transparency.
+c Toggle editable code for 3D scene.
+f Toggle background floaters.
+h Toggle this help menu.
+l Toggle lightpen (small blue object).
+m Hold down to move a sketch.
+p Toggle showing tracked blue pixels.
+s Toggle showing 3D scene.
+t Toggle whether I am transparent.
+u Toggle UFO within blue-plate world.
+w Toggle world seen thru blue plate.
+1 Select 3D scene 1.
+2 Select 3D scene 2.
+\' Convert strokes to a sketch.
+, Make pen line thinner.
+. Make pen line thicker.
+/ Hold down to draw.
+; Hold down to interact with a sketch.
+`.split('\n');
+
+</script>
