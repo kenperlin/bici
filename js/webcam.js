@@ -13,6 +13,9 @@ webcam.canvas.width = 640;
 webcam.canvas.height = 480;
 let wctx = webcam.canvas.getContext('2d');
 
+webcam.isPen = true;
+webcam.opacity = 1;
+
 // HANDLE IMAGE LOADING
 
 let loadImageCanvas = document.createElement('canvas');
@@ -31,17 +34,14 @@ let loadImage = src => {
    image.src = 'imgs/' + src;
    return image;
 }
+
 let brick = loadImage('brick.png');
 let landscape = loadImage('landscape.png');
 let ufo = loadImage('ufo.png');
 
 // CAPTURE BACKGROUND TO PREPARE FOR TRANSPARENCY
 
-webcam.captureBG = () => webcam.bg = webcam.data;
-
-webcam.isPen = true;
-webcam.opacity = 1;
-webcam._op = 1;
+webcam.grabImage = () => webcam.bg = webcam.data;
 
 webcam.update = () => {
    let time = (Date.now() - webcam.T) / 1000;
@@ -99,6 +99,24 @@ webcam.update = () => {
 	 ns++;
       }
    }
+
+   // OPTIONALLY BLUR THE REGION WHERE MY FACE USUALLY IS
+
+   if (webcam.isBlur)
+      for (let row = 0, n = 0 ; row < 480 ; row++)
+      for (let col = 0 ; col < 640 ; col++, n += 4) {
+         let x = col - 320, y = row - 200;
+	 let rr = 2.5 * x * x + y * y;
+	 if (rr < 120 * 120) {
+	    let nb = (120 - Math.sqrt(rr) >> 0) << 2;
+	    let rgb = [0,0,0], s = 0;
+	    for (let i = -nb ; i <= nb ; i += 4, s++)
+	       for (let j = 0 ; j < 3 ; j++)
+	          rgb[j] += data[n+i+j] + data[n+(640*i)+j];
+	    for (let j = 0 ; j < 3 ; j++)
+	       data[n+j] = rgb[j] / s >> 1;
+         }
+      }
 
    // SEE THROUGH A BLUE PLATE INTO A MYSTEROUS OTHER WORLD
 

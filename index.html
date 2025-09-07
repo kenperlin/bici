@@ -82,9 +82,10 @@ document.addEventListener('keyup'  , e => {
    case 'ArrowRight': webcam.B *= 1.1; console.log('webcam.B', webcam.B >> 0); break;
    case 'ArrowUp'   : webcam.A *= 1.1; console.log('webcam.A', webcam.A >> 0); break;
    case 'Backspace' : if (! chalktalk.delete(pen.x,pen.y)) pen.delete(); break;
-   case 'b' : webcam.captureBG(); break;
+   case 'b' : webcam.isBlur = ! webcam.isBlur; break;
    case 'c' : codeArea.getElement().style.left = (isCode = ! isCode) ? 20 : -2000; break;
    case 'f' : webcam.isFloaters = ! webcam.isFloaters; break;
+   case 'g' : webcam.grabImage(); break;
    case 'h' : isHelp = ! isHelp; break;
    case 'l' : isLightPen = ! isLightPen; break;
    case 'm' : isMove = false; break;
@@ -125,9 +126,10 @@ animate = gl => {
 
 let helpText = `\
 Hot keys
-b Capture bg to enable transparency.
+b Toggle blurred region in video.
 c Toggle editable code for 3D scene.
-f Toggle background floaters.
+f Toggle floaters behind me.
+g Grab bg (enables transparency).
 h Toggle this help menu.
 l Toggle lightpen (small blue object).
 m Hold down to move a sketch.
