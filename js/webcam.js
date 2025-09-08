@@ -35,7 +35,9 @@ let loadImage = src => {
    return image;
 }
 
+let blueglass = loadImage('blueglass.jpg');
 let brick = loadImage('brick.png');
+let shapes = loadImage('shapes.jpg');
 let landscape = loadImage('landscape.png');
 let ufo = loadImage('ufo.png');
 
@@ -85,13 +87,15 @@ webcam.update = () => {
       }
    }
 
+   let isBlue = (r,g,b) => b > 80 && b > 1.6 * Math.max(r,g);
+
    // FOLLOW THE POSITION OF A BLUE MARKER PEN
 
    let xs = 0, ys = 0, ns = 0;
    for (let row = 0, n = 0 ; row < 480 ; row++)
    for (let col = 0 ; col < 640 ; col++, n += 4) {
       let r = data[n], g = data[n+1], b = data[n+2];
-      if (b > 64 && b > 1.3 * Math.max(r,g)) {
+      if (isBlue(r,g,b)) {
 	 if (webcam.isPen)
             data[n] = data[n+1] = data[n+2] = 0;
 	 xs += col;
@@ -131,7 +135,7 @@ webcam.update = () => {
       for (let row = 0, n = 0 ; row < 480 ; row++)
       for (let col = 0 ; col < 640 ; col++, n += 4) {
          let r = data[n], g = data[n+1], b = data[n+2];
-         if (b > 64 && b > 1.3 * Math.max(r,g)) {
+         if (isBlue(r,g,b)) {
 	    let rr = 4 * ( (col-x) * (col-x) + (row-y) * (row-y) );
 	    let t = mix(1, rr / ns, webcam._iw);
 	    if (t < 1) {
@@ -159,46 +163,53 @@ webcam.update = () => {
    // OPTIONAL FOREGROUND TRANSPARENCY FADE DOWN AND FADE UP
 
    webcam._op = fade(webcam._op, webcam.opacity, deltaTime / 2);
-
-   if (webcam._op < 1 && webcam.bg) {
-      let t = webcam._op;
-      t = t * t * (3 - t - t);
-      let avg0 = getAvg(webcam.bg);
-      let avg1 = getAvg(data);
-      for (let n = 0 ; n < data.length ; n += 4)
-         for (let i = 0 ; i < 3 ; i++)
-            data[n+i] = t * data[n+i] + (1-t) * webcam.bg[n+i] * avg1[i] / avg0[i];
-   }
+   let t = webcam._op;
+   t = t * t * (3 - t - t);
 
    // OPTIONALLY REPLACE SECTIONS OF THE WHITE WALL BEHIND ME BY VARIOUS IMAGES
 
    if (webcam.isFloaters) {
+      let f;
+      let mix = (n, d) => data[n] = (1-f) * data[n] + f * d;
       for (let n = 0 ; n < data.length ; n += 4) {
          let r = data[n], g = data[n+1], b = data[n+2];
-	 if (r + g + b > webcam.A && Math.max(r,g,b) < webcam.B / 100 * Math.min(r,g,b)) {
-	    let y = (n>>2) / 640 >> 0;
-	    let x = (n>>2) % 640;
-	    if (y >= 140-80 && y <= 140+80 && x >= 120 && x <= 640 - 120) {
-	       let x = (64000000 + n - 300 * time >> 2) % 640;
-	       if (x >= 105-80 && x <= 105+80) {
-                  data[n  ] *= 2;
-                  data[n+1] /= 2;                  // TRANSPARENT RED GEL
-                  data[n+2] /= 2;
-               }
-	       if (x >= 320-80 && x <= 320+80) {
-	          let nb = brick.width * (y-60) + (x - 80) << 2;
-                  data[n  ] = brick.data[nb  ];
-                  data[n+1] = brick.data[nb+1];    // SECTION OF A BRICK WALL
-                  data[n+2] = brick.data[nb+2];
-               }
-	       if (x >= 535-80 && x <= 535+80) {
-                  data[n  ] /= 2;
-                  data[n+1] /= 2;                  // TRANSPARENT BLUE GEL
-                  data[n+2] *= 2;
-               }
+	 f = r + g + b > webcam.A && Math.max(r,g,b) < webcam.B / 100 * Math.min(r,g,b) ? 1 : 1-t;
+	 let y = (n>>2) / 640 >> 0;
+	 let x = (n>>2) % 640;
+	 if (y >= 140-80 && y < 140+80 && x >= 120 && x < 640 - 120) {
+	    let x = (64000000 + n - 300 * time >> 2) % 640;
+	    if (x >= 105-80 && x <= 105+80) {
+	       let nb = blueglass.width * (y-60) + (x - (105-80)) << 2;
+               mix(n  , blueglass.data[nb  ]);
+               mix(n+1, blueglass.data[nb+1]);   // SECTION OF A BRICK WALL
+               mix(n+2, blueglass.data[nb+2]);
+	       data[n+3] = 254;
+            }
+	    if (x >= 320-80 && x <= 320+80) {
+	       let nb = brick.width * (y-60) + (x - (320-80)) << 2;
+               mix(n  , brick.data[nb  ]);
+               mix(n+1, brick.data[nb+1]);   // SECTION OF A BRICK WALL
+               mix(n+2, brick.data[nb+2]);
+	       data[n+3] = 254;
+            }
+	    if (x >= 535-80 && x <= 535+80) {
+	       let nb = shapes.width * (y-60) + (x - (535-80)) << 2;
+               mix(n  , shapes.data[nb  ]);
+               mix(n+1, shapes.data[nb+1]);   // SECTION OF A BRICK WALL
+               mix(n+2, shapes.data[nb+2]);
+	       data[n+3] = 254;
             }
          }
       }
+   }
+
+   if (webcam._op < 1 && webcam.bg) {
+      let avg0 = getAvg(webcam.bg);
+      let avg1 = getAvg(data);
+      for (let n = 0 ; n < data.length ; n += 4)
+         if (data[n+3] != 254)
+            for (let i = 0 ; i < 3 ; i++)
+               data[n+i] = t * data[n+i] + (1-t) * webcam.bg[n+i] * avg1[i] / avg0[i];
    }
 
    wctx.putImageData(imgData, 0,0);
