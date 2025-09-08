@@ -160,13 +160,13 @@ webcam.update = () => {
       }
    }
 
-   // OPTIONAL FOREGROUND TRANSPARENCY FADE DOWN AND FADE UP
+   // COMPUTE FOREGROUND TRANSPARENCY FACTOR (ALSO NEEDED FOR FLOATERS ALGORITHM)
 
    webcam._op = fade(webcam._op, webcam.opacity, deltaTime / 2);
    let t = webcam._op;
    t = t * t * (3 - t - t);
 
-   // OPTIONALLY REPLACE SECTIONS OF THE WHITE WALL BEHIND ME BY VARIOUS IMAGES
+   // OPTIONALLY REPLACE SECTIONS OF THE WHITE WALL BEHIND ME BY FLOATING IMAGES
 
    if (webcam.isFloaters) {
       let f;
@@ -202,6 +202,8 @@ webcam.update = () => {
          }
       }
    }
+
+   // OPTIONAL FOREGROUND TRANSPARENCY FADE DOWN AND FADE UP
 
    if (webcam._op < 1 && webcam.bg) {
       let avg0 = getAvg(webcam.bg);
