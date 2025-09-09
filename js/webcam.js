@@ -87,7 +87,7 @@ webcam.update = () => {
       }
    }
 
-   let isBlue = (r,g,b) => b > 100 && b > 1.8 * Math.max(r,g);
+   let isBlue = (r,g,b) => b > 60 && b > 1.3 * Math.max(r,g);
 
    // FOLLOW THE POSITION OF A BLUE MARKER PEN
 
@@ -96,8 +96,7 @@ webcam.update = () => {
    for (let col = 0 ; col < 640 ; col++, n += 4) {
       let r = data[n], g = data[n+1], b = data[n+2];
       if (isBlue(r,g,b)) {
-	 if (webcam.isPen)
-            data[n] = data[n+1] = data[n+2] = 0;
+         data[n+3] = 253;
 	 xs += col;
 	 ys += row;
 	 ns++;
@@ -213,6 +212,16 @@ webcam.update = () => {
             for (let i = 0 ; i < 3 ; i++)
                data[n+i] = t * data[n+i] + (1-t) * webcam.bg[n+i] * avg1[i] / avg0[i];
    }
+
+   // SHOW THE MARKER PEN AS BLACK
+
+   if (webcam.isPen)
+      for (let row = 0, n = 0 ; row < 480 ; row++)
+      for (let col = 0 ; col < 640 ; col++, n += 4)
+         if (data[n+3] == 253)
+	    data[n] = data[n+1] = data[n+2] = 0;
+
+   // OPTIONALLY BLUR THE REGION WHERE MY FACE USUALLY IS
 
    wctx.putImageData(imgData, 0,0);
 

@@ -93,6 +93,7 @@ document.addEventListener('keyup'  , e => {
    case 'p' : webcam.isPen = ! webcam.isPen; break;
    case 's' : canvas3D.style.left = (isScene = ! isScene) ? 500 : -2000; break;
    case 't' : webcam.opacity = 1.5 - webcam.opacity; break;
+   case 'T' : webcam.opacity = 1.01 - webcam.opacity; break;
    case 'u' : webcam.ufoTime = webcam.ufoTime ? 0 : Date.now() / 1000; break;
    case 'w' : webcam.isWorld = ! webcam.isWorld; break;
    }
@@ -147,7 +148,8 @@ l Toggle lightpen (small blue object).
 m Hold down to move a sketch.
 p Toggle showing tracked blue pixels.
 s Toggle showing 3D scene.
-t Toggle whether I am transparent.
+t Toggle my semi-transparency.
+T Toggle my total transparency.
 u Toggle UFO within blue-plate world.
 w Toggle world seen thru blue plate.
 1 Select 3D scene 1.
