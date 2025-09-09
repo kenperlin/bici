@@ -115,10 +115,13 @@ function MatchCurves() {
    }
 
    this.addGlyph = (name,...args) => {
-      let curves, method;
+      let curves, sketchClass;
       if (typeof args[0] == 'function') {
-         method = new args[0];
-         curves = method.update(0);
+         sketchClass = args[0];
+	 sketchInstance = new sketchClass();
+	 if (sketchInstance.init)
+	    sketchInstance.init();
+         curves = sketchInstance.update(0);
 	 for (let n = 0 ; n < curves.length ; n++)
 	    curves[n] = resample(curves[n], 100);
       }
@@ -149,7 +152,7 @@ function MatchCurves() {
             curves.push(resample(curve, 100));
          }
       }
-      glyphs.push({curves: normalize(curves), method: method});
+      glyphs.push({curves: normalize(curves), sketchClass: sketchClass});
    }
    
    this.recognize = src => {
@@ -186,7 +189,15 @@ function MatchCurves() {
                          xys[1] + xys[2] * glyphs[K].curves[i][n][1] ]);
          target.push(curve);
       }
-      return [strokes, target, K, xys, glyphs[K].method];
+
+      let sketchInstance;
+      if (glyphs[K].sketchClass) {
+        sketchInstance = new glyphs[K].sketchClass();
+        if (sketchInstance.init)
+           sketchInstance.init();
+      }
+
+      return [strokes, target, K, xys, sketchInstance];
    }
    
    this.update = (morphData,t) => {
