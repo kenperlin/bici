@@ -66,6 +66,7 @@ document.addEventListener('keydown', e => {
    }
 });
 document.addEventListener('keyup'  , e => {
+   isHelpSplash = false;
    if (document.activeElement == codeArea.getElement())
       return;
    if (e.key.indexOf('Arrow') == 0) e.preventDefault();
@@ -107,6 +108,14 @@ animate = gl => {
    chalktalk.update(pen.draw);
    scene.update();
 
+   if (isHelpSplash) {
+      ctx.fillStyle = '#ffffff80';      
+      ctx.fillRect(18, 20, 333, 35 * 1.5);
+      ctx.fillStyle = 'black';      
+      ctx.font = 'bold 40px Arial';
+      ctx.fillText(helpSplash, 26, 60);
+   }
+
    if (isHelp) {
       ctx.fillStyle = '#ffffff80';      
       ctx.fillRect(18, 20, 447, 35 * helpText.length);
@@ -123,6 +132,9 @@ animate = gl => {
       }
    }
 }
+
+let isHelpSplash = true;
+let helpSplash = "For help, type 'h'";
 
 let helpText = `\
 Hot keys
