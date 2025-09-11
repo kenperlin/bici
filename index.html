@@ -1,5 +1,6 @@
 <script src=js/webgl.js></script>
 <script src=js/webcam.js></script>
+<script src=js/midi.js></script>
 <script src=js/pen.js></script>
 <script src=js/matchCurves.js></script>
 <script src=js/glyphs.js></script>
@@ -51,11 +52,31 @@ let movePen = (x,y) => {
 document.addEventListener('mousemove', e => movePen(e.x,e.y));
 
 let isPenKey = (e,key) => document.activeElement != codeArea.getElement() && e.key == key;
+
 document.addEventListener('keydown', e => {
    if (document.activeElement == codeArea.getElement())
       return;
-   if (e.key.indexOf('Arrow') == 0) e.preventDefault();
-   switch (e.key) {
+   if (e.key.indexOf('Arrow') == 0)
+      e.preventDefault();
+   keyDown(e.key);
+});
+
+document.addEventListener('keyup', e => {
+   isHelpSplash = false;
+   if (document.activeElement == codeArea.getElement())
+      return;
+   if (e.key.indexOf('Arrow') == 0)
+      e.preventDefault();
+   keyUp(e.key);
+});
+
+midiDown = key => keyDown("            / m  ;       ".substring(key,key+1));
+//                         '|'|''|'|'|''|'|''|'|'|''
+midiUp   = key => keyUp  ("b1u2wc3s4p5D/,m.'; f g tT".substring(key,key+1));
+
+let keyDown = key => {
+   console.log('key down', key);
+   switch (key) {
    case '/': pen.down(); break;
    case ';': isDrag = true; break;
    case 'm':
@@ -64,16 +85,14 @@ document.addEventListener('keydown', e => {
       isMove = true;
       break;
    }
-});
-document.addEventListener('keyup'  , e => {
-   isHelpSplash = false;
-   if (document.activeElement == codeArea.getElement())
-      return;
-   if (e.key.indexOf('Arrow') == 0) e.preventDefault();
-   switch (e.key) {
-   case '1': setScene(scene1); break;
-   case '2': setScene(scene2); break;
-   case '\'': chalktalk.add(pen.strokes,pen.x,pen.y); break;
+}
+
+let keyUp = key => {
+   console.log('key up', key);
+   switch (key) {
+   case '1' : setScene(scene1); break;
+   case '2' : setScene(scene2); break;
+   case "'" : chalktalk.add(pen.strokes,pen.x,pen.y); break;
    case ',' : pen.width *= .707; break;
    case '.' : pen.width /= .707; break;
    case '/' : pen.up(); break;
@@ -82,6 +101,7 @@ document.addEventListener('keyup'  , e => {
    case 'ArrowLeft' : webcam.B /= 1.1; console.log('webcam.B', webcam.B >> 0); break;
    case 'ArrowRight': webcam.B *= 1.1; console.log('webcam.B', webcam.B >> 0); break;
    case 'ArrowUp'   : webcam.A *= 1.1; console.log('webcam.A', webcam.A >> 0); break;
+   case 'D':
    case 'Backspace' : if (! chalktalk.delete(pen.x,pen.y)) pen.delete(); break;
    case 'b' : webcam.isBlur = ! webcam.isBlur; break;
    case 'c' : codeArea.getElement().style.left = (isCode = ! isCode) ? 20 : -2000; break;
@@ -97,7 +117,7 @@ document.addEventListener('keyup'  , e => {
    case 'u' : webcam.ufoTime = webcam.ufoTime ? 0 : Date.now() / 1000; break;
    case 'w' : webcam.isWorld = ! webcam.isWorld; break;
    }
-});
+}
 
 animate = gl => {
    let p = webcam.update();
