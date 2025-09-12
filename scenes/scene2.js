@@ -43,9 +43,9 @@ void main() {
 init : () => {
    scene2.startTime = Date.now();
 },
-update : p => {
+update : viewPoint => {
    setUniform('1f', 'uTime', (Date.now() - scene2.startTime) / 1000);
-   setUniform('3fv', 'uP', [ 10 * (p[0] - 320) / 640, 10 * (240 - p[1]) / 480, p[2] ]);
+   setUniform('3fv', 'uP', viewPoint);
 },
 }
 

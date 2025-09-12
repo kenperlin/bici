@@ -6,7 +6,7 @@
    Approach:
       Find the top of the head.
       Find the left and right edges of the head.
-      From those three values, derive the x,y,z positions of the head.
+      From those three values, derive the x,y,z positio of the head.
 */
 
 let trackHead = data => {
@@ -40,6 +40,8 @@ let trackHead = data => {
    let headX = (left + right) / 2;
    let headS = (right - left) / 2;
 
-   return [ headX, headY, 480 / headS ];
+   return [ 10 * (headX - 320) / 640,
+            10 * (240 - headY) / 480,
+	    480 / headS ];
 }
 
