@@ -1,5 +1,6 @@
 <script src=js/webgl.js></script>
 <script src=js/webcam.js></script>
+<script src=js/trackHead.js></script>
 <script src=js/midi.js></script>
 <script src=js/pen.js></script>
 <script src=js/matchCurves.js></script>
@@ -115,6 +116,7 @@ let keyUp = key => {
    case 't' : webcam.opacity = 1.5 - webcam.opacity; break;
    case 'T' : webcam.opacity = 1.01 - webcam.opacity; break;
    case 'u' : webcam.ufoTime = webcam.ufoTime ? 0 : Date.now() / 1000; break;
+   case 'v' : webcam.isTrackHead = ! webcam.isTrackHead; break;
    case 'w' : webcam.isWorld = ! webcam.isWorld; break;
    }
 }
@@ -127,7 +129,7 @@ animate = gl => {
       movePen(p.x * w / 640, p.y * h / 440);
    pen.draw(pen.strokes);
    chalktalk.update(pen.draw);
-   scene.update();
+   scene.update(webcam.headPos);
 
    if (isHelpSplash) {
       ctx.fillStyle = '#ffffff80';      
@@ -171,6 +173,7 @@ s Toggle showing 3D scene.
 t Toggle my semi-transparency.
 T Toggle my total transparency.
 u Toggle UFO within blue-plate world.
+v Toggle 3D view tracks head position.
 w Toggle world seen thru blue plate.
 1 Select 3D scene 1.
 2 Select 3D scene 2.

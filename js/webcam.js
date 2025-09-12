@@ -202,6 +202,10 @@ webcam.update = () => {
       }
    }
 
+   // OPTIONALLY CHANGE VIEWPOINT OF 3D SCENES BASED ON USER'S HEAD POSITION.
+
+   webcam.headPos = webcam.isTrackHead ? trackHead(data) : [320,162,7];
+
    // OPTIONAL FOREGROUND TRANSPARENCY FADE DOWN AND FADE UP
 
    if (webcam._op < 1 && webcam.bg) {

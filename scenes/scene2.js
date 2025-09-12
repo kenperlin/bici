@@ -9,29 +9,43 @@ void main() {
 }`,
 fragmentShader : `\
 uniform float uTime;
+uniform vec3 uP;
 in  vec3 vPos;
 out vec4 fragColor;
+vec4 raySphere(vec3 V, vec3 W, vec4 S, vec3 C, vec4 F) {
+   V -= S.xyz;
+   float b = dot(V, W);
+   float d = b * b - dot(V, V) + S.w * S.w;
+   if (d < 0.)
+      return F;
+   float t = -b - sqrt(d);
+   vec3 N = (((V + S.xyz) + t * W) - S.xyz) / S.w;
+   return vec4(C * (.1 + .5 * max(0., N.x+N.y+N.z) + .5 * max(0.,-N.x-N.y-N.z/2.)), 1.);
+}
 void main() {
-   fragColor = vec4(0.);
-   for (int i = 0 ; i < 10 ; i++) {
-      float x = 8. * vPos.x + 8. * noise(10.6 * vec3(float(i)) + 100.3 + .05 * uTime);
-      float y = 8. * vPos.y + 8. * noise(10.3 * vec3(float(i)) + 200.6 + .05 * uTime);
-      vec3 lightDir = normalize(vec3(sin(uTime),1.,1.));
-      float rr = 4. - x*x - y*y;
-      if (rr > 0.) {
-         float z = sqrt(rr);
-         float b = max(0., dot(vec3(x,y,z), lightDir));
-         vec3 rgb = vec3(.8,.05,.05) + .8 * vec3(b) * vec3(.2,.5,1.);
-         rgb *= 1. + .5 * noise(3. * vec3(x,y,z + .1 * uTime));
-         fragColor = vec4(sqrt(rgb), 1.0);
+   vec3 V = uP;
+   vec3 W = normalize(vec3(vPos.xy-uP.xy,-V.z));
+
+   for (int i = 0 ; i <= 3 ; i++) {
+      float z = .3 * (2. * float(i) / 3. - 1.);
+      for (int j = 0 ; j <= 3 ; j++) {
+         float y = .3 * (2. * float(j) / 3. - 1.) + .5;
+         for (int k = 0 ; k <= 3 ; k++) {
+            float x = .3 * (2. * float(k) / 3. - 1.);
+            if ( (i==0||i==3)&&(j==0||j==3) ||
+                 (i==0||i==3)&&(k==0||k==3) ||
+                 (j==0||j==3)&&(k==0||k==3) )
+               fragColor = raySphere(V, W, vec4(x,y,z,.1), vec3(1.,.85,.75), fragColor);
+         }
       }
    }
 }`,
 init : () => {
    scene2.startTime = Date.now();
 },
-update : () => {
+update : p => {
    setUniform('1f', 'uTime', (Date.now() - scene2.startTime) / 1000);
+   setUniform('3fv', 'uP', [ 10 * (p[0] - 320) / 640, 10 * (240 - p[1]) / 480, p[2] ]);
 },
 }
 
