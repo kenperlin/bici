@@ -1,6 +1,7 @@
 <script src=js/webgl.js></script>
 <script src=js/webcam.js></script>
 <script src=js/trackHead.js></script>
+<script src=js/help.js></script>
 <script src=js/midi.js></script>
 <script src=js/pen.js></script>
 <script src=js/matchCurves.js></script>
@@ -63,7 +64,7 @@ document.addEventListener('keydown', e => {
 });
 
 document.addEventListener('keyup', e => {
-   isHelpSplash = false;
+   help.isSplash = false;
    if (document.activeElement == codeArea.getElement())
       return;
    if (e.key.indexOf('Arrow') == 0)
@@ -76,7 +77,6 @@ midiDown = key => keyDown("            / m  ;       ".substring(key,key+1));
 midiUp   = key => keyUp  ("b1u2wc3s4p5D/,m.'; f g tT".substring(key,key+1));
 
 let keyDown = key => {
-   console.log('key down', key);
    switch (key) {
    case '/': pen.down(); break;
    case ';': isDrag = true; break;
@@ -89,10 +89,11 @@ let keyDown = key => {
 }
 
 let keyUp = key => {
-   console.log('key up', key);
+   if (key >= '0' && key <= '9') {
+      try { setScene(eval('scene' + key)); } catch (e) {}
+      return;
+   }
    switch (key) {
-   case '1' : setScene(scene1); break;
-   case '2' : setScene(scene2); break;
    case "'" : chalktalk.add(pen.strokes,pen.x,pen.y); break;
    case ',' : pen.width *= .707; break;
    case '.' : pen.width /= .707; break;
@@ -108,7 +109,7 @@ let keyUp = key => {
    case 'c' : codeArea.getElement().style.left = (isCode = ! isCode) ? 20 : -2000; break;
    case 'f' : webcam.isFloaters = ! webcam.isFloaters; break;
    case 'g' : webcam.grabImage(); break;
-   case 'h' : isHelp = ! isHelp; break;
+   case 'h' : help.isHelp = ! help.isHelp; break;
    case 'l' : isLightPen = ! isLightPen; break;
    case 'm' : isMove = false; break;
    case 'p' : webcam.isPen = ! webcam.isPen; break;
@@ -130,58 +131,7 @@ animate = gl => {
    pen.draw(pen.strokes);
    chalktalk.update(pen.draw);
    scene.update(webcam.headPos);
-
-   if (isHelpSplash) {
-      ctx.fillStyle = '#ffffff80';      
-      ctx.fillRect(18, 20, 333, 35 * 1.5);
-      ctx.fillStyle = 'black';      
-      ctx.font = 'bold 40px Arial';
-      ctx.fillText(helpSplash, 26, 60);
-   }
-
-   if (isHelp) {
-      ctx.fillStyle = '#ffffff80';      
-      ctx.fillRect(18, 20, 447, 35 * helpText.length);
-      ctx.fillStyle = 'black';      
-      ctx.font = 'bold 40px Arial';
-      ctx.fillText(helpText[0], 26, 60);
-      for (let n = 1 ; n < helpText.length ; n++) {
-         let ch = helpText[n].substring(0, 1);
-         ctx.font = 'bold 30px Arial';
-         let w = ctx.measureText(ch).width;
-         ctx.fillText(ch, 38 - w/2, 75 + 35 * n);
-         ctx.font = '25px Arial';
-         ctx.fillText(helpText[n].substring(1), 53, 75 + 35 * n);
-      }
-   }
+   help.display(ctx);
 }
-
-let isHelpSplash = true;
-let helpSplash = "For help, type 'h'";
-
-let helpText = `\
-Hot keys
-b Toggle blurred region in video.
-c Toggle editable code for 3D scene.
-f Toggle floaters behind me.
-g Grab bg (enables transparency).
-h Toggle this help menu.
-l Toggle lightpen (small blue object).
-m Hold down to move a sketch.
-p Toggle showing tracked blue pixels.
-s Toggle showing 3D scene.
-t Toggle my semi-transparency.
-T Toggle my total transparency.
-u Toggle UFO within blue-plate world.
-v Toggle 3D view tracks head position.
-w Toggle world seen thru blue plate.
-1 Select 3D scene 1.
-2 Select 3D scene 2.
-\' Convert strokes to a sketch.
-, Make pen line thinner.
-. Make pen line thicker.
-/ Hold down to draw.
-; Hold down to interact with a sketch.
-`.split('\n');
 
 </script>
