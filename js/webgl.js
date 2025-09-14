@@ -1,15 +1,15 @@
-function gl_start(canvas, vertexShader, fragmentShader) {
-   fragmentShader = `#version 300 es
-   precision highp float;
-   vec3 s(vec3 i) { return cos(5.*(i+5.*cos(5.*(i.yzx+5.*cos(5.*(i.zxy+5.*cos(5.*i))))))); }
-   float t(vec3 i, vec3 u, vec3 a) { return dot(normalize(s(i + a)), u - a); }
-   float noise(vec3 p) {
-      vec3 i = floor(p), u = p - i, v = 2.*mix(u*u, u*(2.-u)-.5, step(.5,u));
-      return mix(mix(mix(t(i, u, vec3(0.,0.,0.)), t(i, u, vec3(1.,0.,0.)), v.x),
-                     mix(t(i, u, vec3(0.,1.,0.)), t(i, u, vec3(1.,1.,0.)), v.x), v.y),
-                 mix(mix(t(i, u, vec3(0.,0.,1.)), t(i, u, vec3(1.,0.,1.)), v.x),
-                     mix(t(i, u, vec3(0.,1.,1.)), t(i, u, vec3(1.,1.,1.)), v.x), v.y), v.z);
-   }` + fragmentShader;
+window.fsHeader = `#version 300 es
+precision highp float;
+vec3 s(vec3 i) { return cos(5.*(i+5.*cos(5.*(i.yzx+5.*cos(5.*(i.zxy+5.*cos(5.*i))))))); }
+float t(vec3 i, vec3 u, vec3 a) { return dot(normalize(s(i + a)), u - a); }
+float noise(vec3 p) {
+   vec3 i = floor(p), u = p - i, v = 2.*mix(u*u, u*(2.-u)-.5, step(.5,u));
+   return mix(mix(mix(t(i, u, vec3(0.,0.,0.)), t(i, u, vec3(1.,0.,0.)), v.x),
+                  mix(t(i, u, vec3(0.,1.,0.)), t(i, u, vec3(1.,1.,0.)), v.x), v.y),
+              mix(mix(t(i, u, vec3(0.,0.,1.)), t(i, u, vec3(1.,0.,1.)), v.x),
+                  mix(t(i, u, vec3(0.,1.,1.)), t(i, u, vec3(1.,1.,1.)), v.x), v.y), v.z);
+}`;
+function gl_start(canvas, scene) {
    setTimeout(function() {
       canvas.gl = canvas.getContext('webgl2');
       canvas.setShaders = function(vertexShader, fragmentShader) {
@@ -24,7 +24,7 @@ function gl_start(canvas, vertexShader, fragmentShader) {
             gl.attachShader(gl.program, shader);
          };
          addshader(gl.VERTEX_SHADER, vertexShader);
-         addshader(gl.FRAGMENT_SHADER, fragmentShader);
+         addshader(gl.FRAGMENT_SHADER, window.fsHeader + fragmentShader);
          gl.linkProgram(gl.program);
          if (! gl.getProgramParameter(gl.program, gl.LINK_STATUS))
             console.log('Could not link the shader program!');
@@ -35,9 +35,9 @@ function gl_start(canvas, vertexShader, fragmentShader) {
          gl.enableVertexAttribArray(aPos);
          gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 0, 0);
       }
-      canvas.setShaders(vertexShader, fragmentShader);
+      canvas.setShaders(scene.vertexShader, scene.fragmentShader);
       setInterval(function() {
-         animate(gl);
+         animate();
          gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       }, 30);
    }, 100);

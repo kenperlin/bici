@@ -18,15 +18,14 @@
 
 let codeArea = new CodeArea(-2000, 20), scene;
 
-let setScene = s => {
-   scene = s;
-   gl_start(canvas3D, scene.vertexShader, scene.fragmentShader);
-   if (scene.init)
-      scene.init();
+let setScene = id => {
+   let SceneClass = eval('Scene' + id);
+   scene = new SceneClass();
+   gl_start(canvas3D, scene);
    codeArea.getElement().value = scene.fragmentShader;
 }
 
-setScene(scene1);
+setScene('1');
 
 let pen = new Pen();
 let chalktalk = new Chalktalk();
@@ -34,7 +33,7 @@ let isLightPen = true, isHelp = false;
 
 codeArea.callback = () => {
    scene.fragmentShader = codeArea.getElement().value;
-   gl_start(canvas3D, scene.vertexShader, scene.fragmentShader);
+   gl_start(canvas3D, scene);
 }
 
 let w = canvas2D.width = screen.width;
@@ -90,7 +89,7 @@ let keyDown = key => {
 
 let keyUp = key => {
    if (key >= '0' && key <= '9') {
-      try { setScene(eval('scene' + key)); } catch (e) {}
+      try { setScene(key); } catch (e) {}
       return;
    }
    switch (key) {
@@ -122,7 +121,7 @@ let keyUp = key => {
    }
 }
 
-animate = gl => {
+animate = () => {
    let p = webcam.update();
    codeArea.update();
    ctx.drawImage(webcam.canvas, 0,0,640,440, 0,0,w,h);

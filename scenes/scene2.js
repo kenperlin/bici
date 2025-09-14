@@ -1,13 +1,15 @@
-let scene2 = {
-vertexShader : `\
+function Scene2() {
+
+this.vertexShader = `\
 #version 300 es
 in  vec3 aPos;
 out vec3 vPos;
 void main() {
    gl_Position = vec4(aPos, 1.);
    vPos = aPos;
-}`,
-fragmentShader : `\
+}`;
+
+this.fragmentShader = `\
 uniform float uTime;
 uniform vec3 uP;
 in  vec3 vPos;
@@ -39,13 +41,14 @@ void main() {
          }
       }
    }
-}`,
-init : () => {
-   scene2.startTime = Date.now();
-},
-update : viewPoint => {
-   setUniform('1f', 'uTime', (Date.now() - scene2.startTime) / 1000);
+}`;
+
+let startTime = Date.now() / 1000;
+
+this.update = viewPoint => {
+   setUniform('1f', 'uTime', Date.now() / 1000 - startTime);
    setUniform('3fv', 'uP', viewPoint);
-},
+}
+
 }
 
