@@ -1,3 +1,4 @@
+<script src=js/getFile.js></script>
 <script src=js/webgl.js></script>
 <script src=js/webcam.js></script>
 <script src=js/trackHead.js></script>
@@ -9,27 +10,21 @@
 <script src=js/chalktalk.js></script>
 <script src=js/codeArea.js></script>
 
-<script src=scenes/scene1.js></script>
-<script src=scenes/scene2.js></script>
-<script src=scenes/scene3.js></script>
-<script src=scenes/scene4.js></script>
-<script src=scenes/scene5.js></script>
-<script src=scenes/scene6.js></script>
-<script src=scenes/scene7.js></script>
-<script src=scenes/scene8.js></script>
-<script src=scenes/scene9.js></script>
-
 <canvas id=canvas2D style="position:absolute;top:0;left:0;"></canvas>
 <canvas id=canvas3D style="position:absolute;top:440;left:-2000;" width=500 height=500></canvas>
 <script>
 
-let codeArea = new CodeArea(-2000, 20), scene;
+let codeArea = new CodeArea(-2000, 20), scene, sceneID;
 
 let setScene = id => {
-   let SceneClass = eval('Scene' + id);
-   scene = new SceneClass();
-   gl_start(canvas3D, scene);
-   codeArea.getElement().value = scene.fragmentShader;
+   sceneID = id;
+   let url = './scenes/scene' + id + '.js';
+   loadScript(url, () => {
+      let SceneClass = eval('Scene' + id);
+      scene = new SceneClass();
+      gl_start(canvas3D, scene);
+      getFile(url, str => codeArea.getElement().value = str);
+   });
 }
 
 setScene('3');
@@ -39,7 +34,9 @@ let chalktalk = new Chalktalk();
 let isLightPen = true, isHelp = false;
 
 codeArea.callback = () => {
-   scene.fragmentShader = codeArea.getElement().value;
+   eval(codeArea.getElement().value);
+   let SceneClass = eval('Scene' + sceneID);
+   scene = new SceneClass();
    gl_start(canvas3D, scene);
 }
 
