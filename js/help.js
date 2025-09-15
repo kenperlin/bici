@@ -3,30 +3,30 @@ let help = {
 
 display : ctx => {
 
-   let fontSize = 35;
+   let fs = fontSize * 2 >> 0;
 
    if (help.isSplash) {
       ctx.fillStyle = '#ffffff80';
-      ctx.fillRect(18, 20, 333 * fontSize / 40, 35 * 1.5);
+      ctx.fillRect(18, 20, 333 * fs / 40, 35 * 1.5);
       ctx.fillStyle = 'black';
-      ctx.font = 'bold ' + fontSize + 'px Arial';
+      ctx.font = 'bold ' + fs + 'px Arial';
       ctx.fillText("For help, type 'h'", 26, 60);
    }
 
    if (help.isHelp) {
       ctx.fillStyle = '#ffffff80';      
-      ctx.fillRect(18, 20, 470 * fontSize / 40, (fontSize*7/8) * help.text.length);
+      ctx.fillRect(18, 20, 470 * fs / 40, (fs*7/8) * help.text.length);
       ctx.fillStyle = 'black';      
-      ctx.font = 'bold ' + fontSize + 'px Arial';
-      ctx.fillText(help.text[0], 26, 20 + fontSize);
+      ctx.font = 'bold ' + fs + 'px Arial';
+      ctx.fillText(help.text[0], 26, 20 + fs);
       for (let n = 1 ; n < help.text.length ; n++) {
          let i = n == 1 ? 3 : 1;
          let ch = help.text[n].substring(0, i);
-         ctx.font = 'bold ' + (fontSize*3/4) + 'px Arial';
+         ctx.font = 'bold ' + (fs*3/4) + 'px Arial';
          let w = ctx.measureText(ch).width;
-         ctx.fillText(ch, 38 - w * (n==1 ? .2 : .5), 35 + fontSize + (fontSize*7/8) * n);
-         ctx.font = (fontSize * 5/8) + 'px Arial';
-         ctx.fillText(help.text[n].substring(i), 53, 35 + fontSize + (fontSize*7/8) * n);
+         ctx.fillText(ch, 38 - w * (n==1 ? .2 : .5), 35 + fs + (fs*7/8) * n);
+         ctx.font = (fs * 5/8) + 'px Arial';
+         ctx.fillText(help.text[n].substring(i), 53, 35 + fs + (fs*7/8) * n);
       }
    }
 },
@@ -59,6 +59,8 @@ w Toggle world seen thru blue plate.
 . Make pen line thicker.
 / Hold down to draw.
 ; Hold down to interact with a sketch.
+\u2191 Larger text.
+\u2193 Smaller text.
 `.split('\n'),
 
 }

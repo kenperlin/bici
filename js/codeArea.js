@@ -1,5 +1,4 @@
 function CodeArea(x,y) {
-   let fontSize = 15;
    let codeArea = document.createElement('textArea');
    document.body.appendChild(codeArea);
    codeArea.spellcheck = false;
@@ -21,8 +20,9 @@ function CodeArea(x,y) {
    this.getElement = () => codeArea;
 
    this.update = () => {
+      codeArea.style.fontSize = (fontSize >> 0) + 'px';
       let lines = codeArea.value.split('\n');
-      codeArea.rows = Math.min(780 / fontSize, lines.length);
+      codeArea.rows = Math.min(790 / fontSize >> 0, lines.length);
       codeArea.cols = 0;
       for (let n = 0 ; n < codeArea.rows ; n++)
          codeArea.cols = Math.max(codeArea.cols, lines[n].length-1);
@@ -30,6 +30,5 @@ function CodeArea(x,y) {
 
    this.changeFontSize = factor => {
       fontSize *= factor;
-      codeArea.style.fontSize = (fontSize >> 0) + 'px';
    }
 }

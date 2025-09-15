@@ -14,6 +14,7 @@
 <canvas id=canvas3D style="position:absolute;top:440;left:-2000;" width=500 height=500></canvas>
 <script>
 
+window.fontSize = 20;
 let codeArea = new CodeArea(-2000, 20), scene, sceneID, isAlt;
 
 let setScene = id => {
@@ -95,9 +96,12 @@ let keyDown = key => {
 let keyUp = key => {
    if (isAlt) {
       switch (key) {
-      case 'ArrowUp'  : codeArea.changeFontSize(  1.1); return;
-      case 'ArrowDown': codeArea.changeFontSize(1/1.1); return;
+      case 'ArrowDown' : webcam.A /= 1.1; console.log('webcam.A', webcam.A >> 0); break;
+      case 'ArrowLeft' : webcam.B /= 1.1; console.log('webcam.B', webcam.B >> 0); break;
+      case 'ArrowRight': webcam.B *= 1.1; console.log('webcam.B', webcam.B >> 0); break;
+      case 'ArrowUp'   : webcam.A *= 1.1; console.log('webcam.A', webcam.A >> 0); break;
       }
+      return;
    }
    if (key >= '0' && key <= '9') {
       setScene(key);
@@ -105,15 +109,13 @@ let keyUp = key => {
    }
    switch (key) {
    case 'Alt': isAlt = false; break;
+   case 'ArrowUp'  : fontSize *= 1.1; break;
+   case 'ArrowDown': fontSize /= 1.1; break;
    case "'" : chalktalk.add(pen.strokes,pen.x,pen.y); break;
    case ',' : pen.width *= .707; break;
    case '.' : pen.width /= .707; break;
    case '/' : pen.up(); break;
    case ';' : isDrag = false; break;
-   case 'ArrowDown' : webcam.A /= 1.1; console.log('webcam.A', webcam.A >> 0); break;
-   case 'ArrowLeft' : webcam.B /= 1.1; console.log('webcam.B', webcam.B >> 0); break;
-   case 'ArrowRight': webcam.B *= 1.1; console.log('webcam.B', webcam.B >> 0); break;
-   case 'ArrowUp'   : webcam.A *= 1.1; console.log('webcam.A', webcam.A >> 0); break;
    case 'D':
    case 'Backspace' : if (! chalktalk.delete(pen.x,pen.y)) pen.delete(); break;
    case 'b' : webcam.isBlur = ! webcam.isBlur; break;
