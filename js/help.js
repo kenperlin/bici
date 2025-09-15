@@ -15,7 +15,7 @@ display : ctx => {
 
    if (help.isHelp) {
       ctx.fillStyle = '#ffffff80';      
-      ctx.fillRect(18, 20, 450 * fontSize / 40, (fontSize*7/8) * help.text.length);
+      ctx.fillRect(18, 20, 470 * fontSize / 40, (fontSize*7/8) * help.text.length);
       ctx.fillStyle = 'black';      
       ctx.font = 'bold ' + fontSize + 'px Arial';
       ctx.fillText(help.text[0], 26, 20 + fontSize);
@@ -31,7 +31,8 @@ display : ctx => {
    }
 },
 
-isSplash : true,
+//isSplash : true,
+isSplash : false,
 
 isHelp : false,
 
@@ -51,6 +52,7 @@ t Toggle my semi-transparency.
 T Toggle my total transparency.
 u Toggle UFO within blue-plate world.
 v Toggle if 3D view is tracking head.
+V Toggle show/hide head tracking data.
 w Toggle world seen thru blue plate.
 \' Convert strokes to a sketch.
 , Make pen line thinner.

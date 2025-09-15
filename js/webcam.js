@@ -204,7 +204,7 @@ webcam.update = () => {
 
    // OPTIONALLY CHANGE VIEWPOINT OF 3D SCENES BASED ON USER'S HEAD POSITION.
 
-   webcam.headPos = webcam.isTrackHead ? trackHead(data) : [0,1.6,7];
+   webcam.headPos = webcam.isTrackHead ? trackHead(data, webcam.showTrackHead) : [0,1.6,7];
 
    // OPTIONAL FOREGROUND TRANSPARENCY FADE DOWN AND FADE UP
 
@@ -233,6 +233,6 @@ webcam.update = () => {
 }
 
 webcam.A = 450;
-webcam.B = 130;
+webcam.B = 157;
 webcam.T = Date.now();
 

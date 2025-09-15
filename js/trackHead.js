@@ -9,7 +9,13 @@
       From those three values, derive the x,y,z positio of the head.
 */
 
-let trackHead = data => {
+let trackHead = (data, isShowingTracking) => {
+
+   let highlightRect = (col, row, w, h) => {
+      for (let x = col>>0 ; x <= col+w>>0 ; x++)
+      for (let y = row>>0 ; y <= row+w>>0 ; y++)
+         data[xy_to_n(x,y)] /= 2;
+   }
 
    let top = 0, left = 120, right = 520;
 
@@ -18,7 +24,7 @@ let trackHead = data => {
    let isWall = (x, y) => {
       let n = xy_to_n(x, y);
       let r = data[n], g = data[n+1], b = data[n+2];
-      return r + g + b > 450 && Math.max(r,g,b) < 1.3 * Math.min(r,g,b);
+      return r + g + b > 450 && Math.max(r,g,b) < 1.4 * Math.min(r,g,b);
    }
 
    for (let count = 0 ; top < 120 && count < 10 ; top++)
@@ -39,6 +45,9 @@ let trackHead = data => {
    let headY = top + (right - left) * .8;
    let headX = (left + right) / 2;
    let headS = (right - left) / 2;
+
+   if (isShowingTracking)
+      highlightRect(headX - headS, top, 2 * headS, 2 * headS);
 
    return [ 10 * (headX - 320) / 640,
             10 * (240 - headY) / 480,

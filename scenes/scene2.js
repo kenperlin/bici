@@ -31,7 +31,7 @@ void main() {
    for (int i = 0 ; i <= 3 ; i++) {
       float z = .3 * (2. * float(i) / 3. - 1.);
       for (int j = 0 ; j <= 3 ; j++) {
-         float y = .3 * (2. * float(j) / 3. - 1.) + .5;
+         float y = .3 * (2. * float(j) / 3. - 1.);
          for (int k = 0 ; k <= 3 ; k++) {
             float x = .3 * (2. * float(k) / 3. - 1.);
             if ( (i==0||i==3)&&(j==0||j==3) ||
@@ -41,6 +41,7 @@ void main() {
          }
       }
    }
+   fragColor = vec4(sqrt(fragColor.rgb), fragColor.a);
 }`;
 
 let startTime = Date.now() / 1000;
