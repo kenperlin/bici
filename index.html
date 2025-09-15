@@ -14,7 +14,7 @@
 <canvas id=canvas3D style="position:absolute;top:440;left:-2000;" width=500 height=500></canvas>
 <script>
 
-let codeArea = new CodeArea(-2000, 20), scene, sceneID;
+let codeArea = new CodeArea(-2000, 20), scene, sceneID, isAlt;
 
 let setScene = id => {
    sceneID = id;
@@ -81,6 +81,7 @@ midiUp   = key => keyUp  ("b1u2wc3s4p5D/,m.'; f g tT".substring(key,key+1));
 
 let keyDown = key => {
    switch (key) {
+   case 'Alt': isAlt = true; break;
    case '/': pen.down(); break;
    case ';': isDrag = true; break;
    case 'm':
@@ -92,11 +93,18 @@ let keyDown = key => {
 }
 
 let keyUp = key => {
+   if (isAlt) {
+      switch (key) {
+      case 'ArrowUp'  : codeArea.changeFontSize(  1.1); return;
+      case 'ArrowDown': codeArea.changeFontSize(1/1.1); return;
+      }
+   }
    if (key >= '0' && key <= '9') {
-      try { setScene(key); } catch (e) {}
+      setScene(key);
       return;
    }
    switch (key) {
+   case 'Alt': isAlt = false; break;
    case "'" : chalktalk.add(pen.strokes,pen.x,pen.y); break;
    case ',' : pen.width *= .707; break;
    case '.' : pen.width /= .707; break;

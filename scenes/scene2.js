@@ -22,12 +22,15 @@ vec4 raySphere(vec3 V, vec3 W, vec4 S, vec3 C, vec4 F) {
       return F;
    float t = -b - sqrt(d);
    vec3 N = (((V + S.xyz) + t * W) - S.xyz) / S.w;
-   return vec4(C * (.1 + .5 * max(0., N.x+N.y+N.z) + .5 * max(0.,-N.x-N.y-N.z/2.)), 1.);
+   return vec4(C * (.1 + .5*max(0., N.x+N.y+N.z) +
+                         .5*max(0.,-N.x-N.y-N.z/2.)), 1.);
 }
 void main() {
    vec3 V = uP;
    vec3 W = normalize(vec3(vPos.xy-uP.xy,-V.z));
 
+   vec3 C = vec3(1.,.85,.75);
+   vec4 F = vec4(0.);
    for (int i = 0 ; i <= 3 ; i++) {
       float z = .3 * (2. * float(i) / 3. - 1.);
       for (int j = 0 ; j <= 3 ; j++) {
@@ -37,11 +40,11 @@ void main() {
             if ( (i==0||i==3)&&(j==0||j==3) ||
                  (i==0||i==3)&&(k==0||k==3) ||
                  (j==0||j==3)&&(k==0||k==3) )
-               fragColor = raySphere(V, W, vec4(x,y,z,.1), vec3(1.,.85,.75), fragColor);
+               F = raySphere(V, W, vec4(x,y,z,.1), C, F);
          }
       }
    }
-   fragColor = vec4(sqrt(fragColor.rgb), fragColor.a);
+   fragColor = vec4(sqrt(F.rgb), F.a);
 }`;
 
 let startTime = Date.now() / 1000;

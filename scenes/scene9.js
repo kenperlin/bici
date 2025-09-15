@@ -43,8 +43,8 @@ void main() {
 	 t = tt.x;
          vec3 P = V + t * W;
          vec3 c = vec3(.1);
-	 vec3 p = (P - uS[i].xyz) / uS[i].w;
-         c *= .5 + .5 * sin(20. * p.y);
+//	 vec3 p = (P - uS[i].xyz) / uS[i].w;
+//       c *= .5 + .5 * sin(20. * p.y);
 	 for (int l = 0 ; l < `+NL+` ; l++) {
 	    vec3 V = P + .0001 * uL[l], W = uL[l];
 	    float s = 0.;

@@ -16,8 +16,8 @@ out vec4 fragColor;
 void main() {
    fragColor = vec4(0.);
    for (int i = 0 ; i < 20 ; i++) {
-      float x = 8. * vPos.x + 8. * noise(10.6 * vec3(float(i)) + 100.3 + .1 * uTime);
-      float y = 8. * vPos.y + 8. * noise(10.3 * vec3(float(i)) + 200.6 + .1 * uTime);
+      float x = 8.*(vPos.x+noise(10.6*vec3(float(i))+100.3+.1*uTime));
+      float y = 8.*(vPos.y+noise(10.3*vec3(float(i))+200.6+.1*uTime));
       vec3 lightDir = normalize(vec3(sin(uTime),1.,1.));
       float rr = 1. - x*x - y*y;
       if (rr > 0.) {
