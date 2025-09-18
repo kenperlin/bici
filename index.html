@@ -1,4 +1,5 @@
 <script src=js/getFile.js></script>
+<script src=js/loadImage.js></script>
 <script src=js/webgl.js></script>
 <script src=js/webcam.js></script>
 <script src=js/trackHead.js></script>
@@ -11,24 +12,40 @@
 <script src=js/codeArea.js></script>
 
 <canvas id=canvas2D style="position:absolute;top:0;left:0;"></canvas>
-<canvas id=canvas3D style="position:absolute;top:440;left:-2000;" width=500 height=500></canvas>
+<canvas id=canvas3D style="position:absolute;top:440;left:-2000;" width=600 height=600></canvas>
 <script>
 
-window.fontSize = 20;
-let codeArea = new CodeArea(-2000, 20), scene, sceneID, isAlt;
+window.fontSize = 18;
+let codeArea = new CodeArea(-2000, 20), scene, sceneID, isAlt, isShift, isInfo, isInfoOpaque;
+let shift3D = 0, t3D = 0, isDrawpad;
+
+let ease = t => t * t * (3 - t - t);
+
+let infoImageFiles = [
+   'raytrace1.png',
+   'ray_sphere.png',
+   'multiple_spheres_no_color.png',
+   'multiple_spheres.png',
+   'insert_code.png',
+   'shadow_ray.png',
+   'matrix_types.png',
+   'matrix_multiplication.png',
+];
+
+let infoImages = [], infoIndex = 0;;
+for (let n = 0 ; n < infoImageFiles.length ; n++)
+   infoImages.push(loadImage(infoImageFiles[n]));
 
 let setScene = id => {
    sceneID = id;
    let url = './scenes/scene' + id + '.js';
    loadScript(url, () => {
-      let SceneClass = eval('Scene' + id);
-      scene = new SceneClass();
-      gl_start(canvas3D, scene);
+      gl_start(canvas3D, scene = new Scene());
       getFile(url, str => codeArea.getElement().value = str);
    });
 }
 
-setScene('3');
+setScene('1');
 
 let pen = new Pen();
 let chalktalk = new Chalktalk();
@@ -36,9 +53,7 @@ let isLightPen = true, isHelp = false;
 
 codeArea.callback = () => {
    eval(codeArea.getElement().value);
-   let SceneClass = eval('Scene' + sceneID);
-   scene = new SceneClass();
-   gl_start(canvas3D, scene);
+   gl_start(canvas3D, scene = new Scene());
 }
 
 let w = canvas2D.width = screen.width;
@@ -83,6 +98,7 @@ midiUp   = key => keyUp  ("b1u2wc3s4p5D/,m.'; f g tT".substring(key,key+1));
 let keyDown = key => {
    switch (key) {
    case 'Alt': isAlt = true; break;
+   case 'Shift': isShift = true; break;
    case '/': pen.down(); break;
    case ';': isDrag = true; break;
    case 'm':
@@ -109,24 +125,38 @@ let keyUp = key => {
    }
    switch (key) {
    case 'Alt': isAlt = false; break;
-   case 'ArrowUp'  : fontSize *= 1.1; break;
-   case 'ArrowDown': fontSize /= 1.1; break;
+   case 'Shift': isShift = false; break;
+   case 'ArrowUp'   : fontSize *= 1.1; break;
+   case 'ArrowDown' : fontSize /= 1.1; break;
+   case 'ArrowLeft' : infoIndex = (infoIndex + infoImages.length - 1) % infoImages.length; break;
+   case 'ArrowRight': infoIndex = (infoIndex                     + 1) % infoImages.length; break;
    case "'" : chalktalk.add(pen.strokes,pen.x,pen.y); break;
    case ',' : pen.width *= .707; break;
    case '.' : pen.width /= .707; break;
    case '/' : pen.up(); break;
    case ';' : isDrag = false; break;
    case 'D':
-   case 'Backspace' : if (! chalktalk.delete(pen.x,pen.y)) pen.delete(); break;
+   case 'Backspace' :
+      if (isShift) {
+         chalktalk.clear();
+         pen.clear();
+      }
+      else if (! chalktalk.delete(pen.x,pen.y))
+         pen.delete();
+      break;
    case 'b' : webcam.isBlur = ! webcam.isBlur; break;
    case 'c' : codeArea.getElement().style.left = (isCode = ! isCode) ? 20 : -2000; break;
+   case 'd' : isDrawpad = ! isDrawpad; break;
    case 'f' : webcam.isFloaters = ! webcam.isFloaters; break;
    case 'g' : webcam.grabImage(); break;
    case 'h' : help.isHelp = ! help.isHelp; break;
+   case 'i' : isInfo = ! isInfo; break;
    case 'l' : isLightPen = ! isLightPen; break;
    case 'm' : isMove = false; break;
+   case 'o' : isInfoOpaque = ! isInfoOpaque; break;
    case 'p' : webcam.isPen = ! webcam.isPen; break;
-   case 's' : canvas3D.style.left = (isScene = ! isScene) ? 500 : -2000; break;
+   case 'r' : shift3D = 1 - shift3D; break;
+   case 's' : isScene = ! isScene; break;
    case 't' : webcam.opacity = 1.5 - webcam.opacity; break;
    case 'T' : webcam.opacity = 1.01 - webcam.opacity; break;
    case 'u' : webcam.ufoTime = webcam.ufoTime ? 0 : Date.now() / 1000; break;
@@ -136,14 +166,37 @@ let keyUp = key => {
    }
 }
 
+let timePrev = Date.now() / 1000;
 animate = () => {
+   let time = Date.now() / 1000;
+   let deltaTime = time - timePrev;
+   timePrev = time;
+
    let scrollPosition = window.pageYOffset;
    document.body.style.overflow = 'hidden';
    window.scrollTo(0, scrollPosition);
 
+   t3D = Math.max(0, Math.min(1, t3D + (shift3D ? deltaTime : -deltaTime)));
+   canvas3D.style.left = isScene ? 500 + ease(t3D) * 300 : -2000;
+
    let p = webcam.update();
    codeArea.update();
    ctx.drawImage(webcam.canvas, 0,0,640,440, 0,0,w,h);
+
+   if (isInfo) {
+      let iw = 500, x = screen.width - 20 - iw;
+      ctx.globalAlpha = isInfoOpaque ? 1 : .5;
+      let image = infoImages[infoIndex];
+      ctx.drawImage(image, x, 20, iw, iw*image.height/image.width);
+      ctx.globalAlpha = 1;
+   }
+
+   if (isDrawpad) {
+      let w = 500, h = 400, x = screen.width - 20 - w, y = screen.height - 60 - h;
+      ctx.fillStyle = '#ffffff80';
+      ctx.fillRect(x, y, w, h);
+   }
+
    if (isLightPen && p)
       movePen(p.x * w / 640, p.y * h / 440);
    pen.draw(pen.strokes);

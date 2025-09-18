@@ -3,7 +3,7 @@ let help = {
 
 display : ctx => {
 
-   let fs = fontSize * 2 >> 0;
+   let fs = fontSize * 1.7 >> 0;
 
    if (help.isSplash) {
       ctx.fillStyle = '#ffffff80';
@@ -41,13 +41,17 @@ Hot keys
 0-9    Select 3D scene 0-9.
 b Toggle blurred region in video.
 c Toggle editable code for 3D scene.
+d Toggle drawing pad.
 f Toggle floaters behind me.
 g Grab bg (enables transparency).
 h Toggle this help menu.
+i Toggle show/hide info images.
 l Toggle lightpen (small blue object).
 m Hold down to move a sketch.
-p Toggle showing tracked blue pixels.
-s Toggle showing 3D scene.
+o Toggle info images are opaque.
+p Toggle show/hide tracked blue pixels.
+r Toggle if 3D scene is shifted right.
+s Toggle show/hide 3D scene.
 t Toggle my semi-transparency.
 T Toggle my total transparency.
 u Toggle UFO within blue-plate world.
@@ -59,8 +63,10 @@ w Toggle world seen thru blue plate.
 . Make pen line thicker.
 / Hold down to draw.
 ; Hold down to interact with a sketch.
-\u2191 Larger text.
 \u2193 Smaller text.
+\u2191 Larger text.
+\u2190 Previous info image.
+\u2192 Next info image.
 `.split('\n'),
 
 }

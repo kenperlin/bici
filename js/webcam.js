@@ -16,25 +16,6 @@ let wctx = webcam.canvas.getContext('2d');
 webcam.isPen = true;
 webcam.opacity = 1;
 
-// HANDLE IMAGE LOADING
-
-let loadImageCanvas = document.createElement('canvas');
-loadImageCanvas.style.position = 'absolute';
-loadImageCanvas.style.left = '2000px';
-loadImageCanvas.width = 640;
-loadImageCanvas.height = 480;
-let lictx = loadImageCanvas.getContext('2d');
-
-let loadImage = src => {
-   let image = new Image(), data;
-   image.onload = () => {
-      lictx.drawImage(image, 0,0);
-      image.data = lictx.getImageData(0,0,image.width,image.height).data;
-   }
-   image.src = 'imgs/' + src;
-   return image;
-}
-
 let blueglass = loadImage('blueglass.jpg');
 let brick = loadImage('brick.png');
 let shapes = loadImage('shapes.jpg');
@@ -43,12 +24,19 @@ let ufo = loadImage('ufo.png');
 
 // CAPTURE BACKGROUND TO PREPARE FOR TRANSPARENCY
 
-webcam.grabImage = () => webcam.bg = webcam.data;
+webcam._grabImageTime = -1;
+
+webcam.grabImage = () => webcam._grabImageTime = webcam._time;
 
 webcam.update = () => {
    let time = (Date.now() - webcam.T) / 1000;
    let deltaTime = time - (webcam._time ?? time);
    webcam._time = time;
+
+   if (webcam._grabImageTime > 0 && webcam._time - webcam._grabImageTime > 5) {
+      webcam.bg = webcam.data;
+      webcam._grabImageTime = -1;
+   }
 
    let fade = (a,b,d) => a = (a??b) == b ? b : a < b ? Math.min(b,a+d) : Math.max(b,a-d);
    let ease = t => t * t * (3 - t - t);

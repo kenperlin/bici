@@ -2,7 +2,7 @@
 function Pen() {
 
    this.strokes = [];
-   this.width = 10;
+   this.width = 7;
    let isDown = false;
    let ctx;
    
@@ -39,6 +39,8 @@ function Pen() {
    }
    
    this.delete = () => this.strokes.splice(this.strokes.length-1, 1);
+
+   this.clear = () => this.strokes = [];
 
    let highlightSketches = false;
    

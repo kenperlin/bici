@@ -5,7 +5,7 @@ function CodeArea(x,y) {
    codeArea.style.position = 'absolute';
    codeArea.style.left = x;
    codeArea.style.top = y;
-   codeArea.style.backgroundColor = 'rgba(255,255,255,.33)';
+   codeArea.style.backgroundColor = 'rgba(255,255,255,.6)';
    codeArea.style.fontSize = fontSize + 'px';
    codeArea.style.overflowY = 'scroll';
    codeArea.addEventListener('keyup', event => {
@@ -24,7 +24,7 @@ function CodeArea(x,y) {
       let lines = codeArea.value.split('\n');
       codeArea.rows = Math.min(790 / fontSize >> 0, lines.length);
       codeArea.cols = 0;
-      for (let n = 0 ; n < codeArea.rows ; n++)
+      for (let n = 0 ; n < lines.length ; n++)
          codeArea.cols = Math.max(codeArea.cols, lines[n].length-1);
    }
 

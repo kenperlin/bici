@@ -1,4 +1,13 @@
-function Scene4() {
+/********************************************
+
+If you are defining multiple objects in an
+array that you pass down to the GPU as a
+uniform array, then you can put your GPU
+shader logic into a loop.
+
+*********************************************/
+
+function Scene() {
 
 this.vertexShader = `\
 #version 300 es
@@ -10,43 +19,67 @@ void main() {
 }`;
 
 this.fragmentShader = `\
+#version 300 es
+precision highp float;
 uniform float uTime;
 uniform vec3 uViewPoint;
+
+uniform vec4 uS[2];
+uniform vec3 uC[2];
+
 in  vec3 vPos;
 out vec4 fragColor;
 
-vec4 raySphere(vec3 V, vec3 W, vec4 S, vec3 C, vec4 F) {
+vec2 raySphere(vec3 V, vec3 W, vec4 S) {
    V -= S.xyz;
    float b = dot(V, W);
    float d = b * b - dot(V, V) + S.w * S.w;
    if (d < 0.)
-      return F;
-   float t = -b - sqrt(d);
-   float z = V.z + S.z + t * W.z;
-   if (z < F.w)
-      return F;
-   vec3 N = (((V + S.xyz) + t * W) - S.xyz) / S.w;
-   return vec4(C * (.1 + .5*max(0., N.x+N.y+N.z) +
-                         .5*max(0.,-N.x-N.y-N.z/2.)), z);
+      return vec2(1001.,1000.);
+   return vec2(-b - sqrt(d), -b + sqrt(d));
 }
-vec4 rayScene(vec3 V, vec3 W) {
-   vec4 F = vec4(0.,0.,0.,-1000.);
-   F = raySphere(V,W,vec4(-.3,0.,0.,.4),vec3(1.,1.,1.),F);
-   F = raySphere(V,W,vec4( .3,0.,.3,.4),vec3(1.,1.,1.),F);
-   return F;
+
+vec3 L1 = vec3(1.,1.,1.) / 1.732;
+vec3 L2 = vec3(-1.,-1.,-.5) / 1.5;
+
+vec3 shadeSphere(vec4 S, vec3 P, vec3 C) {
+   vec3 N = (P - S.xyz) / S.w;
+   return C * (.1 + max(0., dot(N, L1))
+                  + max(0., dot(N, L2)));
 }
+
 void main() {
+   vec4 F = vec4(0.);
    vec3 V = uViewPoint;
    vec3 W = normalize(vPos-V);
-   vec4 F = rayScene(V, W);
-   fragColor = vec4(sqrt(F.rgb), F.w == -1000. ? 0. : 1.);
+   float t = 100.;
+
+   for (int i = 0 ; i < 2 ; i++) {
+      vec2 tt = raySphere(V, W, uS[i]);
+      if (tt.x < tt.y && tt.x > 0. && tt.x < t) {
+         t = tt.x;
+	 vec3 P = V + t * W;
+         F = vec4(shadeSphere(uS[i],P,uC[i]),1.);
+      }
+   }
+
+   fragColor = vec4(sqrt(F.rgb), F.a);
 }`;
 
 let startTime = Date.now()/1000;
 
 this.update = viewPoint => {
-   setUniform('1f', 'uTime', Date.now()/1000 - startTime);
+   let time = Date.now()/1000 - startTime;
+   setUniform('1f', 'uTime', time);
    setUniform('3fv', 'uViewPoint', viewPoint);
+
+   let s = Math.sin(time);
+
+   setUniform('4fv', 'uS', [ -.3*s,0,0,.4,
+                              .3*s,0,.3,.4 ]);
+
+   setUniform('3fv', 'uC', [ 1,.5,.5,
+                             .5,.7,1 ]);
 }
 
 }

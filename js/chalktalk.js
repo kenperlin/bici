@@ -47,6 +47,8 @@ function Chalktalk() {
          }
       return false;
    }
+
+   this.clear = () => sketches = [];
    
    let iMove, xMove, yMove;
    

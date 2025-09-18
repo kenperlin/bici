@@ -1,4 +1,15 @@
-function Scene6() {
+/********************************************
+
+You can also define positions and colors for
+each individual light source in Javascript,
+and send that data down to the GPU.
+
+*********************************************/
+
+function Scene() {
+
+let NS = 3;
+let NL = 2;
 
 this.vertexShader = `\
 #version 300 es
@@ -10,10 +21,14 @@ void main() {
 }`;
 
 this.fragmentShader = `\
+#version 300 es
+precision highp float;
 uniform float uTime;
 uniform vec3 uViewPoint;
-uniform vec4 uS[2];
-uniform vec3 uC[2];
+
+uniform vec4 uS[`+NS+`];
+uniform vec3 uC[`+NS+`],uL[`+NL+`],uLC[`+NL+`];
+
 in  vec3 vPos;
 out vec4 fragColor;
 
@@ -23,42 +38,77 @@ vec2 raySphere(vec3 V, vec3 W, vec4 S) {
    float d = b * b - dot(V, V) + S.w * S.w;
    if (d < 0.)
       return vec2(1001.,1000.);
-   float sd = sqrt(d);
-   return vec2(-b-sd, -b+sd);
+   return vec2(-b - sqrt(d), -b + sqrt(d));
 }
 
-float shadeSphere(vec3 P, vec4 S) {
+vec3 L1 = vec3(1.,1.,1.) / 1.732;
+vec3 L2 = vec3(-1.,-1.,-.5) / 1.5;
+
+vec3 shadeSphere(vec4 S, vec3 P, vec3 C) {
    vec3 N = (P - S.xyz) / S.w;
-   return .1 + .5 * max(0., N.x+N.y+N.z) +
-               .5 * max(0.,-N.x-N.y-N.z/2.);
+   return C * (.1 + max(0., dot(N, L1))
+                  + max(0., dot(N, L2)));
 }
+
+/*
+vec3 shadeSphere(vec4 S, vec3 P, vec3 C) {
+   vec3 N = (P - S.xyz) / S.w;
+   vec3 shade = vec3(.1);
+   for (int l = 0 ; l < `+NL+` ; l++)
+      shade += uLC[l] * max(0., dot(N, uL[l]));
+   return C * shade;
+}
+*/
 
 void main() {
+   vec4 F = vec4(0.);
    vec3 V = uViewPoint;
    vec3 W = normalize(vPos-V);
+   float t = 100.;
 
-   fragColor = vec4(0.);
-
-   float t = 2000.;
-   for (int i = 0 ; i < 2 ; i++) {
+   for (int i = 0 ; i < `+NS+` ; i++) {
       vec2 tt = raySphere(V, W, uS[i]);
-      if (tt.x < tt.y && tt.x < t) {
-	 t = tt.x;
-         float c = shadeSphere(V + t * W, uS[i]);
-         fragColor = vec4(uC[i] * c, 1.);
+      if (tt.x < tt.y && tt.x > 0. && tt.x < t) {
+         t = tt.x;
+	 vec3 P = V + t * W;
+         F = vec4(shadeSphere(uS[i],P,uC[i]),1.);
       }
    }
-   fragColor = vec4(sqrt(fragColor.rgb),fragColor.a);
+
+   fragColor = vec4(sqrt(F.rgb), F.a);
 }`;
 
 let startTime = Date.now()/1000;
 
+let normalize = v => {
+   let s = Math.sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
+   return [ v[0]/s, v[1]/s, v[2]/s ];
+}
+
 this.update = viewPoint => {
-   setUniform('1f', 'uTime', Date.now()/1000 - startTime);
+   let time = Date.now()/1000 - startTime;
+   setUniform('1f', 'uTime', time);
    setUniform('3fv', 'uViewPoint', viewPoint);
-   setUniform('4fv', 'uS', [ -.15,-.15,-.1,.3,
-                              .15, .15, .1,.3 ]);
-   setUniform('3fv', 'uC', [ 1,.5,.5, .5,.7,1 ]);
+
+   let s = Math.sin(time);
+   let c = Math.cos(time);
+
+   setUniform('4fv', 'uS', [ -.3*s,0,0,.4,
+                              .3*s,0,.3,.4,
+                              .7*c,.7*s,0,.2 ]);
+
+   setUniform('3fv', 'uC', [ 1,.5,.5,
+                             .5,.7,1,
+                             .5,1,.5 ]);
+
+   setUniform('3fv', 'uL', [ normalize([1,1,1]),
+                             normalize([-1,-1,-.5]),
+                             normalize([0,-1,0])
+			   ].flat());
+
+   setUniform('3fv', 'uLC', [ .5,.7,1,
+                              .2,.15,.1,
+			      .5,0,0 ]);
 }
 
 }
