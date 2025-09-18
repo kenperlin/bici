@@ -127,6 +127,7 @@ void main() {
       fragColor = vec4(0.);
 }`;
 
+let M = new M4();
 let t0 = Date.now() / 1000;
 this.update = viewPoint => {
    let time = Date.now() / 1000 - t0;

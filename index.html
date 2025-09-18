@@ -1,3 +1,4 @@
+<script src=js/M4.js></script>
 <script src=js/getFile.js></script>
 <script src=js/loadImage.js></script>
 <script src=js/webgl.js></script>
@@ -13,6 +14,7 @@
 
 <canvas id=canvas2D style="position:absolute;top:0;left:0;"></canvas>
 <canvas id=canvas3D style="position:absolute;top:440;left:-2000;" width=600 height=600></canvas>
+<canvas id=canvasDiagram style="position:absolute;left:-2000;" width=500 height=500></canvas>
 <script>
 
 window.fontSize = 18;
@@ -21,9 +23,10 @@ let shift3D = 0, t3D = 0, isDrawpad;
 
 let ease = t => t * t * (3 - t - t);
 
-let infoImageFiles = [
+let infoFigureFiles = [
    'raytrace1.png',
    'ray_sphere.png',
+   'cube.js',
    'multiple_spheres_no_color.png',
    'multiple_spheres.png',
    'insert_code.png',
@@ -32,9 +35,16 @@ let infoImageFiles = [
    'matrix_multiplication.png',
 ];
 
-let infoImages = [], infoIndex = 0;;
-for (let n = 0 ; n < infoImageFiles.length ; n++)
-   infoImages.push(loadImage(infoImageFiles[n]));
+let infoFigures = [], infoIndex = 0, dq = [], dqCount = 0;
+for (let n = 0 ; n < infoFigureFiles.length ; n++) {
+   let file = infoFigureFiles[n];
+   if (file.indexOf('.js') < 0)
+      infoFigures.push(loadImage(file));
+   else {
+      let index = infoFigures.length + dqCount++;
+      loadScript('diagrams/' + file, () => dq.push({ name:file, index:index, diagram: new Diagram() }));
+   }
+}
 
 let setScene = id => {
    sceneID = id;
@@ -62,7 +72,55 @@ let ctx = canvas2D.getContext('2d');
 let isMove = false, isScene = false, isCode = false, isDrag = false;
 pen.setContext(ctx);
 
-let movePen = (x,y) => {
+let D = {
+   ctx : canvasDiagram.getContext('2d'),
+   left : screen.width - 20 - 500, top : 20, w : 500, h : 500,
+   isIn : () => D.x >= 0 && D.x < D.w && D.y >= 0 && D.y < D.h,
+};
+
+let penDown = () => {
+   if (isInfo) {
+      let figure = infoFigures[infoIndex];
+      if (D.isIn() && (figure.mouseDown || figure.mouseDrag || figure.mouseUp)) {
+         if (figure.mouseDown)
+            figure.mouseDown(D.x, D.y);
+	 D.isDown = true;
+	 return;
+      }
+   }
+
+   pen.down();
+}
+
+let penUp = () => {
+   if (isInfo) {
+      let figure = infoFigures[infoIndex];
+      if (D.isDown) {
+         if (figure.mouseUp)
+            figure.mouseUp(D.x, D.y);
+	 D.isDown = false;
+	 return;
+      }
+   }
+
+   pen.up();
+}
+
+let penMove = (x,y) => {
+   if (isInfo) {
+      D.x = x - D.left;
+      D.y = y - D.top;
+      let figure = infoFigures[infoIndex];
+      if (D.isDown && figure.mouseDrag) {
+         figure.mouseDrag(D.x, D.y);
+	 return;
+      }
+      if (D.isIn() && figure.mouseMove) {
+         figure.mouseMove(D.x, D.y);
+	 return;
+      }
+   }
+
    pen.move(x,y);
    if (isMove)
       chalktalk.move(x,y);
@@ -70,7 +128,7 @@ let movePen = (x,y) => {
       chalktalk.drag(x,y);
 }
 
-document.addEventListener('mousemove', e => movePen(e.x,e.y));
+document.addEventListener('mousemove', e => penMove(e.x,e.y));
 
 let isPenKey = (e,key) => document.activeElement != codeArea.getElement() && e.key == key;
 
@@ -99,7 +157,7 @@ let keyDown = key => {
    switch (key) {
    case 'Alt': isAlt = true; break;
    case 'Shift': isShift = true; break;
-   case '/': pen.down(); break;
+   case '/': penDown(); break;
    case ';': isDrag = true; break;
    case 'm':
       if (! isMove)
@@ -128,12 +186,12 @@ let keyUp = key => {
    case 'Shift': isShift = false; break;
    case 'ArrowUp'   : fontSize *= 1.1; break;
    case 'ArrowDown' : fontSize /= 1.1; break;
-   case 'ArrowLeft' : infoIndex = (infoIndex + infoImages.length - 1) % infoImages.length; break;
-   case 'ArrowRight': infoIndex = (infoIndex                     + 1) % infoImages.length; break;
+   case 'ArrowLeft' : infoIndex = (infoIndex + infoFigures.length - 1) % infoFigures.length; break;
+   case 'ArrowRight': infoIndex = (infoIndex                     + 1) % infoFigures.length; break;
    case "'" : chalktalk.add(pen.strokes,pen.x,pen.y); break;
    case ',' : pen.width *= .707; break;
    case '.' : pen.width /= .707; break;
-   case '/' : pen.up(); break;
+   case '/' : penUp(); break;
    case ';' : isDrag = false; break;
    case 'D':
    case 'Backspace' :
@@ -166,11 +224,23 @@ let keyUp = key => {
    }
 }
 
-let timePrev = Date.now() / 1000;
+let startTime = Date.now() / 1000;
+let timePrev = startTime;
+
 animate = () => {
    let time = Date.now() / 1000;
    let deltaTime = time - timePrev;
    timePrev = time;
+
+   if (time - startTime > 1 && dq.length > 0) {
+      for (let n = 0 ; n < dq.length ; n++) {
+         console.log(dq[n].name, dq[n].index);
+         infoFigures.splice(dq[n].index, 0, dq[n].diagram);
+         dq[n].diagram.width = D.w;
+         dq[n].diagram.height = D.h;
+      }
+      dq = [];
+   }
 
    let scrollPosition = window.pageYOffset;
    document.body.style.overflow = 'hidden';
@@ -184,10 +254,14 @@ animate = () => {
    ctx.drawImage(webcam.canvas, 0,0,640,440, 0,0,w,h);
 
    if (isInfo) {
-      let iw = 500, x = screen.width - 20 - iw;
       ctx.globalAlpha = isInfoOpaque ? 1 : .5;
-      let image = infoImages[infoIndex];
-      ctx.drawImage(image, x, 20, iw, iw*image.height/image.width);
+      let figure = infoFigures[infoIndex];
+      if (! figure.update)
+         ctx.drawImage(figure, D.left, D.top, 500, 500*figure.height/figure.width);
+      else {
+         figure.update(D.ctx);
+	 ctx.drawImage(canvasDiagram, D.left, D.top);
+      }
       ctx.globalAlpha = 1;
    }
 
@@ -198,7 +272,7 @@ animate = () => {
    }
 
    if (isLightPen && p)
-      movePen(p.x * w / 640, p.y * h / 440);
+      penMove(p.x * w / 640, p.y * h / 440);
    pen.draw(pen.strokes);
    chalktalk.update(pen.draw);
    scene.update(webcam.headPos);
