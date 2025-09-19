@@ -45,10 +45,10 @@ d Toggle drawing pad.
 f Toggle floaters behind me.
 g Grab bg (enables transparency).
 h Toggle this help menu.
-i Toggle show/hide info images.
+i Toggle show/hide figures.
 l Toggle lightpen (small blue object).
 m Hold down to move a sketch.
-o Toggle info images are opaque.
+o Toggle whether figures are opaque.
 p Toggle show/hide tracked blue pixels.
 r Toggle if 3D scene is shifted right.
 s Toggle show/hide 3D scene.
@@ -65,8 +65,8 @@ w Toggle world seen thru blue plate.
 ; Hold down to interact with a sketch.
 \u2193 Smaller text.
 \u2191 Larger text.
-\u2190 Previous info image.
-\u2192 Next info image.
+\u2190 Previous figure.
+\u2192 Next figure.
 `.split('\n'),
 
 }

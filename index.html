@@ -23,7 +23,7 @@ let shift3D = 0, t3D = 0, isDrawpad;
 
 let ease = t => t * t * (3 - t - t);
 
-let infoFigureFiles = [
+let figureFiles = [
    'raytrace1.png',
    'ray_sphere.png',
    'cube.js',
@@ -31,18 +31,39 @@ let infoFigureFiles = [
    'multiple_spheres.png',
    'insert_code.png',
    'shadow_ray.png',
-   'matrix_types.png',
+   'matrices : matrix_types.png',
    'matrix_multiplication.png',
 ];
 
-let infoFigures = [], infoIndex = 0, dq = [], dqCount = 0;
-for (let n = 0 ; n < infoFigureFiles.length ; n++) {
-   let file = infoFigureFiles[n];
-   if (file.indexOf('.js') < 0)
-      infoFigures.push(loadImage(file));
+let gotoFigure = name => {
+   for (let n = 0 ; n < figureNames.length ; n++)
+      if (name === figureNames[n]) {
+         figureIndex = n;
+	 break;
+      }
+}
+
+let figures = [], figureNames = [], figureIndex = 0, dq = [], dqCount = 0;
+
+for (let n = 0 ; n < figureFiles.length ; n++) {
+   let file = figureFiles[n].trim();
+   let name = file.substring(0, file.indexOf('.'));
+
+   let i = file.indexOf(':');
+   if (i >= 0) {
+      name = file.substring(0, i).trim();
+      file = file.substring(i+1).trim();
+   }
+   if (file.length == 0)
+      continue;
+
+   if (file.indexOf('.js') < 0) {
+      figures.push(loadImage(file));
+      figureNames.push(name);
+   }
    else {
-      let index = infoFigures.length + dqCount++;
-      loadScript('diagrams/' + file, () => dq.push({ name:file, index:index, diagram: new Diagram() }));
+      let index = figures.length + dqCount++;
+      loadScript('diagrams/' + file, () => dq.push({ name:name, index:index, diagram: new Diagram() }));
    }
 }
 
@@ -80,7 +101,7 @@ let D = {
 
 let penDown = () => {
    if (isInfo) {
-      let figure = infoFigures[infoIndex];
+      let figure = figures[figureIndex];
       if (D.isIn() && (figure.mouseDown || figure.mouseDrag || figure.mouseUp)) {
          if (figure.mouseDown)
             figure.mouseDown(D.x, D.y);
@@ -94,7 +115,7 @@ let penDown = () => {
 
 let penUp = () => {
    if (isInfo) {
-      let figure = infoFigures[infoIndex];
+      let figure = figures[figureIndex];
       if (D.isDown) {
          if (figure.mouseUp)
             figure.mouseUp(D.x, D.y);
@@ -110,7 +131,7 @@ let penMove = (x,y) => {
    if (isInfo) {
       D.x = x - D.left;
       D.y = y - D.top;
-      let figure = infoFigures[infoIndex];
+      let figure = figures[figureIndex];
       if (D.isDown && figure.mouseDrag) {
          figure.mouseDrag(D.x, D.y);
 	 return;
@@ -186,8 +207,8 @@ let keyUp = key => {
    case 'Shift': isShift = false; break;
    case 'ArrowUp'   : fontSize *= 1.1; break;
    case 'ArrowDown' : fontSize /= 1.1; break;
-   case 'ArrowLeft' : infoIndex = (infoIndex + infoFigures.length - 1) % infoFigures.length; break;
-   case 'ArrowRight': infoIndex = (infoIndex                     + 1) % infoFigures.length; break;
+   case 'ArrowLeft' : figureIndex = (figureIndex + figures.length - 1) % figures.length; break;
+   case 'ArrowRight': figureIndex = (figureIndex                     + 1) % figures.length; break;
    case "'" : chalktalk.add(pen.strokes,pen.x,pen.y); break;
    case ',' : pen.width *= .707; break;
    case '.' : pen.width /= .707; break;
@@ -234,8 +255,8 @@ animate = () => {
 
    if (time - startTime > 1 && dq.length > 0) {
       for (let n = 0 ; n < dq.length ; n++) {
-         console.log(dq[n].name, dq[n].index);
-         infoFigures.splice(dq[n].index, 0, dq[n].diagram);
+         figures.splice(dq[n].index, 0, dq[n].diagram);
+         figureNames.splice(dq[n].index, 0, dq[n].name);
          dq[n].diagram.width = D.w;
          dq[n].diagram.height = D.h;
       }
@@ -255,7 +276,7 @@ animate = () => {
 
    if (isInfo) {
       ctx.globalAlpha = isInfoOpaque ? 1 : .5;
-      let figure = infoFigures[infoIndex];
+      let figure = figures[figureIndex];
       if (! figure.update)
          ctx.drawImage(figure, D.left, D.top, 500, 500*figure.height/figure.width);
       else {

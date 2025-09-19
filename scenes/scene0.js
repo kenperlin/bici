@@ -127,6 +127,8 @@ void main() {
       fragColor = vec4(0.);
 }`;
 
+gotoFigure('matrices');
+
 let M = new M4();
 let t0 = Date.now() / 1000;
 this.update = viewPoint => {
