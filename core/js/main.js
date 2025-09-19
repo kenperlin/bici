@@ -109,7 +109,7 @@ let penDown = () => {
       let figure = figures[figureIndex];
       if (D.isIn() && (figure.mouseDown || figure.mouseDrag || figure.mouseUp)) {
          if (figure.mouseDown)
-            figure.mouseDown(D.x, D.y);
+            figure.mouseDown(figure.px(D.x), figure.py(D.y));
 	 D.isDown = true;
 	 return;
       }
@@ -123,7 +123,7 @@ let penUp = () => {
       let figure = figures[figureIndex];
       if (D.isDown) {
          if (figure.mouseUp)
-            figure.mouseUp(D.x, D.y);
+            figure.mouseUp(figure.px(D.x), figure.py(D.y));
 	 D.isDown = false;
 	 return;
       }
@@ -138,11 +138,11 @@ let penMove = (x,y) => {
       D.y = y - D.top;
       let figure = figures[figureIndex];
       if (D.isDown && figure.mouseDrag) {
-         figure.mouseDrag(D.x, D.y);
+         figure.mouseDrag(figure.px(D.x), figure.py(D.y));
 	 return;
       }
       if (D.isIn() && figure.mouseMove) {
-         figure.mouseMove(D.x, D.y);
+         figure.mouseMove(figure.px(D.x), figure.py(D.y));
 	 return;
       }
    }
@@ -272,9 +272,12 @@ animate = () => {
             let diagram = fq[name].diagram;
             let w = diagram.width  = diagram.width  ?? D.w;
             let h = diagram.height = diagram.height ?? D.h;
-	    diagram.w2p = x => .5 * x * w;
-	    diagram.x2p = x => (.5     + x * .5) * w;
-	    diagram.y2p = y => (.5*h/w - y * .5) * w;
+	    diagram.sp = s => s * .5 * w;
+	    diagram.xp = x => (.5     + x * .5) * w;
+	    diagram.yp = y => (.5*h/w - y * .5) * w;
+	    diagram.ps = s => s / .5 / w;
+	    diagram.px = x => (x / w - .5    ) /  .5;
+	    diagram.py = y => (y / w - .5*h/w) / -.5;
             figures[index] = diagram;
          }
          figureNames[index] = name;

@@ -8,4 +8,5 @@ raysphere: raytrace1.png
 
 matrices : matrix_types.png
            matrix_multiplication.png
+           simple.js
            cube.js

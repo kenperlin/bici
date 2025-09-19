@@ -1,11 +1,12 @@
 function Diagram() {
-   let mx = 250, my = 250;
-   this.mouseDrag = (x,y) => { mx = x; my = y; }
+   let c = {x:0,y:0};
+   this.mouseDrag = (x,y) => c = {x:x,y:y};
    this.update = ctx => {
       ctx.fillStyle = 'white';
-      ctx.fillRect(0,0,500,500);
+      ctx.fillRect(0,0,this.width,this.height);
       ctx.fillStyle = 'black';
-      ctx.fillRect(mx-25,my-25,50,50);
+      let r = this.sp(.1);
+      ctx.fillRect(this.xp(c.x)-r,this.yp(c.y)-r,2*r,2*r);
    }
 }
 
