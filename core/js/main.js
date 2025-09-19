@@ -39,7 +39,7 @@ let gotoFigure = name => {
 }
 
 let isFirstTime = true;
-let figures = [], figureNames = [], figureIndex = 0, fq = [];
+let figures = [], figureNames = [], figureIndex = 0, fq = {}, fqParsed = false;
 
 let initFigures = () => {
    let index = 0;
@@ -54,11 +54,11 @@ let initFigures = () => {
       }
 
       if (file.length > 0) {
+         fq[name] = { index: index++ };
          if (file.indexOf('.js') < 0)
-            loadImage(file, image => fq.push({ name: name, index: index, image: image }));
+            loadImage(file, image => fq[name].image = image);
          else
-            loadScript('projects/' + project + '/diagrams/' + file, () => fq.push({ name: name, index: index, diagram: new Diagram() }));
-         index++;
+            loadScript('projects/' + project + '/diagrams/' + file, () => fq[name].diagram = new Diagram());
       }
    }
 }
@@ -259,27 +259,27 @@ animate = () => {
       isFirstTime = false;
    }
 
-
    let time = Date.now() / 1000;
    let deltaTime = time - timePrev;
    timePrev = time;
 
-   if (time - startTime > 1 && fq.length > 0) {
-      for (let n = 0 ; n < fq.length ; n++) {
-         if (fq[n].image)
-	    figures.splice(fq[n].index, 0, fq[n].image);
+   if (time - startTime > 1 && ! fqParsed) {
+      for (let name in fq) {
+         let index = fq[name].index;
+         if (fq[name].image)
+	    figures[index] = fq[name].image;
 	 else {
-            let diagram = fq[n].diagram;
-            figures.splice(fq[n].index, 0, diagram);
+            let diagram = fq[name].diagram;
             let w = diagram.width  = diagram.width  ?? D.w;
             let h = diagram.height = diagram.height ?? D.h;
 	    diagram.w2p = x => .5 * x * w;
 	    diagram.x2p = x => (.5     + x * .5) * w;
 	    diagram.y2p = y => (.5*h/w - y * .5) * w;
+            figures[index] = diagram;
          }
-         figureNames.splice(fq[n].index, 0, fq[n].name);
+         figureNames[index] = name;
       }
-      fq = [];
+      fqParsed = true;
    }
 
    let scrollPosition = window.pageYOffset;
