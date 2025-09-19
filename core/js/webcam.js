@@ -16,11 +16,12 @@ let wctx = webcam.canvas.getContext('2d');
 webcam.isPen = true;
 webcam.opacity = 1;
 
-let blueglass = loadImage('blueglass.jpg');
-let brick = loadImage('brick.png');
-let shapes = loadImage('shapes.jpg');
-let landscape = loadImage('landscape.png');
-let ufo = loadImage('ufo.png');
+let blueglass, brick, shapes, landscape, ufo;
+loadImage('blueglass.jpg', image => blueglass = image);
+loadImage('brick.png',     image => brick = image);
+loadImage('shapes.jpg',    image => shapes = image);
+loadImage('landscape.png', image => landscape = image);
+loadImage('ufo.png',       image => ufo = image);
 
 // CAPTURE BACKGROUND TO PREPARE FOR TRANSPARENCY
 
