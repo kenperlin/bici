@@ -269,9 +269,13 @@ animate = () => {
          if (fq[n].image)
 	    figures.splice(fq[n].index, 0, fq[n].image);
 	 else {
-            figures.splice(fq[n].index, 0, fq[n].diagram);
-            fq[n].diagram.width = D.w;
-            fq[n].diagram.height = D.h;
+            let diagram = fq[n].diagram;
+            figures.splice(fq[n].index, 0, diagram);
+            let w = diagram.width  = diagram.width  ?? D.w;
+            let h = diagram.height = diagram.height ?? D.h;
+	    diagram.w2p = x => .5 * x * w;
+	    diagram.x2p = x => (.5     + x * .5) * w;
+	    diagram.y2p = y => (.5*h/w - y * .5) * w;
          }
          figureNames.splice(fq[n].index, 0, fq[n].name);
       }
@@ -296,7 +300,16 @@ animate = () => {
          ctx.drawImage(figure, D.left, D.top, 500, 500*figure.height/figure.width);
       else {
          figure.update(D.ctx);
-	 ctx.drawImage(canvasDiagram, D.left, D.top);
+	 let x = D.left, y = D.top, w = figure.width, h = figure.height;
+	 ctx.save();
+	    ctx.beginPath();
+	    ctx.moveTo(x,y);
+	    ctx.lineTo(x+w,y);
+	    ctx.lineTo(x+w,y+h);
+	    ctx.lineTo(x,y+h);
+	    ctx.clip();
+	    ctx.drawImage(canvasDiagram, x, y);
+	 ctx.restore();
       }
       ctx.globalAlpha = 1;
    }

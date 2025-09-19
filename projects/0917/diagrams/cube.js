@@ -13,11 +13,12 @@ function Diagram() {
          M.rotateX(phi / 20);
       }
    }
+   this.height = 400;
    this.update = ctx => {
       ctx.fillStyle = 'white';
       ctx.fillRect(0,0,this.width,this.height);
       ctx.strokeStyle = 'black';
-      ctx.lineWidth = 5;
+      ctx.lineWidth = this.w2p(.015);
       ctx.lineCap = 'round';
 
       let p = [];
@@ -28,8 +29,8 @@ function Diagram() {
          let x = px => (.5 + .25 * px) * this.width;
          let y = py => (.5 - .25 * py) * this.width;
          ctx.beginPath();
-         ctx.moveTo(x(p[i][0]), y(p[i][1]));
-         ctx.lineTo(x(p[j][0]), y(p[j][1]));
+         ctx.moveTo(this.x2p(p[i][0]/2), this.y2p(p[i][1]/2));
+         ctx.lineTo(this.x2p(p[j][0]/2), this.y2p(p[j][1]/2));
          ctx.stroke();
       }
       line(0,1); line(2,3); line(4,5); line(6,7);
