@@ -1,12 +1,14 @@
 
-raysphere: raytrace1.png
+raysphere: Ray tracing\nto\na sphere
+           raytrace1.png
            ray_sphere.png
            multiple_spheres_no_color.png
            multiple_spheres.png
            insert_code.png
            shadow_ray.png
 
-matrices : matrix_types.png
+matrices : Matrices
+           matrix_types.png
            matrix_multiplication.png
            simple.js
            cube.js

@@ -34,7 +34,7 @@ let gotoFigure = name => {
    for (let n = 0 ; n < figureNames.length ; n++)
       if (name === figureNames[n]) {
          figureIndex = n;
-	 break;
+         break;
       }
 }
 
@@ -45,6 +45,9 @@ let initFigures = () => {
    let index = 0;
    for (let n = 0 ; n < slides.length ; n++) {
       let file = slides[n].trim();
+      if (file.length == 0)
+         continue;
+
       let name = file.substring(0, file.indexOf('.'));
 
       let i = file.indexOf(':');
@@ -53,55 +56,85 @@ let initFigures = () => {
          file = file.substring(i+1).trim();
       }
 
-      if (file.length > 0) {
-         fq[name] = { index: index++ };
-         if (file.indexOf('.js') < 0)
-            loadImage(file, image => fq[name].image = image);
-         else
-            loadScript('projects/' + project + '/diagrams/' + file, () => {
-               let diagram = new Diagram();
+      fq[name] = { index: index++ };
 
-               let w  = diagram.width  = diagram.width  ?? D.w;
-               let h  = diagram.height = diagram.height ?? D.h;
-	       let xp = x => (.5     + x * .5) * w;
-	       let yp = y => (.5*h/w - y * .5) * w;
-               let M = new M4();
+      let isDiagram = file.indexOf('.js') > 0;
+      let isImage   = file.indexOf('.png') > 0 || file.indexOf('.jpg') > 0;
 
-               diagram._px   = x => (x / w - .5    ) /  .5;
-               diagram._py   = y => (y / w - .5*h/w) / -.5;
-	       diagram._beforeUpdate = () => {
-	          M.identity();
-	          M.perspective(0,0,-10);
-	       }
+      console.log(file, isDiagram, isImage);
 
-	       diagram.move  = (x,y,z) => { M.translate(x,y,z); return diagram; }
-	       diagram.pop   = ()      => { M.restore  ()     ; return diagram; }
-	       diagram.push  = ()      => { M.save     ()     ; return diagram; }
-	       diagram.scale = (x,y,z) => { M.scale    (x,y,z); return diagram; }
-	       diagram.turnX = a       => { M.rotateX  (a)    ; return diagram; }
-	       diagram.turnY = a       => { M.rotateY  (a)    ; return diagram; }
-	       diagram.turnZ = a       => { M.rotateZ  (a)    ; return diagram; }
-               diagram.line = (a,b) => {
-	          let A = M.transform([a[0],a[1],a[2],1]);
-	          let B = M.transform([b[0],b[1],b[2],1]);
-	          D.ctx.beginPath();
-	          D.ctx.moveTo(xp(A[0]),yp(A[1]));
-	          D.ctx.lineTo(xp(B[0]),yp(B[1]));
-	          D.ctx.stroke();
-		  return diagram;
-	       }
-	       diagram.text = (str, a) => {
-	          let A = M.transform([a[0],a[1],a[2],1]);
-		  let w = D.ctx.measureText(str).width;
-	          let saveFillStyle = D.ctx.fillStyle;
-	          D.ctx.fillStyle = D.ctx.strokeStyle;
-	          D.ctx.fillText(str, xp(A[0]) - w/2, yp(A[1]) + 10);
-	          D.ctx.fillStyle = saveFillStyle;
-		  return diagram;
-	       }
+      if (isImage) {
+         loadImage(file, image => fq[name].image = image);
+      }
 
-	       fq[name].diagram = diagram;
-	    });
+      else if (isDiagram) {
+         console.log('diagram', file);
+         loadScript('projects/' + project + '/diagrams/' + file, () => {
+            let diagram = new Diagram();
+
+            let w  = diagram.width  = diagram.width  ?? D.w;
+            let h  = diagram.height = diagram.height ?? D.h;
+            let xp = x => (.5     + x * .5) * w;
+            let yp = y => (.5*h/w - y * .5) * w;
+            let M = new M4();
+
+            diagram._px   = x => (x / w - .5    ) /  .5;
+            diagram._py   = y => (y / w - .5*h/w) / -.5;
+            diagram._beforeUpdate = () => {
+               M.identity();
+               M.perspective(0,0,-10);
+            }
+
+            diagram.move  = (x,y,z) => { M.translate(x,y,z); return diagram; }
+            diagram.pop   = ()      => { M.restore  ()     ; return diagram; }
+            diagram.push  = ()      => { M.save     ()     ; return diagram; }
+            diagram.scale = (x,y,z) => { M.scale    (x,y,z); return diagram; }
+            diagram.turnX = a       => { M.rotateX  (a)    ; return diagram; }
+            diagram.turnY = a       => { M.rotateY  (a)    ; return diagram; }
+            diagram.turnZ = a       => { M.rotateZ  (a)    ; return diagram; }
+            diagram.line = (a,b) => {
+               let A = M.transform([a[0],a[1],a[2],1]);
+               let B = M.transform([b[0],b[1],b[2],1]);
+               D.ctx.beginPath();
+               D.ctx.moveTo(xp(A[0]),yp(A[1]));
+               D.ctx.lineTo(xp(B[0]),yp(B[1]));
+               D.ctx.stroke();
+               return diagram;
+            }
+            diagram.text = (str, a) => {
+               let A = M.transform([a[0],a[1],a[2],1]);
+               let w = D.ctx.measureText(str).width;
+               let saveFillStyle = D.ctx.fillStyle;
+               D.ctx.fillStyle = D.ctx.strokeStyle;
+               D.ctx.fillText(str, xp(A[0]) - w/2, yp(A[1]) + 10);
+               D.ctx.fillStyle = saveFillStyle;
+               return diagram;
+            }
+
+            fq[name].diagram = diagram;
+         });
+      }
+
+      else {
+         function TitleCard() {
+            this.width = 500;
+            this.height = 400;
+            this._beforeUpdate = () => { }
+            let lines = file.split('\\n');
+            this.update = () => {
+	       D.ctx.save();
+               D.ctx.fillStyle = 'white';
+               D.ctx.fillRect(0,0,this.width,this.height);
+               D.ctx.font = '50px Helvetica';
+               D.ctx.fillStyle = 'black';
+               for (let n = 0 ; n < lines.length ; n++) {
+                  let w = D.ctx.measureText(lines[n]).width;
+                  D.ctx.fillText(lines[n], 250 - w/2, 210 + 50 * (n - (lines.length-1)/2));
+               }
+	       D.ctx.restore();
+            }
+         }
+         fq[name].diagram = new TitleCard();
       }
    }
 }
@@ -111,7 +144,7 @@ async function getFile(url, callback) {
         const response = await fetch(url);
         if (!response.ok)
             throw new Error(`HTTP error! status: ${response.status}`);
-	callback(await response.text());
+        callback(await response.text());
     } catch (error) { }
 }
 */
@@ -157,14 +190,14 @@ let penDown = () => {
          if (figure.mouseMove || figure.mouseDown || figure.mouseDrag || figure.mouseUp) {
             if (figure.mouseDown)
                figure.mouseDown(D.x, D.y);
-	    D.isDown = true;
-	    return;
+            D.isDown = true;
+            return;
          }
          if (figure.onMove || figure.onDown || figure.onDrag || figure.onUp) {
             if (figure.onDown)
                figure.onDown(figure._px(D.x), figure._py(D.y));
-	    D.isDown = true;
-	    return;
+            D.isDown = true;
+            return;
          }
       }
    }
@@ -182,8 +215,8 @@ let penUp = () => {
          if (figure.onUp)
             figure.onUp(figure._px(D.x), figure._py(D.y));
 
-	 D.isDown = false;
-	 return;
+         D.isDown = false;
+         return;
       }
    }
 
@@ -202,7 +235,7 @@ let penMove = (x,y) => {
          if (figure.onDrag)
             figure.onDrag(figure._px(D.x), figure._py(D.y));
 
-	 return;
+         return;
       }
       if (D.isIn()) {
 
@@ -211,7 +244,7 @@ let penMove = (x,y) => {
          if (figure.onMove)
             figure.onMove(figure._px(D.x), figure._py(D.y));
 
-	 return;
+         return;
       }
    }
 
@@ -334,7 +367,7 @@ animate = () => {
    if (time - startTime > 1 && ! fqParsed) {
       for (let name in fq) {
          let index = fq[name].index;
-	 figures[index] = fq[name].image ? fq[name].image : fq[name].diagram;
+         figures[index] = fq[name].image ? fq[name].image : fq[name].diagram;
          figureNames[index] = name;
       }
       fqParsed = true;
@@ -359,16 +392,16 @@ animate = () => {
       else {
          figure._beforeUpdate();
          figure.update(D.ctx);
-	 let x = D.left, y = D.top, w = figure.width, h = figure.height;
-	 ctx.save();
-	    ctx.beginPath();
-	    ctx.moveTo(x,y);
-	    ctx.lineTo(x+w,y);
-	    ctx.lineTo(x+w,y+h);
-	    ctx.lineTo(x,y+h);
-	    ctx.clip();
-	    ctx.drawImage(canvasDiagram, x, y);
-	 ctx.restore();
+         let x = D.left, y = D.top, w = figure.width, h = figure.height;
+         ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(x,y);
+            ctx.lineTo(x+w,y);
+            ctx.lineTo(x+w,y+h);
+            ctx.lineTo(x,y+h);
+            ctx.clip();
+            ctx.drawImage(canvasDiagram, x, y);
+         ctx.restore();
       }
       ctx.globalAlpha = 1;
    }
