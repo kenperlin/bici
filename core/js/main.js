@@ -58,7 +58,50 @@ let initFigures = () => {
          if (file.indexOf('.js') < 0)
             loadImage(file, image => fq[name].image = image);
          else
-            loadScript('projects/' + project + '/diagrams/' + file, () => fq[name].diagram = new Diagram());
+            loadScript('projects/' + project + '/diagrams/' + file, () => {
+               let diagram = new Diagram();
+
+               let w  = diagram.width  = diagram.width  ?? D.w;
+               let h  = diagram.height = diagram.height ?? D.h;
+	       let xp = x => (.5     + x * .5) * w;
+	       let yp = y => (.5*h/w - y * .5) * w;
+               let M = new M4();
+
+               diagram._px   = x => (x / w - .5    ) /  .5;
+               diagram._py   = y => (y / w - .5*h/w) / -.5;
+	       diagram._beforeUpdate = () => {
+	          M.identity();
+	          M.perspective(0,0,-10);
+	       }
+
+	       diagram.move  = (x,y,z) => { M.translate(x,y,z); return diagram; }
+	       diagram.pop   = ()      => { M.restore  ()     ; return diagram; }
+	       diagram.push  = ()      => { M.save     ()     ; return diagram; }
+	       diagram.scale = (x,y,z) => { M.scale    (x,y,z); return diagram; }
+	       diagram.turnX = a       => { M.rotateX  (a)    ; return diagram; }
+	       diagram.turnY = a       => { M.rotateY  (a)    ; return diagram; }
+	       diagram.turnZ = a       => { M.rotateZ  (a)    ; return diagram; }
+               diagram.line = (a,b) => {
+	          let A = M.transform([a[0],a[1],a[2],1]);
+	          let B = M.transform([b[0],b[1],b[2],1]);
+	          D.ctx.beginPath();
+	          D.ctx.moveTo(xp(A[0]),yp(A[1]));
+	          D.ctx.lineTo(xp(B[0]),yp(B[1]));
+	          D.ctx.stroke();
+		  return diagram;
+	       }
+	       diagram.text = (str, a) => {
+	          let A = M.transform([a[0],a[1],a[2],1]);
+		  let w = D.ctx.measureText(str).width;
+	          let saveFillStyle = D.ctx.fillStyle;
+	          D.ctx.fillStyle = D.ctx.strokeStyle;
+	          D.ctx.fillText(str, xp(A[0]) - w/2, yp(A[1]) + 10);
+	          D.ctx.fillStyle = saveFillStyle;
+		  return diagram;
+	       }
+
+	       fq[name].diagram = diagram;
+	    });
       }
    }
 }
@@ -103,15 +146,26 @@ let D = {
    left : screen.width - 20 - 500, top : 20, w : 500, h : 500,
    isIn : () => D.x >= 0 && D.x < D.w && D.y >= 0 && D.y < D.h,
 };
+D.ctx.font = '30px Helvetica';
+D.ctx.lineCap = 'round';
+D.ctx.lineWidth = 3;
 
 let penDown = () => {
    if (isInfo) {
       let figure = figures[figureIndex];
-      if (D.isIn() && (figure.mouseDown || figure.mouseDrag || figure.mouseUp)) {
-         if (figure.mouseDown)
-            figure.mouseDown(figure.px(D.x), figure.py(D.y));
-	 D.isDown = true;
-	 return;
+      if (D.isIn()) {
+         if (figure.mouseMove || figure.mouseDown || figure.mouseDrag || figure.mouseUp) {
+            if (figure.mouseDown)
+               figure.mouseDown(D.x, D.y);
+	    D.isDown = true;
+	    return;
+         }
+         if (figure.onMove || figure.onDown || figure.onDrag || figure.onUp) {
+            if (figure.onDown)
+               figure.onDown(figure._px(D.x), figure._py(D.y));
+	    D.isDown = true;
+	    return;
+         }
       }
    }
 
@@ -122,8 +176,12 @@ let penUp = () => {
    if (isInfo) {
       let figure = figures[figureIndex];
       if (D.isDown) {
+
          if (figure.mouseUp)
-            figure.mouseUp(figure.px(D.x), figure.py(D.y));
+            figure.mouseUp(D.x, D.y);
+         if (figure.onUp)
+            figure.onUp(figure._px(D.x), figure._py(D.y));
+
 	 D.isDown = false;
 	 return;
       }
@@ -137,12 +195,22 @@ let penMove = (x,y) => {
       D.x = x - D.left;
       D.y = y - D.top;
       let figure = figures[figureIndex];
-      if (D.isDown && figure.mouseDrag) {
-         figure.mouseDrag(figure.px(D.x), figure.py(D.y));
+      if (D.isDown) {
+
+         if (figure.mouseDrag)
+            figure.mouseDrag(D.x, D.y);
+         if (figure.onDrag)
+            figure.onDrag(figure._px(D.x), figure._py(D.y));
+
 	 return;
       }
-      if (D.isIn() && figure.mouseMove) {
-         figure.mouseMove(figure.px(D.x), figure.py(D.y));
+      if (D.isIn()) {
+
+         if (figure.mouseMove)
+            figure.mouseMove(D.x, D.y);
+         if (figure.onMove)
+            figure.onMove(figure._px(D.x), figure._py(D.y));
+
 	 return;
       }
    }
@@ -266,20 +334,7 @@ animate = () => {
    if (time - startTime > 1 && ! fqParsed) {
       for (let name in fq) {
          let index = fq[name].index;
-         if (fq[name].image)
-	    figures[index] = fq[name].image;
-	 else {
-            let diagram = fq[name].diagram;
-            let w = diagram.width  = diagram.width  ?? D.w;
-            let h = diagram.height = diagram.height ?? D.h;
-	    diagram.sp = s => s * .5 * w;
-	    diagram.xp = x => (.5     + x * .5) * w;
-	    diagram.yp = y => (.5*h/w - y * .5) * w;
-	    diagram.ps = s => s / .5 / w;
-	    diagram.px = x => (x / w - .5    ) /  .5;
-	    diagram.py = y => (y / w - .5*h/w) / -.5;
-            figures[index] = diagram;
-         }
+	 figures[index] = fq[name].image ? fq[name].image : fq[name].diagram;
          figureNames[index] = name;
       }
       fqParsed = true;
@@ -302,6 +357,7 @@ animate = () => {
       if (! figure.update)
          ctx.drawImage(figure, D.left, D.top, 500, 500*figure.height/figure.width);
       else {
+         figure._beforeUpdate();
          figure.update(D.ctx);
 	 let x = D.left, y = D.top, w = figure.width, h = figure.height;
 	 ctx.save();

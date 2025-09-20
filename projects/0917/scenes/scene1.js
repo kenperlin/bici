@@ -47,7 +47,7 @@ find the intersection of the ray and sphere.
     where:
 
         A = W•W
-        B = 2*(V•V)
+        B = 2*(V•W)
         C = V•V - R²
 
 (6) Solve for t, using the quadratic equation:
