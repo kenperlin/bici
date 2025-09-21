@@ -1,9 +1,9 @@
 function Diagram() {
    let wx = .3, wy = .7;
-   let lx = -.5, ly = .5;
+   let lx = -.7, ly = .7;
    let isDown = 0;
-   this.onDown = (x,y) => { lx = 2*x-1; ly = y + .5; isDown = 1; }
-   this.onDrag = (x,y) => { lx = 2*x-1; ly = y + .5; }
+   this.onDown = (x,y) => { lx = 2*x-1; ly = 2*y + 1; isDown = 1; }
+   this.onDrag = (x,y) => { lx = 2*x-1; ly = 2*y + 1; }
    this.onUp   = (x,y) => { isDown = 0; }
    this.update = ctx => {
       ctx.fillStyle = 'white';
@@ -13,6 +13,9 @@ function Diagram() {
 
       let ls = Math.sqrt(lx*lx+ly*ly);
       let L = [.5 * lx / ls, .5 * ly / ls];
+
+      _.x = L[0];
+      _.y = L[1];
 
       let ws = Math.sqrt(wx*wx+wy*wy);
       let W = [.5 * wx / ws, .5 * wy / ws];

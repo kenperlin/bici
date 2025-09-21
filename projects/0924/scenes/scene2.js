@@ -91,6 +91,14 @@ vec2 raySphere(vec3 V, vec3 W, vec4 S) {
    return vec2(-b - sqrt(d), -b + sqrt(d));
 }
 
+/*
+vec3 phong(vec3 N, vec3 L, vec3 W,
+           vec3 diffuse, vec4 specular) {
+
+   // YOUR CODE GOES HERE.
+}
+*/
+
 vec3 shadeSphere(vec4 S, vec3 P, vec3 W,
                  vec3 ambient,
                  vec3 diffuse,
@@ -143,9 +151,11 @@ this.update = viewPoint => {
    setUniform('3fv', 'uDiffuse', [ 0,0,1 ]);
    setUniform('4fv', 'uSpecular', [ 1,1,1,20 ]);
 
-   setUniform('3fv', 'uL', [ normalize([1,1,1]),
-                             normalize([-1,-1,-.5]),
-			   ].flat());
+   setUniform('3fv', 'uL', [
+      normalize([(_.x ?? -.35),
+                 (_.y ??  .35), .35]),
+      normalize([1,-1,-.5]),
+   ].flat());
 
    setUniform('3fv', 'uLC', [ .5,.7,1,
                               .2,.15,.1,
@@ -153,3 +163,5 @@ this.update = viewPoint => {
 }
 
 }
+
+

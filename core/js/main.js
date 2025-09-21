@@ -23,6 +23,8 @@ canvasDiagram.style.left = -2000;
 canvasDiagram.width = 500;
 canvasDiagram.height = 500;
 
+let _ = {};
+
 let figureSequence = () => { return []; }
 
 window.fontSize = 18;
