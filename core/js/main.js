@@ -48,8 +48,7 @@ let initFigures = () => {
       if (file.length == 0)
          continue;
 
-      let name = file.substring(0, file.indexOf('.'));
-
+      let name = file.trim();
       let i = file.indexOf(':');
       if (i >= 0) {
          name = file.substring(0, i).trim();
@@ -60,8 +59,6 @@ let initFigures = () => {
 
       let isDiagram = file.indexOf('.js') > 0;
       let isImage   = file.indexOf('.png') > 0 || file.indexOf('.jpg') > 0;
-
-      console.log(file, isDiagram, isImage);
 
       if (isImage) {
          loadImage(file, image => fq[name].image = image);
@@ -85,6 +82,17 @@ let initFigures = () => {
                M.perspective(0,0,-10);
             }
 
+	    let mxp = a => {
+	       a = M.transform([a[0],a[1],a[2]??0,1]);
+	       return [xp(a[0]), yp(a[1])];
+	    }
+            let fill = () => {
+               let saveFillStyle = D.ctx.fillStyle;
+               D.ctx.fillStyle = D.ctx.strokeStyle;
+	       D.ctx.fill();
+               D.ctx.fillStyle = saveFillStyle;
+	    }
+
             diagram.move  = (x,y,z) => { M.translate(x,y,z); return diagram; }
             diagram.pop   = ()      => { M.restore  ()     ; return diagram; }
             diagram.push  = ()      => { M.save     ()     ; return diagram; }
@@ -92,23 +100,20 @@ let initFigures = () => {
             diagram.turnX = a       => { M.rotateX  (a)    ; return diagram; }
             diagram.turnY = a       => { M.rotateY  (a)    ; return diagram; }
             diagram.turnZ = a       => { M.rotateZ  (a)    ; return diagram; }
+            diagram.arc = (a,r,t0,t1) => {
+	       let A = mxp(a);
+	       D.ctx.beginPath();
+	       D.ctx.arc(A[0], A[1], r, t0, t1);
+	       D.ctx.stroke();
+	    }
             diagram.dot = (a,r) => {
-	       let A = M.transform([a[0],a[1],a[2]??0,1]);
-	       A = [xp(A[0]), yp(A[1])];
-
+	       let A = mxp(a);
 	       D.ctx.beginPath();
 	       D.ctx.arc(A[0], A[1], r??10, 0, 2*Math.PI);
-
-               let saveFillStyle = D.ctx.fillStyle;
-               D.ctx.fillStyle = D.ctx.strokeStyle;
-	       D.ctx.fill();
-               D.ctx.fillStyle = saveFillStyle;
+	       fill();
 	    }
             diagram.line = (a,b,isArrow) => {
-               let A = M.transform([a[0],a[1],a[2]??0,1]);
-               let B = M.transform([b[0],b[1],b[2]??0,1]);
-	       A = [xp(A[0]), yp(A[1])];
-	       B = [xp(B[0]), yp(B[1])];
+               let A = mxp(a), B = mxp(b);
 
                D.ctx.beginPath();
                D.ctx.moveTo(A[0],A[1]);
@@ -124,18 +129,12 @@ let initFigures = () => {
 		  D.ctx.moveTo(B[0]+dx*.4  ,B[1]+dy*.4  );
 		  D.ctx.lineTo(B[0]-2*dx+dy,B[1]-2*dy-dx);
 		  D.ctx.lineTo(B[0]-2*dx-dy,B[1]-2*dy+dx);
-
-                  let saveFillStyle = D.ctx.fillStyle;
-                  D.ctx.fillStyle = D.ctx.strokeStyle;
-		  D.ctx.fill();
-                  D.ctx.fillStyle = saveFillStyle;
+		  fill();
 	       }
                return diagram;
             }
             diagram.text = (str, a) => {
-               let A = M.transform([a[0],a[1],a[2]??0,1]);
-	       A = [xp(A[0]), yp(A[1])];
-
+               let A = mxp(a);
                let w = D.ctx.measureText(str).width;
 
                let saveFillStyle = D.ctx.fillStyle;
@@ -151,7 +150,7 @@ let initFigures = () => {
       }
 
       else {
-         function TitleCard() {
+         fq[name].diagram = new (function() {
             this.width = 500;
             this.height = 400;
             this._beforeUpdate = () => { }
@@ -164,12 +163,11 @@ let initFigures = () => {
                D.ctx.fillStyle = 'black';
                for (let n = 0 ; n < lines.length ; n++) {
                   let w = D.ctx.measureText(lines[n]).width;
-                  D.ctx.fillText(lines[n], 250 - w/2, 210 + 50 * (n - (lines.length-1)/2));
+                  D.ctx.fillText(lines[n], 250 - w/2, 210 + 60 * (n - (lines.length-1)/2));
                }
 	       D.ctx.restore();
             }
-         }
-         fq[name].diagram = new TitleCard();
+         })();
       }
    }
 }

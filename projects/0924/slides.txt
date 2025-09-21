@@ -1,2 +1,3 @@
+Phong\nreflectance
 phong.js
-Phong\n\nreflectance
+Raytracing\nto general\nsecond order\nsurfaces
