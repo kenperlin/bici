@@ -1,4 +1,4 @@
-let noiseCode = `
+let extraCode = `
 vec3  _s(vec3 i) { return cos(5.*(i+5.*cos(5.*(i.yzx+5.*cos(5.*(i.zxy+5.*cos(5.*i))))))); }
 float _t(vec3 i, vec3 u, vec3 a) { return dot(normalize(_s(i + a)), u - a); }
 float noise(vec3 p) {
@@ -7,7 +7,13 @@ float noise(vec3 p) {
                   mix(_t(i, u, vec3(0.,1.,0.)), _t(i, u, vec3(1.,1.,0.)), v.x), v.y),
               mix(mix(_t(i, u, vec3(0.,0.,1.)), _t(i, u, vec3(1.,0.,1.)), v.x),
                   mix(_t(i, u, vec3(0.,1.,1.)), _t(i, u, vec3(1.,1.,1.)), v.x), v.y), v.z);
-}`;
+}
+vec3 phong(vec3 N, vec3 L, vec3 W, vec3 diffuse, vec4 specular) {
+   vec3 R = 2. * N * dot(N,L) - L;
+   return diffuse      * max(0., dot(N, L)) +
+          specular.rgb * pow(max(0.,dot(R,-W)), specular.a);
+}
+`;
 function gl_start(canvas, scene) {
    setTimeout(function() {
       canvas.gl = canvas.getContext('webgl2');
@@ -25,7 +31,7 @@ function gl_start(canvas, scene) {
          addshader(gl.VERTEX_SHADER, vertexShader);
 
 	 let i = fragmentShader.indexOf('float') + 6;
-         addshader(gl.FRAGMENT_SHADER, fragmentShader.substring(0,i) + noiseCode + fragmentShader.substring(i));
+         addshader(gl.FRAGMENT_SHADER, fragmentShader.substring(0,i) + extraCode + fragmentShader.substring(i));
 
          gl.linkProgram(gl.program);
          if (! gl.getProgramParameter(gl.program, gl.LINK_STATUS))

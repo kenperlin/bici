@@ -92,22 +92,57 @@ let initFigures = () => {
             diagram.turnX = a       => { M.rotateX  (a)    ; return diagram; }
             diagram.turnY = a       => { M.rotateY  (a)    ; return diagram; }
             diagram.turnZ = a       => { M.rotateZ  (a)    ; return diagram; }
-            diagram.line = (a,b) => {
-               let A = M.transform([a[0],a[1],a[2],1]);
-               let B = M.transform([b[0],b[1],b[2],1]);
+            diagram.dot = (a,r) => {
+	       let A = M.transform([a[0],a[1],a[2]??0,1]);
+	       A = [xp(A[0]), yp(A[1])];
+
+	       D.ctx.beginPath();
+	       D.ctx.arc(A[0], A[1], r??10, 0, 2*Math.PI);
+
+               let saveFillStyle = D.ctx.fillStyle;
+               D.ctx.fillStyle = D.ctx.strokeStyle;
+	       D.ctx.fill();
+               D.ctx.fillStyle = saveFillStyle;
+	    }
+            diagram.line = (a,b,isArrow) => {
+               let A = M.transform([a[0],a[1],a[2]??0,1]);
+               let B = M.transform([b[0],b[1],b[2]??0,1]);
+	       A = [xp(A[0]), yp(A[1])];
+	       B = [xp(B[0]), yp(B[1])];
+
                D.ctx.beginPath();
-               D.ctx.moveTo(xp(A[0]),yp(A[1]));
-               D.ctx.lineTo(xp(B[0]),yp(B[1]));
+               D.ctx.moveTo(A[0],A[1]);
+               D.ctx.lineTo(B[0],B[1]);
                D.ctx.stroke();
+
+	       if (isArrow) {
+	          let dx = B[0]-A[0], dy = B[1]-A[1], ds = Math.sqrt(dx*dx+dy*dy);
+		  dx *= 10 / ds;
+		  dy *= 10 / ds;
+
+		  D.ctx.beginPath();
+		  D.ctx.moveTo(B[0]+dx*.4  ,B[1]+dy*.4  );
+		  D.ctx.lineTo(B[0]-2*dx+dy,B[1]-2*dy-dx);
+		  D.ctx.lineTo(B[0]-2*dx-dy,B[1]-2*dy+dx);
+
+                  let saveFillStyle = D.ctx.fillStyle;
+                  D.ctx.fillStyle = D.ctx.strokeStyle;
+		  D.ctx.fill();
+                  D.ctx.fillStyle = saveFillStyle;
+	       }
                return diagram;
             }
             diagram.text = (str, a) => {
-               let A = M.transform([a[0],a[1],a[2],1]);
+               let A = M.transform([a[0],a[1],a[2]??0,1]);
+	       A = [xp(A[0]), yp(A[1])];
+
                let w = D.ctx.measureText(str).width;
+
                let saveFillStyle = D.ctx.fillStyle;
                D.ctx.fillStyle = D.ctx.strokeStyle;
-               D.ctx.fillText(str, xp(A[0]) - w/2, yp(A[1]) + 10);
+               D.ctx.fillText(str, A[0] - w/2, A[1] + 10);
                D.ctx.fillStyle = saveFillStyle;
+
                return diagram;
             }
 
