@@ -8,6 +8,14 @@
 <body>
 <script src=core/js/bici.js></script>
 <script>loadProject('0924')</script>
+<style>
+  #handCanvas {
+    position: fixed;   /* pin to viewport */
+    z-index: 9999;     /* draw above everything */
+  }
+</style>
+
+<canvas id="handCanvas" width="640" height="480"></canvas>
 <script>
 function initHands() {
   const hands = new Hands({
@@ -20,9 +28,23 @@ function initHands() {
     minTrackingConfidence: 0.5,
   });
 
+  const canvas = document.getElementById("handCanvas");
+  const ctx = canvas.getContext("2d");
+
   hands.onResults((results) => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     if (results.multiHandLandmarks) {
-      console.log("Detected:", results.multiHandLandmarks);
+        console.log("Detected:", results.multiHandLandmarks);
+        results.multiHandLandmarks.forEach((landmarks) => {
+        landmarks.forEach((lm) => {
+            const x = (1 - lm.x) * canvas.width;  // mirror horizontally
+            const y = lm.y * canvas.height;
+            ctx.beginPath();
+            ctx.arc(x, y, 5, 0, 2 * Math.PI);
+            ctx.fillStyle = "red";
+            ctx.fill();
+            });
+        })
     }
   });
 
