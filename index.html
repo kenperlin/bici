@@ -1,4 +1,68 @@
+<head>
+  <meta charset="UTF-8" />
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+</head>
+
 <body>
 <script src=core/js/bici.js></script>
 <script>loadProject('0924')</script>
+<script>
+function initHands() {
+  const hands = new Hands({
+    locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`
+  });
+  hands.setOptions({
+    maxNumHands: 2,
+    modelComplexity: 1,
+    minDetectionConfidence: 0.5,
+    minTrackingConfidence: 0.5,
+  });
+
+  hands.onResults((results) => {
+    if (results.multiHandLandmarks) {
+      console.log("Detected:", results.multiHandLandmarks);
+    }
+  });
+
+  async function processFrame() {
+    if (!window.webcam || window.webcam.videoWidth === 0 || window.webcam.videoHeight === 0) {
+      requestAnimationFrame(processFrame);
+      return;
+    }
+    await hands.send({ image: window.webcam });
+    requestAnimationFrame(processFrame);
+  }
+
+  function startIfReady() {
+    if (window.webcam && window.webcam.videoWidth > 0) {
+      console.log("Webcam ready, start frame loop");
+      processFrame();
+      return true;
+    }
+    return false;
+  }
+
+  window.webcam.addEventListener("canplay", () => {
+    if (!startIfReady()) {
+      const checkDims = setInterval(() => {
+        if (startIfReady()) clearInterval(checkDims);
+      }, 100);
+    }
+  });
+
+  const watchdog = setInterval(() => {
+    if (startIfReady()) clearInterval(watchdog);
+  }, 500);
+}
+
+const waitForWebcam = setInterval(() => {
+  if (window.webcam) {
+    clearInterval(waitForWebcam);
+    initHands();
+  }
+}, 100);
+</script>
+
 </body>

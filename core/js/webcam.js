@@ -1,4 +1,5 @@
 let webcam = document.createElement('video');
+window.webcam = webcam;
 webcam.autoplay = true;
 webcam.style.position = 'absolute';
 webcam.style.top = '-2000px';
