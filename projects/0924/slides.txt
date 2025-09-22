@@ -1,3 +1,4 @@
 Phong\nreflectance
 phong.js
 Raytracing\nto general\nsecond order\nsurfaces
+quadric2.js

@@ -44,6 +44,7 @@ let isFirstTime = true;
 let figures = [], figureNames = [], figureIndex = 0, fq = {}, fqParsed = false;
 
 let initFigures = () => {
+   let ctx = D.ctx;
    let index = 0;
    for (let n = 0 ; n < slides.length ; n++) {
       let file = slides[n].trim();
@@ -89,10 +90,10 @@ let initFigures = () => {
 	       return [xp(a[0]), yp(a[1])];
 	    }
             let fill = () => {
-               let saveFillStyle = D.ctx.fillStyle;
-               D.ctx.fillStyle = D.ctx.strokeStyle;
-	       D.ctx.fill();
-               D.ctx.fillStyle = saveFillStyle;
+               let saveFillStyle = ctx.fillStyle;
+               ctx.fillStyle = ctx.strokeStyle;
+	       ctx.fill();
+               ctx.fillStyle = saveFillStyle;
 	    }
 
             diagram.move  = (x,y,z) => { M.translate(x,y,z); return diagram; }
@@ -104,45 +105,68 @@ let initFigures = () => {
             diagram.turnZ = a       => { M.rotateZ  (a)    ; return diagram; }
             diagram.arc = (a,r,t0,t1) => {
 	       let A = mxp(a);
-	       D.ctx.beginPath();
-	       D.ctx.arc(A[0], A[1], r, t0, t1);
-	       D.ctx.stroke();
+	       ctx.beginPath();
+	       ctx.arc(A[0], A[1], r, t0, t1);
+	       ctx.stroke();
 	    }
             diagram.dot = (a,r) => {
 	       let A = mxp(a);
-	       D.ctx.beginPath();
-	       D.ctx.arc(A[0], A[1], r??10, 0, 2*Math.PI);
+	       ctx.beginPath();
+	       ctx.arc(A[0], A[1], r??10, 0, 2*Math.PI);
 	       fill();
+	    }
+            diagram.drawRect = (lo,hi) => {
+	       lo = mxp(lo);
+	       hi = mxp(hi);
+	       ctx.beginPath();
+	       ctx.moveTo(lo[0],lo[1]);
+	       ctx.lineTo(hi[0],lo[1]);
+	       ctx.lineTo(hi[0],hi[1]);
+	       ctx.lineTo(lo[0],hi[1]);
+	       ctx.lineTo(lo[0],lo[1]);
+	       ctx.stroke();
 	    }
             diagram.line = (a,b,isArrow) => {
                let A = mxp(a), B = mxp(b);
 
-               D.ctx.beginPath();
-               D.ctx.moveTo(A[0],A[1]);
-               D.ctx.lineTo(B[0],B[1]);
-               D.ctx.stroke();
+               ctx.beginPath();
+               ctx.moveTo(A[0], A[1]);
+               ctx.lineTo(B[0], B[1]);
+               ctx.stroke();
 
 	       if (isArrow) {
 	          let dx = B[0]-A[0], dy = B[1]-A[1], ds = Math.sqrt(dx*dx+dy*dy);
 		  dx *= 10 / ds;
 		  dy *= 10 / ds;
 
-		  D.ctx.beginPath();
-		  D.ctx.moveTo(B[0]+dx*.4  ,B[1]+dy*.4  );
-		  D.ctx.lineTo(B[0]-2*dx+dy,B[1]-2*dy-dx);
-		  D.ctx.lineTo(B[0]-2*dx-dy,B[1]-2*dy+dx);
+		  ctx.beginPath();
+		  ctx.moveTo(B[0]+dx*.4  , B[1]+dy*.4  );
+		  ctx.lineTo(B[0]-2*dx+dy, B[1]-2*dy-dx);
+		  ctx.lineTo(B[0]-2*dx-dy, B[1]-2*dy+dx);
 		  fill();
 	       }
                return diagram;
             }
+	    diagram.curve = (n, f) => {
+	       ctx.beginPath();
+	       for (let i = 0 ; i <= n ; i++) {
+		  console.log(i/n, f(i/n));
+                  let A = mxp(f(i/n));
+		  if (i == 0)
+		     ctx.moveTo(A[0], A[1]);
+                  else
+		     ctx.lineTo(A[0], A[1]);
+	       }
+	       ctx.stroke();
+	    }
             diagram.text = (str, a) => {
                let A = mxp(a);
-               let w = D.ctx.measureText(str).width;
+               let w = ctx.measureText(str).width;
 
-               let saveFillStyle = D.ctx.fillStyle;
-               D.ctx.fillStyle = D.ctx.strokeStyle;
-               D.ctx.fillText(str, A[0] - w/2, A[1] + 10);
-               D.ctx.fillStyle = saveFillStyle;
+               let saveFillStyle = ctx.fillStyle;
+               ctx.fillStyle = ctx.strokeStyle;
+               ctx.fillText(str, A[0] - w/2, A[1] + 10);
+               ctx.fillStyle = saveFillStyle;
 
                return diagram;
             }
@@ -158,31 +182,22 @@ let initFigures = () => {
             this._beforeUpdate = () => { }
             let lines = file.split('\\n');
             this.update = () => {
-	       D.ctx.save();
-               D.ctx.fillStyle = 'white';
-               D.ctx.fillRect(0,0,this.width,this.height);
-               D.ctx.font = '50px Helvetica';
-               D.ctx.fillStyle = 'black';
+	       ctx.save();
+               ctx.fillStyle = 'white';
+               ctx.fillRect(0,0,this.width,this.height);
+               ctx.font = '50px Helvetica';
+               ctx.fillStyle = 'black';
                for (let n = 0 ; n < lines.length ; n++) {
                   let w = D.ctx.measureText(lines[n]).width;
-                  D.ctx.fillText(lines[n], 250 - w/2, 210 + 60 * (n - (lines.length-1)/2));
+                  ctx.fillText(lines[n], 250 - w/2, 210 + 60 * (n - (lines.length-1)/2));
                }
-	       D.ctx.restore();
+	       ctx.restore();
             }
          })();
       }
    }
 }
-/*
-async function getFile(url, callback) {
-    try {
-        const response = await fetch(url);
-        if (!response.ok)
-            throw new Error(`HTTP error! status: ${response.status}`);
-        callback(await response.text());
-    } catch (error) { }
-}
-*/
+
 let setScene = id => {
    sceneID = id;
    let url = 'projects/' + project + '/scenes/scene' + id + '.js';
