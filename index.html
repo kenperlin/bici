@@ -30,6 +30,8 @@ function initHands() {
 
   const canvas = document.getElementById("handCanvas");
   const ctx = canvas.getContext("2d");
+  canvas.width = screen.width;
+  canvas.height = screen.height;
 
   hands.onResults((results) => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -38,7 +40,7 @@ function initHands() {
         results.multiHandLandmarks.forEach((landmarks) => {
         landmarks.forEach((lm) => {
             const x = (1 - lm.x) * canvas.width;  // mirror horizontally
-            const y = lm.y * canvas.height;
+            const y = lm.y * (canvas.height + 80);
             ctx.beginPath();
             ctx.arc(x, y, 5, 0, 2 * Math.PI);
             ctx.fillStyle = "red";
