@@ -28,7 +28,7 @@ let _ = {};
 let figureSequence = () => { return []; }
 
 window.fontSize = 18;
-let codeArea = new CodeArea(-2000, 20), scene, sceneID, isAlt, isShift, isInfo, isInfoOpaque;
+let codeArea = new CodeArea(-2000, 20), scene, sceneID, isAlt, isShift, isInfo, isOpaque;
 let shift3D = 0, t3D = 0, isDrawpad;
 let ease = t => t * t * (3 - t - t);
 
@@ -126,6 +126,16 @@ let initFigures = () => {
 	       ctx.lineTo(lo[0],lo[1]);
 	       ctx.stroke();
 	    }
+            diagram.fillRect = (lo,hi) => {
+	       lo = mxp(lo);
+	       hi = mxp(hi);
+	       ctx.beginPath();
+	       ctx.moveTo(lo[0],lo[1]);
+	       ctx.lineTo(hi[0],lo[1]);
+	       ctx.lineTo(hi[0],hi[1]);
+	       ctx.lineTo(lo[0],hi[1]);
+	       ctx.fill();
+	    }
             diagram.line = (a,b,isArrow) => {
                let A = mxp(a), B = mxp(b);
 
@@ -150,7 +160,6 @@ let initFigures = () => {
 	    diagram.curve = (n, f) => {
 	       ctx.beginPath();
 	       for (let i = 0 ; i <= n ; i++) {
-		  console.log(i/n, f(i/n));
                   let A = mxp(f(i/n));
 		  if (i == 0)
 		     ctx.moveTo(A[0], A[1]);
@@ -211,7 +220,7 @@ setScene('1');
 
 let pen = new Pen();
 let chalktalk = new Chalktalk();
-let isLightPen = true, isHelp = false;
+let isLightPen = false, isHelp = false;
 
 codeArea.callback = () => {
    eval(codeArea.getElement().value);
@@ -347,10 +356,10 @@ let keyDown = key => {
 let keyUp = key => {
    if (isAlt) {
       switch (key) {
-      case 'ArrowDown' : webcam.A /= 1.1; console.log('webcam.A', webcam.A >> 0); break;
-      case 'ArrowLeft' : webcam.B /= 1.1; console.log('webcam.B', webcam.B >> 0); break;
-      case 'ArrowRight': webcam.B *= 1.1; console.log('webcam.B', webcam.B >> 0); break;
-      case 'ArrowUp'   : webcam.A *= 1.1; console.log('webcam.A', webcam.A >> 0); break;
+      case 'ArrowDown' : webcam.A /= 1.1; break;
+      case 'ArrowLeft' : webcam.B /= 1.1; break;
+      case 'ArrowRight': webcam.B *= 1.1; break;
+      case 'ArrowUp'   : webcam.A *= 1.1; break;
       }
       return;
    }
@@ -388,7 +397,7 @@ let keyUp = key => {
    case 'i' : isInfo = ! isInfo; break;
    case 'l' : isLightPen = ! isLightPen; break;
    case 'm' : isMove = false; break;
-   case 'o' : isInfoOpaque = ! isInfoOpaque; break;
+   case 'o' : isOpaque = ! isOpaque; break;
    case 'p' : webcam.isPen = ! webcam.isPen; break;
    case 'r' : shift3D = 1 - shift3D; break;
    case 's' : isScene = ! isScene; break;
@@ -435,7 +444,7 @@ animate = () => {
    ctx.drawImage(webcam.canvas, 0,0,640,440, 0,0,w,h);
 
    if (isInfo) {
-      ctx.globalAlpha = isInfoOpaque ? 1 : .5;
+      ctx.globalAlpha = isOpaque ? 1 : .5;
       let figure = figures[figureIndex];
       if (! figure.update)
          ctx.drawImage(figure, D.left, D.top, 500, 500*figure.height/figure.width);
@@ -468,4 +477,31 @@ animate = () => {
    chalktalk.update(pen.draw);
    scene.update(webcam.headPos);
    help.display(ctx);
+
+   if (isLightPen) {
+      ctx.fillStyle = 'black';
+      ctx.fillRect(screen.width/2-20,screen.height-48,40,10);
+   }
 }
+
+let c = t => Math.cos(t);
+let s = t => Math.sin(t);
+let move = (x,y,z) => [1,0,0,0, 0,1,0,0, 0,0,1,0, x,y,z,1];
+let turnX = t => [1,0,0,0, 0,c(t),s(t),0, 0,-s(t),c(t),0, 0,0,0,1];
+let turnY = t => [s(t),0,c(t),0, 0,1,0,0, c(t),0,-s(t),0, 0,0,0,1];
+let turnZ = t => [c(t),s(t),0,0, -s(t),c(t),0,0, 0,0,1,0, 0,0,0,1];
+let scale = (x,y,z) => [x,0,0,0, 0,y??x,0,0, 0,0,z??x,0, 0,0,0,1];
+
+let sphere = [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,-1];
+let parabX = [0,0,0,1, 0,1,0,0, 0,0,1,0, 0,0,0,0 ];
+let parabY = [1,0,0,0, 0,0,0,1, 0,0,1,0, 0,0,0,0 ];
+let parabZ = [1,0,0,0, 0,1,0,0, 0,0,0,1, 0,0,0,0 ];
+let slabX  = [1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,-1];
+let slabY  = [0,0,0,0, 0,1,0,0, 0,0,0,0, 0,0,0,-1];
+let slabZ  = [0,0,0,0, 0,0,0,0, 0,0,1,0, 0,0,0,-1];
+let tubeX  = [0,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,-1];
+let tubeY  = [1,0,0,0, 0,0,0,0, 0,0,1,0, 0,0,0,-1];
+let tubeZ  = [1,0,0,0, 0,1,0,0, 0,0,0,0, 0,0,0,-1];
+let space  = [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,-1];
+
+

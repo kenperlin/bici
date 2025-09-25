@@ -10,7 +10,7 @@ the light sources. For each light source, it is
 tinted by the color of that light source, and
 varies as:
 
-   diffuse_color * max(0,N.L)
+   diffuse_color * max(0,N•L)
 
 where N is the surface normal, and L is the
 direction toward the light source.

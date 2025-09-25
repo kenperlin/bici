@@ -73,10 +73,10 @@ this.update = viewPoint => {
 
    setUniform('4fv', 'uS', [ 0,0,0,.4 ]);
 
-   setUniform('3fv', 'uC', [ 1,1,1 ]);
+   setUniform('3fv', 'uC', [ 0,0,1 ]);
 
-   setUniform('3fv', 'uL', [ normalize([1,1,1]),
-                             normalize([-1,-1,-.5]),
+   setUniform('3fv', 'uL', [ normalize([-1,1,1]),
+                             normalize([1,-1,-.5]),
 			   ].flat());
 
    setUniform('3fv', 'uLC', [ .5,.7,1,

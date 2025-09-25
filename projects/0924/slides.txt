@@ -1,4 +1,16 @@
 Phong\nreflectance
 phong.js
+Metal\nversus\nplastic
 Raytracing\nto general\nsecond order\nsurfaces
+Let's start with\ncurves in 2D
 quadric2.js
+Transforming\na curve
+quadricA.png
+quadricB.png
+quadricC.png
+quadricD.png
+quadricRay.js
+Raytracing to\nthe intersection\nof quadrics
+squareRay.js
+How do we\ndo this in 3D?
+quadric3.js
