@@ -35,8 +35,8 @@ let loadProject = projectName => {
    getFile('projects/' + project + '/slides.txt', s => {
       slides = s.split('\n');
       loadScripts(
-         ` M4, loadImage, webgl, webcam, trackHead, help, midi,
-           pen, matchCurves, glyphs, chalktalk, codeArea, main `.split(','));
+         `M4, loadImage, webgl, webcam, trackHead, help, midi,
+          pen, matchCurves, glyphs, chalktalk, codeArea, main, mediapipe`.split(','));
    });
 }
 
