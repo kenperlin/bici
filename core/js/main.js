@@ -47,11 +47,16 @@ let initFigures = () => {
    let ctx = D.ctx;
    let index = 0;
    for (let n = 0 ; n < slides.length ; n++) {
-      let file = slides[n].trim();
+
+      let file = slides[n];
+      let j = file.indexOf('//');
+      if (j >= 0)
+         file = file.substring(0, j);
+      file = file.trim();
       if (file.length == 0)
          continue;
 
-      let name = file.trim();
+      let name = file;
       let i = file.indexOf(':');
       if (i >= 0) {
          name = file.substring(0, i).trim();
@@ -475,7 +480,8 @@ animate = () => {
       penMove(p.x * w / 640, p.y * h / 440);
    pen.draw(pen.strokes);
    chalktalk.update(pen.draw);
-   scene.update(webcam.headPos);
+   if (scene.update)
+      scene.update(webcam.headPos);
    help.display(ctx);
 
    if (isLightPen) {
