@@ -108,6 +108,7 @@ let initFigures = () => {
             diagram.turnX = a       => { M.rotateX  (a)    ; return diagram; }
             diagram.turnY = a       => { M.rotateY  (a)    ; return diagram; }
             diagram.turnZ = a       => { M.rotateZ  (a)    ; return diagram; }
+            diagram.getMatrix = () => M.m();
             diagram.arc = (a,r,t0,t1) => {
 	       let A = mxp(a);
 	       ctx.beginPath();
@@ -510,4 +511,14 @@ let tubeY  = [1,0,0,0, 0,0,0,0, 0,0,1,0, 0,0,0,-1];
 let tubeZ  = [1,0,0,0, 0,1,0,0, 0,0,0,0, 0,0,0,-1];
 let space  = [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,-1];
 
+let noise = (x,y,z) => {
+   let normalize = v => (s => v.map(a => a/s))(Math.sqrt(dot(v,v))), c = Math.cos;
+   let f=Math.floor,i=f(x),j=f(y),k=f(z),dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+   let r = (x,y,z) => c(5 * (x + 5 * c(5 * (y + 5 * c(5 * (z + 5 * c(5 * x)))))));
+   let s = (x,y,z) => normalize([ r(x,y,z),r(y,z,x),r(z,x,y) ]),u=x-i,v=y-j,w=z-k;
+   let e = t => t < 0.5 ? 2 * t*t : 2*t * (2-t) - 1, U = e(u), V = e(v), W = e(w);
+   let t = (x,y,z) => dot(s(i+x,j+y,k+z),[u-x,v-y,w-z]), m = (a,b,t) => a+(b-a)*t;
+   return m( m( m( t(0,0,0), t(1,0,0), U), m( t(0,1,0), t(1,1,0), U ), V ),
+             m( m( t(0,0,1), t(1,0,1), U), m( t(0,1,1), t(1,1,1), U ), V ), W );
+}
 

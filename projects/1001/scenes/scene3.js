@@ -1,4 +1,4 @@
-// CLOUDS
+// MARBLE
 function Scene() {
 
 this.vertexShader = `\
@@ -20,26 +20,33 @@ out vec4 fragColor;
 
 float turbulence(vec3 P) {
    float f = 0., s = 1.;
-   for (int i = 0 ; i < 8 ; i++) {
-      float t = noise(s * P);
-      f += abs(t) / s;
+   for (int i = 0 ; i < 9 ; i++) {
+      f += abs(noise(s * P)) / s;
       s *= 2.;
       P = vec3(.866*P.x + .5*P.z, P.y + 100., -.5*P.x + .866*P.z);
    }
    return f;
 }
 
+vec3 marble(vec3 pos) {
+   float v = turbulence(1.5 * pos);
+   v = 0.; //------
+   float s = sqrt(.5 + .5 * sin(20. * pos.x + 8. * v));
+   return vec3(.8,.7,.5) * s; //------
+   return vec3(.8,.7,.5) * vec3(s,s*s,s*s*s);
+}
+
 void main() {
-   float t = .5 + .5 * vPos.y;
-/* //------
-   if (t > .5)
-      t += .3 * turbulence(vPos + vec3(.05*uTime,0.,.1*uTime));
-*/
-   vec3 c = vec3(.1,0.,0.);
-   c = mix(c, vec3(0,.4,1.), min(t,.5));
-   if (t > 0.65)
-      c = mix(c, vec3(.2,.3,.5), (t-.65) / (.7 - .65));
-   fragColor = vec4(sqrt(c), 1.);
+   vec4 F = vec4(0.);
+   float x = 2. * vPos.x;
+   float y = 2. * vPos.y;
+   float rr = x*x + y*y;
+   if (rr < 1.) {
+      float z = sqrt(1. - rr);
+      float c = .1 + .5 * max(0., x+y+z);
+      F = vec4(c * marble(vPos),1.);
+   }
+   fragColor = vec4(sqrt(F.rgb), F.a);
 }`;
 
 let startTime = Date.now()/1000;

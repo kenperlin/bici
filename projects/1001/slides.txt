@@ -1,4 +1,4 @@
-Procedural textures
+PROCEDURAL\nTEXTURES
 The noise function
 Making noise in 1D
 noise1D.js
@@ -6,11 +6,28 @@ Making noise in 2D
 noise2D.js
 Making noise in 3D
 noise3D.js
-Fractal sum
+How do we\nchoose\nthe gradients?
+samples.js
+Fractal sum\nof noise
+fractal_sum_of_noise.png
+fractal.js
 Turbulence function
-Animation
-Endless cycles (eg corona)
-More advanced raytracing
+turbulence_function.png
+turbulence.js
+EXAMPLES OF\nPROCEDURAL\nTEXTURES
+Clouds
+Marble
+Wood
+Fireball
+Dragon Planet
+ADVANCED\nRAYTRACING
 Reflection
+reflection.png
 Refraction
-Fog and atmosphere
+refraction.png
+refraction_steps1.png
+refraction_example.png
+refraction_steps2.png
+Fog and\natmosphere
+API for\ndiagrams
+AI and the Coming\nXR Singularity

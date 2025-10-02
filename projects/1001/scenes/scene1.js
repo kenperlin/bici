@@ -1,3 +1,4 @@
+// NOISE TEXTURE
 function Scene() {
 
 this.vertexShader = `\
