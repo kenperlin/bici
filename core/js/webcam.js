@@ -76,7 +76,8 @@ webcam.update = () => {
       }
    }
 
-   let isBlue = (r,g,b) => b > 60 && b > 1.3 * Math.max(r,g);
+   //let isBlue = (r,g,b) => b > 60 && b > 1.3 * Math.max(r,g);
+   let isBlue = (r,g,b) => b > 115 && b > 1.6 * Math.max(r,g);
 
    // FOLLOW THE POSITION OF A BLUE MARKER PEN
 

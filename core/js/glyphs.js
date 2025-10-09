@@ -26,7 +26,7 @@ mc.addGlyph('X',[[-.6,1],[.6,-1]],[[.6,1],[-.6,-1]]);
 mc.addGlyph('Y',[[-.6,1],[0,.1]],[[.6,1],[0,.1],[0,-1]]);
 mc.addGlyph('Z',[[-.6,1],[.6,1],[-.6,-1],[.6,-1]]);
 
-mc.addGlyph('square',[[-1,1],[1,1],[1,-1],[-1,-1],[-1,1]]);
+//mc.addGlyph('square',[[-1,1],[1,1],[1,-1],[-1,-1],[-1,1]]);
 mc.addGlyph('circle',[[-.01,1],[.01,1],2,[.01,-1],[-.01,-1],2,[-.01,1],[.01,1]]);
 //mc.addGlyph('plus',[[0,1],[0,-1]],[[-1,0],[1,0]]);
 //mc.addGlyph('minus',[[-1,0],[1,0]]);
@@ -126,4 +126,49 @@ mc.addGlyph('sliderY',function() {
    };
    this.value = () => t;
 });
+
+// To do: Implement mc.glyph3D()
+
+mc.glyph3D = function(obj,update) {
+   let M = new M4(), theta = 0, phi = 0, cx, cy;
+   obj.move = (x,y) => { cx = cy = undefined; }
+   obj.drag = (x,y) => {
+      if (cx !== undefined) {
+         theta += cx - x;
+         phi   -= cy - y;
+      }
+      cx = x;
+      cy = y;
+   }
+   obj.update = time => {
+      if (time == 0)
+         return update(0);
+      M.identity();
+      let t = Math.min(1,2*time);
+      M.perspective(0,0,10*Math.max(1,1/(t*t*(3-t-t))));
+      M.rotateX(phi);
+      M.rotateY(theta);
+      let A = update(time), B = [];
+      for (let i = 0 ; i < A.length ; i++) {
+         B[i] = [];
+	 for (let j = 0 ; j < A[i].length ; j++)
+	    B[i][j] = M.transform(A[i][j]);
+      }
+      return B;
+   }
+}
+
+mc.addGlyph('cube',function() {
+   new mc.glyph3D(this, time => {
+      if (time == 0)
+         return [ [ [-1,1],[1,1],[1,-1],[-1,-1],[-1,1] ] ];
+      let p = cubeVertices;
+      return [
+         [p[0],p[1]], [p[2],p[3]], [p[4],p[5]], [p[6],p[7]],
+         [p[0],p[2]], [p[1],p[3]], [p[4],p[6]], [p[5],p[7]],
+         [p[0],p[4]], [p[1],p[5]], [p[2],p[6]], [p[3],p[7]],
+       ];
+   });
+});
+
 }
