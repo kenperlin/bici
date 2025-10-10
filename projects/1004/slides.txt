@@ -1,0 +1,14 @@
+// This is a version of bici that I presented
+// on October 4 at the BrainLink workshop.
+PHONG SHADING
+phong.js
+PROCEDURAL\nTEXTURES
+Noise function
+Building the\nnoise function
+noise2D.js
+Choosing\nnoise gradients
+samples.js
+EXAMPLES OF\nPROCEDURAL\nTEXTURES
+Clouds
+Eclipse
+Fireball

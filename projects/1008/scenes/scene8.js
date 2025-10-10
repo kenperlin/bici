@@ -94,8 +94,8 @@ function Matrix() {
    this.identity = () => { m[top] = identity(); return this; }
    this.move = (x,y,z) => { m[top]=mxm(m[top],move(x,y,z)); return this; }
    this.turnX = a => { m[top] = mxm(m[top], turnX(a)); return this; }
-   this.turnY = a => { m[top] = mxm(m[top], turnX(a)); return this; }
-   this.turnZ = a => { m[top] = mxm(m[top], turnX(a)); return this; }
+   this.turnY = a => { m[top] = mxm(m[top], turnY(a)); return this; }
+   this.turnZ = a => { m[top] = mxm(m[top], turnZ(a)); return this; }
    this.scale = (x,y,z) => {
       m[top] = mxm(m[top], scale(x,y,z));
       return this;
