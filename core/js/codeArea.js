@@ -11,19 +11,24 @@ function CodeArea(x,y) {
    codeArea.style.overflowY = 'scroll';
    codeArea.addEventListener('mousemove', event => {
       if (isShift) {
-         if (ey && Math.abs(dial += event.clientY-ey) >= 10) {
-	    let oldS = '', i = codeArea.selectionStart - 1, j = i, c;
-	    for ( ; j > 0 && c != '-' ; j--)
-	       if ((c = codeArea.value.substring(j,j+1)) >= '0' && c <= '9' || c == '-')
-	          oldS = c + oldS;
-               else
-	          break;
-	    if (oldS.length) {
-	       let newS = '' + (parseInt(oldS) - Math.sign(dial));
-	       codeArea.value = codeArea.value.substring(0,j+1) + newS + codeArea.value.substring(i+1);
-               codeArea.selectionStart = codeArea.selectionEnd = i+1 + newS.length - oldS.length;
-	    }
-	    dial -= 10 * Math.sign(dial);
+         if (ey && Math.abs(dial += event.clientY-ey) >= 3) {
+	    let i1 = codeArea.selectionStart;
+	    let s0 = numberString.findNumberString(codeArea.value, i1);
+	    if (s0) {
+	       let i0 = i1 - s0.length;
+	       let s1 = numberString.increment(s0, -Math.sign(dial));
+
+	       if (codeArea.value.charAt(i0-1) == ' ' && s0.charAt(0) != '-' && s1.charAt(0) == '-')
+	          i0--;
+	       if (s0.charAt(0) == '-' && s1.charAt(0) != '-')
+	          s1 = ' ' + s1;
+
+	       codeArea.value = codeArea.value.substring(0,i0) + s1 + codeArea.value.substring(i1);
+               codeArea.selectionStart = codeArea.selectionEnd = i0 + s1.length;
+	       if (this.callback)
+	          this.callback();
+            }
+	    dial = 0;
 	 }
          ey = event.clientY;
       }

@@ -1,0 +1,63 @@
+DISTANCE FOG
+
+Fog attenuates\nexponentially\nwith distance\nalong the ray.
+
+t = pow(fogFactor, dist)\n\nfogFactor < 1
+
+Visibility t goes down\ntoward zero with\ngreater distance.
+
+t * color + (1-t) * fogColor
+
+CGFog.jpg
+
+SPLINES
+
+Parametric cubic\nspline curves\n\nC(t) = at³+bt²+ct+d\n\nwhere 0 <= t <= 1
+
+Cubic spline patches\n\nc₀₀  +  c₁₀u  +  c₂₀u²  +  c₃₀u³\nc₀₁v+ c₁₁uv+ c₂₁u²v + c₃₁u³v\nc₀₂v²+c₁₂uv²+c₂₂u²v²+c₃₂u³v²\nc₀₃v³+c₁₃uv³+c₂₃u²v³+c₃₃u³v³
+
+Create a curve by\nmarching along t\nfrom t=0\nto t=1
+cubic_curve.js
+
+Hermite spline
+hermite_matrix.js
+hermite_curve.js
+Hermite spline\nin 2D
+hermite_curve2D.js
+hermite_curves2D.js
+
+Bezier spline
+bezier_matrix.js
+bezier_curve.js
+bezier_curve2D.js
+bezier_curves2D.js
+
+BSpline
+bspline_matrix.js
+bspline_curve.js
+bspline_curves2D.js
+
+Bicubic patches
+bezier_patch.js
+
+// SCENE 1
+
+teapot.js
+
+// SCENE 2
+
+Extrusion
+
+Bezier curve\neditor
+bezier_curve_editor.js
+
+Building\nthe extrusion
+
+// SCENE 3
+
+Animating with\ncubic splines
+
+Key frames
+
+Hierarchical\nlimbs
+

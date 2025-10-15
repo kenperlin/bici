@@ -15,7 +15,7 @@ vec3 phong(vec3 N, vec3 L, vec3 W, vec3 diffuse, vec4 specular) {
           specular.rgb * pow(max(0.,dot(R,-W)), specular.a);
 }
 `;
-let autodraw = true;
+let intervalID, autodraw = true;
 let vertexSize = 6;
 let mesh = {
   triangle_strip: true,
@@ -65,7 +65,9 @@ function gl_start(canvas, scene) {
          vertexAttribute('aNor', 3, 3);
       }
       canvas.setShaders(scene.vertexShader, scene.fragmentShader);
-      setInterval(function() {
+      if (intervalID)
+         clearInterval(intervalID);
+      intervalID = setInterval(function() {
          animate();
 	 if (autodraw)
 	    drawMesh(mesh);

@@ -25,6 +25,15 @@ canvasDiagram.height = 500;
 
 let _ = {};
 
+let colors = [ '#ff0000', '#008f00', '#0080ff', '#ff00ff' ];
+
+let transition = (a,b,startTime) => {
+   if (! startTime || startTime < 0)
+      return a;
+   let t = Math.max(0, Math.min(1, Date.now() / 1000 - startTime));
+   return a + (b - a) * t * t * (3 - t - t);
+}
+
 let figureSequence = () => { return []; }
 
 window.fontSize = 18;
@@ -117,12 +126,14 @@ let initFigures = () => {
 	       ctx.beginPath();
 	       ctx.arc(A[0], A[1], r, t0, t1);
 	       ctx.stroke();
+	       return diagram;
 	    }
             diagram.dot = (a,r) => {
 	       let A = mxp(a);
 	       ctx.beginPath();
 	       ctx.arc(A[0], A[1], r??10, 0, 2*Math.PI);
 	       fill();
+	       return diagram;
 	    }
             diagram.drawRect = (lo,hi) => {
 	       lo = mxp(lo);
@@ -134,6 +145,7 @@ let initFigures = () => {
 	       ctx.lineTo(lo[0],hi[1]);
 	       ctx.lineTo(lo[0],lo[1]);
 	       ctx.stroke();
+	       return diagram;
 	    }
             diagram.fillRect = (lo,hi) => {
 	       lo = mxp(lo);
@@ -144,6 +156,7 @@ let initFigures = () => {
 	       ctx.lineTo(hi[0],hi[1]);
 	       ctx.lineTo(lo[0],hi[1]);
 	       ctx.fill();
+	       return diagram;
 	    }
             diagram.fillPolygon = P => {
                ctx.beginPath();
@@ -152,6 +165,7 @@ let initFigures = () => {
 	          ctx[n==0 ? 'moveTo' : 'lineTo'](p[0], p[1]);
 	       }
 	       ctx.fill();
+	       return diagram;
 	    }
             diagram.line = (a,b,isArrow) => {
                let A = mxp(a), B = mxp(b);
@@ -211,7 +225,7 @@ let initFigures = () => {
 	       ctx.save();
                ctx.fillStyle = 'white';
                ctx.fillRect(0,0,this.width,this.height);
-               ctx.font = '50px Helvetica';
+               ctx.font = '40px Helvetica';
                ctx.fillStyle = 'black';
                for (let n = 0 ; n < lines.length ; n++) {
                   let w = D.ctx.measureText(lines[n]).width;
@@ -241,9 +255,12 @@ let chalktalk = new Chalktalk();
 let isLightPen = false, isHelp = false;
 
 codeArea.callback = () => {
+   isReloadScene = true;
+/*
    eval(codeArea.getElement().value);
    autodraw = true;
    gl_start(canvas3D, scene = new Scene());
+*/
 }
 
 let w = canvas2D.width = screen.width;
@@ -261,7 +278,13 @@ D.ctx.font = '30px Helvetica';
 D.ctx.lineCap = 'round';
 D.ctx.lineWidth = 3;
 
+let isPenDown = false;
+
 let penDown = () => {
+   if (isPenDown)
+      return;
+   isPenDown = true;
+
    if (isInfo) {
       let figure = figures[figureIndex];
       if (D.isIn()) {
@@ -284,6 +307,8 @@ let penDown = () => {
 }
 
 let penUp = () => {
+   isPenDown = false;
+
    if (isInfo) {
       let figure = figures[figureIndex];
       if (D.isDown) {
@@ -431,6 +456,7 @@ let keyUp = key => {
 
 let startTime = Date.now() / 1000;
 let timePrev = startTime;
+let isReloadScene = false, reloadTime = 0;
 
 animate = () => {
    if (isFirstTime) {
@@ -441,6 +467,14 @@ animate = () => {
    let time = Date.now() / 1000;
    let deltaTime = time - timePrev;
    timePrev = time;
+
+   if (isReloadScene && time - reloadTime > .1) {
+      eval(codeArea.getElement().value);
+      autodraw = true;
+      gl_start(canvas3D, scene = new Scene());
+      reloadTime = time;
+      isReloadScene = false;
+   }
 
    if (time - startTime > 1 && ! fqParsed) {
       for (let name in fq) {
@@ -502,64 +536,5 @@ animate = () => {
       ctx.fillStyle = 'black';
       ctx.fillRect(screen.width/2-20,screen.height-48,40,10);
    }
-}
-
-let c = t => Math.cos(t);
-let s = t => Math.sin(t);
-let identity = () => [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1];
-let move = (x,y,z) => [1,0,0,0, 0,1,0,0, 0,0,1,0, x,y,z,1];
-let turnX = t => [1,0,0,0, 0,c(t),s(t),0, 0,-s(t),c(t),0, 0,0,0,1];
-let turnY = t => [s(t),0,c(t),0, 0,1,0,0, c(t),0,-s(t),0, 0,0,0,1];
-let turnZ = t => [c(t),s(t),0,0, -s(t),c(t),0,0, 0,0,1,0, 0,0,0,1];
-let scale = (x,y,z) => [x,0,0,0, 0,y??x,0,0, 0,0,z??x,0, 0,0,0,1];
-let perspective = (x,y,z) => [1,0,0,x, 0,1,0,y??x, 0,0,1,z??x, 0,0,0,1];
-
-let mxm = (a,b) => {
-   let m = [];
-   for (let c = 0 ; c < 16 ; c += 4)
-   for (let r = 0 ; r < 4 ; r++)
-      m.push( a[r]*b[c] + a[r+4]*b[c+1] + a[r+8]*b[c+2] + a[r+12]*b[c+3] );
-   return m;
-}
-
-let transpose = m => [ m[0],m[4],m[ 8],m[12],
-                       m[1],m[5],m[ 9],m[13],
-                       m[2],m[6],m[10],m[14],
-                       m[3],m[7],m[11],m[15] ];
-
-let inverse = src => {
-   let dst = [], det = 0, cofactor = (c, r) => {
-      let s = (i, j) => src[c+i & 3 | (r+j & 3) << 2];
-      return (c+r & 1 ? -1 : 1) * ( (s(1,1)*(s(2,2)*s(3,3)-s(3,2)*s(2,3)))
-                                  - (s(2,1)*(s(1,2)*s(3,3)-s(3,2)*s(1,3)))
-                                  + (s(3,1)*(s(1,2)*s(2,3)-s(2,2)*s(1,3))) );
-   }
-   for (let n = 0 ; n < 16 ; n++) dst.push(cofactor(n >> 2, n & 3));
-   for (let n = 0 ; n <  4 ; n++) det += src[n] * dst[n << 2];
-   for (let n = 0 ; n < 16 ; n++) dst[n] /= det;
-   return dst;
-}
-
-let sphere = [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,-1];
-let parabX = [0,0,0,1, 0,1,0,0, 0,0,1,0, 0,0,0,0 ];
-let parabY = [1,0,0,0, 0,0,0,1, 0,0,1,0, 0,0,0,0 ];
-let parabZ = [1,0,0,0, 0,1,0,0, 0,0,0,1, 0,0,0,0 ];
-let slabX  = [1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,-1];
-let slabY  = [0,0,0,0, 0,1,0,0, 0,0,0,0, 0,0,0,-1];
-let slabZ  = [0,0,0,0, 0,0,0,0, 0,0,1,0, 0,0,0,-1];
-let tubeX  = [0,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,-1];
-let tubeY  = [1,0,0,0, 0,0,0,0, 0,0,1,0, 0,0,0,-1];
-let tubeZ  = [1,0,0,0, 0,1,0,0, 0,0,0,0, 0,0,0,-1];
-let space  = [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,-1];
-
-let noise = (x,y,z) => {
-   let normalize = v => (s => v.map(a => a/s))(Math.sqrt(dot(v,v))), c = Math.cos;
-   let f=Math.floor,i=f(x),j=f(y),k=f(z),dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
-   let r = (x,y,z) => c(5 * (x + 5 * c(5 * (y + 5 * c(5 * (z + 5 * c(5 * x)))))));
-   let s = (x,y,z) => normalize([ r(x,y,z),r(y,z,x),r(z,x,y) ]),u=x-i,v=y-j,w=z-k;
-   let e = t => t < 0.5 ? 2 * t*t : 2*t * (2-t) - 1, U = e(u), V = e(v), W = e(w);
-   let t = (x,y,z) => dot(s(i+x,j+y,k+z),[u-x,v-y,w-z]), m = (a,b,t) => a+(b-a)*t;
-   return m( m( m( t(0,0,0), t(1,0,0), U), m( t(0,1,0), t(1,1,0), U ), V ),
-             m( m( t(0,0,1), t(1,0,1), U), m( t(0,1,1), t(1,1,1), U ), V ), W );
 }
 
