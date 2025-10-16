@@ -14,7 +14,7 @@ SPLINES
 
 Parametric cubic\nspline curves\n\nC(t) = at³+bt²+ct+d\n\nwhere 0 <= t <= 1
 
-Cubic spline patches\n\nc₀₀  +  c₁₀u  +  c₂₀u²  +  c₃₀u³\nc₀₁v+ c₁₁uv+ c₂₁u²v + c₃₁u³v\nc₀₂v²+c₁₂uv²+c₂₂u²v²+c₃₂u³v²\nc₀₃v³+c₁₃uv³+c₂₃u²v³+c₃₃u³v³
+Cubic spline patches\n<font 35px Helvetica>\nc₀₀  +  c₁₀u  +  c₂₀u²  +  c₃₀u³\nc₀₁v+ c₁₁uv+ c₂₁u²v + c₃₁u³v\nc₀₂v²+c₁₂uv²+c₂₂u²v²+c₃₂u³v²\nc₀₃v³+c₁₃uv³+c₂₃u²v³+c₃₃u³v³
 
 Create a curve by\nmarching along t\nfrom t=0\nto t=1
 cubic_curve.js

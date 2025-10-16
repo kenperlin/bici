@@ -228,8 +228,13 @@ let initFigures = () => {
                ctx.font = '40px Helvetica';
                ctx.fillStyle = 'black';
                for (let n = 0 ; n < lines.length ; n++) {
-                  let w = D.ctx.measureText(lines[n]).width;
-                  ctx.fillText(lines[n], 250 - w/2, 210 + 60 * (n - (lines.length-1)/2));
+	          let line = lines[n], i, j;
+	          if ((i=line.indexOf('<font'))>=0 && (j=line.indexOf('>',i))>=0) {
+		     ctx.font = line.substring(i+6, j);
+		     line = line.substring(j+1);
+		  }
+                  let w = ctx.measureText(line).width;
+                  ctx.fillText(line, 250 - w/2, 210 + 60 * (n - (lines.length-1)/2));
                }
 	       ctx.restore();
             }
