@@ -25,7 +25,7 @@ canvasDiagram.height = 500;
 
 let _ = {};
 
-let colors = [ '#ff0000', '#008f00', '#0080ff', '#ff00ff' ];
+let colors = [ '#ff0000', '#008f00', '#0080ff', '#ff00ff', '#000000' ];
 
 let transition = (a,b,startTime) => {
    if (! startTime || startTime < 0)
@@ -254,14 +254,7 @@ let pen = new Pen();
 let chalktalk = new Chalktalk();
 let isLightPen = false, isHelp = false;
 
-codeArea.callback = () => {
-   isReloadScene = true;
-/*
-   eval(codeArea.getElement().value);
-   autodraw = true;
-   gl_start(canvas3D, scene = new Scene());
-*/
-}
+codeArea.callback = () => isReloadScene = true;
 
 let w = canvas2D.width = screen.width;
 let h = canvas2D.height = screen.height;
@@ -421,6 +414,9 @@ let keyUp = key => {
    case "'" : chalktalk.add(pen.strokes,pen.x,pen.y); break;
    case ',' : pen.width *= .707; break;
    case '.' : pen.width /= .707; break;
+   case '[' : pen.setColor('#ff0000'); break;
+   case ']' : pen.setColor('#0080ff'); break;
+   case '\\': pen.setColor('#000000'); break;
    case '/' : penUp(); break;
    case ';' : isDrag = false; break;
    case 'D':

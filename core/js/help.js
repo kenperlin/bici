@@ -61,6 +61,9 @@ w Toggle world seen thru blue plate.
 \' Convert strokes to a sketch.
 , Make pen line thinner.
 . Make pen line thicker.
+[ Red pen.
+] Blue pen.
+\\ Black pen.
 / Hold down to draw.
 ; Hold down to interact with a sketch.
 \u2193 Smaller text.

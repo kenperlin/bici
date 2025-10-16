@@ -4,28 +4,36 @@ function Diagram() {
    let I = -1; 
    let X = [ -.5,-.1, .8, .8, .8, -.2, -.2 ];
    let Y = [ -.1,-.4,-.2, .4, .6,   0,  .2 ];
-   let M = [ [-1,3,-3,1],[3,-6,3,0],[-3,3,0,0],[1,0,0,0] ];
-   let T = (a,t) => a[0]*t*t*t + a[1]*t*t + a[2]*t + a[3];
-   let Vi = (V,i,t) => V[i] * T(M[i],t);
-   let C = (V,t) => Vi(V,0,t) + Vi(V,1,t) + Vi(V,2,t) + Vi(V,3,t);
-   let norm = V => Math.sqrt(V[0]*V[0] + V[1]*V[1]);
    _.BX = X;
    _.BY = Y;
+
    let align = (a,b,c) => {
       let r1 = norm([ X[b] - X[c], Y[b] - Y[c] ]);
       let r2 = norm([ X[a] - X[b], Y[a] - Y[b] ]);
       X[a] = X[b] + (X[b] - X[c]) / r1 * r2;
       Y[a] = Y[b] + (Y[b] - Y[c]) / r1 * r2;
    }
+   let isLoop, dragDistance, dragDiff;
    this.onDown = (x,y) => {
       nDrags = 0;
       I = -1;
       for (let i = 0 ; i < X.length ; i++)
          if (norm([ x-X[i], y-Y[i] ]) < .1)
 	    I = i;
+
+      // IF THE SPLINE IS LOOPED, CHECK FOR A FAST DRAG THAT WILL BREAK IT
+
+      let L = X.length-1;
+      if (isLoop = (I == 0 || I == L) && norm([ X[0]-X[L], Y[0]-Y[L] ]) == 0) {
+	 dragDistance = 0;
+	 let K = I==0 ? L-1 : 1;
+	 dragDiff = [ X[K] - X[I], Y[K] - Y[I] ];
+      }
    }
    this.onDrag = (x,y) => {
       nDrags++;
+      let L = X.length-1;
+
       if (I >= 0) {
          let dx = x - X[I];
          let dy = y - Y[I];
@@ -46,12 +54,33 @@ function Diagram() {
          X[I] += dx;
          Y[I] += dy;
       }
-      let L = X.length-1;
       if (I == 1   && norm([X[L]-X[0],Y[L]-Y[0]]) == 0) align(L-1,0,1);
       if (I == L-1 && norm([X[L]-X[0],Y[L]-Y[0]]) == 0) align(1,0,L-1);
+
+      if (isLoop) {
+         let J = I == 0 ? L : 0;
+         dragDistance += norm([ x-X[J], y-Y[J] ]);
+
+         // IF FAST DRAGGING A LOOP END POINT, BREAK THE LOOP
+
+	 if (nDrags == 3 && dragDistance > .1)
+	    isLoop = false;
+
+	 // OTHERWISE, DRAG THE OTHER END OF THE LOOP CORRECTLY
+
+	 if (nDrags > 5) {
+	    X[J] = X[I];
+	    Y[J] = Y[I];
+	    let K = I==0 ? L-1 : 1;
+	    X[K] = X[J] + dragDiff[0];
+	    Y[K] = Y[J] + dragDiff[1];
+	 }
+      }
+
       isReloadScene = true;
    }
    this.onUp = (x,y) => {
+      info = '';
       let L = X.length - 1;
       if (nDrags == 0) {
          if (I == -1) {
@@ -91,7 +120,8 @@ function Diagram() {
       ctx.strokeStyle = 'black';
       ctx.lineWidth = 6;
       for (let n = 0 ; n < X.length-1 ; n += 3)
-         this.curve(50, t => [ C(X.slice(n,n+4), t), C(Y.slice(n,n+4), t) ]);
+         this.curve(50, t => [ evalBezier(X.slice(n,n+4), t),
+	                       evalBezier(Y.slice(n,n+4), t) ]);
       ctx.lineWidth = 3;
 
       ctx.strokeStyle = '#0000ff' + (I>=0 ? '' : '40');
@@ -100,7 +130,7 @@ function Diagram() {
 
       ctx.strokeStyle = 'blue';
       for (let i = 0 ; i < X.length ; i++)
-         this.dot([X[i],Y[i]]);
+         this.dot([X[i],Y[i]], i%3 == 0 ? 10 : 7);
       ctx.strokeStyle = 'white';
       this.dot([X[X.length-1],Y[Y.length-1]], 5);
 

@@ -5,10 +5,14 @@ function Pen() {
    this.width = 7;
    let isDown = false;
    let ctx;
+   let color = '#000000';
+
+   this.setColor = c => color = c;
    
    this.down = () => {
       if ( ! isDown) {
          let stroke = [];
+         stroke.color = color;
          stroke.lineWidth = this.width;
          stroke.xlo = stroke.ylo =  10000;
          stroke.xhi = stroke.yhi = -10000;
@@ -52,6 +56,7 @@ function Pen() {
       for (let n = 0 ; n < ss.length ; n++) {
          let s = ss[n];
          ctx.lineWidth = lineWidth ?? s.lineWidth;
+         ctx.strokeStyle = s.color;
          ctx.beginPath();
          for (let i = 0 ; i < s.length ; i++)
             ctx[i==0 ? 'moveTo' : 'lineTo'](s[i][0],s[i][1]);
