@@ -1,41 +1,41 @@
 TRIANGLE\nMESHES
 
 vertex\nattributes
-triangle: vertex.js
+triangle:: vertex.js
 // SCENE 1 -- triangle
 
 Building an\noctahedron\nfrom triangles
-octahedron: octahedron.js
+octahedron:: octahedron.js
 // SCENE 2 -- octahedron
 Transforming\nvertices
 transform_vertex.js
 
 Building a\ncube from\ntriangles
-cube: cube.js
+cube:: cube.js
 // SCENE 3 -- cube
 
 triangle strips
-strips: triangle_strip.js
+strips:: triangle_strip.js
 a parametric\nopen tube
 open_tube.js
 // SCENE 4 -- tube, disk
 
 General\nparametric\nshapes
-general: triangle_strip2.js
+general:: triangle_strip2.js
 // SCENE 5 -- sphere, torus
 sphere
 torus
 cylinder
 
-multiple: Rendering\nmultiple\nmeshes
+multiple:: Rendering\nmultiple\nmeshes
 // SCENE 6 -- two meshes
 
-matrix: Creating a\nmatrix class
+matrix:: Creating a\nmatrix class
 Using the\nmatrix stack
 // SCENE 7 -- Matrix class
 Adding noise\nto vertices
 
 Gluing\nmeshes\ntogether
-gluing: gluing.js
+gluing:: gluing.js
 // SCENE 8 -- Glue meshes to make a cylinder
 

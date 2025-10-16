@@ -6,7 +6,7 @@ t = pow(fogFactor, dist)\n\nfogFactor < 1
 
 Visibility t goes down\ntoward zero with\ngreater distance.
 
-t * color + (1-t) * fogColor
+Blend scene into fog:\n\nt * color + (1-t) * fogColor
 
 CGFog.jpg
 

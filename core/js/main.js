@@ -69,10 +69,10 @@ let initFigures = () => {
          continue;
 
       let name = file;
-      let i = file.indexOf(':');
+      let i = file.indexOf('::');
       if (i >= 0) {
          name = file.substring(0, i).trim();
-         file = file.substring(i+1).trim();
+         file = file.substring(i+2).trim();
       }
 
       fq[name] = { index: index++ };
