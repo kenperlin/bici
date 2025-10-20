@@ -215,8 +215,6 @@ webcam.update = () => {
          if (data[n+3] == 253)
 	    data[n] = data[n+1] = data[n+2] = 0;
 
-   // OPTIONALLY BLUR THE REGION WHERE MY FACE USUALLY IS
-
    wctx.putImageData(imgData, 0,0);
 
    return ns > 20 ? {x: xs/ns, y: ys/ns} : null;

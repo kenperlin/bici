@@ -433,6 +433,7 @@ let keyUp = key => {
       else if (! chalktalk.delete(pen.x,pen.y))
          pen.delete();
       break;
+   case 'a' : window.open('http://cs.nyu.edu/~perlin/video_links.html', '_blank'); break;
    case 'b' : webcam.isBlur = ! webcam.isBlur; break;
    case 'c' : codeArea.getElement().style.left = (isCode = ! isCode) ? 20 : -2000; break;
    case 'd' : isDrawpad = ! isDrawpad; break;
@@ -535,7 +536,7 @@ animate = () => {
 
    if (isLightPen) {
       ctx.fillStyle = 'black';
-      ctx.fillRect(screen.width/2-20,screen.height-48,40,10);
+      ctx.fillRect(screen.width-8,screen.height-8,8,8);
    }
 }
 

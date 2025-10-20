@@ -49,7 +49,6 @@ void main() {
    float t = max(0.,min(1., (r0 - a) / (b - a)));
 
    float r = .9 + .1 * noise(13.*vPos+vec3(0.,0.,uTime));
-   r = .5; //-------
    vec4 f0 = vec4(2.*r,r,(r*r+r)/2.,1.);
 
    vec3 color = vec3(s);

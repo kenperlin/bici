@@ -37,7 +37,6 @@ void main(void) {
    float cV = cos(.1*uTime), sV = sin(.1*uTime);
    vec3 P = vec3(cR*x+sR*dz+cV,y,-sR*x+cR*dz+sV);
    float g = turbulence(P);                          /* CLOUDS */
-   g = 0.; //-----
    float d = 1. - 1.1 * (x*x + y*y);                 /* EDGE   */
    d = d>0. ? .1+.05*g+.6*(.1+g)*s*s : max(0.,d+.05);
    float f = -.2 + sin(4. * P.x + 8. * g + 4.);      /* FIRE   */

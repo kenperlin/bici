@@ -3,7 +3,7 @@ let help = {
 
 display : ctx => {
 
-   let fs = fontSize * 1.7 >> 0;
+   let fs = fontSize * 1.65 >> 0;
 
    if (help.isSplash) {
       ctx.fillStyle = '#ffffff80';
@@ -39,6 +39,7 @@ isHelp : false,
 text : `\
 Hot keys
 0-9    Select 3D scene 0-9.
+a Bring up a page of video links.
 b Toggle blurred region in video.
 c Toggle editable code for 3D scene.
 d Toggle drawing pad.

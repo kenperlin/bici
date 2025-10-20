@@ -45,12 +45,11 @@ vec3 marble(vec3 pos) {
 }
 
 vec3 wood(vec3 pos) {
-// pos.y += .5 * turbulence(.4*pos); //------
+   pos.y += .5 * turbulence(.4*pos); //------
    vec3 c = vec3(1.,.42,.15) *
             mix(1.5, .1,
 	        .5 + .25 * turbulence(vec3(.5,40.,40.) * pos+2.*sin(pos))
                    + .25 * turbulence(vec3(40.,40.,.5) * pos+2.*sin(pos)));
-   c = vec3(1.); //------
    c *= .3 + .7 * pow(abs(sin(10. * pos.y)), .4);
    return c;
 }

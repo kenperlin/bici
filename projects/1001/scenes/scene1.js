@@ -26,7 +26,7 @@ void main() {
    if (rr < 1.) {
       float z = sqrt(1. - rr);
       float c = .1 + .5 * max(0., x+y+z);
-      c *= .5 + noise(40. * vPos - vec3(uTime,0.,0.));
+      c *= .5 + noise(4. * vPos - vec3(0.*uTime,0.,0.));
       F = vec4(c,c,c,1.);
    }
    fragColor = vec4(sqrt(F.rgb), F.a);

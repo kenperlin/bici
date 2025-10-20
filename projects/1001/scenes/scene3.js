@@ -30,9 +30,7 @@ float turbulence(vec3 P) {
 
 vec3 marble(vec3 pos) {
    float v = turbulence(1.5 * pos);
-   v = 0.; //------
    float s = sqrt(.5 + .5 * sin(20. * pos.x + 8. * v));
-   return vec3(.8,.7,.5) * s; //------
    return vec3(.8,.7,.5) * vec3(s,s*s,s*s*s);
 }
 

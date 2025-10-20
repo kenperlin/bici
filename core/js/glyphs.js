@@ -94,12 +94,14 @@ mc.addGlyph('x',[[-.8,1],[.8,-1]],[[.8,1],[-.8,-1]]);
 mc.addGlyph('y',[[-.65,1],[-.05,-.1]],[[.5,1],[0,0],.3,[-.5,-.7],[-.7,-.7]]);
 mc.addGlyph('z',[[-1,1],[1,1],[-1,-1],[1,-1]]);
 */
+
 mc.addGlyph('test1',function() {
    this.update = time => [
       [ [ -1,Math.sin(4*time)], [0, 1], [ 1,Math.sin(4*time)] ],
       [ [  1,Math.sin(4*time)], [0,-1], [-1,Math.sin(4*time)] ]
    ];
 });
+
 mc.addGlyph('flapping',function() {
    this.update = time => {
       let t = .1 * Math.sin(8 * time + .2);
@@ -110,6 +112,18 @@ mc.addGlyph('flapping',function() {
       return [ [ [-x,y+4*s-.2], [-c/2,y+s], [0,y-s], [c/2,y+s], [x,y+4*s-.2] ] ];
    };
 });
+
+mc.addGlyph('fish',function() {
+   this.update = time => {
+      let C = [];
+      let s = .2 * Math.sin(10*time);
+      for (let n = 0 ; n <= 30 ; n++)
+	 C.push([ evalBezier([-1, 1.7,1.7, -1], n/30),
+	          evalBezier([.2+s,-1,1,-.2+s], n/30) ]);
+      return [ C, [[-1,.2+s],[-1,-.2+s]] ];
+   };
+});
+
 mc.addGlyph('sliderX',function() {
    let t = .5;
    this.drag = (x,y) => t = (x+1)/2;
@@ -118,6 +132,7 @@ mc.addGlyph('sliderX',function() {
    };
    this.value = () => t;
 });
+
 mc.addGlyph('sliderY',function() {
    let t = .5;
    this.drag = (x,y) => t = (y+1)/2;
@@ -126,8 +141,6 @@ mc.addGlyph('sliderY',function() {
    };
    this.value = () => t;
 });
-
-// To do: Implement mc.glyph3D()
 
 mc.glyph3D = function(obj,update) {
    let M = new M4(), theta = 0, phi = 0, cx, cy;

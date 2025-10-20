@@ -31,10 +31,8 @@ float turbulence(vec3 P) {
 
 void main() {
    float t = .5 + .5 * vPos.y;
-/* //------
    if (t > .5)
       t += .3 * turbulence(vPos + vec3(.05*uTime,0.,.1*uTime));
-*/
    vec3 c = vec3(.1,0.,0.);
    c = mix(c, vec3(0,.4,1.), min(t,.5));
    if (t > 0.65)
