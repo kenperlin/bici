@@ -71,7 +71,7 @@ function gl_start(canvas, scene) {
          animate();
 	 if (autodraw)
 	    drawMesh(mesh);
-      }, 30);
+      }, 10);
    }, 100);
 }
 

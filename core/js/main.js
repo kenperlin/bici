@@ -39,7 +39,6 @@ let figureSequence = () => { return []; }
 window.fontSize = 18;
 let codeArea = new CodeArea(-2000, 20), scene, sceneID, isAlt, isShift, isInfo, isOpaque;
 let shift3D = 0, t3D = 0, isDrawpad;
-let ease = t => t * t * (3 - t - t);
 
 let gotoFigure = name => {
    for (let n = 0 ; n < figureNames.length ; n++)

@@ -1,0 +1,29 @@
+
+KINEMATICS\nAND\nDYNAMICS
+
+Forward\nKinematics
+// SCENE1
+
+Hierarchical\nSkeletons
+// SCENE2
+
+Inverse\nKinematics
+ik.js
+ikcode.js
+
+Bipeds
+// SCENE3
+// SCENE4
+// SCENE5
+
+Reaching
+Looking
+// SCENE6
+
+DYNAMICS
+
+Springs
+spring.js
+springcode.js
+// SCENE7
+

@@ -85,7 +85,7 @@ void main() {
 }`;
 
 autodraw = false;
-
+/*
 function Matrix() {
    let m = [identity()], top = 0;
    this.push = () => { m[top+1] = m[top].slice(); top++; return this; }
@@ -105,7 +105,7 @@ function Matrix() {
       return this;
    }
 }
-
+*/
 let matrix = new Matrix();
 
 let startTime = Date.now()/1000;
