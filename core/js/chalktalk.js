@@ -1,6 +1,8 @@
 
 function Chalktalk() {
+
    let matchCurves = new MatchCurves();
+
    glyphs(matchCurves);
 
    let preSketch, morphData, T = 1, oldTime, sketches = [];

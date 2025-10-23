@@ -65,7 +65,6 @@ function Pen() {
    }
 }
 
-
 let isPenDown = false;
 
 let penDown = () => {

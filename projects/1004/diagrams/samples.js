@@ -39,7 +39,7 @@ function Diagram() {
          this.line([z,x,y],[z+2,x,y]);
          this.line([y,z,x],[y,z+2,x]);
       }
-      this.arc([0,0,0],.6*this.width/2,0,2*Math.PI);
+      this.arc([0,0,0],.6,0,2*Math.PI);
       if (state < 2 && P.length < 256)
          P.push([ 2*Math.random()-1,
 	          2*Math.random()-1,
@@ -65,7 +65,7 @@ function Diagram() {
             let r = Math.sqrt(x*x + y*y + z*z);
 	    P[n] = [x/r,y/r,z/r];
 	    ctx.strokeStyle = x*Z[0] + y*Z[1] + z*Z[2] > 0 ? 'blue' : '#a0a0ff';
-	    this.dot(P[n],4);
+	    this.dot(P[n],.016);
          }
       }
       else
@@ -80,7 +80,7 @@ function Diagram() {
 	    }
 	    if (state < 2)
 	       ctx.strokeStyle = rr <= 1 ? 'blue' : (state==0 ? 'red' : '#ffa0a0');
-	    this.dot([x,y,z],4);
+	    this.dot([x,y,z],.016);
          }
    }
 }

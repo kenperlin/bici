@@ -25,8 +25,8 @@ function Diagram() {
 	 pos[0] = spring.getPosition();
       }
 
-      ctx.fillStyle = 'red';
-      this.dot(pos, 20);
+      ctx.strokeStyle = 'red';
+      this.dot(pos, .08);
       _.x = pos[0];
    }
 }

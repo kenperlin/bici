@@ -52,7 +52,7 @@ function Diagram() {
 
       ctx.strokeStyle = '#0000ff' + (I>=0 ? '' : '40');
       for (let i = 0 ; i < X.length ; i++)
-         this.dot([X[i],Y[i]], i%3==0 ? 10 : 7);
+         this.dot([X[i],Y[i]], i%3==0 ? 10 : .028);
       for (let i = 1 ; i < X.length ; i++)
          this.line([X[i-1],Y[i-1]],[X[i],Y[i]]);
    }

@@ -45,8 +45,8 @@ function Diagram() {
 
          this.drawRect([-.89,-.10],[-.43,.08]);
          this.drawRect([.50,-.30],[.68,.29]);
-	 this.dot([-.36,0],8);
-	 this.dot([.43,0],8);
+	 this.dot([-.36,0],.032);
+	 this.dot([.43,0],.032);
 
 	 break;
 
@@ -78,8 +78,8 @@ function Diagram() {
 
          this.drawRect([-.89,-.10],[-.43,.08]);
          this.drawRect([.50,-.30],[.68,.29]);
-	 this.dot([-.36,0],8);
-	 this.dot([.43,0],8);
+	 this.dot([-.36,0],.032);
+	 this.dot([.43,0],.032);
 
          ctx.strokeStyle = '#a0a0a0';
 	 this.line([-.9,-.7],[-.1,-.7], true);
@@ -120,8 +120,8 @@ function Diagram() {
 
          this.drawRect([-.89,-.10],[-.43,.08]);
          this.drawRect([.50,-.30],[.68,.29]);
-	 this.dot([-.36,0],8);
-	 this.dot([.43,0],8);
+	 this.dot([-.36,0],.032);
+	 this.dot([.43,0],.032);
 
          ctx.strokeStyle = '#a0a0a0';
 	 this.line([-.9,-.7],[-.1,-.7], true);
@@ -162,8 +162,8 @@ function Diagram() {
 
          this.drawRect([-.89,-.10],[-.43,.08]);
          this.drawRect([.50,-.30],[.68,.29]);
-	 this.dot([-.36,0],8);
-	 this.dot([.43,0],8);
+	 this.dot([-.36,0],.032);
+	 this.dot([.43,0],.032);
 
          ctx.strokeStyle = '#a0a0a0';
 	 this.line([-.9,-.7],[-.1,-.7], true);
@@ -204,8 +204,8 @@ function Diagram() {
 
          this.drawRect([-.89,-.10],[-.43,.08]);
          this.drawRect([.50,-.30],[.68,.29]);
-	 this.dot([-.36,0],8);
-	 this.dot([.43,0],8);
+	 this.dot([-.36,0],.032);
+	 this.dot([.43,0],.032);
 
          ctx.strokeStyle = '#a0a0a0';
 	 this.line([-.9,-.7],[-.1,-.7], true);
@@ -247,8 +247,8 @@ function Diagram() {
 
          this.drawRect([-.89,-.10],[-.43,.08]);
          this.drawRect([.50,-.30],[.68,.29]);
-	 this.dot([-.36,0],8);
-	 this.dot([.43,0],8);
+	 this.dot([-.36,0],.032);
+	 this.dot([.43,0],.032);
 
          ctx.strokeStyle = '#a0a0a0';
 	 this.line([-.9,-.7],[-.1,-.7], true);
@@ -289,8 +289,8 @@ function Diagram() {
 
          this.drawRect([-.89,-.10],[-.43,.08]);
          this.drawRect([.50,-.30],[.68,.29]);
-	 this.dot([-.36,0],8);
-	 this.dot([.43,0],8);
+	 this.dot([-.36,0],.032);
+	 this.dot([.43,0],.032);
 
          ctx.strokeStyle = '#a0a0a0';
 	 this.line([-.9,-.7],[-.1,-.7], true);

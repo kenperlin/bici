@@ -32,13 +32,13 @@ function Diagram() {
       ctx.strokeStyle = 'blue';
       this.line([0,0], L, true);
       this.text('L', [L[0]-.05,L[1]]);
-      this.arc([0,0], 40, Math.atan2(lx,ly)-Math.PI/2,-Math.PI/2);
+      this.arc([0,0], .16, Math.atan2(lx,ly)-Math.PI/2,-Math.PI/2);
 
       ctx.strokeStyle = 'gray';
       this.line([0,0], [-L[0],L[1]], true);
       this.text('R', [-L[0]+.06,L[1]]);
-      this.arc([0,0], 40, Math.atan2(wx,wy)-Math.PI/2,
-                          Math.atan2(-lx,ly)-Math.PI/2);
+      this.arc([0,0], .1640, Math.atan2(wx,wy)-Math.PI/2,
+                             Math.atan2(-lx,ly)-Math.PI/2);
 
       ctx.strokeStyle = 'black';
 

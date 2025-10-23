@@ -67,7 +67,7 @@ function Diagram() {
       }
 
       ctx.strokeStyle = 'red';
-      this.dot([A.x,A.y], 10);
+      this.dot([A.x,A.y], .04);
       this.line([A.x,A.y], [B.x,B.y], 1);
 
       ctx.strokeStyle = 'blue';
@@ -86,8 +86,8 @@ function Diagram() {
          A0 = [V.x + tt[0] * W.x, V.y + tt[0] * W.y];
          B0 = [V.x + tt[1] * W.x, V.y + tt[1] * W.y];
          ctx.strokeStyle = 'blue';
-	 this.dot(A0, 7);
-	 this.dot(B0, 7);
+	 this.dot(A0, .028);
+	 this.dot(B0, .028);
 
          ctx.strokeStyle = 'black';
 	 this.line([.68,.77], [.74,.77]);
@@ -113,8 +113,8 @@ function Diagram() {
             A1 = [V.x + tt[0] * W.x, V.y + tt[0] * W.y];
             B1 = [V.x + tt[1] * W.x, V.y + tt[1] * W.y];
             ctx.strokeStyle = 'blue';
-	    this.dot(A1, 7);
-	    this.dot(B1, 7);
+	    this.dot(A1, .028);
+	    this.dot(B1, .028);
 
             ctx.strokeStyle = 'black';
 	    this.line([.68,.52], [.74,.52]);

@@ -44,7 +44,7 @@ function Diagram() {
       }
       ctx.strokeStyle = '#0000ff';
       ctx.fillStyle = '#0000ff20';
-      this.dot(V[I(state)], 7);
+      this.dot(V[I(state)], .028);
       for (let i = 0 ; i < state ; i++) {
          this.line(V[I(i)],V[I(i+1)]);
 	 if (i > 0)

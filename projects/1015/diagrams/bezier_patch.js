@@ -47,7 +47,7 @@ function Diagram() {
    let drawBezierControlGrid = (X,Y,Z,showPoints) => {
       if (showPoints)
          for (let n = 0 ; n < 16 ; n++)
-            this.dot([X[n],Y[n],Z[n]], 7);
+            this.dot([X[n],Y[n],Z[n]], .028);
       for (let i = 0 ; i < 4 ; i++)
       for (let j = 1 ; j < 4 ; j++) {
          this.line([X[4*i + j-1],Y[4*i + j-1],Z[4*i + j-1]],[X[4*i+j],Y[4*i+j],Z[4*i+j]]);

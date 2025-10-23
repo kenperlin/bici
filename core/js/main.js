@@ -37,7 +37,12 @@ let transition = (a,b,startTime) => {
 let figureSequence = () => { return []; }
 
 window.fontSize = 18;
-let codeArea = new CodeArea(-2000, 20), scene, sceneID, isAlt, isShift, isInfo, isOpaque;
+let scene, sceneID, isAlt, isShift, isInfo, isOpaque;
+
+let codeArea = new CodeArea(-2000, 20);
+let chalktalk = new Chalktalk();
+let pen = new Pen();
+
 let shift3D = 0, t3D = 0, isDrawpad;
 
 let gotoFigure = name => {
@@ -132,8 +137,6 @@ let setScene = id => {
 
 setScene('1');
 
-let pen = new Pen();
-let chalktalk = new Chalktalk();
 let isLightPen = false, isHelp = false;
 
 codeArea.callback = () => isReloadScene = true;

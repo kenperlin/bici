@@ -34,14 +34,14 @@ let addDiagramProperties = (diagram, ctx) => {
    diagram.arc = (a,r,t0,t1) => {
       let A = mxp(a);
       ctx.beginPath();
-      ctx.arc(A[0], A[1], r, t0, t1);
+      ctx.arc(A[0], A[1], r*w/2, t0, t1);
       ctx.stroke();
       return diagram;
    }
    diagram.dot = (a,r) => {
       let A = mxp(a);
       ctx.beginPath();
-      ctx.arc(A[0], A[1], r??10, 0, 2*Math.PI);
+      ctx.arc(A[0], A[1], (r??.04)*w/2, 0, 2*Math.PI);
       fill();
       return diagram;
    }

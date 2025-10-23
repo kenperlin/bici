@@ -51,8 +51,8 @@ function Diagram() {
 
          this.drawRect([-.94,-.10],[-.43,.08]);
          this.drawRect([.56,-.36],[.74,.36]);
-	 this.dot([-.36,-.01],8);
-	 this.dot([.48,-.01],8);
+	 this.dot([-.36,-.01],.016);
+	 this.dot([.48,-.01],.016);
 
 	 this.move(.15,.1,0);
 

@@ -27,7 +27,7 @@ function Diagram() {
       this.dot(C);
       this.text('C', [C[0]+.1,C[1],0]);
       ctx.strokeStyle = 'white';
-      this.dot(C,5);
+      this.dot(C,.02);
 
       ctx.strokeStyle = '#0080ff';
       this.dot(B);
@@ -35,8 +35,8 @@ function Diagram() {
       this.line(B, add(B,D), 1);
       if (isDragging) {
          ctx.lineWidth = 2;
-         this.arc(A, 250 * .8, 0, 2*Math.PI);
-         this.arc(C, 250 * .6, 0, 2*Math.PI);
+         this.arc(A, .8, 0, 2*Math.PI);
+         this.arc(C, .6, 0, 2*Math.PI);
       }
    }
 }

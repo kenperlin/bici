@@ -22,20 +22,6 @@ let draw = (mesh, matrix, color) => {
    return this;
 }
 
-/*
-let aim = Z => {
-   Z = normalize(Z);
-   let X = Z[0]*Z[0] < Z[1]*Z[1] ? [1,0,0] :
-           Z[1]*Z[1] < Z[2]*Z[2] ? [0,1,0] : [0,0,1];
-   let Y = normalize(cross(Z,X));
-   X = normalize(cross(Y,Z));
-   return [ X[0],X[1],X[2], 0,
-            Y[0],Y[1],Y[2], 0,
-	    Z[0],Z[1],Z[2], 0,
-	       0,   0,   0, 1 ];
-}
-*/
-
 this.update = () => {
    let time = Date.now() / 1000 / 10;
 
@@ -52,7 +38,7 @@ this.update = () => {
       draw(ball);
    M.pop();
 
-   M.push().aim(P).scale(.05,.05,norm(P)/2);
+   M.push().aim(P).scale(.05,.05,norm(P));
       draw(tube);
    M.pop();
 

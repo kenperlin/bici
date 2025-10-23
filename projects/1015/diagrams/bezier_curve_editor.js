@@ -130,9 +130,9 @@ function Diagram() {
 
       ctx.strokeStyle = 'blue';
       for (let i = 0 ; i < X.length ; i++)
-         this.dot([X[i],Y[i]], i%3 == 0 ? 10 : 7);
+         this.dot([X[i],Y[i]], i%3 == 0 ? .04 : .028);
       ctx.strokeStyle = 'white';
-      this.dot([X[X.length-1],Y[Y.length-1]], 5);
+      this.dot([X[X.length-1],Y[Y.length-1]], .02);
 
       ctx.font = '40px Courier';
       ctx.strokeStyle = '#0000ff';
