@@ -65,3 +65,86 @@ function Pen() {
    }
 }
 
+
+let isPenDown = false;
+
+let penDown = () => {
+   if (isPenDown)
+      return;
+   isPenDown = true;
+
+   if (isInfo) {
+      let figure = figures[figureIndex];
+      if (D.isIn()) {
+         if (figure.mouseMove || figure.mouseDown || figure.mouseDrag || figure.mouseUp) {
+            if (figure.mouseDown)
+               figure.mouseDown(D.x, D.y);
+            D.isDown = true;
+            return;
+         }
+         if (figure.onMove || figure.onDown || figure.onDrag || figure.onUp) {
+            if (figure.onDown)
+               figure.onDown(figure._px(D.x), figure._py(D.y));
+            D.isDown = true;
+            return;
+         }
+      }
+   }
+
+   pen.down();
+}
+
+let penUp = () => {
+   isPenDown = false;
+
+   if (isInfo) {
+      let figure = figures[figureIndex];
+      if (D.isDown) {
+
+         if (figure.mouseUp)
+            figure.mouseUp(D.x, D.y);
+         if (figure.onUp)
+            figure.onUp(figure._px(D.x), figure._py(D.y));
+
+         D.isDown = false;
+         return;
+      }
+   }
+
+   pen.up();
+}
+
+let penMove = (x,y) => {
+   if (isInfo) {
+      D.x = x - D.left;
+      D.y = y - D.top;
+      let figure = figures[figureIndex];
+      if (D.isDown) {
+
+         if (figure.mouseDrag)
+            figure.mouseDrag(D.x, D.y);
+         if (figure.onDrag)
+            figure.onDrag(figure._px(D.x), figure._py(D.y));
+
+         return;
+      }
+      if (D.isIn()) {
+
+         if (figure.mouseMove)
+            figure.mouseMove(D.x, D.y);
+         if (figure.onMove)
+            figure.onMove(figure._px(D.x), figure._py(D.y));
+
+         return;
+      }
+   }
+
+   pen.move(x,y);
+   if (isMove)
+      chalktalk.move(x,y);
+   if (isDrag)
+      chalktalk.drag(x,y);
+}
+
+document.addEventListener('mousemove', e => penMove(e.x,e.y));
+

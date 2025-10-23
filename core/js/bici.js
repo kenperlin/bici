@@ -35,9 +35,10 @@ let loadProject = projectName => {
    getFile('projects/' + project + '/slides.txt', s => {
       slides = s.split('\n');
       loadScripts(
-         ` M4, loadImage, webgl, webcam, trackHead, help, midi,
-	 linefont, numberString, teapotData, pen, matchCurves,
-	 glyphs, chalktalk, codeArea, math, shape, shader, main `.split(','));
+         ` M4, loadImage, webgl, webcam, trackHead, help,
+	 midi, linefont, numberString, teapotData, pen,
+	 keyEvent, matchCurves, glyphs, chalktalk, codeArea,
+	 math, shape, shader, diagram, main `.split(','));
    });
 }
 
