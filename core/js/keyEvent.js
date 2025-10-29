@@ -20,6 +20,17 @@ midiDown = key => keyDown("            / m  ;       ".substring(key,key+1));
 //                         '|'|''|'|'|''|'|''|'|'|''
 midiUp   = key => keyUp  ("b1u2wc3s4p5D/,m.'; f g tT".substring(key,key+1));
 
+let URLs = [
+   'http://cs.nyu.edu/~perlin/video_links.html',
+];
+
+let isOpeningURL = false;
+let openURL = index => {
+   let url = URLs[index];
+   if (url)
+      window.open(url, '_blank');
+}
+
 let keyDown = key => {
    switch (key) {
    case 'Alt': isAlt = true; break;
@@ -35,6 +46,14 @@ let keyDown = key => {
 }
 
 let keyUp = key => {
+   if (isOpeningURL) {
+      isOpeningURL = false;
+      if (key >= '0' && key <= '9') {
+         openURL(key - '0');
+	 return;
+      }
+   }
+
    if (isAlt) {
       switch (key) {
       case 'ArrowDown' : webcam.A /= 1.1; break;
@@ -72,7 +91,8 @@ let keyUp = key => {
       else if (! chalktalk.delete(pen.x,pen.y))
          pen.delete();
       break;
-   case 'a' : window.open('http://cs.nyu.edu/~perlin/video_links.html', '_blank'); break;
+   //case 'a' : window.open('http://cs.nyu.edu/~perlin/video_links.html', '_blank'); break;
+   case 'a' : isOpeningURL = true; break;
    case 'b' : webcam.isBlur = ! webcam.isBlur; break;
    case 'c' : codeArea.getElement().style.left = (isCode = ! isCode) ? 20 : -2000; break;
    case 'd' : isDrawpad = ! isDrawpad; break;

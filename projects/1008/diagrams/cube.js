@@ -1,4 +1,4 @@
-// BUILDING AN OCTAHEDRON
+// BUILDING A CUBE
 function Diagram() {
    let state = 0, isDown = false, theta = .1, phi = .1, xPrev = 0, yPrev = 0;
    this.onDown = (x,y) => {

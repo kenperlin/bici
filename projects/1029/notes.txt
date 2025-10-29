@@ -1,0 +1,55 @@
+
+Need diagrams to explain:
+
+	The goal of fast display text in 3D
+
+	Building your own stroke font
+
+	Making optimal use of what the GPU does well
+
+	Core problem to solve:
+
+		draw a sequence of lines with constant thickness.
+
+	Algorithm to draw one segment.
+
+	Algorithm to draw multiple segments.	
+
+	Combining all text into a single mesh (review).
+
+	Varying parameters
+		Inter-character spacing
+		Inter-line spacing
+		Width to height ratio
+
+	Variants:
+		making the text italic
+		making the text bold
+
+	Interesting questions to think about:
+
+		What is the best way to specify italic, bold, color, etc.
+		Can we do other things with the text?
+		Can we use this to render other sorts of things?
+		Can we generate other fonts procedurally?
+			Eg: define letter shapes with splines.
+
+	Intro to implicit surfaces
+
+	Printiple in one dimension
+
+	Blobby shapes
+
+	Show in two dimensions
+
+	Marching squares
+
+	Principle in 3 dimensions
+
+	Marching cubes -- Bill Lorenson
+
+	My variant -- marching simplices
+
+
+
+

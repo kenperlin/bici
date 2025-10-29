@@ -1,0 +1,70 @@
+TWO TOPICS:\n\n1) FAST WEBGL TEXT ,\n2) IMPLICIT SURFACES
+
+URL 1 https://kenperlin.com/implicit1
+URL 2 https://kenperlin.com/implicit2
+
+FAST WEBGL TEXT
+
+Goal:\n\nFast display of\ntext in 3D
+
+Strategy:\n\nMake optimal use of\nwhat the GPU does well
+
+Approach:\n\nBuild a stroke font
+
+Core problem to solve:
+
+Render a sequence\nof lines with\nconstant thickness\non the GPU\nas a single mesh
+
+(1) Draw all the segments\n\n(2) Connect the segments\n\n(3) Make it all look good!!!
+
+Then merge all text\ninto a single mesh
+
+multiline.js
+
+Things to vary:\n\nInter-letter spacing\nInter-line spacing\nWidth / height ratio
+
+Variants:\n\nitalic text\nbold text
+
+INTERESTING\nQUESTIONS
+
+What is the best way\nfor users to specify\nitalic, bold, color, etc.
+
+Can we do other things\nwith the text?
+
+Can we generate\nother fonts\nby using splines?
+
+Can we use this\napproach to render\nnon-text things?
+
+INTRODUCTION TO\nIMPLICIT SURFACES
+
+Basic idea
+
+metaball.js
+
+Finding the boundary
+
+Marching squares
+
+marching_square.js
+marching_squares_cases.js
+marching_squares.js
+
+Three dimensions
+
+Marching cubes
+
+8 corners\n=\n256 cases
+
+marching_cubes.js
+
+Marching simplices
+
+Split each cube\ninto 6 simplices
+
+simplices.js
+
+4 vertices per simplex\n=\n16 cases
+
+simplex.js
+
+

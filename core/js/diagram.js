@@ -23,18 +23,19 @@ let addDiagramProperties = (diagram, ctx) => {
       ctx.fillStyle = saveFillStyle;
    }
 
-   diagram.move  = (x,y,z) => { M.translate(x,y,z); return diagram; }
-   diagram.pop   = ()      => { M.restore  ()     ; return diagram; }
-   diagram.push  = ()      => { M.save     ()     ; return diagram; }
-   diagram.scale = (x,y,z) => { M.scale    (x,y,z); return diagram; }
-   diagram.turnX = a       => { M.rotateX  (a)    ; return diagram; }
-   diagram.turnY = a       => { M.rotateY  (a)    ; return diagram; }
-   diagram.turnZ = a       => { M.rotateZ  (a)    ; return diagram; }
+   diagram.identity  = ()      => { M.identity()      ; return diagram; }
+   diagram.move      = (x,y,z) => { M.translate(x,y,z); return diagram; }
+   diagram.pop       = ()      => { M.restore  ()     ; return diagram; }
+   diagram.push      = ()      => { M.save     ()     ; return diagram; }
+   diagram.scale     = (x,y,z) => { M.scale    (x,y,z); return diagram; }
+   diagram.turnX     = a       => { M.rotateX  (a)    ; return diagram; }
+   diagram.turnY     = a       => { M.rotateY  (a)    ; return diagram; }
+   diagram.turnZ     = a       => { M.rotateZ  (a)    ; return diagram; }
    diagram.getMatrix = () => M.m();
    diagram.arc = (a,r,t0,t1) => {
       let A = mxp(a);
       ctx.beginPath();
-      ctx.arc(A[0], A[1], r*w/2, t0, t1);
+      ctx.arc(A[0], A[1], r*w/2, t0??0, t1??2*Math.PI);
       ctx.stroke();
       return diagram;
    }
@@ -77,7 +78,7 @@ let addDiagramProperties = (diagram, ctx) => {
       ctx.fill();
       return diagram;
    }
-   diagram.line = (a,b,isArrow) => {
+   diagram.line = (a,b,arrowHead) => {
       let A = mxp(a), B = mxp(b);
 
       ctx.beginPath();
@@ -85,10 +86,10 @@ let addDiagramProperties = (diagram, ctx) => {
       ctx.lineTo(B[0], B[1]);
       ctx.stroke();
 
-      if (isArrow) {
+      if (arrowHead) {
          let dx = B[0]-A[0], dy = B[1]-A[1], ds = Math.sqrt(dx*dx+dy*dy);
-         dx *= 10 / ds;
-         dy *= 10 / ds;
+         dx *= 10 / ds * arrowHead;
+         dy *= 10 / ds * arrowHead;
 
          ctx.beginPath();
          ctx.moveTo(B[0]+dx*.4  , B[1]+dy*.4  );
@@ -109,9 +110,9 @@ let addDiagramProperties = (diagram, ctx) => {
       }
       ctx.stroke();
    }
-   diagram.text = (str, a) => {
+   diagram.text = (str, a, isLeft) => {
       let A = mxp(a);
-      let w = ctx.measureText(str).width;
+      let w = isLeft ? 0 : ctx.measureText(str).width;
 
       let saveFillStyle = ctx.fillStyle;
       ctx.fillStyle = ctx.strokeStyle;

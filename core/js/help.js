@@ -39,7 +39,7 @@ isHelp : false,
 text : `\
 Hot keys
 0-9    Select 3D scene 0-9.
-a Bring up a page of video links.
+a (+ 0-9) Open a pre-defined URL.
 b Toggle blurred region in video.
 c Toggle editable code for 3D scene.
 d Toggle drawing pad.

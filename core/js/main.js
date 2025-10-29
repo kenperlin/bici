@@ -58,6 +58,9 @@ let figures = [], figureNames = [], figureIndex = 0, fq = {}, fqParsed = false;
 
 let cubeVertices = [ [-1,-1,-1,1],[1,-1,-1,1],[-1,1,-1,1],[1,1,-1,1],
                      [-1,-1, 1,1],[1,-1, 1,1],[-1,1, 1,1],[1,1, 1,1] ];
+let cubeEdges = [ [0,1],[2,3],[4,5],[6,7],
+                  [0,2],[1,3],[4,6],[5,7],
+                  [0,4],[1,5],[2,6],[3,7] ];
 
 let initFigures = () => {
    let ctx = D.ctx;
@@ -65,6 +68,13 @@ let initFigures = () => {
    for (let n = 0 ; n < slides.length ; n++) {
 
       let file = slides[n];
+
+      if (file.indexOf('URL') == 0) {
+         let info = file.split(' ');
+	 URLs[parseInt(info[1])] = info[2];
+	 continue;
+      }
+
       let j = file.indexOf('//');
       if (j >= 0)
          file = file.substring(0, j);

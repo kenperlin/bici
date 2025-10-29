@@ -37,8 +37,9 @@ let loadProject = projectName => {
       loadScripts(
          `M4, loadImage, webgl, webcam, trackHead, help,
 	  midi, linefont, numberString, teapotData, pen,
-	  keyEvent, matchCurves, glyphs, chalktalk, codeArea,
-	  math, shape, shader, diagram, main`.split(','));
+	  keyEvent, matchCurves, glyphs, chalktalk,
+	  codeArea, math, shape, shader, diagram, main,
+	  textSample, marching_cubes_table`.split(','));
    });
 }
 
