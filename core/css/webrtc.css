@@ -37,10 +37,10 @@
 /* Remote Video Container - Large */
 #remote-videos-container .video-container {
   position: relative;
-  width: 100%;
-  height: 100%;
-  max-width: 1280px;
-  max-height: 720px;
+  width: auto;
+  height: auto;
+  max-width: 90vw;
+  max-height: 90vh;
   background: #000;
   border-radius: 12px;
   overflow: hidden;
@@ -48,8 +48,11 @@
 }
 
 #remote-videos-container .video-container video {
-  width: 100%;
-  height: 100%;
+  display: block;
+  max-width: 90vw;
+  max-height: 90vh;
+  width: auto;
+  height: auto;
   object-fit: contain;
 }
 
