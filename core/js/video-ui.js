@@ -113,8 +113,38 @@ class VideoUI {
   // Update method to draw remote video to canvas (like webcam.update)
   update() {
     if (this.hasRemoteVideo && this.remoteVideo.readyState >= 2) {
-      // Draw remote video to canvas
-      this.ctx.drawImage(this.remoteVideo, 0, 0, 640, 480);
+      // Get actual video dimensions
+      const videoWidth = this.remoteVideo.videoWidth;
+      const videoHeight = this.remoteVideo.videoHeight;
+
+      if (videoWidth && videoHeight) {
+        // Clear canvas first
+        this.ctx.fillStyle = 'black';
+        this.ctx.fillRect(0, 0, 640, 480);
+
+        // Calculate aspect ratio to fit video (contain mode - no stretching)
+        const canvasAspect = 640 / 480;
+        const videoAspect = videoWidth / videoHeight;
+
+        let drawWidth, drawHeight, offsetX, offsetY;
+
+        if (videoAspect > canvasAspect) {
+          // Video is wider - fit to width
+          drawWidth = 640;
+          drawHeight = 640 / videoAspect;
+          offsetX = 0;
+          offsetY = (480 - drawHeight) / 2;
+        } else {
+          // Video is taller - fit to height
+          drawHeight = 480;
+          drawWidth = 480 * videoAspect;
+          offsetX = (640 - drawWidth) / 2;
+          offsetY = 0;
+        }
+
+        // Draw remote video with proper aspect ratio
+        this.ctx.drawImage(this.remoteVideo, offsetX, offsetY, drawWidth, drawHeight);
+      }
     } else {
       // Clear canvas if no remote video
       this.ctx.fillStyle = 'black';
