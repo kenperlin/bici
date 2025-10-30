@@ -31,3 +31,4 @@ build/
 # Temporary files
 *.tmp
 .cache/
+INSIGHTFLOW_FILE_PATHS.txt
