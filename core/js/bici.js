@@ -38,7 +38,8 @@ let loadProject = projectName => {
          `M4, loadImage, webgl, webcam, trackHead, help,
 	  midi, linefont, numberString, teapotData, pen,
 	  keyEvent, matchCurves, glyphs, chalktalk,
-	  codeArea, math, shape, shader, diagram, main,
+	  codeArea, math, shape, shader, diagram,
+	  webrtc-client, video-ui, main,
 	  textSample, marching_cubes_table`.split(','));
    });
 }

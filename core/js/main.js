@@ -43,6 +43,19 @@ let codeArea = new CodeArea(-2000, 20);
 let chalktalk = new Chalktalk();
 let pen = new Pen();
 
+// Initialize WebRTC
+let webrtcClient, videoUI;
+if (typeof WebRTCClient !== 'undefined') {
+   webrtcClient = new WebRTCClient();
+   webrtcClient.init().then(localStream => {
+      videoUI = new VideoUI(webrtcClient);
+      videoUI.setLocalStream(localStream);
+      console.log('WebRTC initialized successfully');
+   }).catch(err => {
+      console.log('WebRTC not available:', err.message);
+   });
+}
+
 let shift3D = 0, t3D = 0, isDrawpad;
 
 let gotoFigure = name => {
