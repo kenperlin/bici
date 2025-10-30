@@ -6,18 +6,30 @@ class VideoUI {
     this.isVisible = true;
     this.remoteVideoElements = new Map();
 
+    // Create off-screen canvas for remote video (like webcam.canvas)
+    this.canvas = document.createElement('canvas');
+    this.canvas.style.position = 'absolute';
+    this.canvas.style.left = '2000px';
+    this.canvas.width = 640;
+    this.canvas.height = 480;
+    this.ctx = this.canvas.getContext('2d');
+
+    // Create off-screen video element for remote stream
+    this.remoteVideo = document.createElement('video');
+    this.remoteVideo.autoplay = true;
+    this.remoteVideo.style.position = 'absolute';
+    this.remoteVideo.style.top = '-2000px';
+
     this.createUI();
     this.setupEventHandlers();
   }
 
   createUI() {
-    // Create main container
+    // Create main container - only for local PiP and controls
     this.container = document.createElement('div');
     this.container.id = 'webrtc-container';
     this.container.className = 'webrtc-hidden';
     this.container.innerHTML = `
-      <div id="remote-videos-container"></div>
-
       <div id="local-video-container" class="video-container local-pip">
         <video id="local-video" autoplay muted playsinline></video>
         <div class="video-label">You</div>
@@ -40,7 +52,6 @@ class VideoUI {
 
     // Cache DOM elements
     this.localVideo = document.getElementById('local-video');
-    this.remoteVideosContainer = document.getElementById('remote-videos-container');
     this.toggleVideoBtn = document.getElementById('toggle-video-btn');
     this.toggleAudioBtn = document.getElementById('toggle-audio-btn');
     this.toggleWebRTCBtn = document.getElementById('toggle-webrtc-btn');
@@ -89,25 +100,9 @@ class VideoUI {
   addRemoteVideo(clientId, stream) {
     console.log('Adding remote video for:', clientId);
 
-    // Create video element
-    const videoContainer = document.createElement('div');
-    videoContainer.className = 'video-container';
-    videoContainer.id = `remote-${clientId}`;
-
-    const video = document.createElement('video');
-    video.autoplay = true;
-    video.playsinline = true;
-    video.srcObject = stream;
-
-    const label = document.createElement('div');
-    label.className = 'video-label';
-    label.textContent = `User ${clientId.substr(0, 6)}`;
-
-    videoContainer.appendChild(video);
-    videoContainer.appendChild(label);
-    this.remoteVideosContainer.appendChild(videoContainer);
-
-    this.remoteVideoElements.set(clientId, videoContainer);
+    // Set the remote video stream (only support one remote peer for now)
+    this.remoteVideo.srcObject = stream;
+    this.hasRemoteVideo = true;
 
     // Show the container if hidden
     if (this.container.classList.contains('webrtc-hidden')) {
@@ -115,17 +110,27 @@ class VideoUI {
     }
   }
 
+  // Update method to draw remote video to canvas (like webcam.update)
+  update() {
+    if (this.hasRemoteVideo && this.remoteVideo.readyState >= 2) {
+      // Draw remote video to canvas
+      this.ctx.drawImage(this.remoteVideo, 0, 0, 640, 480);
+    } else {
+      // Clear canvas if no remote video
+      this.ctx.fillStyle = 'black';
+      this.ctx.fillRect(0, 0, 640, 480);
+    }
+  }
+
   removeRemoteVideo(clientId) {
     console.log('Removing remote video for:', clientId);
 
-    const videoContainer = this.remoteVideoElements.get(clientId);
-    if (videoContainer) {
-      videoContainer.remove();
-      this.remoteVideoElements.delete(clientId);
-    }
+    // Clear the remote video
+    this.remoteVideo.srcObject = null;
+    this.hasRemoteVideo = false;
 
     // Hide if no remote videos left
-    if (this.remoteVideoElements.size === 0 && this.isVisible) {
+    if (this.isVisible) {
       this.hide();
     }
   }

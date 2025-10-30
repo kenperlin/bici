@@ -219,7 +219,14 @@ animate = () => {
 
    let p = webcam.update();
    codeArea.update();
-   ctx.drawImage(webcam.canvas, 0,0,640,440, 0,0,w,h);
+
+   // Draw remote video if available, otherwise draw webcam
+   if (videoUI && videoUI.hasRemoteVideo) {
+      videoUI.update();
+      ctx.drawImage(videoUI.canvas, 0,0,640,480, 0,0,w,h);
+   } else {
+      ctx.drawImage(webcam.canvas, 0,0,640,440, 0,0,w,h);
+   }
 
    if (isInfo) {
       ctx.globalAlpha = isOpaque ? 1 : .5;

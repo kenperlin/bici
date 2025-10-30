@@ -1,66 +1,20 @@
-/* WebRTC Video Container */
+/* WebRTC Video Container - Only for local PiP and controls */
 #webrtc-container {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  bottom: 20px;
+  right: 20px;
   z-index: 1000;
   transition: opacity 0.3s ease;
-  pointer-events: none;
 }
 
 #webrtc-container.webrtc-hidden {
   opacity: 0;
-}
-
-#webrtc-container > * {
-  pointer-events: auto;
-}
-
-/* Remote Videos Container - Full Screen */
-#remote-videos-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  padding: 10px;
-}
-
-/* Remote Video Container - Large */
-#remote-videos-container .video-container {
-  position: relative;
-  width: auto;
-  height: auto;
-  max-width: 90vw;
-  max-height: 90vh;
-  background: #000;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-}
-
-#remote-videos-container .video-container video {
-  display: block;
-  max-width: 90vw;
-  max-height: 90vh;
-  width: auto;
-  height: auto;
-  object-fit: contain;
+  pointer-events: none;
 }
 
 /* Local video (you) - Picture in Picture */
 #local-video-container.local-pip {
-  position: fixed;
-  bottom: 80px;
-  right: 20px;
+  position: relative;
   width: 200px;
   height: 150px;
   background: #000;
@@ -68,7 +22,7 @@
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   border: 2px solid #00ff00;
-  z-index: 1001;
+  margin-bottom: 10px;
 }
 
 #local-video-container.local-pip video {
@@ -94,6 +48,7 @@
 /* Controls */
 #webrtc-controls {
   display: flex;
+  flex-direction: row;
   gap: 8px;
   justify-content: center;
 }
