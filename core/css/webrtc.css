@@ -1,42 +1,80 @@
 /* WebRTC Video Container */
 #webrtc-container {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   z-index: 1000;
   transition: opacity 0.3s ease;
+  pointer-events: none;
 }
 
 #webrtc-container.webrtc-hidden {
   opacity: 0;
-  pointer-events: none;
 }
 
-/* Videos Layout */
-#webrtc-videos {
+#webrtc-container > * {
+  pointer-events: auto;
+}
+
+/* Remote Videos Container - Full Screen */
+#remote-videos-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
   gap: 10px;
-  margin-bottom: 10px;
+  padding: 10px;
 }
 
-/* Video Container */
-.video-container {
+/* Remote Video Container - Large */
+#remote-videos-container .video-container {
   position: relative;
+  width: 100%;
+  height: 100%;
+  max-width: 1280px;
+  max-height: 720px;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+}
+
+#remote-videos-container .video-container video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Local video (you) - Picture in Picture */
+#local-video-container.local-pip {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
   width: 200px;
   height: 150px;
   background: #000;
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  border: 2px solid #00ff00;
+  z-index: 1001;
 }
 
-.video-container video {
+#local-video-container.local-pip video {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
+/* Video Labels */
 .video-label {
   position: absolute;
   bottom: 8px;
@@ -47,18 +85,7 @@
   border-radius: 4px;
   font-size: 12px;
   font-family: Arial, sans-serif;
-}
-
-/* Local video (you) */
-#local-video-container {
-  border: 2px solid #00ff00;
-}
-
-/* Remote Videos Container */
-#remote-videos-container {
-  display: flex;
-  flex-direction: row;
-  gap: 10px;
+  z-index: 10;
 }
 
 /* Controls */

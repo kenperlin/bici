@@ -16,12 +16,11 @@ class VideoUI {
     this.container.id = 'webrtc-container';
     this.container.className = 'webrtc-hidden';
     this.container.innerHTML = `
-      <div id="webrtc-videos">
-        <div id="local-video-container" class="video-container">
-          <video id="local-video" autoplay muted playsinline></video>
-          <div class="video-label">You</div>
-        </div>
-        <div id="remote-videos-container"></div>
+      <div id="remote-videos-container"></div>
+
+      <div id="local-video-container" class="video-container local-pip">
+        <video id="local-video" autoplay muted playsinline></video>
+        <div class="video-label">You</div>
       </div>
 
       <div id="webrtc-controls">
