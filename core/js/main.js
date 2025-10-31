@@ -43,6 +43,19 @@ let codeArea = new CodeArea(-2000, 20);
 let chalktalk = new Chalktalk();
 let pen = new Pen();
 
+// Initialize WebRTC
+let webrtcClient, videoUI;
+if (typeof WebRTCClient !== 'undefined') {
+   webrtcClient = new WebRTCClient();
+   webrtcClient.init().then(localStream => {
+      videoUI = new VideoUI(webrtcClient);
+      videoUI.setLocalStream(localStream);
+      console.log('WebRTC initialized successfully');
+   }).catch(err => {
+      console.log('WebRTC not available:', err.message);
+   });
+}
+
 let shift3D = 0, t3D = 0, isDrawpad;
 
 let gotoFigure = name => {
@@ -71,8 +84,14 @@ let initFigures = () => {
 
       if (file.indexOf('URL') == 0) {
          let info = file.split(' ');
-	 URLs[parseInt(info[1])] = info[2];
+	 URLs[info[1]] = info[2];
 	 continue;
+      }
+
+      if (file.indexOf('SRC') == 0) {
+         let info = file.split(' ');
+         loadScript('projects/' + project + '/' + info[1]);
+         continue;
       }
 
       let j = file.indexOf('//');
@@ -203,6 +222,13 @@ animate = () => {
 
    t3D = Math.max(0, Math.min(1, t3D + (shift3D ? deltaTime : -deltaTime)));
    canvas3D.style.left = isScene ? 500 + ease(t3D) * 300 : -2000;
+
+   // Video source is remote video if available, otherwise webcam
+   if (videoUI && videoUI.hasRemoteVideo) {
+      videoUI.update();
+      videoSrc = videoUI.canvas;
+   } else
+      videoSrc = webcam;
 
    let p = webcam.update();
    codeArea.update();

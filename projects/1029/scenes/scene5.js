@@ -1,8 +1,8 @@
-// RENDER A "W"
+// RENDER A LARGE TEXT MESSAGE IN A LINEFONT
 
 function Scene() {
 
-   let createPathsMesh = (width, paths) => {
+   let createPathsMesh = (lineWidth, paths) => {
       let vertices = [];
       let addVertex = pos => vertices.push(pos,[0,0,1]);
       for (let n = 0 ; n < paths.length ; n++) {
@@ -15,9 +15,9 @@ function Scene() {
             let dc = normalize(subtract(c, b));
             let db = normalize(add(da, dc));
             let s = dot(da, db);
-            da = resize(da, width/2);
-            dc = resize(dc, width/2);
-            db = resize(db, width/2);
+            da = resize(da, lineWidth/2);
+            dc = resize(dc, lineWidth/2);
+            db = resize(db, lineWidth/2);
             let ea = [-da[1]  , da[0]  , 0];
             let ec = [-dc[1]  , dc[0]  , 0];
             let eb = [-db[1]/s, db[0]/s, 0];
@@ -51,7 +51,27 @@ function Scene() {
       }
    }
 
-   console.log(mesh);
+   let createTextMesh = text => {
+      let myPaths = [], lines = text.split('\n'), c;
+      for (let row = 0 ; row < lines.length ; row++)
+      for (let col = 0 ; col < lines[row].length ; col++)
+         if ((c = lines[row].charCodeAt(col) & 127) > 32) {
+            let x = .019*col, y = -.0375*row;
+            let paths = linefont[c - 32].paths;
+            for (let i = 0 ; i < paths.length ; i++) {
+               let myPath = [], path = paths[i];
+               for (let j = 0 ; j < path.length ; j++) {
+	          let p = path[j];
+                  myPath.push([ x + p[0] / 4000,
+                                y - p[1] / 4000, 0]);
+               }
+               myPaths.push(myPath);
+            }
+         }
+      return createPathsMesh(.0025, myPaths);
+   }
+
+   let mesh = createTextMesh(textSampleCode);
 
 let cube = Shape.cubeMesh();
 
@@ -73,18 +93,9 @@ let draw = (mesh, matrix, color) => {
 
 this.update = () => {
    let time = Date.now() / 1000;
-
-   let mesh = createPathsMesh(.2, [
-      [ [-.4, .8,0],
-        [-.4,-.8,0],
-	[  0,-.4,0],
-	[ .4,-.8,0],
-	[ .4, .8,0]],
-   ]);
-
-   draw(mesh, mxm(turnX(0 * time),
-              mxm(turnY(0 * time),
-	          scale(.8))),[0,.5,1]);
+   draw(mesh, mxm(turnY(.0*Math.sin(3*time)),
+              mxm(move(-1,1,0),
+                  scale(1.5))),[0,0,0]);
 }
 
 }

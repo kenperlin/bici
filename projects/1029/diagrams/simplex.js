@@ -1,8 +1,7 @@
 function Diagram() {
-   let state = 0, isDown = false, theta = .1, phi = .1, xPrev = 0, yPrev = 0;
+   let state = 0, theta = .1, phi = .1, xPrev = 0, yPrev = 0;
    let order = [ [1,2],[2,1],[2,4],[4,2],[4,1],[1,4] ];
    this.onDown = (x,y) => {
-      isDown = true;
       xPrev = x;
       yPrev = y;
    }
@@ -13,22 +12,18 @@ function Diagram() {
       yPrev = y;
    }
    this.onUp = (x,y) => {
-      isDown = false;
       if (y > .5)
-         if (x > 0)
-	    state = Math.min(state + 1, 2);
-         else
-            state = Math.max(0, state - 1);
+         state = Math.max(0, Math.min(2, state + (x>0?1:-1)));
    }
    this.update = ctx => {
-      ctx.fillStyle = 'white';
-      ctx.fillRect(0,0,this.width,this.height);
+      this.fillColor('white');
+      this.fillRect([-1,-1],[1,1]);
 
       this.turnY(theta);
       this.turnX(phi);
 
-      ctx.fillStyle = '#0000ff20';
-      ctx.strokeStyle = '#0000ff';
+      this.fillColor('#0000ff20');
+      this.drawColor('#0000ff');
 
       this.scale(.5);
 
@@ -37,19 +32,19 @@ function Diagram() {
       let C = cubeVertices[5];
       let D = cubeVertices[6];
 
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = 'black';
+      this.lineWidth(.008);
+      this.drawColor('black');
       this.line(A,B).line(A,C).line(A,D);
       this.line(B,C).line(B,D).line(C,D);
 
-      ctx.fillStyle = '#00000010';
+      this.fillColor('#00000010');
       this.fillPolygon([A,B,C]);
       this.fillPolygon([A,B,D]);
       this.fillPolygon([A,C,D]);
       this.fillPolygon([B,C,D]);
 
-      ctx.lineWidth = 4;
-      ctx.fillStyle = '#00000040';
+      this.lineWidth(.016);
+      this.fillColor('#00000040');
       let AB, AC, AD, BC, BD;
       switch (state) {
       case 1:
@@ -58,9 +53,9 @@ function Diagram() {
          AD = mix(A,D,.7);
          this.fillPolygon([AB,AC,AD]);
          this.line(AB,AC).line(AC,AD).line(AD,AB);
-	 ctx.strokeStyle = 'blue';
+	 this.drawColor('blue');
 	 this.dot(A,.05);
-	 ctx.strokeStyle = 'red';
+	 this.drawColor('red');
 	 this.dot(B,.05).dot(C,.05).dot(D,.05);
          break;
       case 2:
@@ -71,9 +66,9 @@ function Diagram() {
          this.fillPolygon([AC,AD,BD]);
          this.fillPolygon([AC,BC,BD]);
          this.line(AC,AD).line(AD,BD).line(BD,BC).line(BC,AC).line(AC,BD);
-	 ctx.strokeStyle = 'blue';
+	 this.drawColor('blue');
 	 this.dot(A,.05).dot(B,.05);
-	 ctx.strokeStyle = 'red';
+	 this.drawColor('red');
 	 this.dot(C,.05).dot(D,.05);
          break;
       }

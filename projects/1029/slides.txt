@@ -1,23 +1,41 @@
-TWO TOPICS:\n\n1) FAST WEBGL TEXT ,\n2) IMPLICIT SURFACES
+SRC js/linefont.js
+SRC js/textSamples.js
+SRC js/marching_cubes_table.js
 
-URL 1 https://kenperlin.com/implicit1
+TWO TOPICS:\n\n1) FAST SCALABLE TEXT\n2) IMPLICIT  SURFACES .
+
 URL 2 https://kenperlin.com/implicit2
 
-FAST WEBGL TEXT
+TOPIC 1:\n\nFAST SCALABLE TEXT
 
-Goal:\n\nFast display of\ntext in 3D
+Goal:\n\nFast display of infinitely\nscalable text in 3D
 
-Strategy:\n\nMake optimal use of\nwhat the GPU does well
+Traditional method:\n\nUse a font atlas\nas a texture source.
 
-Approach:\n\nBuild a stroke font
+URL 1 https://kenperlin.com/implicit1
+font_atlas.png
+
+sample_text_triangle_strip.png
+
+sample_text_in_perspective.png
+
+Problem:\n\nIt looks fuzzy\nwhen you get close
+
+font_atlas_zoomed_in.png
+
+That can be a problem\nwhen walking around\nin mixed reality\nor virtual reality.
+
+Strategy:\n\nUse what the\nGPU does well.
+
+Approach:\n\nBuild a\nstroke font.
 
 Core problem to solve:
 
-Render a sequence\nof lines with\nconstant thickness\non the GPU\nas a single mesh
+Render a sequence\nof lines with\nconstant thickness\non the GPU\nas a single mesh.
 
 (1) Draw all the segments\n\n(2) Connect the segments\n\n(3) Make it all look good!!!
 
-Then merge all text\ninto a single mesh
+Then merge all text\ninto a single mesh.
 
 multiline.js
 
@@ -25,7 +43,7 @@ Things to vary:\n\nInter-letter spacing\nInter-line spacing\nWidth / height rati
 
 Variants:\n\nitalic text\nbold text
 
-INTERESTING\nQUESTIONS
+SOME\nINTERESTING\nQUESTIONS
 
 What is the best way\nfor users to specify\nitalic, bold, color, etc.
 
@@ -35,13 +53,13 @@ Can we generate\nother fonts\nby using splines?
 
 Can we use this\napproach to render\nnon-text things?
 
-INTRODUCTION TO\nIMPLICIT SURFACES
+TOPIC 2:\n\nINTRODUCTION TO\nIMPLICIT SURFACES
 
 Basic idea
 
 metaball.js
 
-Finding the boundary
+Finding the boundary\nexplicitly.
 
 Marching squares
 
@@ -51,20 +69,36 @@ marching_squares.js
 
 Three dimensions
 
-Marching cubes
+Marching cubes\n\n<font 35px Helvetica>Bill Lorensen (1987)
 
-8 corners\n=\n256 cases
+bill_lorensen.png
+
+marching_cubes.png
+
+It revolutionized\nmedical imaging
+
+cat_to_marching_cubes.png
+
+8 cube corners\n=\n256 cases
 
 marching_cubes.js
 
-Marching simplices
+My approach:\n\nMarching simplices
 
-Split each cube\ninto 6 simplices
+Split each cube\ninto 6 simplices.
 
 simplices.js
 
-4 vertices per simplex\n=\n16 cases
+4 vertices per simplex\n=\nonly 16 cases
 
 simplex.js
 
+Blending weights\nat each vertex.
 
+blending.js
+
+bending.js
+
+Skinning:\n\nBlending matrix transforms\nat each vertex
+
+fini

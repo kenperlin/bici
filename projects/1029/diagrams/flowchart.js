@@ -22,18 +22,18 @@ Wearable does the following final steps:
    let lines = text.split('\n');
 
    this.update = ctx => {
-      ctx.fillStyle = 'white';
+      this.fillColor('white');
       this.fillRect([-1,-1],[1,1]);
 
-      ctx.font = '15px Arial';
+      this.font('15px Arial');
       for (let n = 0 ; n < lines.length ; n++) {
          let y = .93-.202*n;
          this.text(lines[n], [-.8,y], 1);
-         ctx.lineWidth = 1;
+         this.lineWidth(.004);
 	 this.drawRect([n>=6 ? -.73 : -.81,y-.06],[n>=6 ? .51 : .73,y+.02]);
 	 if (n < lines.length-1) {
 	    let x = n>=6 ? -.1 : -.3;
-            ctx.lineWidth = 2;
+            this.lineWidth(.008);
 	    this.line([x,y-.06],[x,y-.17],.5);
          }
       }

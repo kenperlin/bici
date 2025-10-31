@@ -1,3 +1,4 @@
+SRC js/teapotData.js
 DISTANCE FOG
 
 Fog attenuates\nexponentially\nwith distance\nalong the ray.

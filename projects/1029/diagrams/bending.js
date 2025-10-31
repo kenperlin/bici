@@ -1,9 +1,9 @@
 function Diagram() {
-   let state = 0, mx = 0;
+   let state = 5, mx = .25;
    this.onDrag = (x,y) => mx = x;
    this.onUp = (x,y) => {
       if (y > .5)
-         state = Math.max(0, Math.min(5, x > 0 ? state+1 : state-1));
+         state = Math.max(0, Math.min(7, x > 0 ? state+1 : state-1));
    }
    this.update = ctx => {
       let y = .2;
@@ -70,19 +70,39 @@ function Diagram() {
 	    this.dot([mx,-.4],.5);
          }
 
+	 let theta = state < 7 ? 0 : Math.PI/2 * Math.sin(2 * Date.now() / 1000) * .5 + .5;
+	 let cos = Math.cos(theta);
+	 let sin = Math.sin(theta);
+
          this.fillColor('black');
          for (let x = -1 ; x <  1 ; x += 1/200)
          for (let y = -1 ; y < .1 ; y += 1/200) {
+
             let x1 = x;
+            let y1 = y + .4 - mx;
+
             let x2 = x - mx;
-            let y1 = y + .4;
             let y2 = y + .4;
-	    let f1 = mb(2.27 * Math.sqrt(x1*x1 + y1*y1));
-	    let f2 = mb(2.27 * Math.sqrt(x2*x2 + y2*y2));
+
+            y2 -= mx;
+	    let x2_tmp =  cos * x2 + sin * y2;
+	    let y2_tmp = -sin * x2 + cos * y2;
+	    x2 = x2_tmp;
+	    y2 = y2_tmp;
+            y2 += mx;
+
+	    let f1 = mb(2.27 * Math.sqrt(x1*x1 + 8*y1*y1));
+	    let f2 = mb(2.27 * Math.sqrt(8*x2*x2 + y2*y2));
+
 	    let f = state < 4 ? Math.max(f1,f2) : f1 + f2;
+
 	    if (f > .1) {
 	       let r = .01 * (1.3 - f);
 	       r = 20 * r * r;
+	       if (state >= 6) {
+	          let t = 255 * f2 / (f1 + f2);
+		  this.fillColor('rgb(' + (255-t >> 0) + ',0,' + (t >> 0) + ')');
+	       }
 	       this.fillRect([x-r,y-r],[x+r,y+r]);
             }
          }
@@ -102,7 +122,9 @@ function Diagram() {
       case 2: this.text("Let's look at one slice in profile.", [0,.75]); break;
       case 3: this.text("Instead of choosing the taller peak", [0,.75]); break;
       case 4: this.text("let's try summing their heights.", [0,.75]); break;
-      case 5: this.text("The blended shape is the boundary.", [0,.75]); break;
+      case 5: this.text("We can use the different weights", [0,.75]); break;
+      case 6: this.text("to blend various properties,", [0,.75]); break;
+      case 6: this.text("including matrix transformation.", [0,.75]); break;
       }
    }
 }

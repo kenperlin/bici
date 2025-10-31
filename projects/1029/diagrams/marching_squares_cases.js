@@ -6,26 +6,26 @@ function Diagram() {
          state = Math.max(0, Math.min(4, x > 0 ? state+1 : state-1));
    }
    this.update = ctx => {
-      ctx.fillStyle = 'white';
+      this.fillColor('white');
       this.fillRect([-1,-1],[1,1]);
 
       let sign = (x,y,pos) => {
          if (pos) {
-            ctx.strokeStyle = 'blue';
+            this.drawColor('blue');
             this.drawRect([x-.04 ,y-.04 ],[x+.04 ,y+.04 ]);
             this.fillRect([x-.032,y-.032],[x+.032,y+.032]);
             this.line([x-.015,y],[x+.015,y]);
             this.line([x,y-.015],[x,y+.015]);
          }
 	 else {
-            ctx.strokeStyle = 'red';
+            this.drawColor('red');
             this.drawRect([x-.04 ,y-.04 ],[x+.04 ,y+.04 ]);
             this.fillRect([x-.032,y-.032],[x+.032,y+.032]);
             this.line([x-.015,y],[x+.015,y]);
 	 }
       }
 
-      ctx.font = '60px Helvetica';
+      this.font('60px Helvetica');
       for (let row = 0 ; row < 4 ; row++)
       for (let col = 0 ; col < 4 ; col++) {
 
@@ -36,10 +36,10 @@ function Diagram() {
 
 	 let highlight = x0<mx && x1>mx && y0<my&& y1>my;
 
-         ctx.lineWidth = highlight ? 4 : 2;
-         ctx.strokeStyle = 'black';
+         this.lineWidth(highlight ? .024 : .008);
+         this.drawColor('black');
          this.drawRect([x0,y0], [x1,y1]);
-         ctx.lineWidth = 2.5;
+         this.lineWidth(.01);
 	 sign(x0, y0, col & 1);
 	 sign(x1, y0, col & 2);
 	 sign(x0, y1, row & 1);
@@ -51,7 +51,7 @@ function Diagram() {
 	       + ((row&2)>0?8:0);
 
          if (state >= 1) {
-            ctx.strokeStyle = '#00000080';
+            this.drawColor('#00000080');
 	    let hex = '0123456789abcdef'.charAt(4 * row + col);
 	    this.text(hex, [x0+.16,y0+.12]);
          }
@@ -80,8 +80,8 @@ function Diagram() {
 	    }
          }
 
-         ctx.strokeStyle = 'black';
-	 ctx.lineWidth = highlight ? 6 : 2;
+         this.drawColor('black');
+	 this.lineWidth(highlight ? .024 : .008);
 	 switch (s) {
 	 case 1    : connect('x0','y0'); break;
 	 case 2    : connect('x1','y0'); break;

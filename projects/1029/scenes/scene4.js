@@ -71,7 +71,7 @@ function Scene() {
       return createPathsMesh(.0025, myPaths);
    }
 
-   let mesh = createTextMesh(textSample);
+   let mesh = createTextMesh(textSampleLarge);
 
 let cube = Shape.cubeMesh();
 

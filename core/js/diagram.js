@@ -32,6 +32,12 @@ let addDiagramProperties = (diagram, ctx) => {
    diagram.turnY     = a       => { M.rotateY  (a)    ; return diagram; }
    diagram.turnZ     = a       => { M.rotateZ  (a)    ; return diagram; }
    diagram.getMatrix = () => M.m();
+
+   diagram.lineWidth = lw => { ctx.lineWidth = lw * w/2; return diagram; }
+   diagram.drawColor = lc => { ctx.strokeStyle = lc    ; return diagram; }
+   diagram.fillColor = fc => { ctx.fillStyle = fc      ; return diagram; }
+   diagram.font      = f  => { ctx.font      = f       ; return diagram; }
+
    diagram.arc = (a,r,t0,t1) => {
       let A = mxp(a);
       ctx.beginPath();
