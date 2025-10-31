@@ -209,7 +209,30 @@ if (webrtcClient) {
          fontSize = state.fontSize;
       }
    };
+
+   // Handle actions from secondary clients (master only)
+   webrtcClient.onActionReceived = (fromClientId, action) => {
+      console.log('Processing action from:', fromClientId, action);
+
+      // Process the action and update state
+      processAction(action);
+
+      // Broadcast the new state to all clients
+      broadcastState();
+   };
 }
+
+// Process actions (called by master when receiving actions from secondary clients)
+let processAction = (action) => {
+   switch (action.type) {
+      case 'keyUp':
+         // Re-execute the key event on master
+         if (typeof keyUp === 'function') {
+            keyUp(action.key);
+         }
+         break;
+   }
+};
 
 // Helper function to broadcast current state (only master calls this)
 let broadcastStateTimer = null;

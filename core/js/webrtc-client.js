@@ -17,6 +17,7 @@ class WebRTCClient {
     this.onRemoteStreamRemoved = null;
     this.onConnectionStatusChanged = null;
     this.onStateUpdate = null;  // Callback for receiving state updates
+    this.onActionReceived = null;  // Callback for master receiving actions from secondary clients
 
     // Master client pattern (first client is master)
     this.isMasterClient = false;
@@ -85,6 +86,14 @@ class WebRTCClient {
           console.log('Received state update from:', data.from, data.state);
           if (this.onStateUpdate) {
             this.onStateUpdate(data.from, data.state);
+          }
+          break;
+
+        case 'action':
+          // Handle action from secondary client (master only)
+          console.log('Received action from:', data.from, data.action);
+          if (this.isMasterClient && this.onActionReceived) {
+            this.onActionReceived(data.from, data.action);
           }
           break;
       }
@@ -270,6 +279,18 @@ class WebRTCClient {
         state: state
       }));
       console.log('Sent state update:', state);
+    }
+  }
+
+  // Send action to master client (secondary clients use this)
+  sendAction(action) {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN && !this.isMasterClient) {
+      this.ws.send(JSON.stringify({
+        type: 'action',
+        to: this.masterClientId,
+        action: action
+      }));
+      console.log('Sent action to master:', action);
     }
   }
 

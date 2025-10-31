@@ -13,9 +13,19 @@ document.addEventListener('keyup', e => {
       return;
    if (e.key.indexOf('Arrow') == 0)
       e.preventDefault();
-   keyUp(e.key);
 
-   // Automatically broadcast state after any key event
+   let key = e.key;
+
+   // Check if this is a master or secondary client
+   if (typeof webrtcClient !== 'undefined' && webrtcClient && !webrtcClient.isMaster()) {
+      // Secondary client: send key action to master
+      webrtcClient.sendAction({type: 'keyUp', key: key});
+   }
+
+   // Execute key handler locally (both master and secondary for immediate feedback)
+   keyUp(key);
+
+   // Master broadcasts state after execution
    if (typeof broadcastState === 'function') broadcastState();
 });
 

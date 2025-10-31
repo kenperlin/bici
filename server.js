@@ -71,6 +71,19 @@ wss.on('connection', (ws) => {
           });
           break;
 
+        case 'action':
+          // Relay action from secondary client to master client
+          console.log('Relaying action from:', clientId, 'to master:', data.to);
+          const masterClient = clients.get(data.to);
+          if (masterClient && masterClient.readyState === 1) {
+            masterClient.send(JSON.stringify({
+              type: 'action',
+              from: clientId,
+              action: data.action
+            }));
+          }
+          break;
+
         default:
           console.log('Unknown message type:', data.type);
       }
