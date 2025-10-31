@@ -6,6 +6,8 @@ navigator.mediaDevices.getUserMedia({ audio: false, video: true })
          .then(function(stream) { webcam.srcObject = stream; },
                function(error ) { console.log(error); });
 
+let videoSrc = webcam;
+
 webcam.canvas = document.createElement('canvas');
 webcam.canvas.style.position = 'absolute';
 webcam.canvas.style.left = '2000px';
@@ -58,7 +60,7 @@ webcam.update = () => {
 
    // GET THIS FRAME OF VIDEO AS AN RGBA BYTE ARRAY
 
-   wctx.drawImage(webcam, 0, 0, 640, 480);
+   wctx.drawImage(videoSrc, 0, 0, 640, 480);
    let imgData = wctx.getImageData(0,0,640,480);
    let data = imgData.data;
    webcam.data = data;
