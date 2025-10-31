@@ -176,6 +176,63 @@ let ctx = canvas2D.getContext('2d');
 let isMove = false, isScene = false, isCode = false, isDrag = false;
 pen.setContext(ctx);
 
+// Setup state synchronization after all variables are initialized
+if (webrtcClient) {
+   webrtcClient.onStateUpdate = (fromClientId, state) => {
+      console.log('Received state update from:', fromClientId, state);
+
+      // Apply state updates from other clients
+      if (state.figureIndex !== undefined) {
+         figureIndex = state.figureIndex;
+      }
+      if (state.sceneID !== undefined && state.sceneID !== sceneID) {
+         setScene(state.sceneID);
+      }
+      if (state.isInfo !== undefined) {
+         isInfo = state.isInfo;
+      }
+      if (state.isScene !== undefined) {
+         isScene = state.isScene;
+         shift3D = state.isScene ? 1 : 0;
+      }
+      if (state.isCode !== undefined) {
+         isCode = state.isCode;
+         codeArea.getElement().style.left = isCode ? 20 : -2000;
+      }
+      if (state.isOpaque !== undefined) {
+         isOpaque = state.isOpaque;
+      }
+      if (state.isDrawpad !== undefined) {
+         isDrawpad = state.isDrawpad;
+      }
+      if (state.fontSize !== undefined) {
+         fontSize = state.fontSize;
+      }
+   };
+}
+
+// Helper function to broadcast current state (only master calls this)
+let broadcastStateTimer = null;
+let broadcastState = () => {
+   if (!webrtcClient || !webrtcClient.isMaster()) return;
+
+   // Debounce: wait 50ms after last change before broadcasting
+   clearTimeout(broadcastStateTimer);
+   broadcastStateTimer = setTimeout(() => {
+      webrtcClient.broadcastState({
+         figureIndex: figureIndex,
+         sceneID: sceneID,
+         isInfo: isInfo,
+         isScene: isScene,
+         isCode: isCode,
+         isOpaque: isOpaque,
+         isDrawpad: isDrawpad,
+         fontSize: fontSize,
+         timestamp: Date.now()
+      });
+   }, 50);
+};
+
 let D = {
    ctx : canvasDiagram.getContext('2d'),
    left : screen.width - 20 - 500, top : 20, w : 500, h : 500,
@@ -232,7 +289,14 @@ animate = () => {
 
    let p = webcam.update();
    codeArea.update();
-   ctx.drawImage(webcam.canvas, 0,0,640,440, 0,0,w,h);
+
+   // Draw remote video if available, otherwise draw webcam
+   if (videoUI && videoUI.hasRemoteVideo) {
+      videoUI.update();
+      ctx.drawImage(videoUI.canvas, 0,0,640,480, 0,0,w,h);
+   } else {
+      ctx.drawImage(webcam.canvas, 0,0,640,440, 0,0,w,h);
+   }
 
    if (isInfo) {
       ctx.globalAlpha = isOpaque ? 1 : .5;

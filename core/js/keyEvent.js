@@ -14,6 +14,9 @@ document.addEventListener('keyup', e => {
    if (e.key.indexOf('Arrow') == 0)
       e.preventDefault();
    keyUp(e.key);
+
+   // Automatically broadcast state after any key event
+   if (typeof broadcastState === 'function') broadcastState();
 });
 
 midiDown = key => keyDown("            / m  ;       ".substring(key,key+1));

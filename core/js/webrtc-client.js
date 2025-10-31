@@ -16,6 +16,12 @@ class WebRTCClient {
     this.onRemoteStreamAdded = null;
     this.onRemoteStreamRemoved = null;
     this.onConnectionStatusChanged = null;
+    this.onStateUpdate = null;  // Callback for receiving state updates
+
+    // Master client pattern (first client is master)
+    this.isMasterClient = false;
+    this.masterClientId = null;
+    this.connectedClients = [];
   }
 
   async init() {
@@ -73,6 +79,14 @@ class WebRTCClient {
         case 'ice-candidate':
           await this.handleIceCandidate(data.from, data.candidate);
           break;
+
+        case 'state-update':
+          // Handle state updates from other clients
+          console.log('Received state update from:', data.from, data.state);
+          if (this.onStateUpdate) {
+            this.onStateUpdate(data.from, data.state);
+          }
+          break;
       }
     };
 
@@ -89,6 +103,16 @@ class WebRTCClient {
   }
 
   handleClientList(clients) {
+    // Update connected clients list
+    this.connectedClients = clients;
+
+    // Determine master client (first one in the list, lowest ID)
+    const sortedClients = [...clients].sort();
+    this.masterClientId = sortedClients[0];
+    this.isMasterClient = (this.masterClientId === this.myClientId);
+
+    console.log(`Master client: ${this.masterClientId}, I am master: ${this.isMasterClient}`);
+
     // Auto-connect to new clients
     const otherClients = clients.filter(id => id !== this.myClientId);
 
@@ -238,6 +262,17 @@ class WebRTCClient {
     }
   }
 
+  // Send state updates to all other clients
+  sendStateUpdate(state) {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({
+        type: 'state-update',
+        state: state
+      }));
+      console.log('Sent state update:', state);
+    }
+  }
+
   toggleVideo(enabled) {
     if (this.localStream) {
       const videoTrack = this.localStream.getVideoTracks()[0];
@@ -283,5 +318,23 @@ class WebRTCClient {
 
   getRemoteStreams() {
     return this.remoteStreams;
+  }
+
+  // Master client helpers
+  isMaster() {
+    return this.isMasterClient;
+  }
+
+  getMasterClientId() {
+    return this.masterClientId;
+  }
+
+  // Broadcast state to all clients (only master should call this)
+  broadcastState(state) {
+    if (!this.isMasterClient) {
+      console.warn('Only master client should broadcast state');
+      return;
+    }
+    this.sendStateUpdate(state);
   }
 }
