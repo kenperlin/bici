@@ -57,6 +57,20 @@ wss.on('connection', (ws) => {
           sendClientList(ws, clientId);
           break;
 
+        case 'state-update':
+          // Broadcast state updates to all other clients
+          console.log('Broadcasting state update from:', clientId);
+          clients.forEach((client, id) => {
+            if (id !== clientId && client.readyState === 1) {
+              client.send(JSON.stringify({
+                type: 'state-update',
+                from: clientId,
+                state: data.state
+              }));
+            }
+          });
+          break;
+
         default:
           console.log('Unknown message type:', data.type);
       }
