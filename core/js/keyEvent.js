@@ -20,9 +20,10 @@ midiDown = key => keyDown("            / m  ;       ".substring(key,key+1));
 //                         '|'|''|'|'|''|'|''|'|'|''
 midiUp   = key => keyUp  ("b1u2wc3s4p5D/,m.'; f g tT".substring(key,key+1));
 
-let URLs = [
-   'http://cs.nyu.edu/~perlin/video_links.html',
-];
+let URLs = {
+   'v': 'http://cs.nyu.edu/~perlin/video_links.html',
+   'w': 'https://kenperlin.com/web.html',
+};
 
 let isOpeningURL = false;
 let openURL = index => {
@@ -48,10 +49,8 @@ let keyDown = key => {
 let keyUp = key => {
    if (isOpeningURL) {
       isOpeningURL = false;
-      if (key >= '0' && key <= '9') {
-         openURL(key - '0');
-	 return;
-      }
+      openURL(key);
+      return;
    }
 
    if (isAlt) {

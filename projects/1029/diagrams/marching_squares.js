@@ -8,17 +8,17 @@ function Diagram() {
    this.update = ctx => {
       let d = state < 4 ? .1 : .1/4;
 
-      ctx.fillStyle = 'white';
+      this.fillColor('white');
       this.fillRect([-1,-1],[1,1]);
 
       if (state < 3) {
-         ctx.strokeStyle = '#c0c0c0';
+         this.drawColor('#c0c0c0');
          this.dot([ 0, 0],.5);
          this.dot([mx,my],.5);
       }
 
-      ctx.lineWidth = state < 4 ? 3 : 1;
-      ctx.strokeStyle = '#0080ff80';
+      this.lineWidth(state < 4 ? .012 : .004);
+      this.drawColor('#0080ff80');
       for (let x = -1 ; x < 1 ; x += d)
          this.line([x,-1],[x,1]);
       for (let y = -1 ; y < 1 ; y += d)
@@ -39,9 +39,9 @@ function Diagram() {
 	 return f1 + f2 - .1;
       }
 
-      ctx.strokeStyle = 'black';
+      this.drawColor('black');
       if (state < 3) {
-         ctx.fillStyle = '#00000080';
+         this.fillColor('#00000080');
          for (let x = -1 ; x < 1 ; x += 1/200)
          for (let y = -1 ; y < 1 ; y += 1/200) {
 	    let f = fxy(x,y);
@@ -56,8 +56,8 @@ function Diagram() {
       if (state < 1)
          return;
 
-      ctx.lineWidth = 6;
-      ctx.font = '20px Courier';
+      this.lineWidth(.024);
+      this.font('20px Courier');
       for (let x0 = -1 ; x0 < 1 ; x0 += d)
       for (let y0 = -1 ; y0 < 1 ; y0 += d) {
          let x1 = x0 + d;
@@ -70,7 +70,7 @@ function Diagram() {
 	 let hex = '0123456789abcdef'.charAt(s);
 
          if (state < 2) {
-            ctx.strokeStyle = '#000080';
+            this.drawColor('#000080');
 	    this.text(hex, [x0+.05,y0+.065]);
 	    continue;
          }
@@ -91,7 +91,7 @@ function Diagram() {
 	 if (s >= 8)
 	    s = 15 - s;
 
-         ctx.strokeStyle = 'black';
+         this.drawColor('black');
 	 switch (s) {
 	 case 1    : connect('x0','y0'); break;
 	 case 2    : connect('x1','y0'); break;

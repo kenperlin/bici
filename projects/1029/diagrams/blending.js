@@ -1,9 +1,9 @@
 function Diagram() {
-   let state = 0, mx = 0;
+   let state = 5, mx = .5;
    this.onDrag = (x,y) => mx = x;
    this.onUp = (x,y) => {
       if (y > .5)
-         state = Math.max(0, Math.min(5, x > 0 ? state+1 : state-1));
+         state = Math.max(0, Math.min(6, x > 0 ? state+1 : state-1));
    }
    this.update = ctx => {
       let y = .2;
@@ -83,6 +83,10 @@ function Diagram() {
 	    if (f > .1) {
 	       let r = .01 * (1.3 - f);
 	       r = 20 * r * r;
+	       if (state == 6) {
+	          let t = 255 * f2 / (f1 + f2);
+		  this.fillColor('rgb(' + (255-t >> 0) + ',0,' + (t >> 0) + ')');
+	       }
 	       this.fillRect([x-r,y-r],[x+r,y+r]);
             }
          }
@@ -102,7 +106,8 @@ function Diagram() {
       case 2: this.text("Let's look at one slice in profile.", [0,.75]); break;
       case 3: this.text("Instead of choosing the taller peak", [0,.75]); break;
       case 4: this.text("let's try summing their heights.", [0,.75]); break;
-      case 5: this.text("The blended shape is the boundary.", [0,.75]); break;
+      case 5: this.text("We can use the different weights", [0,.75]); break;
+      case 6: this.text("to blend various properties.", [0,.75]); break;
       }
    }
 }
