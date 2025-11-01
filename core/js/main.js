@@ -92,16 +92,17 @@ if (typeof WebRTCClient !== 'undefined') {
             if (isLocalUpdate) return;
             isLocalUpdate = true;
             const newText = ytext.toString();
+
+            // Check if backtick was added (reload trigger)
+            const hasBacktick = newText.includes('`');
+
             // Remove backticks (they're just reload triggers, not actual code)
             textarea.value = newText.replace(/`/g, '');
 
-            // Debounce reload: only reload after 500ms of no changes
-            clearTimeout(reloadTimer);
-            reloadTimer = setTimeout(() => {
-               if (typeof codeArea.callback === 'function') {
-                  codeArea.callback();
-               }
-            }, 500);
+            // Only reload if backtick was pressed (not on every keystroke)
+            if (hasBacktick && typeof codeArea.callback === 'function') {
+               codeArea.callback();
+            }
 
             isLocalUpdate = false;
          });
