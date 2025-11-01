@@ -39,6 +39,9 @@ let figureSequence = () => { return []; }
 window.fontSize = 18;
 let scene, sceneID, isAlt, isShift, isInfo, isOpaque;
 
+// Initialize Yjs for collaborative code editing
+let ydoc, ytext, yjsProvider;
+
 let codeArea = new CodeArea(-2000, 20);
 let chalktalk = new Chalktalk();
 let pen = new Pen();
@@ -50,6 +53,78 @@ if (typeof WebRTCClient !== 'undefined') {
    webrtcClient.init().then(localStream => {
       videoUI = new VideoUI(webrtcClient);
       videoUI.setLocalStream(localStream);
+
+      // Initialize Yjs with custom WebSocket connection
+      if (typeof Y !== 'undefined') {
+         ydoc = new Y.Doc();
+         ytext = ydoc.getText('codemirror');
+
+         // Create separate WebSocket for Yjs (different from WebRTC signaling)
+         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+         const yjsWs = new WebSocket(`${protocol}//${window.location.host}/bici-code-editor`);
+         yjsWs.binaryType = 'arraybuffer';
+
+         yjsWs.onopen = () => {
+            console.log('Yjs WebSocket connected');
+         };
+
+         yjsWs.onmessage = (event) => {
+            if (event.data instanceof ArrayBuffer) {
+               const update = new Uint8Array(event.data);
+               Y.applyUpdate(ydoc, update);
+            }
+         };
+
+         // Send Yjs updates through the dedicated Yjs WebSocket
+         ydoc.on('update', (update) => {
+            if (yjsWs.readyState === WebSocket.OPEN) {
+               yjsWs.send(update);
+            }
+         });
+
+         // Setup textarea binding
+         const textarea = codeArea.getElement();
+         let isLocalUpdate = false;
+         let reloadTimer = null;
+
+         // When Yjs text changes, update textarea
+         ytext.observe(event => {
+            if (isLocalUpdate) return;
+            isLocalUpdate = true;
+            const newText = ytext.toString();
+            // Remove backticks (they're just reload triggers, not actual code)
+            textarea.value = newText.replace(/`/g, '');
+
+            // Debounce reload: only reload after 500ms of no changes
+            clearTimeout(reloadTimer);
+            reloadTimer = setTimeout(() => {
+               if (typeof codeArea.callback === 'function') {
+                  codeArea.callback();
+               }
+            }, 500);
+
+            isLocalUpdate = false;
+         });
+
+         // When textarea changes, update Yjs text
+         textarea.addEventListener('input', () => {
+            if (isLocalUpdate) return;
+            isLocalUpdate = true;
+            const currentText = ytext.toString();
+            const newText = textarea.value;
+
+            if (currentText !== newText) {
+               ydoc.transact(() => {
+                  ytext.delete(0, currentText.length);
+                  ytext.insert(0, newText);
+               });
+            }
+            isLocalUpdate = false;
+         });
+
+         console.log('Yjs collaborative editing initialized');
+      }
+
       console.log('WebRTC initialized successfully');
    }).catch(err => {
       console.log('WebRTC not available:', err.message);
@@ -227,8 +302,8 @@ let processAction = (action) => {
    switch (action.type) {
       case 'keyUp':
          // Re-execute the key event on master
-         if (typeof keyUp === 'function') {
-            keyUp(action.key);
+         if (typeof window.keyUp === 'function') {
+            window.keyUp(action.key);
          }
          break;
    }

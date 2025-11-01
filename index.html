@@ -3,8 +3,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BICI - Interactive Video Chat Platform</title>
 <link rel="stylesheet" href="core/css/webrtc.css">
+<script type="importmap">
+{
+  "imports": {
+    "yjs": "https://cdn.jsdelivr.net/npm/yjs@13.6.18/+esm"
+  }
+}
+</script>
 </head>
 <body bgcolor=black>
+<script type="module">
+  // Import only Yjs - we don't actually need lib0 on client side
+  import * as Y from 'yjs';
+
+  // Make it globally available
+  window.Y = Y;
+</script>
 <script src=core/js/bici.js></script>
 <button onclick=loadProject('0917')>0917</button>
 <button onclick=loadProject('0924')>0924</button>

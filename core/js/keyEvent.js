@@ -23,7 +23,7 @@ document.addEventListener('keyup', e => {
    }
 
    // Execute key handler locally (both master and secondary for immediate feedback)
-   keyUp(key);
+   window.keyUp(key);
 
    // Master broadcasts state after execution
    if (typeof broadcastState === 'function') broadcastState();
@@ -31,7 +31,7 @@ document.addEventListener('keyup', e => {
 
 midiDown = key => keyDown("            / m  ;       ".substring(key,key+1));
 //                         '|'|''|'|'|''|'|''|'|'|''
-midiUp   = key => keyUp  ("b1u2wc3s4p5D/,m.'; f g tT".substring(key,key+1));
+midiUp   = key => window.keyUp("b1u2wc3s4p5D/,m.'; f g tT".substring(key,key+1));
 
 let URLs = {
    'v': 'http://cs.nyu.edu/~perlin/video_links.html',
@@ -59,7 +59,7 @@ let keyDown = key => {
    }
 }
 
-let keyUp = key => {
+window.keyUp = key => {
    if (isOpeningURL) {
       isOpeningURL = false;
       openURL(key);

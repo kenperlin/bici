@@ -3,6 +3,7 @@ import { WebSocketServer } from 'ws';
 import { createServer } from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import * as Y from 'yjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,7 +18,59 @@ app.use(express.static('.'));
 // Store connected clients
 const clients = new Map();
 
-wss.on('connection', (ws) => {
+// Store Yjs documents (one per room/document name)
+const yjsDocs = new Map();
+
+// Get or create a Yjs document for a room
+function getYDoc(docName) {
+  if (!yjsDocs.has(docName)) {
+    const ydoc = new Y.Doc();
+    yjsDocs.set(docName, ydoc);
+    console.log(`Created new Yjs document: ${docName}`);
+  }
+  return yjsDocs.get(docName);
+}
+
+wss.on('connection', (ws, req) => {
+  // Check if this is a y-websocket connection (has docName in URL)
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const docName = url.pathname.slice(1); // Remove leading '/'
+
+  if (docName && docName !== '') {
+    // This is a y-websocket connection for collaborative editing
+    console.log(`Yjs client connected to document: ${docName}`);
+
+    const ydoc = getYDoc(docName);
+
+    // Send current document state to new client
+    const currentState = Y.encodeStateAsUpdate(ydoc);
+    if (currentState.length > 0) {
+      ws.send(currentState);
+    }
+
+    // Handle incoming Yjs updates (raw binary)
+    ws.on('message', (message) => {
+      const update = new Uint8Array(message);
+
+      // Apply update to server's document
+      Y.applyUpdate(ydoc, update);
+
+      // Broadcast to other clients connected to the same document
+      wss.clients.forEach((client) => {
+        if (client !== ws && client.readyState === 1) {
+          client.send(message);
+        }
+      });
+    });
+
+    ws.on('close', () => {
+      console.log(`Yjs client disconnected from document: ${docName}`);
+    });
+
+    return;
+  }
+
+  // Regular WebRTC signaling connection
   const clientId = Math.random().toString(36).substr(2, 9);
   clients.set(clientId, ws);
 
@@ -34,6 +87,7 @@ wss.on('connection', (ws) => {
   broadcastClientList();
 
   ws.on('message', (message) => {
+
     try {
       const data = JSON.parse(message.toString());
 

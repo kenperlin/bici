@@ -57,9 +57,15 @@ class WebRTCClient {
     };
 
     this.ws.onmessage = async (event) => {
-      const data = JSON.parse(event.data);
+      // Ignore binary messages (those are for Yjs on a different WebSocket)
+      if (event.data instanceof Blob) {
+        return;
+      }
 
-      switch (data.type) {
+      try {
+        const data = JSON.parse(event.data);
+
+        switch (data.type) {
         case 'welcome':
           this.myClientId = data.clientId;
           console.log('My client ID:', this.myClientId);
@@ -96,6 +102,10 @@ class WebRTCClient {
             this.onActionReceived(data.from, data.action);
           }
           break;
+        }
+      } catch (error) {
+        // Ignore JSON parse errors (likely binary data meant for Yjs)
+        console.debug('Ignoring non-JSON message on WebRTC signaling socket');
       }
     };
 
@@ -116,7 +126,9 @@ class WebRTCClient {
     this.connectedClients = clients;
 
     // Determine master client (first one in the list, lowest ID)
-    const sortedClients = [...clients].sort();
+    // Include self in the list if not already there
+    const allClients = clients.includes(this.myClientId) ? clients : [...clients, this.myClientId];
+    const sortedClients = [...allClients].sort();
     this.masterClientId = sortedClients[0];
     this.isMasterClient = (this.masterClientId === this.myClientId);
 
