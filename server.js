@@ -15,6 +15,48 @@ const wss = new WebSocketServer({ server });
 // Serve static files
 app.use(express.static('.'));
 
+// Endpoint to clear Yjs document cache
+app.post('/api/clear-yjs-cache/:docName?', (req, res) => {
+  const docName = req.params.docName;
+
+  if (docName) {
+    // Clear specific document
+    if (yjsDocs.has(docName)) {
+      yjsDocs.delete(docName);
+      console.log(`Cleared Yjs document: ${docName}`);
+      res.json({ success: true, message: `Cleared document: ${docName}` });
+    } else {
+      res.json({ success: false, message: `Document not found: ${docName}` });
+    }
+  } else {
+    // Clear all documents
+    const count = yjsDocs.size;
+    yjsDocs.clear();
+    console.log(`Cleared all ${count} Yjs documents`);
+    res.json({ success: true, message: `Cleared ${count} documents` });
+  }
+});
+
+// GET endpoint for easier browser access
+app.get('/api/clear-yjs-cache/:docName?', (req, res) => {
+  const docName = req.params.docName;
+
+  if (docName) {
+    if (yjsDocs.has(docName)) {
+      yjsDocs.delete(docName);
+      console.log(`Cleared Yjs document: ${docName}`);
+      res.send(`<h1>Cleared document: ${docName}</h1><p><a href="/">Back to BICI</a></p>`);
+    } else {
+      res.send(`<h1>Document not found: ${docName}</h1><p><a href="/">Back to BICI</a></p>`);
+    }
+  } else {
+    const count = yjsDocs.size;
+    yjsDocs.clear();
+    console.log(`Cleared all ${count} Yjs documents`);
+    res.send(`<h1>Cleared ${count} documents</h1><p><a href="/">Back to BICI</a></p>`);
+  }
+});
+
 // Store connected clients
 const clients = new Map();
 
