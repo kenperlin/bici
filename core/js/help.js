@@ -39,7 +39,7 @@ isHelp : false,
 text : `\
 Hot keys
 0-9    Select 3D scene 0-9.
-a (+ 0-9) Open a pre-defined URL.
+a (+ key) Open a pre-defined URL.
 b Toggle blurred region in video.
 c Toggle editable code for 3D scene.
 d Toggle drawing pad.
@@ -47,6 +47,7 @@ f Toggle floaters behind me.
 g Grab bg (enables transparency).
 h Toggle this help menu.
 i Toggle show/hide figures.
+j (+ key) Jump to a particular figure.
 l Toggle lightpen (small blue object).
 m Hold down to move a sketch.
 o Toggle whether figures are opaque.

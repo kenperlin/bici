@@ -38,12 +38,17 @@ let URLs = {
    'w': 'https://kenperlin.com/web.html',
 };
 
-let isOpeningURL = false;
-let openURL = index => {
-   let url = URLs[index];
+let isOpeningURL = false, isJumpingToFigure;
+
+let openURL = key => {
+   let url = URLs[key];
    if (url)
       window.open(url, '_blank');
 }
+
+let figureKey = '0123456789\
+abcdefghijklmnopqrstuvwxyz\
+ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 let keyDown = key => {
    switch (key) {
@@ -66,6 +71,14 @@ window.keyUp = key => {
       return;
    }
 
+   if (isJumpingToFigure) {
+      let i = figureKey.indexOf(key);
+      if (i >= 0)
+         figureIndex = Math.min(figures.length-1, figureKey.indexOf(key));
+      isJumpingToFIgure = false;
+      return;
+   }
+
    if (isAlt) {
       switch (key) {
       case 'ArrowDown' : webcam.A /= 1.1; break;
@@ -85,7 +98,7 @@ window.keyUp = key => {
    case 'ArrowUp'   : fontSize *= 1.1; break;
    case 'ArrowDown' : fontSize /= 1.1; break;
    case 'ArrowLeft' : figureIndex = (figureIndex + figures.length - 1) % figures.length; break;
-   case 'ArrowRight': figureIndex = (figureIndex                     + 1) % figures.length; break;
+   case 'ArrowRight': figureIndex = (figureIndex                  + 1) % figures.length; break;
    case "'" : chalktalk.add(pen.strokes,pen.x,pen.y); break;
    case ',' : pen.width *= .707; break;
    case '.' : pen.width /= .707; break;
@@ -112,6 +125,7 @@ window.keyUp = key => {
    case 'g' : webcam.grabImage(); break;
    case 'h' : help.isHelp = ! help.isHelp; break;
    case 'i' : isInfo = ! isInfo; break;
+   case 'j' : isJumpingToFigure = true; break;
    case 'l' : isLightPen = ! isLightPen; break;
    case 'm' : isMove = false; break;
    case 'o' : isOpaque = ! isOpaque; break;

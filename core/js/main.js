@@ -545,6 +545,10 @@ animate = () => {
          ctx.restore();
       }
       ctx.globalAlpha = 1;
+
+      // Show the id of the current figure in the bottom right corner.
+      ctx.font = '20px Courier';
+      ctx.fillText(figureKey.charAt(figureIndex), screen.width-15, screen.height-37);
    }
 
    if (isDrawpad) {
