@@ -287,13 +287,6 @@ animate = () => {
    } else
       videoSrc = webcam;
 
-   // Video source is remote video if available, otherwise webcam
-   if (videoUI && videoUI.hasRemoteVideo) {
-      videoUI.update();
-      videoSrc = videoUI.canvas;
-   } else
-      videoSrc = webcam;
-
    let p = webcam.update();
    codeArea.update();
    ctx.drawImage(webcam.canvas, 0,0,640,440, 0,0,w,h);
