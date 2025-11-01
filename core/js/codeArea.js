@@ -1,4 +1,4 @@
-function CodeArea(x,y) {
+function CodeArea(x,y,yjsBinding) {
    let isShift = false, ey = 0, dial = 0;
    let codeArea = document.createElement('textArea');
    document.body.appendChild(codeArea);
@@ -9,6 +9,9 @@ function CodeArea(x,y) {
    codeArea.style.backgroundColor = 'rgba(255,255,255,.6)';
    codeArea.style.fontSize = fontSize + 'px';
    codeArea.style.overflowY = 'scroll';
+
+   // Store the Yjs binding reference
+   this.yjsBinding = yjsBinding;
    codeArea.addEventListener('mousemove', event => {
       if (isShift) {
          if (ey && Math.abs(dial += event.clientY-ey) >= 3) {

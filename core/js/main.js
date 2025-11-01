@@ -39,9 +39,27 @@ let figureSequence = () => { return []; }
 window.fontSize = 18;
 let scene, sceneID, isAlt, isShift, isInfo, isOpaque;
 
+// Initialize Yjs for collaborative code editing
+let ydoc, ytext, yjsBinding, wsProvider;
+if (typeof Y !== 'undefined' && typeof WebsocketProvider !== 'undefined') {
+   ydoc = new Y.Doc();
+   ytext = ydoc.getText('codemirror');
+
+   // We'll create the WebSocket provider and binding after CodeArea is created
+}
+
 let codeArea = new CodeArea(-2000, 20);
 let chalktalk = new Chalktalk();
 let pen = new Pen();
+
+// Setup Yjs binding after CodeArea is created
+if (ydoc && ytext && typeof TextAreaBinding !== 'undefined') {
+   const wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`;
+   wsProvider = new WebsocketProvider(wsUrl, 'bici-code', ydoc);
+   yjsBinding = new TextAreaBinding(ytext, codeArea.getElement());
+   codeArea.yjsBinding = yjsBinding;
+   console.log('Yjs collaborative editing initialized');
+}
 
 // Initialize WebRTC
 let webrtcClient, videoUI;

@@ -3,6 +3,7 @@ import { WebSocketServer } from 'ws';
 import { createServer } from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import * as Y from 'yjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,6 +17,10 @@ app.use(express.static('.'));
 
 // Store connected clients
 const clients = new Map();
+
+// Yjs document for collaborative code editing
+const ydoc = new Y.Doc();
+const ytext = ydoc.getText('codemirror');
 
 wss.on('connection', (ws) => {
   const clientId = Math.random().toString(36).substr(2, 9);
@@ -34,6 +39,17 @@ wss.on('connection', (ws) => {
   broadcastClientList();
 
   ws.on('message', (message) => {
+    // Check if it's a Yjs sync message (binary)
+    if (message instanceof Buffer || message instanceof Uint8Array) {
+      // Broadcast Yjs sync message to all other clients
+      clients.forEach((client, id) => {
+        if (id !== clientId && client.readyState === 1) {
+          client.send(message);
+        }
+      });
+      return;
+    }
+
     try {
       const data = JSON.parse(message.toString());
 
