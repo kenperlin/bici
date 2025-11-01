@@ -1,5 +1,5 @@
 function CodeArea(x,y) {
-   let isShift = false, ey = 0, dial = 0;
+   let ey = 0, dial = 0;
    let codeArea = document.createElement('textArea');
    document.body.appendChild(codeArea);
    codeArea.spellcheck = false;
@@ -10,7 +10,7 @@ function CodeArea(x,y) {
    codeArea.style.fontSize = fontSize + 'px';
    codeArea.style.overflowY = 'scroll';
    codeArea.addEventListener('mousemove', event => {
-      if (isShift) {
+      if (window.isShift) {
          if (ey && Math.abs(dial += event.clientY-ey) >= 3) {
 	    let i1 = codeArea.selectionStart;
 	    let s0 = numberString.findNumberString(codeArea.value, i1);
@@ -25,6 +25,10 @@ function CodeArea(x,y) {
 
 	       codeArea.value = codeArea.value.substring(0,i0) + s1 + codeArea.value.substring(i1);
                codeArea.selectionStart = codeArea.selectionEnd = i0 + s1.length;
+
+	       // Trigger input event to sync with Yjs
+	       codeArea.dispatchEvent(new Event('input', { bubbles: true }));
+
 	       if (this.callback)
 	          this.callback();
             }
@@ -35,11 +39,11 @@ function CodeArea(x,y) {
    });
    codeArea.addEventListener('keydown', event => {
       if (event.key == 'Shift')
-         isShift = true;
+         window.isShift = true;
    });
    codeArea.addEventListener('keyup', event => {
       if (event.key == 'Shift') {
-         isShift = false;
+         window.isShift = false;
 	 ey = 0;
       }
       if (this.callback && event.key == '`') {
