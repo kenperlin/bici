@@ -57,6 +57,17 @@ class WebRTCClient {
     };
 
     this.ws.onmessage = async (event) => {
+      // Handle binary Yjs sync messages
+      if (event.data instanceof Blob) {
+        const arrayBuffer = await event.data.arrayBuffer();
+        const update = new Uint8Array(arrayBuffer);
+        // Apply Yjs update to the shared document
+        if (typeof ydoc !== 'undefined' && typeof Y !== 'undefined') {
+          Y.applyUpdate(ydoc, update);
+        }
+        return;
+      }
+
       const data = JSON.parse(event.data);
 
       switch (data.type) {
