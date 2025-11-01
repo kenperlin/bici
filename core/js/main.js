@@ -37,7 +37,8 @@ let transition = (a,b,startTime) => {
 let figureSequence = () => { return []; }
 
 window.fontSize = 18;
-let scene, sceneID, isAlt, isShift, isInfo, isOpaque;
+let scene, sceneID, isAlt, isInfo, isOpaque;
+window.isShift = false;
 
 // Initialize Yjs for collaborative code editing
 let ydoc, ytext, yjsProvider;
@@ -96,11 +97,26 @@ if (typeof WebRTCClient !== 'undefined') {
             // Check if backtick was added (reload trigger)
             const hasBacktick = newText.includes('`');
 
-            // Remove backticks (they're just reload triggers, not actual code)
-            textarea.value = newText.replace(/`/g, '');
+            // Check if slider marker was added (slider reload trigger)
+            const hasSliderMarker = newText.includes('\u200B');
 
-            // Only reload if backtick was pressed (not on every keystroke)
-            if (hasBacktick && typeof codeArea.callback === 'function') {
+            console.log('Yjs observer fired:', {
+               hasBacktick,
+               hasSliderMarker,
+               isShift: window.isShift,
+               textLength: newText.length,
+               firstChars: newText.substring(0, 50)
+            });
+
+            // Remove backticks and slider markers (they're just reload triggers, not actual code)
+            textarea.value = newText.replace(/`/g, '').replace(/\u200B/g, '');
+
+            // Reload in three cases:
+            // 1. Backtick was pressed (explicit reload)
+            // 2. Slider marker detected (real-time slider sync)
+            // 3. Local shift is held down (local number slider)
+            if ((hasBacktick || hasSliderMarker || window.isShift) && typeof codeArea.callback === 'function') {
+               console.log('Triggering reload due to:', hasBacktick ? 'backtick' : hasSliderMarker ? 'slider' : 'shift');
                codeArea.callback();
             }
 
@@ -112,9 +128,21 @@ if (typeof WebRTCClient !== 'undefined') {
             if (isLocalUpdate) return;
             isLocalUpdate = true;
             const currentText = ytext.toString();
-            const newText = textarea.value;
+            let newText = textarea.value;
 
             if (currentText !== newText) {
+               // Add invisible slider marker for real-time sync when shift is held
+               if (window.isShift) {
+                  console.log('Adding slider marker, isShift:', window.isShift);
+                  newText = newText + '\u200B';
+               }
+
+               console.log('Sending to Yjs:', {
+                  isShift: window.isShift,
+                  hasMarker: newText.includes('\u200B'),
+                  textLength: newText.length
+               });
+
                ydoc.transact(() => {
                   ytext.delete(0, currentText.length);
                   ytext.insert(0, newText);
@@ -281,6 +309,15 @@ if (webrtcClient) {
       if (state.isDrawpad !== undefined) {
          isDrawpad = state.isDrawpad;
       }
+      if (state.isMove !== undefined) {
+         isMove = state.isMove;
+      }
+      if (state.isDrag !== undefined) {
+         isDrag = state.isDrag;
+      }
+      if (state.isShift !== undefined) {
+         window.isShift = state.isShift;
+      }
       if (state.fontSize !== undefined) {
          fontSize = state.fontSize;
       }
@@ -326,6 +363,9 @@ let broadcastState = () => {
          isCode: isCode,
          isOpaque: isOpaque,
          isDrawpad: isDrawpad,
+         isMove: isMove,
+         isDrag: isDrag,
+         isShift: window.isShift,
          fontSize: fontSize,
          timestamp: Date.now()
       });
