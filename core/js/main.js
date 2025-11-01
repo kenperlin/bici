@@ -41,7 +41,7 @@ let scene, sceneID, isAlt, isInfo, isOpaque;
 window.isShift = false;
 
 // Initialize Yjs for collaborative code editing
-let ydoc, ytext, yjsProvider;
+let ydoc, ytext, ypenStrokes, yjsProvider;
 
 let codeArea = new CodeArea(-2000, 20);
 let chalktalk = new Chalktalk();
@@ -100,14 +100,6 @@ if (typeof WebRTCClient !== 'undefined') {
             // Check if slider marker was added (slider reload trigger)
             const hasSliderMarker = newText.includes('\u200B');
 
-            console.log('Yjs observer fired:', {
-               hasBacktick,
-               hasSliderMarker,
-               isShift: window.isShift,
-               textLength: newText.length,
-               firstChars: newText.substring(0, 50)
-            });
-
             // Remove backticks and slider markers (they're just reload triggers, not actual code)
             textarea.value = newText.replace(/`/g, '').replace(/\u200B/g, '');
 
@@ -116,7 +108,6 @@ if (typeof WebRTCClient !== 'undefined') {
             // 2. Slider marker detected (real-time slider sync)
             // 3. Local shift is held down (local number slider)
             if ((hasBacktick || hasSliderMarker || window.isShift) && typeof codeArea.callback === 'function') {
-               console.log('Triggering reload due to:', hasBacktick ? 'backtick' : hasSliderMarker ? 'slider' : 'shift');
                codeArea.callback();
             }
 
@@ -133,15 +124,8 @@ if (typeof WebRTCClient !== 'undefined') {
             if (currentText !== newText) {
                // Add invisible slider marker for real-time sync when shift is held
                if (window.isShift) {
-                  console.log('Adding slider marker, isShift:', window.isShift);
                   newText = newText + '\u200B';
                }
-
-               console.log('Sending to Yjs:', {
-                  isShift: window.isShift,
-                  hasMarker: newText.includes('\u200B'),
-                  textLength: newText.length
-               });
 
                ydoc.transact(() => {
                   ytext.delete(0, currentText.length);
@@ -149,6 +133,33 @@ if (typeof WebRTCClient !== 'undefined') {
                });
             }
             isLocalUpdate = false;
+         });
+
+         // Setup Yjs pen strokes synchronization
+         ypenStrokes = ydoc.getArray('penStrokes');
+         let isUpdatingFromYjs = false;
+
+         // All clients observe pen strokes changes and render
+         ypenStrokes.observe(event => {
+            // Master client already has the correct pen.strokes locally
+            // Only secondary clients need to update from Yjs
+            if (webrtcClient && webrtcClient.isMaster()) {
+               return;
+            }
+
+            isUpdatingFromYjs = true;
+            // Update pen.strokes in place to preserve reference
+            const yjsArray = ypenStrokes.toArray();
+            pen.strokes.length = 0;
+            pen.strokes.push(...yjsArray);
+            isUpdatingFromYjs = false;
+         });
+
+         // Set up callback to sync local pen changes to Yjs (only master will actually sync)
+         pen.setOnStrokesChanged(() => {
+            if (!isUpdatingFromYjs) {
+               syncPenStrokesToYjs();
+            }
          });
 
          console.log('Yjs collaborative editing initialized');
@@ -283,8 +294,6 @@ pen.setContext(ctx);
 // Setup state synchronization after all variables are initialized
 if (webrtcClient) {
    webrtcClient.onStateUpdate = (fromClientId, state) => {
-      console.log('Received state update from:', fromClientId, state);
-
       // Apply state updates from other clients
       if (state.figureIndex !== undefined) {
          figureIndex = state.figureIndex;
@@ -321,27 +330,112 @@ if (webrtcClient) {
       if (state.fontSize !== undefined) {
          fontSize = state.fontSize;
       }
+      // penStrokes now synced via Yjs, no longer via WebRTC state updates
    };
 
    // Handle actions from secondary clients (master only)
    webrtcClient.onActionReceived = (fromClientId, action) => {
-      console.log('Processing action from:', fromClientId, action);
-
+      console.log('Master received action:', action.type, 'from:', fromClientId);
       // Process the action and update state
-      processAction(action);
+      processAction(action, fromClientId);
 
       // Broadcast the new state to all clients
       broadcastState();
    };
 }
 
+// Track ownership of drag and move modes (master only)
+let dragOwner = null;
+let moveOwner = null;
+
+// Helper to sync pen.strokes to Yjs (master only)
+let syncPenStrokesTimer = null;
+let syncPenStrokesToYjs = () => {
+   if (!ypenStrokes || !webrtcClient || !webrtcClient.isMaster()) return;
+
+   // Throttle updates to avoid excessive syncing (sync immediately, then debounce)
+   if (syncPenStrokesTimer) {
+      clearTimeout(syncPenStrokesTimer);
+   }
+
+   const doSync = () => {
+      ydoc.transact(() => {
+         // Clear and repopulate Yjs array with current pen.strokes
+         ypenStrokes.delete(0, ypenStrokes.length);
+         ypenStrokes.insert(0, pen.strokes);
+      });
+   };
+
+   // Sync immediately for responsiveness
+   doSync();
+
+   // Also schedule a final sync after 100ms to ensure we catch the last update
+   syncPenStrokesTimer = setTimeout(doSync, 100);
+};
+
 // Process actions (called by master when receiving actions from secondary clients)
-let processAction = (action) => {
+let processAction = (action, fromClientId) => {
    switch (action.type) {
       case 'keyUp':
          // Re-execute the key event on master
          if (typeof window.keyUp === 'function') {
             window.keyUp(action.key);
+         }
+         break;
+
+      case 'penDown':
+         console.log('Master received penDown from:', fromClientId, 'dragOwner:', dragOwner);
+         // First person to pen down gets drag ownership
+         if (!dragOwner) {
+            dragOwner = fromClientId;
+            console.log('Assigned drag ownership to:', fromClientId);
+         }
+         if (dragOwner === fromClientId) {
+            pen.x = action.x;
+            pen.y = action.y;
+            pen.width = action.width;
+            pen.down();
+            console.log('Called pen.down(), pen.strokes length:', pen.strokes.length);
+            syncPenStrokesToYjs();
+         }
+         break;
+
+      case 'penUp':
+         // Release drag ownership when pen up
+         if (dragOwner === fromClientId) {
+            pen.up();
+            dragOwner = null;
+            syncPenStrokesToYjs();
+         }
+         break;
+
+      case 'penMove':
+         // Handle move ownership (first person to move in diagram)
+         if (action.isMove && !moveOwner) {
+            moveOwner = fromClientId;
+         }
+
+         // Process move from owner
+         if (moveOwner === fromClientId && action.isMove) {
+            pen.move(action.x, action.y);
+            if (typeof chalktalk !== 'undefined') {
+               chalktalk.move(action.x, action.y);
+            }
+         }
+
+         // Process drag from drag owner
+         if (dragOwner === fromClientId && action.isDrag) {
+            console.log('Master processing drag move from:', fromClientId, 'pos:', action.x, action.y);
+            pen.move(action.x, action.y);
+            if (typeof chalktalk !== 'undefined') {
+               chalktalk.drag(action.x, action.y);
+            }
+            syncPenStrokesToYjs();
+         }
+
+         // Always update pen position
+         if (dragOwner === fromClientId || moveOwner === fromClientId) {
+            pen.move(action.x, action.y);
          }
          break;
    }
@@ -367,6 +461,7 @@ let broadcastState = () => {
          isDrag: isDrag,
          isShift: window.isShift,
          fontSize: fontSize,
+         // penStrokes now synced via Yjs instead of WebRTC
          timestamp: Date.now()
       });
    }, 50);

@@ -6,9 +6,12 @@ function Pen() {
    let isDown = false;
    let ctx;
    let color = '#000000';
+   let onStrokesChanged = null;
 
    this.setColor = c => color = c;
-   
+
+   this.setOnStrokesChanged = callback => onStrokesChanged = callback;
+
    this.down = () => {
       if ( ! isDown) {
          let stroke = [];
@@ -17,10 +20,11 @@ function Pen() {
          stroke.xlo = stroke.ylo =  10000;
          stroke.xhi = stroke.yhi = -10000;
          this.strokes.push(stroke);
+         if (onStrokesChanged) onStrokesChanged();
       }
       isDown = true;
    }
-   
+
    this.move = (x,y) => {
       this.x = x;
       this.y = y;
@@ -31,10 +35,14 @@ function Pen() {
          stroke.ylo = Math.min(stroke.ylo, y - stroke.lineWidth/2);
          stroke.xhi = Math.max(stroke.xhi, x + stroke.lineWidth/2);
          stroke.yhi = Math.max(stroke.yhi, y + stroke.lineWidth/2);
+         if (onStrokesChanged) onStrokesChanged();
       }
    }
-   
-   this.up = () => isDown = false;
+
+   this.up = () => {
+      isDown = false;
+      if (onStrokesChanged) onStrokesChanged();
+   }
    
    this.setContext = _ctx => {
       ctx = _ctx;
@@ -90,6 +98,18 @@ let penDown = () => {
       }
    }
 
+   // Secondary clients send pen action to master
+   if (typeof webrtcClient !== 'undefined' && !webrtcClient.isMasterClient) {
+      console.log('Secondary sending penDown to master, pos:', pen.x, pen.y);
+      webrtcClient.sendAction({
+         type: 'penDown',
+         x: pen.x,
+         y: pen.y,
+         width: pen.width
+      });
+      return;
+   }
+
    pen.down();
 }
 
@@ -108,6 +128,14 @@ let penUp = () => {
          D.isDown = false;
          return;
       }
+   }
+
+   // Secondary clients send pen action to master
+   if (typeof webrtcClient !== 'undefined' && !webrtcClient.isMasterClient) {
+      webrtcClient.sendAction({
+         type: 'penUp'
+      });
+      return;
    }
 
    pen.up();
@@ -136,6 +164,18 @@ let penMove = (x,y) => {
 
          return;
       }
+   }
+
+   // Secondary clients send pen action to master
+   if (typeof webrtcClient !== 'undefined' && !webrtcClient.isMasterClient) {
+      webrtcClient.sendAction({
+         type: 'penMove',
+         x: x,
+         y: y,
+         isMove: isMove,
+         isDrag: isDrag
+      });
+      return;
    }
 
    pen.move(x,y);
