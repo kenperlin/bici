@@ -39,7 +39,6 @@ function Scene() {
    let M = new Matrix();
 
    this.update = () => {
-      console.log('AHA');
       let time = Date.now() / 1000;
       let A, B, C;
       let bend = c(time) * .5 - .5;

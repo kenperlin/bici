@@ -87,6 +87,7 @@ if (typeof WebRTCClient !== 'undefined') {
          const textarea = codeArea.getElement();
          let isLocalUpdate = false;
          let reloadTimer = null;
+	 let isReloading = false;
 
          // When Yjs text changes, update textarea
          ytext.observe(event => {
@@ -94,21 +95,16 @@ if (typeof WebRTCClient !== 'undefined') {
             isLocalUpdate = true;
             const newText = ytext.toString();
 
-            // Check if backtick was added (reload trigger)
-            const hasBacktick = newText.includes('`');
-
             // Check if slider marker was added (slider reload trigger)
             const hasSliderMarker = newText.includes('\u200B');
 
-            // Remove backticks and slider markers (they're just reload triggers, not actual code)
-            textarea.value = newText.replace(/`/g, '').replace(/\u200B/g, '');
-
             // Reload in three cases:
-            // 1. Backtick was pressed (explicit reload)
+            // 1. Explicit reload
             // 2. Slider marker detected (real-time slider sync)
             // 3. Local shift is held down (local number slider)
-            if ((hasBacktick || hasSliderMarker || window.isShift) && typeof codeArea.callback === 'function') {
+            if ((isReloading || hasSliderMarker || window.isShift) && typeof codeArea.callback === 'function') {
                codeArea.callback();
+	       isReloading = false;
             }
 
             isLocalUpdate = false;

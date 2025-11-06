@@ -42,14 +42,13 @@ function CodeArea(x,y) {
          window.isShift = true;
    });
    codeArea.addEventListener('keyup', event => {
+      console.log(event.key);
       if (event.key == 'Shift') {
          window.isShift = false;
 	 ey = 0;
       }
-      if (this.callback && event.key == '`') {
-         let i = codeArea.selectionStart - 1;
-         codeArea.value = codeArea.value.substring(0,i) + codeArea.value.substring(i+1);
-         codeArea.selectionStart = codeArea.selectionEnd = i;
+      if (this.callback && event.key == 'Meta') {
+         isReloading = true;
          this.callback();
       }
    });
