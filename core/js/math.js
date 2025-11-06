@@ -19,11 +19,11 @@ let s = t => Math.sin(t);
 let identity = () => [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1];
 let move = (x,y,z) => { if (y===undefined) {z=x[2];y=x[1];x=x[0];}
                         return [1,0,0,0, 0,1,0,0, 0,0,1,0, x,y,z,1]; }
+let perspective = (x,y,z) => [1,0,0,x, 0,1,0,y??x, 0,0,1,z??x, 0,0,0,1];
+let scale = (x,y,z) => [x,0,0,0, 0,y??x,0,0, 0,0,z??x,0, 0,0,0,1];
 let turnX = t => [1,0,0,0, 0,c(t),s(t),0, 0,-s(t),c(t),0, 0,0,0,1];
 let turnY = t => [c(t),0,-s(t),0, 0,1,0,0, s(t),0,c(t),0, 0,0,0,1];
 let turnZ = t => [c(t),s(t),0,0, -s(t),c(t),0,0, 0,0,1,0, 0,0,0,1];
-let scale = (x,y,z) => [x,0,0,0, 0,y??x,0,0, 0,0,z??x,0, 0,0,0,1];
-let perspective = (x,y,z) => [1,0,0,x, 0,1,0,y??x, 0,0,1,z??x, 0,0,0,1];
 
 let mxm = (a,b) => {
    let m = [];
@@ -31,6 +31,16 @@ let mxm = (a,b) => {
    for (let r = 0 ; r < 4 ; r++)
       m.push( a[r]*b[c] + a[r+4]*b[c+1] + a[r+8]*b[c+2] + a[r+12]*b[c+3] );
    return m;
+}
+
+let transform = (m,p) => {
+   let x = p[0], y = p[1], z = p[2], w = p[3] ?? 1;
+   return [
+      m[0] * x + m[4] * y + m[ 8] * z + m[12] * w,
+      m[1] * x + m[5] * y + m[ 9] * z + m[13] * w,
+      m[2] * x + m[6] * y + m[10] * z + m[14] * w,
+      m[3] * x + m[7] * y + m[11] * z + m[15] * w,
+   ];
 }
 
 let transpose = m => [ m[0],m[4],m[ 8],m[12],

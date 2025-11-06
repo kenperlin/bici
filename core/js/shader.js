@@ -28,5 +28,20 @@ void main() {
    fragColor = vec4(c * uColor, 1.);
 }`,
 
+shinyFragmentShader : `\
+#version 300 es
+precision highp float;
+in  vec3 vPos, vNor;
+out vec4 fragColor;
+uniform vec3 uColor;
+
+void main() {
+   vec3 L = vec3(.577), N = normalize(vNor);
+   float d = dot(L,N), r = 2. * dot(L,N) * N.z - L.z;
+   fragColor = vec4(uColor*(.1+max(0.,d)+max(0.,-d)*.5)
+                    + pow(max(0., r),20.)
+		    + pow(max(0.,-r),20.)*.5, 1.);
+}`,
+
 };
 

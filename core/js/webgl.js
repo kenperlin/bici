@@ -15,6 +15,7 @@ vec3 phong(vec3 N, vec3 L, vec3 W, vec3 diffuse, vec4 specular) {
           specular.rgb * pow(max(0.,dot(R,-W)), specular.a);
 }
 `;
+let isImplicit = false;
 let intervalID, autodraw = true;
 let vertexSize = 6;
 let mesh = {
@@ -56,13 +57,7 @@ function gl_start(canvas, scene) {
          gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
          gl.enable(gl.DEPTH_TEST);
          gl.depthFunc(gl.LEQUAL);
-         let vertexAttribute = (name, size, position) => {
-            let attr = gl.getAttribLocation(gl.program, name);
-            gl.enableVertexAttribArray(attr);
-            gl.vertexAttribPointer(attr, size, gl.FLOAT, false, vertexSize * 4, position * 4);
-         }
-         vertexAttribute('aPos', 3, 0);
-         vertexAttribute('aNor', 3, 3);
+	 vertexMap(['aPos',3,'aNor',3]);
       }
       canvas.setShaders(scene.vertexShader, scene.fragmentShader);
       if (intervalID)
@@ -75,10 +70,35 @@ function gl_start(canvas, scene) {
    }, 100);
 }
 
+let vertexMap = map => {
+   let vertexAttribute = (name, size, position) => {
+      let attr = gl.getAttribLocation(gl.program, name);
+      gl.enableVertexAttribArray(attr);
+      gl.vertexAttribPointer(attr, size, gl.FLOAT, false, vertexSize * 4, position * 4);
+   }
+   vertexSize = 0;
+   for (let n = 0 ; n < map.length ; n += 2)
+      vertexSize += map[n+1];
+   let index = 0;
+   for (let n = 0 ; n < map.length ; n += 2) {
+      vertexAttribute(map[n], map[n+1], index);
+      index += map[n+1];
+   }
+}
+
 let drawMesh = mesh => {
    gl.bufferData(gl.ARRAY_BUFFER, mesh.data, gl.STATIC_DRAW);
    gl.drawArrays(mesh.triangle_strip ? gl.TRIANGLE_STRIP : gl.TRIANGLES,
                  0, mesh.data.length / vertexSize);
+}
+
+let drawObj = (mesh, matrix, color) => {
+   autodraw = false;
+   let m = mxm(perspective(0,0,-.5),matrix);
+   setUniform('Matrix4fv', 'uMF', false, m);
+   setUniform('Matrix4fv', 'uMI', false, inverse(m));
+   setUniform('3fv', 'uColor', color ?? [1,1,1]);
+   drawMesh(mesh);
 }
 
 let animate = () => {}

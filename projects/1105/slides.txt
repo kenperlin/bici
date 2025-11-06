@@ -1,0 +1,44 @@
+URL 1 https://kenperlin.com/implicit1
+URL 2 https://kenperlin.com/implicit2
+
+Student work
+MORE\nIMPLICIT\nSURFACES
+Finding the\nedge point
+findEdgePoint.js
+Looking more\ncarefully\nat blobs
+bending.js
+ellipse.js
+Varying region size
+Examples
+// scenes 1-6
+Skinning bones
+How can we have\nmany bones with\nonly a few weights?
+
+6 weights => 20 matrices
+
+In vertex shader:\n\nUse weights\nto blend\ntransforms
+
+Flexible vertex map
+
+Fragment shader:\n\nblend color,\nshininess,\netc.
+
+Negative blobs
+
+A DEEP DIVE\nINTO THE CODE
+
+Marching tetrahedra code
+
+Efficiency
+Only look at\nactive regions
+Still to do:\n\nFirst do a low res\npass thru volume
+
+Alternate shapes:\n\nsphere,\nsausage,\ncylinder,\ncube
+
+Quadratic components\nin X, Y, Z
+
+//Videos -- Remember to check in at 8:39pm!!
+Chalktalk AR
+Centrifuge brain project
+Carlitopolis
+
+fini

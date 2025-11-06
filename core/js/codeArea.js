@@ -57,6 +57,7 @@ function CodeArea(x,y) {
    this.getElement = () => codeArea;
 
    this.update = () => {
+      codeArea.style.backgroundColor = isOpaque ? 'white' : 'rgba(255,255,255,.6)';
       codeArea.style.fontSize = (fontSize >> 0) + 'px';
       let lines = codeArea.value.split('\n');
       codeArea.rows = Math.min(790 / fontSize >> 0, lines.length);

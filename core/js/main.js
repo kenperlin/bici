@@ -548,7 +548,7 @@ animate = () => {
 
       // Show the id of the current figure in the bottom right corner.
       ctx.font = '20px Courier';
-      ctx.fillText(figureKey.charAt(figureIndex), screen.width-15, screen.height-37);
+      ctx.fillText(choiceKey.charAt(figureIndex), screen.width-15, screen.height-37);
    }
 
    if (isDrawpad) {

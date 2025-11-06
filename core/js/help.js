@@ -15,7 +15,7 @@ display : ctx => {
 
    if (help.isHelp) {
       ctx.fillStyle = '#ffffff80';      
-      ctx.fillRect(18, 20, 470 * fs / 40, (fs*7/8) * help.text.length);
+      ctx.fillRect(18, 20, 470 * fs / 40, .85 * fs * help.text.length + 5);
       ctx.fillStyle = 'black';      
       ctx.font = 'bold ' + fs + 'px Arial';
       ctx.fillText(help.text[0], 26, 20 + fs);
@@ -24,16 +24,14 @@ display : ctx => {
          let ch = help.text[n].substring(0, i);
          ctx.font = 'bold ' + (fs*3/4) + 'px Arial';
          let w = ctx.measureText(ch).width;
-         ctx.fillText(ch, 38 - w * (n==1 ? .2 : .5), 35 + fs + (fs*7/8) * n);
+         ctx.fillText(ch, 38 - w * (n==1 ? .2 : .5), 35 + fs + .85 * fs * n);
          ctx.font = (fs * 5/8) + 'px Arial';
-         ctx.fillText(help.text[n].substring(i), 53, 35 + fs + (fs*7/8) * n);
+         ctx.fillText(help.text[n].substring(i), 53, 35 + fs + .85 * fs * n);
       }
    }
 },
 
-//isSplash : true,
 isSplash : false,
-
 isHelp : false,
 
 text : `\
@@ -43,6 +41,7 @@ a (+ key) Open a pre-defined URL.
 b Toggle blurred region in video.
 c Toggle editable code for 3D scene.
 d Toggle drawing pad.
+e (+ key) Show src code in text editor.
 f Toggle floaters behind me.
 g Grab bg (enables transparency).
 h Toggle this help menu.

@@ -38,7 +38,7 @@ let URLs = {
    'w': 'https://kenperlin.com/web.html',
 };
 
-let isOpeningURL = false, isJumpingToFigure;
+let isOpeningURL, isJumpingToFigure, isLoadingSrcFile;
 
 let openURL = key => {
    let url = URLs[key];
@@ -46,7 +46,7 @@ let openURL = key => {
       window.open(url, '_blank');
 }
 
-let figureKey = '0123456789\
+let choiceKey = '0123456789\
 abcdefghijklmnopqrstuvwxyz\
 ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
@@ -65,6 +65,9 @@ let keyDown = key => {
 }
 
 window.keyUp = key => {
+
+   let toggleCode = () => codeArea.getElement().style.left = (isCode = ! isCode) ? 20 : -2000;
+
    if (isOpeningURL) {
       isOpeningURL = false;
       openURL(key);
@@ -72,10 +75,22 @@ window.keyUp = key => {
    }
 
    if (isJumpingToFigure) {
-      let i = figureKey.indexOf(key);
+      let i = choiceKey.indexOf(key);
       if (i >= 0)
-         figureIndex = Math.min(figures.length-1, figureKey.indexOf(key));
-      isJumpingToFIgure = false;
+         figureIndex = Math.min(figures.length-1, choiceKey.indexOf(key));
+      isJumpingToFigure = false;
+      return;
+   }
+
+   if (isLoadingSrcFile) {
+      let i = choiceKey.indexOf(key);
+      if (i >= 0 && i < srcFiles.length)
+         getFile('core/js/' + srcFiles[i].trim() + '.js', str => {
+	    codeArea.getElement().value = str;
+         });
+      isLoadingSrcFile = false;
+      if (! isCode)
+         toggleCode();
       return;
    }
 
@@ -116,11 +131,11 @@ window.keyUp = key => {
       else if (! chalktalk.delete(pen.x,pen.y))
          pen.delete();
       break;
-   //case 'a' : window.open('http://cs.nyu.edu/~perlin/video_links.html', '_blank'); break;
    case 'a' : isOpeningURL = true; break;
    case 'b' : webcam.isBlur = ! webcam.isBlur; break;
-   case 'c' : codeArea.getElement().style.left = (isCode = ! isCode) ? 20 : -2000; break;
+   case 'c' : toggleCode(); break;
    case 'd' : isDrawpad = ! isDrawpad; break;
+   case 'e' : isLoadingSrcFile = true; break;
    case 'f' : webcam.isFloaters = ! webcam.isFloaters; break;
    case 'g' : webcam.grabImage(); break;
    case 'h' : help.isHelp = ! help.isHelp; break;
