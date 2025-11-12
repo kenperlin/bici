@@ -34,8 +34,6 @@ let transition = (a,b,startTime) => {
    return a + (b - a) * t * t * (3 - t - t);
 }
 
-let figureSequence = () => { return []; }
-
 window.fontSize = 18;
 let scene, sceneID, isAlt, isInfo, isOpaque;
 window.isShift = false;
@@ -169,16 +167,16 @@ if (typeof WebRTCClient !== 'undefined') {
 
 let shift3D = 0, t3D = 0, isDrawpad;
 
-let gotoFigure = name => {
-   for (let n = 0 ; n < figureNames.length ; n++)
-      if (name === figureNames[n]) {
-         figureIndex = n;
+let gotoSlide = name => {
+   for (let n = 0 ; n < slideNames.length ; n++)
+      if (name === slideNames[n]) {
+         slideIndex = n;
          break;
       }
 }
 
 let isFirstTime = true;
-let figures = [], figureNames = [], figureIndex = 0, fq = {}, fqParsed = false;
+let slides = [], slideNames = [], slideIndex = 0, fq = {}, fqParsed = false;
 
 let cubeVertices = [ [-1,-1,-1,1],[1,-1,-1,1],[-1,1,-1,1],[1,1,-1,1],
                      [-1,-1, 1,1],[1,-1, 1,1],[-1,1, 1,1],[1,1, 1,1] ];
@@ -186,12 +184,12 @@ let cubeEdges = [ [0,1],[2,3],[4,5],[6,7],
                   [0,2],[1,3],[4,6],[5,7],
                   [0,4],[1,5],[2,6],[3,7] ];
 
-let initFigures = () => {
+let initSlides = () => {
    let ctx = D.ctx;
    let index = 0;
-   for (let n = 0 ; n < slides.length ; n++) {
+   for (let n = 0 ; n < slideData.length ; n++) {
 
-      let file = slides[n];
+      let file = slideData[n];
 
       if (file.indexOf('URL') == 0) {
          let info = file.split(' ');
@@ -229,7 +227,6 @@ let initFigures = () => {
       }
 
       else if (isDiagram) {
-         console.log('diagram', file);
          loadScript('projects/' + project + '/diagrams/' + file, () => {
             let diagram = new Diagram();
 	    addDiagramProperties(diagram, ctx);
@@ -291,8 +288,8 @@ pen.setContext(ctx);
 if (webrtcClient) {
    webrtcClient.onStateUpdate = (fromClientId, state) => {
       // Apply state updates from other clients
-      if (state.figureIndex !== undefined) {
-         figureIndex = state.figureIndex;
+      if (state.slideIndex !== undefined) {
+         slideIndex = state.slideIndex;
       }
       if (state.sceneID !== undefined && state.sceneID !== sceneID) {
          setScene(state.sceneID);
@@ -446,7 +443,7 @@ let broadcastState = () => {
    clearTimeout(broadcastStateTimer);
    broadcastStateTimer = setTimeout(() => {
       webrtcClient.broadcastState({
-         figureIndex: figureIndex,
+         slideIndex: slideIndex,
          sceneID: sceneID,
          isInfo: isInfo,
          isScene: isScene,
@@ -478,7 +475,7 @@ let isReloadScene = false, reloadTime = 0;
 
 animate = () => {
    if (isFirstTime) {
-      initFigures();
+      initSlides();
       isFirstTime = false;
    }
 
@@ -497,8 +494,8 @@ animate = () => {
    if (time - startTime > 1 && ! fqParsed) {
       for (let name in fq) {
          let index = fq[name].index;
-         figures[index] = fq[name].image ? fq[name].image : fq[name].diagram;
-         figureNames[index] = name;
+         slides[index] = fq[name].image ? fq[name].image : fq[name].diagram;
+         slideNames[index] = name;
       }
       fqParsed = true;
    }
@@ -523,13 +520,14 @@ animate = () => {
 
    if (isInfo) {
       ctx.globalAlpha = isOpaque ? 1 : .5;
-      let figure = figures[figureIndex];
-      if (! figure.update)
-         ctx.drawImage(figure, D.left, D.top, 500, 500*figure.height/figure.width);
+      let slide = slides[slideIndex];
+      D.left = window.innerWidth - 500 - 20;
+      if (! slide.update)
+         ctx.drawImage(slide, D.left, D.top, 500, 500*slide.height/slide.width);
       else {
-         figure._beforeUpdate();
-         figure.update(D.ctx);
-         let x = D.left, y = D.top, w = figure.width, h = figure.height;
+         slide._beforeUpdate();
+         slide.update(D.ctx);
+         let x = D.left, y = D.top, w = slide.width, h = slide.height;
          ctx.save();
             ctx.beginPath();
             ctx.moveTo(x,y);
@@ -542,14 +540,14 @@ animate = () => {
       }
       ctx.globalAlpha = 1;
 
-      // Show the id of the current figure in the bottom right corner.
+      // Show the id of the current slide in the bottom right corner.
       ctx.font = '20px Courier';
-      ctx.fillText(choiceKey.charAt(figureIndex), screen.width-15, screen.height-37);
+      ctx.fillText(choiceKey.charAt(slideIndex), screen.width-15, screen.height-37);
    }
 
    if (isDrawpad) {
-      let w = 500, h = 400, x = screen.width - 20 - w, y = screen.height - 60 - h;
-      ctx.fillStyle = '#ffffff80';
+      let w = 500, h = 400, x = window.innerWidth - 20 - w, y = screen.height - 60 - h;
+      ctx.fillStyle = isOpaque ? 'white' : '#ffffff80';
       ctx.fillRect(x, y, w, h);
    }
 

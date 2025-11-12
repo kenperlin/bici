@@ -45,11 +45,11 @@ e (+ key) Show src code in text editor.
 f Toggle floaters behind me.
 g Grab bg (enables transparency).
 h Toggle this help menu.
-i Toggle show/hide figures.
-j (+ key) Jump to a particular figure.
+i Toggle show/hide slides.
+j (+ key) Jump to a particular slide.
 l Toggle lightpen (small blue object).
 m Hold down to move a sketch.
-o Toggle whether figures are opaque.
+o Toggle whether slides are opaque.
 p Toggle show/hide tracked blue pixels.
 r Toggle if 3D scene is shifted right.
 s Toggle show/hide 3D scene.
@@ -69,8 +69,8 @@ w Toggle world seen thru blue plate.
 ; Hold down to interact with a sketch.
 \u2193 Smaller text.
 \u2191 Larger text.
-\u2190 Previous figure.
-\u2192 Next figure.
+\u2190 Previous slide.
+\u2192 Next slide.
 `.split('\n'),
 
 }

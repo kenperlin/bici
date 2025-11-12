@@ -1,3 +1,8 @@
+/*
+   To do:
+   	The initial sweep to determine the bounds of the active region
+	should be done at a lower resolution for greater efficiency.
+*/
 // CONVERT AN IMPLICIT SURFACE DESCRIPTION INTO A TRIANGLE MESH.
 // THE FIRST ARG MUST BE AN OBJECT THAT PROVIDES eval() AND weights() METHODS.
 
@@ -233,6 +238,8 @@ function Blobs() {
       }
 
       t = Math.max(0, t);
+      if (t > 1)
+         t = 2 - 1/t;
       return t * t * Math.sign(data.blur);
    }
 

@@ -81,17 +81,17 @@ let penDown = () => {
    isPenDown = true;
 
    if (isInfo) {
-      let figure = figures[figureIndex];
+      let slide = slides[slideIndex];
       if (D.isIn()) {
-         if (figure.mouseMove || figure.mouseDown || figure.mouseDrag || figure.mouseUp) {
-            if (figure.mouseDown)
-               figure.mouseDown(D.x, D.y);
+         if (slide.mouseMove || slide.mouseDown || slide.mouseDrag || slide.mouseUp) {
+            if (slide.mouseDown)
+               slide.mouseDown(D.x, D.y);
             D.isDown = true;
             return;
          }
-         if (figure.onMove || figure.onDown || figure.onDrag || figure.onUp) {
-            if (figure.onDown)
-               figure.onDown(figure._px(D.x), figure._py(D.y));
+         if (slide.onMove || slide.onDown || slide.onDrag || slide.onUp) {
+            if (slide.onDown)
+               slide.onDown(slide._px(D.x), slide._py(D.y));
             D.isDown = true;
             return;
          }
@@ -117,13 +117,13 @@ let penUp = () => {
    isPenDown = false;
 
    if (isInfo) {
-      let figure = figures[figureIndex];
+      let slide = slides[slideIndex];
       if (D.isDown) {
 
-         if (figure.mouseUp)
-            figure.mouseUp(D.x, D.y);
-         if (figure.onUp)
-            figure.onUp(figure._px(D.x), figure._py(D.y));
+         if (slide.mouseUp)
+            slide.mouseUp(D.x, D.y);
+         if (slide.onUp)
+            slide.onUp(slide._px(D.x), slide._py(D.y));
 
          D.isDown = false;
          return;
@@ -145,22 +145,22 @@ let penMove = (x,y) => {
    if (isInfo) {
       D.x = x - D.left;
       D.y = y - D.top;
-      let figure = figures[figureIndex];
+      let slide = slides[slideIndex];
       if (D.isDown) {
 
-         if (figure.mouseDrag)
-            figure.mouseDrag(D.x, D.y);
-         if (figure.onDrag)
-            figure.onDrag(figure._px(D.x), figure._py(D.y));
+         if (slide.mouseDrag)
+            slide.mouseDrag(D.x, D.y);
+         if (slide.onDrag)
+            slide.onDrag(slide._px(D.x), slide._py(D.y));
 
          return;
       }
       if (D.isIn()) {
 
-         if (figure.mouseMove)
-            figure.mouseMove(D.x, D.y);
-         if (figure.onMove)
-            figure.onMove(figure._px(D.x), figure._py(D.y));
+         if (slide.mouseMove)
+            slide.mouseMove(D.x, D.y);
+         if (slide.onMove)
+            slide.onMove(slide._px(D.x), slide._py(D.y));
 
          return;
       }

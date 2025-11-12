@@ -13,10 +13,8 @@ let loadImage = (src, callback) => {
       callback(image);
    }
    image.onload = () => onload(image);
-   image.src = 'projects/' + project + '/images/' + src;
-   image.onerror = err => {
-      image = new Image();
-      image.onload = () => onload(image);
-      image.src = 'core/images/' + src;
-   }
+   if (src.indexOf('/') == -1)
+      src = 'projects/' + project + '/images/' + src;
+   image.src = src;
+   image.onerror = err => console.log('image', src, 'not found');
 }

@@ -1,0 +1,20 @@
+TEXTURE MAPPING
+Basic ideas
+mapping.png
+Sampling
+aliasing1.png
+aliasing2.png
+We need to approximate\nan integral.\n\nHow can we do\nthat efficiently?
+MIP mapping (1983)
+lance.png
+mipmapping1.png
+mipmapping2.png
+mm-algorithm1.png
+mm-algorithm2.png
+mm-algorithm3.png
+MIP mapping is\nbuilt into\nevery modern GPU!
+The parts\nof the code
+Info at\neach vertex
+Bump mapping
+Security\nand servers
+fini
