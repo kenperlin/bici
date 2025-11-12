@@ -11,6 +11,8 @@ class WebRTCClient {
     this.localStream = null;
     this.ws = null;
     this.myClientId = null;
+    this.roomId = null;
+    this.roomFull = false;
     this.peerConnections = new Map();
     this.remoteStreams = new Map();
     this.onRemoteStreamAdded = null;
@@ -18,6 +20,8 @@ class WebRTCClient {
     this.onConnectionStatusChanged = null;
     this.onStateUpdate = null;  // Callback for receiving state updates
     this.onActionReceived = null;  // Callback for master receiving actions from secondary clients
+    this.onRoomJoined = null;  // Callback when room is joined successfully
+    this.onRoomFull = null;  // Callback when trying to join a full room
 
     // Master client pattern (first client is master)
     this.isMasterClient = false;
@@ -45,7 +49,16 @@ class WebRTCClient {
 
   connectToSignalingServer() {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}`;
+
+    // Parse room ID from URL query parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomParam = urlParams.get('room');
+
+    // Include room in WebSocket URL if specified
+    let wsUrl = `${protocol}//${window.location.host}`;
+    if (roomParam) {
+      wsUrl += `?room=${roomParam}`;
+    }
 
     this.ws = new WebSocket(wsUrl);
 
@@ -68,7 +81,23 @@ class WebRTCClient {
         switch (data.type) {
         case 'welcome':
           this.myClientId = data.clientId;
+          this.roomId = data.roomId;
+          this.roomFull = data.roomFull || false;
+
           console.log('My client ID:', this.myClientId);
+          console.log('Room ID:', this.roomId);
+
+          if (this.roomFull) {
+            console.warn('Room is full!');
+            if (this.onRoomFull) {
+              this.onRoomFull(this.roomId);
+            }
+          } else if (this.roomId) {
+            console.log('Successfully joined room:', this.roomId);
+            if (this.onRoomJoined) {
+              this.onRoomJoined(this.roomId);
+            }
+          }
           break;
 
         case 'client-list':
@@ -347,6 +376,14 @@ class WebRTCClient {
 
   getMyClientId() {
     return this.myClientId;
+  }
+
+  getRoomId() {
+    return this.roomId;
+  }
+
+  isRoomFull() {
+    return this.roomFull;
   }
 
   getRemoteStreams() {

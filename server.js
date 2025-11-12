@@ -63,6 +63,82 @@ const clients = new Map();
 // Store Yjs documents (one per room/document name)
 const yjsDocs = new Map();
 
+// Store rooms: roomId -> { clients: Set<clientId>, createdAt: timestamp }
+const rooms = new Map();
+
+// Store client-to-room mapping: clientId -> roomId
+const clientRooms = new Map();
+
+// Generate short room code (6 alphanumeric characters)
+function generateRoomCode() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  // Ensure uniqueness
+  return rooms.has(code) ? generateRoomCode() : code;
+}
+
+// Create a new room
+function createRoom(roomId = null) {
+  const id = roomId || generateRoomCode();
+  if (!rooms.has(id)) {
+    rooms.set(id, {
+      clients: new Set(),
+      createdAt: Date.now()
+    });
+    console.log(`Created room: ${id}`);
+  }
+  return id;
+}
+
+// Add client to room
+function addClientToRoom(clientId, roomId) {
+  const room = rooms.get(roomId);
+  if (!room) {
+    console.error(`Room ${roomId} does not exist`);
+    return false;
+  }
+
+  // Check room capacity (max 2 for 1-on-1)
+  if (room.clients.size >= 2) {
+    console.log(`Room ${roomId} is full (${room.clients.size}/2)`);
+    return false;
+  }
+
+  room.clients.add(clientId);
+  clientRooms.set(clientId, roomId);
+  console.log(`Client ${clientId} joined room ${roomId} (${room.clients.size}/2)`);
+  return true;
+}
+
+// Remove client from room and cleanup if empty
+function removeClientFromRoom(clientId) {
+  const roomId = clientRooms.get(clientId);
+  if (!roomId) return;
+
+  const room = rooms.get(roomId);
+  if (room) {
+    room.clients.delete(clientId);
+    console.log(`Client ${clientId} left room ${roomId} (${room.clients.size}/2)`);
+
+    // Auto-delete room if empty
+    if (room.clients.size === 0) {
+      rooms.delete(roomId);
+      console.log(`Deleted empty room: ${roomId}`);
+    }
+  }
+
+  clientRooms.delete(clientId);
+}
+
+// Get clients in same room
+function getRoomClients(roomId) {
+  const room = rooms.get(roomId);
+  return room ? Array.from(room.clients) : [];
+}
+
 // Get or create a Yjs document for a room
 function getYDoc(docName) {
   if (!yjsDocs.has(docName)) {
@@ -118,15 +194,44 @@ wss.on('connection', (ws, req) => {
 
   console.log(`Client connected: ${clientId}. Total clients: ${clients.size}`);
 
-  // Send the client their ID
+  // Parse room ID from URL query parameters
+  const roomIdFromUrl = url.searchParams.get('room');
+  let roomId = null;
+  let roomJoinSuccess = false;
+  let roomFull = false;
+
+  if (roomIdFromUrl) {
+    // Client wants to join a specific room
+    if (!rooms.has(roomIdFromUrl)) {
+      // Room doesn't exist, create it
+      createRoom(roomIdFromUrl);
+    }
+    roomJoinSuccess = addClientToRoom(clientId, roomIdFromUrl);
+    if (roomJoinSuccess) {
+      roomId = roomIdFromUrl;
+    } else {
+      roomFull = true;
+    }
+  } else {
+    // No room specified, auto-create a new room
+    roomId = createRoom();
+    addClientToRoom(clientId, roomId);
+    roomJoinSuccess = true;
+  }
+
+  // Send the client their ID and room info
   ws.send(JSON.stringify({
     type: 'welcome',
     clientId: clientId,
+    roomId: roomId,
+    roomFull: roomFull,
     totalClients: clients.size
   }));
 
-  // Broadcast updated client list to all clients
-  broadcastClientList();
+  if (roomJoinSuccess) {
+    // Broadcast updated client list to clients in the same room
+    broadcastClientListToRoom(roomId);
+  }
 
   ws.on('message', (message) => {
 
@@ -154,17 +259,24 @@ wss.on('connection', (ws, req) => {
           break;
 
         case 'state-update':
-          // Broadcast state updates to all other clients
-          console.log('Broadcasting state update from:', clientId);
-          clients.forEach((client, id) => {
-            if (id !== clientId && client.readyState === 1) {
-              client.send(JSON.stringify({
-                type: 'state-update',
-                from: clientId,
-                state: data.state
-              }));
-            }
-          });
+          // Broadcast state updates to clients in the same room only
+          const senderRoomId = clientRooms.get(clientId);
+          if (senderRoomId) {
+            console.log('Broadcasting state update from:', clientId, 'in room:', senderRoomId);
+            const roomClients = getRoomClients(senderRoomId);
+            roomClients.forEach((id) => {
+              if (id !== clientId) {
+                const client = clients.get(id);
+                if (client && client.readyState === 1) {
+                  client.send(JSON.stringify({
+                    type: 'state-update',
+                    from: clientId,
+                    state: data.state
+                  }));
+                }
+              }
+            });
+          }
           break;
 
         case 'action':
@@ -189,9 +301,15 @@ wss.on('connection', (ws, req) => {
   });
 
   ws.on('close', () => {
+    const roomId = clientRooms.get(clientId);
     clients.delete(clientId);
+    removeClientFromRoom(clientId);
     console.log(`Client disconnected: ${clientId}. Total clients: ${clients.size}`);
-    broadcastClientList();
+
+    // Notify other clients in the room
+    if (roomId) {
+      broadcastClientListToRoom(roomId);
+    }
   });
 
   ws.on('error', (error) => {
@@ -199,22 +317,40 @@ wss.on('connection', (ws, req) => {
   });
 });
 
-function broadcastClientList() {
-  const clientIds = Array.from(clients.keys());
+// Broadcast client list to all clients in a specific room
+function broadcastClientListToRoom(roomId) {
+  const roomClientIds = getRoomClients(roomId);
   const message = JSON.stringify({
     type: 'client-list',
-    clients: clientIds
+    clients: roomClientIds
   });
 
-  clients.forEach((client) => {
-    if (client.readyState === 1) { // OPEN
+  roomClientIds.forEach((clientId) => {
+    const client = clients.get(clientId);
+    if (client && client.readyState === 1) { // OPEN
       client.send(message);
     }
   });
 }
 
+// Legacy function for backwards compatibility (now uses rooms)
+function broadcastClientList() {
+  rooms.forEach((room, roomId) => {
+    broadcastClientListToRoom(roomId);
+  });
+}
+
 function sendClientList(ws, excludeId) {
-  const clientIds = Array.from(clients.keys()).filter(id => id !== excludeId);
+  const roomId = clientRooms.get(excludeId);
+  if (!roomId) {
+    ws.send(JSON.stringify({
+      type: 'client-list',
+      clients: []
+    }));
+    return;
+  }
+
+  const clientIds = getRoomClients(roomId).filter(id => id !== excludeId);
   ws.send(JSON.stringify({
     type: 'client-list',
     clients: clientIds

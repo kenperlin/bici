@@ -109,3 +109,189 @@
 #remote-videos-container:has(.video-container:nth-child(3)) {
   flex-direction: column;
 }
+
+/* Invitation UI */
+.invitation-container {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000;
+  background: rgba(0, 0, 0, 0.95);
+  border: 2px solid #4CAF50;
+  border-radius: 12px;
+  padding: 20px;
+  min-width: 400px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  font-family: Arial, sans-serif;
+}
+
+.invitation-content {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.room-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: rgba(76, 175, 80, 0.2);
+  border-radius: 6px;
+}
+
+.status-label {
+  color: #ccc;
+  font-size: 14px;
+}
+
+.room-code {
+  color: #4CAF50;
+  font-size: 18px;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 2px;
+}
+
+.invitation-link {
+  display: flex;
+  gap: 10px;
+}
+
+.invitation-link input {
+  flex: 1;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid #555;
+  border-radius: 6px;
+  color: white;
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
+}
+
+.invitation-link input:focus {
+  outline: none;
+  border-color: #4CAF50;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.invitation-link button,
+#close-invitation-btn {
+  padding: 10px 20px;
+  background: #4CAF50;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.invitation-link button:hover,
+#close-invitation-btn:hover {
+  background: #45a049;
+  transform: scale(1.05);
+}
+
+.invitation-link button:active,
+#close-invitation-btn:active {
+  transform: scale(0.95);
+}
+
+.peer-status {
+  padding: 10px;
+  background: rgba(255, 193, 7, 0.2);
+  border-radius: 6px;
+  text-align: center;
+  color: #FFC107;
+  font-size: 14px;
+}
+
+#close-invitation-btn {
+  background: rgba(255, 255, 255, 0.1);
+  margin-top: 5px;
+}
+
+#close-invitation-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Room Full Notification */
+.room-full-notification {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Arial, sans-serif;
+}
+
+.notification-content {
+  background: rgba(30, 30, 30, 0.98);
+  border: 2px solid #f44336;
+  border-radius: 12px;
+  padding: 30px;
+  max-width: 500px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  text-align: center;
+}
+
+.notification-content h3 {
+  color: #f44336;
+  margin: 0 0 20px 0;
+  font-size: 24px;
+}
+
+.notification-content p {
+  color: #ccc;
+  margin: 10px 0;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.notification-content strong {
+  color: #fff;
+  font-family: 'Courier New', monospace;
+}
+
+#close-notification-btn {
+  margin-top: 20px;
+  padding: 12px 30px;
+  background: #f44336;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+#close-notification-btn:hover {
+  background: #da190b;
+  transform: scale(1.05);
+}
+
+#close-notification-btn:active {
+  transform: scale(0.95);
+}
+
+/* Responsive Design for Invitation UI */
+@media (max-width: 768px) {
+  .invitation-container {
+    min-width: 90%;
+    max-width: 90%;
+  }
+
+  .notification-content {
+    max-width: 90%;
+    padding: 20px;
+  }
+}
