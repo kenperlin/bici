@@ -63,6 +63,9 @@ const clients = new Map();
 // Store Yjs documents (one per room/document name)
 const yjsDocs = new Map();
 
+// Store Yjs WebSocket connections per document: docName -> Set<WebSocket>
+const yjsConnections = new Map();
+
 // Store rooms: roomId -> { clients: Set<clientId>, createdAt: timestamp }
 const rooms = new Map();
 
@@ -160,6 +163,13 @@ wss.on('connection', (ws, req) => {
 
     const ydoc = getYDoc(docName);
 
+    // Track this WebSocket connection for this document
+    if (!yjsConnections.has(docName)) {
+      yjsConnections.set(docName, new Set());
+    }
+    yjsConnections.get(docName).add(ws);
+    console.log(`Yjs connections for ${docName}: ${yjsConnections.get(docName).size}`);
+
     // Send current document state to new client
     const currentState = Y.encodeStateAsUpdate(ydoc);
     if (currentState.length > 0) {
@@ -173,16 +183,29 @@ wss.on('connection', (ws, req) => {
       // Apply update to server's document
       Y.applyUpdate(ydoc, update);
 
-      // Broadcast to other clients connected to the same document
-      wss.clients.forEach((client) => {
-        if (client !== ws && client.readyState === 1) {
-          client.send(message);
-        }
-      });
+      // Broadcast to other clients connected to the SAME document only
+      const docConnections = yjsConnections.get(docName);
+      if (docConnections) {
+        docConnections.forEach((client) => {
+          if (client !== ws && client.readyState === 1) {
+            client.send(message);
+          }
+        });
+      }
     });
 
     ws.on('close', () => {
       console.log(`Yjs client disconnected from document: ${docName}`);
+      // Remove from document connections
+      const docConnections = yjsConnections.get(docName);
+      if (docConnections) {
+        docConnections.delete(ws);
+        console.log(`Yjs connections for ${docName}: ${docConnections.size}`);
+        // Clean up empty sets
+        if (docConnections.size === 0) {
+          yjsConnections.delete(docName);
+        }
+      }
     });
 
     return;

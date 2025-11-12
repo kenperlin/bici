@@ -52,8 +52,12 @@ if (typeof WebRTCClient !== 'undefined') {
 
    // Handle room joined successfully
    webrtcClient.onRoomJoined = (roomId) => {
-      console.log('Room joined:', roomId);
+      console.log('[BICI] Room joined:', roomId);
       showInvitationUI(roomId);
+
+      // Initialize Yjs after room is joined to use room-specific document
+      console.log('[BICI] Calling initializeYjs with roomId:', roomId);
+      initializeYjs(roomId);
    };
 
    // Handle room full error
@@ -65,123 +69,140 @@ if (typeof WebRTCClient !== 'undefined') {
    webrtcClient.init().then(localStream => {
       videoUI = new VideoUI(webrtcClient);
       videoUI.setLocalStream(localStream);
+      // Yjs will be initialized after room is joined
+   }).catch(error => {
+      console.error('Failed to initialize WebRTC:', error);
+   });
+}
 
-      // Initialize Yjs with custom WebSocket connection
-      if (typeof Y !== 'undefined') {
-         ydoc = new Y.Doc();
-         ytext = ydoc.getText('codemirror');
+// Initialize Yjs for collaborative editing (called after room is joined)
+function initializeYjs(roomId) {
+   console.log('[BICI] initializeYjs called with roomId:', roomId);
 
-         // Create separate WebSocket for Yjs (different from WebRTC signaling)
-         // Scope Yjs document to room
-         const roomId = webrtcClient.getRoomId();
-         const docName = roomId ? `bici-code-editor-${roomId}` : 'bici-code-editor';
+   if (typeof Y === 'undefined') {
+      console.error('[BICI] Y (Yjs) is undefined!');
+      return;
+   }
 
-         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-         const yjsWs = new WebSocket(`${protocol}//${window.location.host}/${docName}`);
-         yjsWs.binaryType = 'arraybuffer';
+   ydoc = new Y.Doc();
+   ytext = ydoc.getText('codemirror');
 
-         console.log('Yjs document name:', docName);
+   // Create separate WebSocket for Yjs (different from WebRTC signaling)
+   // Scope Yjs document to room
+   const docName = roomId ? `bici-code-editor-${roomId}` : 'bici-code-editor';
 
-         yjsWs.onopen = () => {
-            console.log('Yjs WebSocket connected');
-         };
+   console.log('[BICI] Creating Yjs WebSocket connection for document:', docName);
 
-         yjsWs.onmessage = (event) => {
-            if (event.data instanceof ArrayBuffer) {
-               const update = new Uint8Array(event.data);
-               Y.applyUpdate(ydoc, update);
-            }
-         };
+   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+   const yjsWs = new WebSocket(`${protocol}//${window.location.host}/${docName}`);
+   yjsWs.binaryType = 'arraybuffer';
 
-         // Send Yjs updates through the dedicated Yjs WebSocket
-         ydoc.on('update', (update) => {
-            if (yjsWs.readyState === WebSocket.OPEN) {
-               yjsWs.send(update);
-            }
-         });
+   yjsWs.onopen = () => {
+      console.log('Yjs WebSocket connected');
+   };
 
-         // Setup textarea binding
-         const textarea = codeArea.getElement();
-         let isLocalUpdate = false;
-         let reloadTimer = null;
-	 let isReloading = false;
+   yjsWs.onmessage = (event) => {
+      if (event.data instanceof ArrayBuffer) {
+         const update = new Uint8Array(event.data);
+         Y.applyUpdate(ydoc, update);
+      }
+   };
 
-         // When Yjs text changes, update textarea
-         ytext.observe(event => {
-            if (isLocalUpdate) return;
-            isLocalUpdate = true;
-            const newText = ytext.toString();
+   // Send Yjs updates through the dedicated Yjs WebSocket
+   ydoc.on('update', (update) => {
+      if (yjsWs.readyState === WebSocket.OPEN) {
+         yjsWs.send(update);
+      }
+   });
 
-            // Check if slider marker was added (slider reload trigger)
-            const hasSliderMarker = newText.includes('\u200B');
+   // Setup textarea binding
+   const textarea = codeArea.getElement();
+   let isLocalUpdate = false;
+   let reloadTimer = null;
+   let isReloading = false;
 
-            // Reload in three cases:
-            // 1. Explicit reload
-            // 2. Slider marker detected (real-time slider sync)
-            // 3. Local shift is held down (local number slider)
-            if ((isReloading || hasSliderMarker || window.isShift) && typeof codeArea.callback === 'function') {
-               codeArea.callback();
-	       isReloading = false;
-            }
+   // When Yjs text changes, update textarea
+   ytext.observe(event => {
+      if (isLocalUpdate) return;
+      isLocalUpdate = true;
+      const newText = ytext.toString();
 
-            isLocalUpdate = false;
-         });
+      // Check if slider marker was added (slider reload trigger)
+      const hasSliderMarker = newText.includes('\u200B');
 
-         // When textarea changes, update Yjs text
-         textarea.addEventListener('input', () => {
-            if (isLocalUpdate) return;
-            isLocalUpdate = true;
-            const currentText = ytext.toString();
-            let newText = textarea.value;
+      // Only update textarea and reload when there's a trigger (Meta key or shift+drag)
+      // NOT on every keystroke from remote user
+      if (isReloading || hasSliderMarker || window.isShift) {
+         // Update textarea with Yjs text
+         if (textarea.value !== newText) {
+            const cursorPos = textarea.selectionStart;
+            textarea.value = newText;
+            // Try to restore cursor position
+            textarea.selectionStart = textarea.selectionEnd = Math.min(cursorPos, newText.length);
+         }
 
-            if (currentText !== newText) {
-               // Add invisible slider marker for real-time sync when shift is held
-               if (window.isShift) {
-                  newText = newText + '\u200B';
-               }
-
-               ydoc.transact(() => {
-                  ytext.delete(0, currentText.length);
-                  ytext.insert(0, newText);
-               });
-            }
-            isLocalUpdate = false;
-         });
-
-         // Setup Yjs pen strokes synchronization
-         ypenStrokes = ydoc.getArray('penStrokes');
-         let isUpdatingFromYjs = false;
-
-         // All clients observe pen strokes changes and render
-         ypenStrokes.observe(event => {
-            // Master client already has the correct pen.strokes locally
-            // Only secondary clients need to update from Yjs
-            if (webrtcClient && webrtcClient.isMaster()) {
-               return;
-            }
-
-            isUpdatingFromYjs = true;
-            // Update pen.strokes in place to preserve reference
-            const yjsArray = ypenStrokes.toArray();
-            pen.strokes.length = 0;
-            pen.strokes.push(...yjsArray);
-            isUpdatingFromYjs = false;
-         });
-
-         // Set up callback to sync local pen changes to Yjs (only master will actually sync)
-         pen.setOnStrokesChanged(() => {
-            if (!isUpdatingFromYjs) {
-               syncPenStrokesToYjs();
-            }
-         });
-
-         console.log('Yjs collaborative editing initialized');
+         // Reload the scene
+         if (typeof codeArea.callback === 'function') {
+            codeArea.callback();
+            isReloading = false;
+         }
       }
 
-      console.log('WebRTC initialized successfully');
-   }).catch(err => {
-      console.log('WebRTC not available:', err.message);
+      isLocalUpdate = false;
    });
+
+   // When textarea changes, update Yjs text
+   textarea.addEventListener('input', () => {
+      if (isLocalUpdate) {
+         return;
+      }
+      isLocalUpdate = true;
+      const currentText = ytext.toString();
+      let newText = textarea.value;
+
+      // Update Yjs if text changed OR if we're reloading (even with same text)
+      if (currentText !== newText || isReloading) {
+         // Add invisible marker for real-time sync when shift is held OR when reloading
+         if (window.isShift || isReloading) {
+            newText = newText + '\u200B';
+         }
+
+         ydoc.transact(() => {
+            ytext.delete(0, currentText.length);
+            ytext.insert(0, newText);
+         });
+      }
+      isLocalUpdate = false;
+   });
+
+   // Setup Yjs pen strokes synchronization
+   ypenStrokes = ydoc.getArray('penStrokes');
+   let isUpdatingFromYjs = false;
+
+   // All clients observe pen strokes changes and render
+   ypenStrokes.observe(event => {
+      // Master client already has the correct pen.strokes locally
+      // Only secondary clients need to update from Yjs
+      if (webrtcClient && webrtcClient.isMaster()) {
+         return;
+      }
+
+      isUpdatingFromYjs = true;
+      // Update pen.strokes in place to preserve reference
+      const yjsArray = ypenStrokes.toArray();
+      pen.strokes.length = 0;
+      pen.strokes.push(...yjsArray);
+      isUpdatingFromYjs = false;
+   });
+
+   // Set up callback to sync local pen changes to Yjs (only master will actually sync)
+   pen.setOnStrokesChanged(() => {
+      if (!isUpdatingFromYjs) {
+         syncPenStrokesToYjs();
+      }
+   });
+
+   console.log('Yjs collaborative editing initialized');
 }
 
 let shift3D = 0, t3D = 0, isDrawpad;
