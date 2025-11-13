@@ -30,7 +30,7 @@ async function getFile(file, callback) {
 }
 
 let srcFiles = `M4, loadImage, webgl, webcam, trackHead, help,
-	        midi, numberString, pen, keyEvent, matchCurves,
+	        midi, numberString, pen, scriptPanel, keyEvent, matchCurves,
 	        glyphs, chalktalk, codeArea, math, shape, shader,
 	        diagram, webrtc-client, video-ui, implicit, main`.split(',');
 

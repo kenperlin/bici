@@ -2,6 +2,11 @@
 document.addEventListener('keydown', e => {
    if (document.activeElement == codeArea.getElement())
       return;
+
+   let scriptTextarea = document.getElementById('scriptInput');
+   if (scriptTextarea && document.activeElement === scriptTextarea)
+      return;
+
    if (e.key.indexOf('Arrow') == 0)
       e.preventDefault();
    keyDown(e.key);
@@ -11,6 +16,11 @@ document.addEventListener('keyup', e => {
    help.isSplash = false;
    if (document.activeElement == codeArea.getElement())
       return;
+
+   let scriptTextarea = document.getElementById('scriptInput');
+   if (scriptTextarea && document.activeElement === scriptTextarea)
+      return;
+
    if (e.key.indexOf('Arrow') == 0)
       e.preventDefault();
 
@@ -67,6 +77,13 @@ let keyDown = key => {
 window.keyUp = key => {
 
    let toggleCode = () => codeArea.getElement().style.left = (isCode = ! isCode) ? 20 : -2000;
+
+   let toggleScriptPanel = () => {
+      let textarea = document.getElementById('scriptInput');
+      if (!textarea || document.activeElement !== textarea) {
+         scriptPanel.toggle();
+      }
+   }
 
    if (isOpeningURL) {
       isOpeningURL = false;
@@ -153,6 +170,7 @@ window.keyUp = key => {
    case 'v' : webcam.isTrackHead = ! webcam.isTrackHead; break;
    case 'V' : webcam.showTrackHead = ! webcam.showTrackHead; break;
    case 'w' : webcam.isWorld = ! webcam.isWorld; break;
+   case 'x' : toggleScriptPanel(); break;
    }
 }
 
