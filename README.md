@@ -11,5 +11,8 @@ It works best if there is a white wall behind you.
 
 Usage:
 1. In a console window, start a local web server from within the bici/ folder.
+    ```bash
+    python -m http.server 8000
+    ```
 2. Launch http://localhost:8000 in your web browser.
 3. Hit the 'h' key on your keyboard to see the help menu.
