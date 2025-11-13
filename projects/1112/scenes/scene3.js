@@ -1,5 +1,10 @@
 function Scene() {
 
+   let mx, my, dx = 0, dy = 0;
+   this.onDown = (x,y) => { mx = x; my = y; }
+   this.onDrag = (x,y) => { dx += x - mx; mx = x;
+                            dy += y - my; my = y; }
+
    this.vertexShader = `#version 300 es
       uniform mat4 uMF, uMI;
 
@@ -111,8 +116,8 @@ function Scene() {
 
       vertexMap(['aPos',3,'aNor',3,'aTan',3,'aUV',2]);
 
-      drawObj(mesh, mxm(turnY(time/2),
-                    mxm(turnX(Math.PI/4),
+      drawObj(mesh, mxm(turnY( dx),
+                    mxm(turnX(-dy),
 		        scale(.6,.6,.75))));
    }
 }
