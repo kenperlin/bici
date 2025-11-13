@@ -16,7 +16,7 @@ function Scene() {
          gl_Position = pos * vec4(1.,1.,-.1,1.);
          vPos = pos.xyz;
          vNor = nor.xyz;
-         vTan = tan.xyz;
+         vTan = tan.xyz; // NEED TANGENT VECTOR!
          vUV  = aUV;
       }
    `;
@@ -42,20 +42,19 @@ function Scene() {
                       + max(0., dot(vec3(-.5),nor));
 
          vec3 L = vec3(.577);
-	 vec3 P = vec3(.5,.7,1.),
-	      Q = vec3(.6,.2,.1);
-         float d = dot(L,nor),
-	       r = 2. * dot(L,nor) * nor.z - L.z;
-         vec3 diffuse = .1 + P*max(0.,d)
-	                   + Q*max(0.,-d);
-         vec3 specular = P*pow(max(0., r),60.)
-	               + Q*pow(max(0.,-r),60.);
+	 vec3 Key  = vec3(.5,.7,1.),
+	      Fill = vec3(.6,.2,.1);
+         float d = dot(L,nor), r = 2.*d*nor.z - L.z;
+         vec3 diffuse = .2 + .5 * Key  * max(0., d)
+	                   + .5 * Fill * max(0.,-d);
+         vec3 specular = Key  * pow(max(0., r),20.)
+	               + Fill * pow(max(0.,-r),20.);
 
 	 vec3 color = uColor * diffuse + specular;
 
-         vec3 T = texture(uSampler[0], vUV).rgb;
+         vec4 T = texture(uSampler[0], vUV);
 
-         fragColor = vec4(sqrt(color) * T, 1.);
+         fragColor = vec4(sqrt(color) * T.rgb, 1.);
       }
    `;
 
@@ -75,7 +74,10 @@ function Scene() {
           x = Math.cos(phi) * Math.cos(theta),
           y = Math.cos(phi) * Math.sin(theta),
           z = Math.sin(phi);
-      return [ x,y,z, x,y,z, -y,x,0, u,v ];
+
+      // INCLUDE DIRECTION OF TANGENT TO SURFACE
+
+      return [ x,y,z, x,y,z, y,-x,0, u,v ];
    });
 
    let tube = nu => createMesh(nu,2,(u,v) => {
@@ -83,7 +85,7 @@ function Scene() {
           x = Math.cos(theta),
           y = Math.sin(theta),
           z = 2 * v - 1;
-      return [ x,y,z, x,y,0, 0,0,1, u,v ];
+      return [ x,y,z, x,y,0, y,-x,0, u,v ];
    });
 
    mesh = { triangle_strip: true,
@@ -91,18 +93,28 @@ function Scene() {
 
    let isFirstTime = true;
 
+   let src = 'mosaic';
+
    this.update = () => {
-      vertexMap(['aPos',3,'aNor',3,'aTan',3,'aUV',2]);
       if (isFirstTime) {
+
+         // USE TWO TEXTURES: (0) COLOR, (1) BUMPINESS
+
          setUniform('1iv', 'uSampler', [0,1]);
-         addTexture(0, 'mosaic_color.png');
-         addTexture(1, 'mosaic_bumps.png');
+         addTexture(0, src + '_color.png');
+         addTexture(1, src + '_bumps.png');
 	 isFirstTime = false;
       }
       let time = Date.now() / 1000;
+
+      // EACH VERTEX NOW ALSO HAS A TANGENT VECTOR
+
+      vertexMap(['aPos',3,'aNor',3,'aTan',3,'aUV',2]);
+
       drawObj(mesh, mxm(turnY(time/2),
                     mxm(turnX(Math.PI/4),
 		        scale(.6,.6,.75))));
    }
 }
+
 

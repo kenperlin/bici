@@ -31,7 +31,10 @@ function Scene() {
          float c = .1 + max(0., dot(vec3( .5),nor))
                       + max(0., dot(vec3(-.5),nor));
          vec4 T = texture(uSampler[0], vUV);
-         fragColor = vec4(sqrt(c) * uColor * T.rgb, T.a);
+
+	 // TRANSPARENT TEXTURE => TRANSPARENT PIXEL
+
+         fragColor = vec4(sqrt(c)*uColor*T.rgb, T.a);
       }
    `;
 
@@ -45,7 +48,7 @@ function Scene() {
       return mesh.flat();
    }
 
-   let square = (nu=2,nv=2,f) => createMesh(nu,nv,(u,v) => {
+   let square=(nu=2,nv=2,f)=>createMesh(nu,nv,(u,v)=>{
       return [ 2*u-1,2*v-1,f?f(u,v):0, 0,0,1, u,v ];
    });
 
@@ -56,7 +59,8 @@ function Scene() {
 
    this.update = () => {
       gl.enable(gl.BLEND);
-      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      gl.blendFunc(gl.SRC_ALPHA,
+                   gl.ONE_MINUS_SRC_ALPHA);
 
       if (isFirstTime) {
          addTexture(0, 'fish.png');
@@ -65,16 +69,30 @@ function Scene() {
       }
       let time = Date.now() / 1000;
       vertexMap(['aPos', 3, 'aNor', 3, 'aUV', 2]);
+
+      // ARRAY OF CONTINUALLY MOVING FISH POSITIONS
+
       let P = [];
-      for (let n = 0 ; n < 10 ; n++)
-         P.push({n:n, p:[1.5*noise(100.5,n+0.5,time/4.12),
-                         1.5*noise(300.5,n+0.5,time/4.34),
-                             noise(500.5,n+0.5,time/4.56)]});
+      for (let n = 0 ; n < 10 ; n++) {
+         let a = 1.5, b = n + .5;
+         P.push({n:n, p:[a*noise(100.5,b,time/4.1),
+                         a*noise(300.5,b,time/4.3),
+                           noise(500.5,b,time/4.5)]});
+      }
+
+      // SORT THE FISH FROM BACK TO FRONT
+
       P.sort((a,b) => a.p[2] - b.p[2]);
+
+      // THEN DISPLAY THEM IN BACK TO FRONT ORDER
+
       for (let i = 0 ; i < P.length ; i++) {
          let n = P[i].n;
          drawObj(mesh, mxm(move(P[i].p), scale(.15)),
-	         [s(n)*.5+.5,s(2*n)*.5+.5,s(3*n)*.5+.5]);
+
+            // TRICK TO CREATE VARIED COLORS
+
+	    [s(n)*.5+.5, s(2*n)*.5+.5, s(3*n)*.5+.5]);
       }
    }
 }

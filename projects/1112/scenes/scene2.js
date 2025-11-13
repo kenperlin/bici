@@ -30,8 +30,8 @@ function Scene() {
          vec3 nor = normalize(vNor);
          float c = .1 + max(0., dot(vec3( .5),nor))
                       + max(0., dot(vec3(-.5),nor));
-         vec3 T = texture(uSampler[0], vUV).rgb;
-         fragColor = vec4(sqrt(c) * uColor * T, 1.);
+         vec4 T = texture(uSampler[0], vUV);
+         fragColor = vec4(sqrt(c)*uColor*T.rgb, 1.);
       }
    `;
 
@@ -59,13 +59,13 @@ function Scene() {
    let isFirstTime = true;
 
    this.update = () => {
-      vertexMap(['aPos', 3, 'aNor', 3, 'aUV', 2]);
       if (isFirstTime) {
          addTexture(0, 'brick.png');
          setUniform('1iv', 'uSampler', [0,1]);
 	 isFirstTime = false;
       }
       let time = Date.now() / 1000;
+      vertexMap(['aPos', 3, 'aNor', 3, 'aUV', 2]);
       drawObj(mesh, mxm(turnY(time/2),
                     mxm(turnX(Math.PI/4),
 		        scale(.3,.3,.4))));
