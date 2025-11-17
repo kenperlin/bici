@@ -70,6 +70,33 @@ let codeArea = new CodeArea(-2000, 20);
 let chalktalk = new Chalktalk();
 let pen = new Pen();
 
+// Show error notification to user
+function showErrorNotification(title, message, details) {
+   const notification = document.createElement('div');
+   notification.className = 'error-notification';
+   notification.innerHTML = `
+      <div class="notification-content">
+         <h3>${title}</h3>
+         <p>${message}</p>
+         ${details ? `
+         <details>
+            <summary>Technical Details</summary>
+            <pre>${details}</pre>
+         </details>
+         ` : ''}
+         <button class="close-notification-btn">Close</button>
+      </div>
+   `;
+
+   document.body.appendChild(notification);
+
+   notification.querySelector('.close-notification-btn').addEventListener('click', () => {
+      notification.remove();
+   });
+
+   return notification;
+}
+
 // Initialize WebRTC
 let webrtcClient, videoUI;
 if (typeof WebRTCClient !== 'undefined') {
@@ -92,11 +119,27 @@ if (typeof WebRTCClient !== 'undefined') {
    };
 
    webrtcClient.init().then(localStream => {
+      console.log('[BICI] WebRTC initialized successfully');
+
+      // Set the webcam stream to use WebRTC's local stream
+      // This eliminates dual webcam access conflict
+      if (typeof webcam !== 'undefined') {
+         webcam.srcObject = localStream;
+         console.log('[BICI] Set webcam to use WebRTC stream');
+      }
+
       videoUI = new VideoUI(webrtcClient);
       videoUI.setLocalStream(localStream);
       // Yjs will be initialized after room is joined
    }).catch(error => {
-      console.error('Failed to initialize WebRTC:', error);
+      console.error('[BICI] Failed to initialize WebRTC:', error);
+
+      // Show user-friendly error notification
+      showErrorNotification(
+         'Camera/Microphone Access Error',
+         error.userMessage || 'Could not access camera or microphone.',
+         `Error: ${error.name}\nMessage: ${error.message}`
+      );
    });
 }
 
