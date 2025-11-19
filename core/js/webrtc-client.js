@@ -32,9 +32,30 @@ class WebRTCClient {
   async init() {
     try {
       // Get user media with smaller resolution for better performance
+      console.log('[WebRTC] Requesting camera and microphone access...');
       this.localStream = await navigator.mediaDevices.getUserMedia({
         video: { width: 640, height: 480 },
         audio: true
+      });
+
+      console.log('[WebRTC] Media access granted');
+
+      // Log track information
+      this.localStream.getTracks().forEach(track => {
+        console.log(`[WebRTC] Track added: ${track.kind}, enabled=${track.enabled}, muted=${track.muted}, readyState=${track.readyState}`);
+
+        // Monitor track errors
+        track.addEventListener('ended', () => {
+          console.error(`[WebRTC] ${track.kind} track ended unexpectedly`);
+        });
+
+        track.addEventListener('mute', () => {
+          console.warn(`[WebRTC] ${track.kind} track muted`);
+        });
+
+        track.addEventListener('unmute', () => {
+          console.log(`[WebRTC] ${track.kind} track unmuted`);
+        });
       });
 
       // Connect to signaling server
@@ -42,7 +63,25 @@ class WebRTCClient {
 
       return this.localStream;
     } catch (error) {
-      console.error('Error accessing media devices:', error);
+      console.error('[WebRTC] Error accessing media devices:', error);
+      console.error('[WebRTC] Error name:', error.name);
+      console.error('[WebRTC] Error message:', error.message);
+
+      // Provide more helpful error messages
+      let userMessage = 'Could not access camera or microphone. ';
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        userMessage += 'Please grant camera and microphone permissions and reload the page.';
+      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        userMessage += 'No camera or microphone found. Please connect a camera and microphone.';
+      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+        userMessage += 'Camera is already in use by another application. Please close other apps using the camera.';
+      } else if (error.name === 'OverconstrainedError') {
+        userMessage += 'Camera does not support the requested resolution.';
+      } else {
+        userMessage += error.message;
+      }
+
+      error.userMessage = userMessage;
       throw error;
     }
   }
@@ -243,17 +282,36 @@ class WebRTCClient {
   createPeerConnection(clientId) {
     const pc = new RTCPeerConnection(configuration);
 
+    console.log(`[WebRTC] Creating peer connection with ${clientId}`);
+
     // Add local stream tracks to the connection
     if (this.localStream) {
       this.localStream.getTracks().forEach(track => {
-        pc.addTrack(track, this.localStream);
+        // Check if track is actually active
+        if (track.readyState === 'live') {
+          const sender = pc.addTrack(track, this.localStream);
+          console.log(`[WebRTC] Added ${track.kind} track to connection with ${clientId}`);
+        } else {
+          console.error(`[WebRTC] Track not live: ${track.kind}, state: ${track.readyState}`);
+        }
       });
+    } else {
+      console.error('[WebRTC] No local stream available when creating peer connection');
     }
 
     // Handle incoming tracks
     pc.ontrack = (event) => {
-      console.log('Received remote track from:', clientId, 'kind:', event.track.kind);
+      console.log(`[WebRTC] Received remote track from ${clientId}: kind=${event.track.kind}, enabled=${event.track.enabled}, muted=${event.track.muted}`);
       const remoteStream = event.streams[0];
+
+      // Monitor remote track
+      event.track.addEventListener('ended', () => {
+        console.error(`[WebRTC] Remote ${event.track.kind} track ended from ${clientId}`);
+      });
+
+      event.track.addEventListener('mute', () => {
+        console.warn(`[WebRTC] Remote ${event.track.kind} track muted from ${clientId}`);
+      });
 
       // Only trigger onRemoteStreamAdded once (when we receive the first track)
       if (!this.remoteStreams.has(clientId)) {
@@ -268,19 +326,47 @@ class WebRTCClient {
     // Handle ICE candidates
     pc.onicecandidate = (event) => {
       if (event.candidate) {
+        console.log(`[WebRTC] ICE candidate for ${clientId}:`, event.candidate.type);
         this.sendSignalingMessage({
           type: 'ice-candidate',
           target: clientId,
           candidate: event.candidate
         });
+      } else {
+        console.log(`[WebRTC] ICE gathering complete for ${clientId}`);
+      }
+    };
+
+    // Handle ICE connection state changes
+    pc.oniceconnectionstatechange = () => {
+      console.log(`[WebRTC] ICE connection state with ${clientId}:`, pc.iceConnectionState);
+
+      if (pc.iceConnectionState === 'failed') {
+        console.error(`[WebRTC] ICE connection failed with ${clientId} - possible NAT/firewall issue`);
+        this.logConnectionDiagnostics(clientId);
+      } else if (pc.iceConnectionState === 'disconnected') {
+        console.warn(`[WebRTC] ICE connection disconnected with ${clientId}`);
+      } else if (pc.iceConnectionState === 'connected') {
+        console.log(`[WebRTC] ICE connection established with ${clientId}`);
       }
     };
 
     // Handle connection state changes
     pc.onconnectionstatechange = () => {
-      console.log(`Connection state with ${clientId}:`, pc.connectionState);
+      console.log(`[WebRTC] Connection state with ${clientId}:`, pc.connectionState);
 
-      if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed' || pc.connectionState === 'closed') {
+      if (pc.connectionState === 'connected') {
+        console.log(`[WebRTC] Peer connection established with ${clientId}`);
+        this.logConnectionDiagnostics(clientId);
+      } else if (pc.connectionState === 'failed') {
+        console.error(`[WebRTC] Peer connection failed with ${clientId}`);
+        this.logConnectionDiagnostics(clientId);
+        this.removePeerConnection(clientId);
+      } else if (pc.connectionState === 'disconnected') {
+        console.warn(`[WebRTC] Peer connection disconnected with ${clientId}`);
+        this.removePeerConnection(clientId);
+      } else if (pc.connectionState === 'closed') {
+        console.log(`[WebRTC] Peer connection closed with ${clientId}`);
         this.removePeerConnection(clientId);
       }
     };
@@ -406,5 +492,44 @@ class WebRTCClient {
       return;
     }
     this.sendStateUpdate(state);
+  }
+
+  // Log comprehensive connection diagnostics
+  logConnectionDiagnostics(clientId) {
+    const pc = this.peerConnections.get(clientId);
+    if (!pc) {
+      console.log(`[WebRTC] No peer connection found for ${clientId}`);
+      return;
+    }
+
+    console.log('=== WebRTC Connection Diagnostics ===');
+    console.log(`Client ID: ${clientId}`);
+    console.log(`Connection State: ${pc.connectionState}`);
+    console.log(`ICE Connection State: ${pc.iceConnectionState}`);
+    console.log(`ICE Gathering State: ${pc.iceGatheringState}`);
+    console.log(`Signaling State: ${pc.signalingState}`);
+
+    // Check local tracks
+    console.log('Local tracks:');
+    if (this.localStream) {
+      this.localStream.getTracks().forEach(track => {
+        console.log(`  ${track.kind}: enabled=${track.enabled}, muted=${track.muted}, readyState=${track.readyState}`);
+      });
+    } else {
+      console.log('  No local stream');
+    }
+
+    // Check remote tracks
+    console.log('Remote tracks:');
+    const remoteStream = this.remoteStreams.get(clientId);
+    if (remoteStream) {
+      remoteStream.getTracks().forEach(track => {
+        console.log(`  ${track.kind}: enabled=${track.enabled}, muted=${track.muted}, readyState=${track.readyState}`);
+      });
+    } else {
+      console.log('  No remote stream');
+    }
+
+    console.log('=====================================');
   }
 }

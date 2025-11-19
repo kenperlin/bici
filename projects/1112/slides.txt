@@ -1,20 +1,34 @@
+URL p https://www.python.org/downloads/
+URL 1 https://persci.mit.edu/pub_pdfs/RCA84.pdf
+URL 2 https://medium.com/@gokcenazakyol/image-pyramids-and-edges-image-processing-8-20e8016f484a
 TEXTURE MAPPING
 Basic ideas
 mapping.png
+Loading textures\nVertex structure\nVertex shader\nFragment shader
 Sampling
 aliasing1.png
 aliasing2.png
-We need to approximate\nan integral.\n\nHow can we do\nthat efficiently?
+To sample properly,\nwe need to approximate\nan integral.\n\nHow can we do\nthat efficiently?
 MIP mapping (1983)
 lance.png
 mipmapping1.png
 mipmapping2.png
+MIP Mapping was\ninspired by\ncontemporary work\nin computer vision\nusing image pyramids
+peter_burt.png
 mm-algorithm1.png
 mm-algorithm2.png
 mm-algorithm3.png
 MIP mapping is\nbuilt into\nevery modern GPU!
-The parts\nof the code
-Info at\neach vertex
 Bump mapping
+mosaic_color.png
+mosaic_bumps.png
+rocks_color.png
+rocks_bumps.png
+polygons_color.png
+polygons_bumps.png
+Transparency\nand\nrender order
+fish.png
 Security\nand servers
+Download python3
+<font 35px Courier>python3 -m http.server
 fini

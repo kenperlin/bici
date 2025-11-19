@@ -54,7 +54,10 @@ function Scene() {
          float c = .1 + max(0., dot(vec3( .5),nor))
                       + max(0., dot(vec3(-.5),nor));
          vec4 T = texture(uSampler[0], vUV);
-         fragColor = vec4(sqrt(c) * uColor * T.rgb, T.a);
+
+         // TRANSPARENT TEXTURE => TRANSPARENT PIXEL
+
+         fragColor = vec4(sqrt(c)*uColor*T.rgb, T.a);
       }
    `;
 
@@ -68,7 +71,9 @@ function Scene() {
       return mesh.flat();
    }
 
-   let square = (nu=2,nv=2,f) => createMesh(nu,nv,(u,v) => {
+   // GEOMETRY IS JUST A SQUARE
+
+   let square=(nu=2,nv=2,f)=>createMesh(nu,nv,(u,v)=>{
       return [ 2*u-1,2*v-1,f?f(u,v):0, 0,0,1, u,v ];
    });
 

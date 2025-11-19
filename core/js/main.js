@@ -8,17 +8,42 @@ canvas2D.style.left = 0;
 let canvas3D = document.createElement('canvas');
 document.body.appendChild(canvas3D);
 
+const CANVAS3D_TOP    = 440;
+const CANVAS3D_LEFT   = 500;
+const CANVAS3D_WIDTH  = 500;
+const CANVAS3D_HEIGHT = 500;
+
 canvas3D.style.position = 'absolute';
-canvas3D.style.top = 440;
+canvas3D.style.top = CANVAS3D_TOP;
 canvas3D.style.left = -2000;
-canvas3D.width = 500;
-canvas3D.height = 500;
+canvas3D.width = CANVAS3D_WIDTH;
+canvas3D.height = CANVAS3D_HEIGHT;
+
+let xToScene = event => 2 * (event.clientX - CANVAS3D_LEFT) / CANVAS3D_WIDTH - 1;
+let yToScene = event => 1 - 2 * (event.clientY - CANVAS3D_TOP) / CANVAS3D_WIDTH;
+
+canvas3D.addEventListener('mousemove', event => {
+   if (scene && scene.onMove && ! canvas3D.isDown)
+      scene.onMove(xToScene(event), yToScene(event));
+   if (scene && scene.onDrag && canvas3D.isDown)
+      scene.onDrag(xToScene(event), yToScene(event));
+});
+canvas3D.addEventListener('mousedown', event => {
+   canvas3D.isDown = true;
+   if (scene && scene.onDown)
+      scene.onDown(xToScene(event), yToScene(event));
+});
+canvas3D.addEventListener('mouseup', event => {
+   canvas3D.isDown = false;
+   if (scene && scene.onUp)
+      scene.onUp(xToScene(event), yToScene(event));
+});
 
 let canvasDiagram = document.createElement('canvas');
 document.body.appendChild(canvasDiagram);
 
 canvasDiagram.style.position = 'absolute';
-canvasDiagram.style.top = 440;
+canvasDiagram.style.top = CANVAS3D_TOP;
 canvasDiagram.style.left = -2000;
 canvasDiagram.width = 500;
 canvasDiagram.height = 500;
@@ -45,6 +70,33 @@ let codeArea = new CodeArea(-2000, 20);
 let chalktalk = new Chalktalk();
 let pen = new Pen();
 
+// Show error notification to user
+function showErrorNotification(title, message, details) {
+   const notification = document.createElement('div');
+   notification.className = 'error-notification';
+   notification.innerHTML = `
+      <div class="notification-content">
+         <h3>${title}</h3>
+         <p>${message}</p>
+         ${details ? `
+         <details>
+            <summary>Technical Details</summary>
+            <pre>${details}</pre>
+         </details>
+         ` : ''}
+         <button class="close-notification-btn">Close</button>
+      </div>
+   `;
+
+   document.body.appendChild(notification);
+
+   notification.querySelector('.close-notification-btn').addEventListener('click', () => {
+      notification.remove();
+   });
+
+   return notification;
+}
+
 // Initialize WebRTC
 let webrtcClient, videoUI;
 if (typeof WebRTCClient !== 'undefined') {
@@ -67,11 +119,27 @@ if (typeof WebRTCClient !== 'undefined') {
    };
 
    webrtcClient.init().then(localStream => {
+      console.log('[BICI] WebRTC initialized successfully');
+
+      // Set the webcam stream to use WebRTC's local stream
+      // This eliminates dual webcam access conflict
+      if (typeof webcam !== 'undefined') {
+         webcam.srcObject = localStream;
+         console.log('[BICI] Set webcam to use WebRTC stream');
+      }
+
       videoUI = new VideoUI(webrtcClient);
       videoUI.setLocalStream(localStream);
       // Yjs will be initialized after room is joined
    }).catch(error => {
-      console.error('Failed to initialize WebRTC:', error);
+      console.error('[BICI] Failed to initialize WebRTC:', error);
+
+      // Show user-friendly error notification
+      showErrorNotification(
+         'Camera/Microphone Access Error',
+         error.userMessage || 'Could not access camera or microphone.',
+         `Error: ${error.name}\nMessage: ${error.message}`
+      );
    });
 }
 
@@ -545,7 +613,7 @@ animate = () => {
    window.scrollTo(0, scrollPosition);
 
    t3D = Math.max(0, Math.min(1, t3D + (shift3D ? deltaTime : -deltaTime)));
-   canvas3D.style.left = isScene ? 500 + ease(t3D) * 300 : -2000;
+   canvas3D.style.left = isScene ? CANVAS3D_LEFT + ease(t3D) * 300 : -2000;
 
    // Video source is remote video if available, otherwise webcam
    if (videoUI && videoUI.hasRemoteVideo) {
