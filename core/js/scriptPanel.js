@@ -1,8 +1,12 @@
 function ScriptPanel () {
     let isOpen = false;
     let panel = null;
-    let textarea = null;
-    let savedContent = '';
+    let inputTextarea = null;
+    let outputTextarea = null;
+    let savedInputContent = '';
+    let savedOutputContent = '';
+    // Add conversation history to track the prompt each quary
+    let conversationHistory = [];
 
     this.isOpen = () => isOpen;
 
@@ -34,30 +38,51 @@ function ScriptPanel () {
         
         // Create header
         let header = document.createElement('div');
-        header.textContent = 'Script Panel';
+        header.textContent = 'AI Script Panel';
         header.style.fontFamily = "Arial";
         header.style.fontSize = '18px';
         header.style.fontWeight = 'bold';
         header.style.marginBottom = '5px';
         header.style.textAlign = 'center';
         
-        // Create textarea
-        textarea = document.createElement('textarea');
-        textarea.id = 'scriptInput';
-        textarea.spellcheck = false;
-        textarea.style.width = '100%';
-        textarea.style.flex = '1';
-        textarea.style.backgroundColor = 'rgba(255,255,255,.6)';
-        textarea.style.border = 'none';
-        textarea.style.padding = '5px';
-        textarea.style.fontFamily = 'Arial';
-        textarea.style.fontSize = '16px';
-        textarea.style.resize = 'none';
-        textarea.style.outline = 'none';
-        textarea.placeholder = 'Type here...';
-        textarea.value = savedContent;  // Restore saved content
+        // Create input textarea
+        inputTextarea = document.createElement('textarea');
+        inputTextarea.id = 'scriptInput';
+        inputTextarea.spellcheck = false;
+        inputTextarea.style.width = '100%';
+        inputTextarea.style.flex = '1';
+        inputTextarea.style.backgroundColor = 'rgba(255,255,255,.6)';
+        inputTextarea.style.border = 'none';
+        inputTextarea.style.padding = '5px';
+        inputTextarea.style.fontFamily = 'Arial';
+        inputTextarea.style.fontSize = '16px';
+        inputTextarea.style.resize = 'none';
+        inputTextarea.style.outline = 'none';
+        inputTextarea.placeholder = 'Type here...';
+        inputTextarea.value = savedInputContent;
 
-        textarea.addEventListener('keydown', (e) => {
+        inputTextarea.addEventListener('keydown', (e) => {
+            e.stopPropagation();
+        });
+
+        // Create output textarea (lower half)
+        outputTextarea = document.createElement('textarea');
+        outputTextarea.id = 'scriptOutput';
+        outputTextarea.spellcheck = false;
+        outputTextarea.style.width = '100%';
+        outputTextarea.style.flex = '3';
+        outputTextarea.style.backgroundColor = 'rgba(200,200,200,.6)';
+        outputTextarea.style.border = 'none';
+        outputTextarea.style.padding = '5px';
+        outputTextarea.style.fontFamily = 'Arial';
+        outputTextarea.style.fontSize = '16px';
+        outputTextarea.style.resize = 'none';
+        outputTextarea.style.outline = 'none';
+        outputTextarea.placeholder = 'Answer...';
+        outputTextarea.value = savedOutputContent;
+        outputTextarea.readOnly = true;
+
+        outputTextarea.addEventListener('keydown', (e) => {
             e.stopPropagation();
         });
         
@@ -68,7 +93,7 @@ function ScriptPanel () {
         
         // clear button
         let clearBtn = document.createElement('button');
-        clearBtn.textContent = 'Clear';
+        clearBtn.textContent = 'Clear History';
         clearBtn.style.flex = '1';
         clearBtn.style.padding = '5px';
         clearBtn.style.fontFamily = 'Arial';
@@ -93,52 +118,131 @@ function ScriptPanel () {
         closeBtn.style.cursor = 'pointer';
         closeBtn.style.fontSize = '14px';
         closeBtn.onclick = () => this.close();
+
+        // Ask Gemini button
+        let askGeminiBtn = document.createElement('button');
+        askGeminiBtn.textContent = 'Ask Gemini';
+        askGeminiBtn.style.flex = '1';
+        askGeminiBtn.style.padding = '5px';
+        askGeminiBtn.style.fontFamily = 'Arial';
+        askGeminiBtn.style.fontWeight = 'bold';
+        askGeminiBtn.style.color = "white";
+        askGeminiBtn.style.backgroundColor = 'rgba(0, 255, 0, 0.5)';
+        askGeminiBtn.style.border = '1px solid #ccc';
+        askGeminiBtn.style.cursor = 'pointer';
+        askGeminiBtn.style.fontSize = '14px';
+        askGeminiBtn.onclick = () => this.askGemini();
+
         
         // Assemble
         buttonContainer.appendChild(clearBtn);
+        buttonContainer.appendChild(askGeminiBtn);
         buttonContainer.appendChild(closeBtn);
         
         panel.appendChild(header);
-        panel.appendChild(textarea);
+        panel.appendChild(inputTextarea);
+        panel.appendChild(outputTextarea);
         panel.appendChild(buttonContainer);
         document.body.appendChild(panel);
         
         // Auto-focus
-        textarea.focus();
+        inputTextarea.focus();
     }
     
     this.close = () => {
         if (!isOpen) return;
         
         // Save content before closing
-        if (textarea) {
-            savedContent = textarea.value;
+        if (inputTextarea) {
+            savedInputContent = inputTextarea.value;
+        }
+        if (outputTextarea) {
+            savedOutputContent = outputTextarea.value;
         }
         
         if (panel) {
             panel.remove();
             panel = null;
-            textarea = null;
+            inputTextarea = null;
+            outputTextarea = null;
         }
         isOpen = false;
     }
     
     this.getContent = () => {
-        return textarea ? textarea.value : savedContent;
+        return inputTextarea ? inputTextarea.value : savedInputContent;
     }
     
     this.setContent = (text) => {
-        savedContent = text;
-        if (textarea) {
-            textarea.value = text;
+        savedInputContent = text;
+        if (inputTextarea) {
+            inputTextarea.value = text;
         }
     }
     
     this.clear = () => {
-        savedContent = '';  // Clear saved content too
-        if (textarea) {
-            textarea.value = '';
-            textarea.focus();
+        savedInputContent = '';
+        savedOutputContent = '';
+        conversationHistory = [];
+        if (inputTextarea) {
+            inputTextarea.value = '';
+            inputTextarea.focus();
+        }
+        if (outputTextarea) {
+            outputTextarea.value = '';
+        }
+    }
+
+    // Activate the Gemini AI
+    this.askGemini = async () => {
+        const prompt = inputTextarea.value.trim();
+        
+        if (!prompt) {
+            outputTextarea.value = 'Please enter a question first.';
+            return;
+        }
+    
+        // Show loading message
+        outputTextarea.value = 'Asking Gemini...';
+    
+        try {
+            const response = await fetch('/api/gemini', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    prompt: prompt,
+                    history: conversationHistory
+                })
+            });
+    
+            const data = await response.json();
+    
+            if (response.ok) {
+                outputTextarea.value = data.response;
+                savedOutputContent = data.response;
+                
+                // Add to conversation history
+                conversationHistory.push({
+                    role: 'user',
+                    parts: [{ text: prompt }]
+                });
+                conversationHistory.push({
+                    role: 'model',
+                    parts: [{ text: data.response }]
+                });
+                
+                // Clear input for next question
+                inputTextarea.value = '';
+                savedInputContent = '';
+
+            } else {
+                outputTextarea.value = 'Error: ' + (data.error || 'Unknown error');
+            }
+        } catch (error) {
+            outputTextarea.value = 'Error: Failed to connect to server';
+            console.error('Error:', error);
         }
     }
 

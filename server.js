@@ -15,6 +15,40 @@ const wss = new WebSocketServer({ server });
 // Serve static files
 app.use(express.static('.'));
 
+// Add JSON bodt parser
+app.use(express.json());
+
+// Gemini endpoint
+app.post('/api/gemini', async (req, res) => {
+  try {
+    const { prompt, history = [] } = req.body;
+    
+    if (!prompt) {
+      return res.status(400).json({ error: 'Prompt is required' });
+    }
+
+    // Import Gemini
+    const { GoogleGenerativeAI } = await import("@google/generative-ai");
+    const genAI = new GoogleGenerativeAI("AIzaSyAFdBnX9Zi8sqT-arPVj9ivSFQPwH8MmcU");
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+
+    // Start chat with history
+    const chat = model.startChat({
+      history: history
+    });
+
+    // Send message
+    const result = await chat.sendMessage(prompt);
+    const response = result.response;
+    const text = response.text();
+
+    res.json({ response: text });
+  } catch (error) {
+    console.error('Gemini API error:', error);
+    res.status(500).json({ error: 'Failed to get response from Gemini' });
+  }
+});
+
 // Endpoint to clear Yjs document cache
 app.post('/api/clear-yjs-cache/:docName?', (req, res) => {
   const docName = req.params.docName;
