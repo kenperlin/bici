@@ -91,7 +91,7 @@ function ScriptPanel () {
         buttonContainer.style.display = 'flex';
         buttonContainer.style.gap = '5px';
         
-        // clear button
+        // clear chat history button
         let clearBtn = document.createElement('button');
         clearBtn.textContent = 'Clear History';
         clearBtn.style.flex = '1';
@@ -99,7 +99,7 @@ function ScriptPanel () {
         clearBtn.style.fontFamily = 'Arial';
         clearBtn.style.fontWeight = 'bold';
         clearBtn.style.color = "white";
-        clearBtn.style.backgroundColor = 'rgba(0, 0, 255, 0.5)';
+        clearBtn.style.backgroundColor = 'rgba(128, 128, 128, 0.6)';
         clearBtn.style.border = '1px solid #ccc';
         clearBtn.style.cursor = 'pointer';
         clearBtn.style.fontSize = '14px';
@@ -113,7 +113,7 @@ function ScriptPanel () {
         closeBtn.style.fontFamily = 'Arial';
         closeBtn.style.fontWeight = 'bold';
         closeBtn.style.color = "white";
-        closeBtn.style.backgroundColor = 'rgba(255, 0, 0, 0.5)';
+        closeBtn.style.backgroundColor = 'rgba(255, 0, 0, 0.6)';
         closeBtn.style.border = '1px solid #ccc';
         closeBtn.style.cursor = 'pointer';
         closeBtn.style.fontSize = '14px';
@@ -121,18 +121,24 @@ function ScriptPanel () {
 
         // Ask Gemini button
         let askGeminiBtn = document.createElement('button');
-        askGeminiBtn.textContent = 'Ask Gemini';
+        askGeminiBtn.innerHTML = `Ask Gemini<span style="
+                background: linear-gradient(135deg, red 0%, orange 40%, yellow 55%, green 65%, blue 85%);
+                -webkit-background-clip: text;
+                background-clip: text;
+                -webkit-text-fill-color: transparent;
+                color: transparent;
+                font-size: 20px;
+            "> ✦ </span>`;
         askGeminiBtn.style.flex = '1';
         askGeminiBtn.style.padding = '5px';
         askGeminiBtn.style.fontFamily = 'Arial';
         askGeminiBtn.style.fontWeight = 'bold';
         askGeminiBtn.style.color = "white";
-        askGeminiBtn.style.backgroundColor = 'rgba(0, 255, 0, 0.5)';
+        askGeminiBtn.style.backgroundColor = 'rgba(66, 133, 244, 0.6)';
         askGeminiBtn.style.border = '1px solid #ccc';
         askGeminiBtn.style.cursor = 'pointer';
         askGeminiBtn.style.fontSize = '14px';
         askGeminiBtn.onclick = () => this.askGemini();
-
         
         // Assemble
         buttonContainer.appendChild(clearBtn);
