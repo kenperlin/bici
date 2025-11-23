@@ -283,6 +283,108 @@
   transform: scale(0.95);
 }
 
+/* Error Notification */
+.error-notification {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 3500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Arial, sans-serif;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.error-notification .notification-content {
+  background: rgba(40, 40, 40, 0.98);
+  border: 2px solid #ff5722;
+  border-radius: 12px;
+  padding: 30px;
+  max-width: 600px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+  text-align: left;
+}
+
+.error-notification .notification-content h3 {
+  color: #ff5722;
+  margin: 0 0 20px 0;
+  font-size: 24px;
+  text-align: center;
+}
+
+.error-notification .notification-content p {
+  color: #e0e0e0;
+  margin: 15px 0;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.error-notification details {
+  margin-top: 20px;
+  padding: 15px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  border: 1px solid #555;
+}
+
+.error-notification summary {
+  color: #ffa726;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  padding: 5px;
+  user-select: none;
+}
+
+.error-notification summary:hover {
+  color: #ffb74d;
+}
+
+.error-notification pre {
+  color: #ccc;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  margin: 10px 0 0 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.error-notification .close-notification-btn {
+  display: block;
+  margin: 20px auto 0;
+  padding: 12px 30px;
+  background: #ff5722;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.error-notification .close-notification-btn:hover {
+  background: #f4511e;
+  transform: scale(1.05);
+}
+
+.error-notification .close-notification-btn:active {
+  transform: scale(0.95);
+}
+
 /* Responsive Design for Invitation UI */
 @media (max-width: 768px) {
   .invitation-container {
@@ -291,6 +393,11 @@
   }
 
   .notification-content {
+    max-width: 90%;
+    padding: 20px;
+  }
+
+  .error-notification .notification-content {
     max-width: 90%;
     padding: 20px;
   }

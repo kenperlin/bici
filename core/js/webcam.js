@@ -2,9 +2,10 @@ let webcam = document.createElement('video');
 webcam.autoplay = true;
 webcam.style.position = 'absolute';
 webcam.style.top = '-2000px';
-navigator.mediaDevices.getUserMedia({ audio: false, video: true })
-         .then(function(stream) { webcam.srcObject = stream; },
-               function(error ) { console.log(error); });
+
+// NOTE: Camera stream will be set by WebRTC initialization in main.js
+// This eliminates dual webcam access conflict
+webcam.srcObject = null;
 
 let videoSrc = webcam;
 
