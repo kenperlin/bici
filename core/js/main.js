@@ -19,8 +19,14 @@ canvas3D.style.left = -2000;
 canvas3D.width = CANVAS3D_WIDTH;
 canvas3D.height = CANVAS3D_HEIGHT;
 
-let xToScene = event => 2 * (event.clientX - CANVAS3D_LEFT) / CANVAS3D_WIDTH - 1;
-let yToScene = event => 1 - 2 * (event.clientY - CANVAS3D_TOP) / CANVAS3D_WIDTH;
+let xToScene = event => {
+   let rect = event.srcElement.getBoundingClientRect();
+   return 2 * (event.clientX - rect.left) / rect.width - 1;
+}
+let yToScene = event => {
+   let rect = event.srcElement.getBoundingClientRect();
+   return 1 - 2 * (event.clientY - rect.top) / rect.width;
+}
 
 canvas3D.addEventListener('mousemove', event => {
    if (scene && scene.onMove && ! canvas3D.isDown)
@@ -37,6 +43,9 @@ canvas3D.addEventListener('mouseup', event => {
    canvas3D.isDown = false;
    if (scene && scene.onUp)
       scene.onUp(xToScene(event), yToScene(event));
+});
+canvas2D.addEventListener('mouseup', event => {
+   canvas3D.isDown = false;
 });
 
 let canvasDiagram = document.createElement('canvas');
