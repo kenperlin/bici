@@ -1,9 +1,12 @@
 function Scene() {
 
-   let mx, my, dx = 0, dy = 0;
+   _.x = _.x ?? 0;
+   _.y = _.y ?? 0;
+
+   let mx, my;
    this.onDown = (x,y) => { mx = x; my = y; }
-   this.onDrag = (x,y) => { dx += x - mx; mx = x;
-                            dy += y - my; my = y; }
+   this.onDrag = (x,y) => { _.x += x - mx; mx = x;
+                            _.y -= y - my; my = y; }
 
    this.vertexShader = `#version 300 es
       uniform mat4 uMF, uMI;
@@ -82,7 +85,7 @@ function Scene() {
 
       // INCLUDE DIRECTION OF TANGENT TO SURFACE
 
-      return [ x,y,z, x,y,z, y,-x,0, u,v ];
+      return [ x,y,z, x,y,z, -y,x,0, u,v ];
    });
 
    let tube = nu => createMesh(nu,2,(u,v) => {
@@ -90,34 +93,32 @@ function Scene() {
           x = Math.cos(theta),
           y = Math.sin(theta),
           z = 2 * v - 1;
-      return [ x,y,z, x,y,0, y,-x,0, u,v ];
+      return [ x,y,z, x,y,0, -y,x,0, u,v ];
    });
 
    mesh = { triangle_strip: true,
             data: new Float32Array(sphere(40,20)) };
 
-   let isFirstTime = true;
-
    let src = 'mosaic';
+// let src = 'rocks;
+// let src = 'polygons;
+// let src = 'wood;
+
+   addTexture(0, src+'_color.png'); // LOAD TEXTURE
+   addTexture(1, src+'_bumps.png'); // LOAD BUMP MAP
 
    this.update = () => {
-      if (isFirstTime) {
 
-         // USE TWO TEXTURES: (0) COLOR, (1) BUMPINESS
-
-         setUniform('1iv', 'uSampler', [0,1]);
-         addTexture(0, src + '_color.png');
-         addTexture(1, src + '_bumps.png');
-	 isFirstTime = false;
-      }
-      let time = Date.now() / 1000;
-
-      // EACH VERTEX NOW ALSO HAS A TANGENT VECTOR
+      // VERTEX ATTRIBUTES: POSITION,NORMAL,TANGENT,UV
 
       vertexMap(['aPos',3,'aNor',3,'aTan',3,'aUV',2]);
 
-      drawObj(mesh, mxm(turnY( dx),
-                    mxm(turnX(-dy),
+      // 2 SAMPLERS: ONE FOR TEXTURE, ONE FOR BUMP MAP
+
+      setUniform('1iv', 'uSampler', [0,1]);
+
+      drawObj(mesh, mxm(turnY(_.x),
+                    mxm(turnX(_.y),
 		        scale(.6,.6,.75))));
    }
 }
