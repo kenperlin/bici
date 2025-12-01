@@ -24,11 +24,11 @@ loadMediapipe()
     tasks.isRunning = true;
     tasks.drawUtils = new mediapipe.DrawingUtils(canvasCtx);
 
-    console.log(mediapipe.VisionTaskOptions)
     const createHandLandmarker = async () => {
       const vision = await mediapipe.FilesetResolver.forVisionTasks(
         "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
       );
+
       tasks.handLandmarker = await mediapipe.HandLandmarker.createFromOptions(
         vision,
         {
@@ -40,13 +40,26 @@ loadMediapipe()
           numHands: 2
         }
       );
+      tasks.faceLandmarker = await mediapipe.FaceLandmarker.createFromOptions(
+        vision,
+        {
+          baseOptions: {
+            modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task`,
+            delegate: "GPU"
+          },
+          outputFaceBlendshapes: true,
+          runningMode: "VIDEO",
+          numFaces: 1
+        }
+      );
     };
     createHandLandmarker();
 
     const startPredictionLoop = setInterval(() => {
       if (
         webcam.srcObject && // userMedia is loaded
-        tasks.handLandmarker && // landmarker is loaded
+        tasks.handLandmarker && // hand landmarker is loaded
+        tasks.faceLandmarker && // face landmarker is loaded
         videoSrc.readyState >= 2 // video has data
       ) {
         mediapipeRunning = true;
@@ -61,19 +74,14 @@ loadMediapipe()
   });
 
 function predictWebcam() {
-  let results = tasks.handLandmarker.detectForVideo(webcam, performance.now());
- 
   canvasCtx.save();
   canvasCtx.clearRect(0, 0, mediapipeCanvas.width, mediapipeCanvas.height);
-
-  if (results.landmarks) {
-    for (let i = 0; i < results.landmarks.length; i++) {
-      let landmarks = results.landmarks[i];
-
-      landmarks = landmarks.map((lm) => ({
-        ...lm,
-        x: 1- lm.x // horizontal flip
-      }))
+  
+  let handResults = tasks.handLandmarker.detectForVideo(webcam, performance.now());
+  if (handResults.landmarks) {
+    for (let i = 0; i < handResults.landmarks.length; i++) {
+      let landmarks = handResults.landmarks[i];
+      landmarks = remapLandmarks(landmarks)
 
       tasks.drawUtils.drawConnectors(
         landmarks,
@@ -104,11 +112,42 @@ function predictWebcam() {
 
   }
 
+  let faceResults = tasks.faceLandmarker.detectForVideo(webcam, performance.now());
+  if (faceResults.faceLandmarks) {
+    for (let landmarks of faceResults.faceLandmarks) {
+      landmarks = remapLandmarks(landmarks)
+      
+      tasks.drawUtils.drawConnectors(
+        landmarks,
+        mediapipe.FaceLandmarker.FACE_LANDMARKS_TESSELATION,
+        { color: "#C0C0C070", lineWidth: 1 }
+      );
+      tasks.drawUtils.drawConnectors(
+        landmarks,
+        mediapipe.FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE,
+        { color: "#FF3030" }
+      );
+      tasks.drawUtils.drawConnectors(
+        landmarks,
+        mediapipe.FaceLandmarker.FACE_LANDMARKS_LEFT_EYE,
+        { color: "#FF3030" }
+      );
+    }
+  }
+
   canvasCtx.restore();
 
   if (tasks.isRunning === true) {
     window.requestAnimationFrame(predictWebcam);
   }
+}
+
+function remapLandmarks(landmarks) {
+  return landmarks.map((lm) => ({
+    x: 1 - lm.x,
+    y: lm.y + 0.04,
+    z: lm.z
+  }))
 }
 
 function getAveragePos(a, b, c) {
