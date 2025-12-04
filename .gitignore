@@ -4,6 +4,9 @@ node_modules/
 # Documentation (generated/temporary)
 *.md
 
+# Generated outputs
+out/
+
 # Logs
 npm-debug.log*
 yarn-debug.log*
