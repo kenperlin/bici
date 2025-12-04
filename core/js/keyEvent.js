@@ -153,6 +153,9 @@ window.keyUp = key => {
    case 'v' : webcam.isTrackHead = ! webcam.isTrackHead; break;
    case 'V' : webcam.showTrackHead = ! webcam.showTrackHead; break;
    case 'w' : webcam.isWorld = ! webcam.isWorld; break;
+   case 'x' : navigator.clipboard.readText()
+                       .then(text => console.log('Clipboard content:', text))
+		       .catch(err => {}); break;
    }
 }
 
