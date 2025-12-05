@@ -49,6 +49,7 @@ i Toggle show/hide slides.
 j (+ key) Jump to a particular slide.
 l Toggle lightpen (small blue object).
 m Hold down to move a sketch.
+M Toggle mediapipe face/hand tracking.
 o Toggle whether slides are opaque.
 p Toggle show/hide tracked blue pixels.
 r Toggle if 3D scene is shifted right.
