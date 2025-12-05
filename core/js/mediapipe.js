@@ -1,5 +1,5 @@
 let mediapipe;
-let tasks = {};
+let mediapipeTasks = {};
 
 async function loadMediapipe() {
   mediapipe = await import(
@@ -21,15 +21,14 @@ document.body.appendChild(mediapipeCanvas);
 
 loadMediapipe()
   .then(() => {
-    tasks.isRunning = true;
-    tasks.drawUtils = new mediapipe.DrawingUtils(canvasCtx);
+    mediapipeTasks.drawUtils = new mediapipe.DrawingUtils(canvasCtx);
 
     const createHandLandmarker = async () => {
       const vision = await mediapipe.FilesetResolver.forVisionTasks(
         "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
       );
 
-      tasks.handLandmarker = await mediapipe.HandLandmarker.createFromOptions(
+      mediapipeTasks.handLandmarker = await mediapipe.HandLandmarker.createFromOptions(
         vision,
         {
           baseOptions: {
@@ -40,7 +39,7 @@ loadMediapipe()
           numHands: 2
         }
       );
-      tasks.faceLandmarker = await mediapipe.FaceLandmarker.createFromOptions(
+      mediapipeTasks.faceLandmarker = await mediapipe.FaceLandmarker.createFromOptions(
         vision,
         {
           baseOptions: {
@@ -58,12 +57,12 @@ loadMediapipe()
     const startPredictionLoop = setInterval(() => {
       if (
         webcam.srcObject && // userMedia is loaded
-        tasks.handLandmarker && // hand landmarker is loaded
-        tasks.faceLandmarker && // face landmarker is loaded
+        mediapipeTasks.handLandmarker && // hand landmarker is loaded
+        mediapipeTasks.faceLandmarker && // face landmarker is loaded
         videoSrc.readyState >= 2 // video has data
       ) {
-        mediapipeRunning = true;
-        predictWebcam();
+        mediapipeTasks.isReady = true;
+        if(mediapipeTasks.isRunning) mediapipeTasks.predictWebcam();
         clearInterval(startPredictionLoop);
       }
     }, 100);
@@ -73,17 +72,17 @@ loadMediapipe()
     console.log(e);
   });
 
-function predictWebcam() {
+mediapipeTasks.predictWebcam = () => {
   canvasCtx.save();
   canvasCtx.clearRect(0, 0, mediapipeCanvas.width, mediapipeCanvas.height);
   
-  let handResults = tasks.handLandmarker.detectForVideo(webcam, performance.now());
+  let handResults = mediapipeTasks.handLandmarker.detectForVideo(webcam, performance.now());
   if (handResults.landmarks) {
     for (let i = 0; i < handResults.landmarks.length; i++) {
       let landmarks = handResults.landmarks[i];
       landmarks = remapLandmarks(landmarks)
 
-      tasks.drawUtils.drawConnectors(
+      mediapipeTasks.drawUtils.drawConnectors(
         landmarks,
         mediapipe.HandLandmarker.HAND_CONNECTIONS,
         {
@@ -103,7 +102,7 @@ function predictWebcam() {
             ? "#00ffccff"
             : "#FF0000";
 
-        tasks.drawUtils.drawLandmarks([landmark], {
+        mediapipeTasks.drawUtils.drawLandmarks([landmark], {
           color: dot_color,
           lineWidth: 2
         });
@@ -112,22 +111,22 @@ function predictWebcam() {
 
   }
 
-  let faceResults = tasks.faceLandmarker.detectForVideo(webcam, performance.now());
+  let faceResults = mediapipeTasks.faceLandmarker.detectForVideo(webcam, performance.now());
   if (faceResults.faceLandmarks) {
     for (let landmarks of faceResults.faceLandmarks) {
       landmarks = remapLandmarks(landmarks)
       
-      tasks.drawUtils.drawConnectors(
+      mediapipeTasks.drawUtils.drawConnectors(
         landmarks,
         mediapipe.FaceLandmarker.FACE_LANDMARKS_TESSELATION,
         { color: "#C0C0C070", lineWidth: 1 }
       );
-      tasks.drawUtils.drawConnectors(
+      mediapipeTasks.drawUtils.drawConnectors(
         landmarks,
         mediapipe.FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE,
         { color: "#FF3030" }
       );
-      tasks.drawUtils.drawConnectors(
+      mediapipeTasks.drawUtils.drawConnectors(
         landmarks,
         mediapipe.FaceLandmarker.FACE_LANDMARKS_LEFT_EYE,
         { color: "#FF3030" }
@@ -137,8 +136,24 @@ function predictWebcam() {
 
   canvasCtx.restore();
 
-  if (tasks.isRunning === true) {
-    window.requestAnimationFrame(predictWebcam);
+  if (mediapipeTasks.isRunning === true) {
+    window.requestAnimationFrame(mediapipeTasks.predictWebcam);
+  }
+}
+
+mediapipeTasks.toggleRunning = () => {
+  if(!mediapipeTasks.isReady) {
+    console.log("Mediapipe is not ready yet, please try again.")
+    return;
+  }
+
+  if(mediapipeTasks.isRunning) {
+    mediapipeCanvas.hidden = true;
+    mediapipeTasks.isRunning = false;
+  } else {
+    mediapipeCanvas.hidden = false;
+    mediapipeTasks.isRunning = true;
+    mediapipeTasks.predictWebcam()
   }
 }
 
