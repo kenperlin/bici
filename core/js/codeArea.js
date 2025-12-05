@@ -53,6 +53,19 @@ function CodeArea(x,y) {
          codeArea.dispatchEvent(new Event('input', { bubbles: true }));
          this.callback();
       }
+      if (event.key == 'Control') {
+         let i0 = codeArea.selectionStart;
+         let i1 = codeArea.selectionEnd;
+	 if (i0 < i1)
+	    try {
+	       let func = new Function('return ' + codeArea.value.substring(i0,i1));
+	       let result = '' + func();
+	       codeArea.value = codeArea.value.substring(0,i0)
+	                      + result
+			      + codeArea.value.substring(i1);
+               codeArea.selectionStart = codeArea.selectionEnd = i0 + result.length;
+            } catch (e) { console.log('error:', e); }
+      }
    });
 
    this.getElement = () => codeArea;
