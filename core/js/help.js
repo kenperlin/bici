@@ -1,4 +1,6 @@
-
+/**
+ * Display hot keys loaded on top of the main canvas
+ */
 let help = {
 
 display : ctx => {
