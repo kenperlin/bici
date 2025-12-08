@@ -32,7 +32,7 @@ async function getFile(file, callback) {
 let srcFiles = `M4, loadImage, webgl, webcam, trackHead, help,
 	        midi, numberString, pen, keyEvent, matchCurves,
 	        glyphs, chalktalk, codeArea, math, shape, shader,
-	        diagram, webrtc-client, video-ui, implicit, main`.split(',');
+	        diagram, webrtc-client, video-ui, implicit, mediapipe, main`.split(',');
 
 let project, slideData;
 let loadProject = projectName => {

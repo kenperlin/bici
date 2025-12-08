@@ -65,7 +65,6 @@ let keyDown = key => {
 }
 
 window.keyUp = key => {
-
    let toggleCode = () => codeArea.getElement().style.left = (isCode = ! isCode) ? 20 : -2000;
 
    if (isOpeningURL) {
@@ -143,6 +142,7 @@ window.keyUp = key => {
    case 'j' : isJumpingToSlide = true; break;
    case 'l' : isLightPen = ! isLightPen; break;
    case 'm' : isMove = false; break;
+   case 'M' : mediapipeTasks.toggleRunning(); break;
    case 'o' : isOpaque = ! isOpaque; break;
    case 'p' : webcam.isPen = ! webcam.isPen; break;
    case 'r' : shift3D = 1 - shift3D; break;
