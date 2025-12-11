@@ -700,7 +700,7 @@ animate = () => {
       trackingIndex++;
    }
    else if (wasTracking) {
-      codeArea.getElement().value = trackingInfo;
+      //codeArea.getElement().value = trackingInfo;
       wasTracking = false;
    }
 }
