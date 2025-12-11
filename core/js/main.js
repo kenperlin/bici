@@ -680,7 +680,32 @@ animate = () => {
       ctx.fillStyle = 'black';
       ctx.fillRect(screen.width-8,screen.height-8,8,8);
    }
+
+   let logTracking = (name, data) => {
+      let round = t => (1000 * t >> 0) / 1000;
+
+      trackingInfo += name + '[' + trackingIndex + '] = [\n';
+      for (let n = 0 ; n < data.length ; n++)
+         trackingInfo += '{x:' + round(data[n].x) +
+	                 ',y:' + round(data[n].y) +
+			 ',z:' + round(data[n].z) + '},\n';
+      trackingInfo += '];\n';
+   }
+
+   if (mediapipeTasks.isRunning) {
+      wasTracking = true;
+      logTracking('left' , mediapipe_hand[0]);
+      logTracking('right', mediapipe_hand[1]);
+      logTracking('face' , mediapipe_face);
+      trackingIndex++;
+   }
+   else if (wasTracking) {
+      codeArea.getElement().value = trackingInfo;
+      wasTracking = false;
+   }
 }
+
+let trackingIndex = 0, wasTracking = false, trackingInfo = 'let left=[],right=[],face=[];';
 
 // Room invitation UI
 function showInvitationUI(roomId) {

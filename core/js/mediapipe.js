@@ -7,6 +7,9 @@ async function loadMediapipe() {
   );
 }
 
+window.mediapipe_hand = [];
+window.mediapipe_face = [];
+
 const mediapipeCanvas = document.createElement("canvas");
 mediapipeCanvas.id = "mediapipe-canvas";
 mediapipeCanvas.style.position = "absolute";
@@ -82,6 +85,13 @@ mediapipeTasks.predictWebcam = () => {
       let landmarks = handResults.landmarks[i];
       landmarks = remapLandmarks(landmarks)
 
+      mediapipe_hand[i] = [];
+      for (let j = 0 ; j < landmarks.length ; j++) {
+         mediapipe_hand[i][j] = {};
+         for (let axis in landmarks[j])
+            mediapipe_hand[i][j][axis] = landmarks[j][axis];
+      }
+
       mediapipeTasks.drawUtils.drawConnectors(
         landmarks,
         mediapipe.HandLandmarker.HAND_CONNECTIONS,
@@ -115,7 +125,13 @@ mediapipeTasks.predictWebcam = () => {
   if (faceResults.faceLandmarks) {
     for (let landmarks of faceResults.faceLandmarks) {
       landmarks = remapLandmarks(landmarks)
-      
+
+      for (let i = 0 ; i < landmarks.length ; i++) {
+         mediapipe_face[i] = {};
+         for (let axis in landmarks[i])
+            mediapipe_face[i][axis] = landmarks[i][axis];
+      }
+
       mediapipeTasks.drawUtils.drawConnectors(
         landmarks,
         mediapipe.FaceLandmarker.FACE_LANDMARKS_TESSELATION,
