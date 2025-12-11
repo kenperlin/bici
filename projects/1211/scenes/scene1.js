@@ -1,10 +1,11 @@
 function Scene() {
    let cube = Shape.cubeMesh();
+   let ball = Shape.sphereMesh(20,10);
    this.vertexShader = Shader.defaultVertexShader;
    this.fragmentShader = Shader.defaultFragmentShader;
    this.update = () => {
-      let time = Date.now() / 1000;
-      drawObj(cube, mxm(headMatrix,scale(.3)));
+      drawObj(cube, mxm(headMatrix,scale(.3,.3,.01)));
+      drawObj(ball, mxm(mxm(headMatrix,move(eyeGazeX,eyeGazeY,0)),scale(.07)), [0,0,0]);
    }
 }
 

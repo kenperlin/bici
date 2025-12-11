@@ -752,6 +752,12 @@ animate = () => {
       computeHeadMatrix(pointToArray(mediapipe_face[280]),
                         pointToArray(mediapipe_face[  4]),
                         pointToArray(mediapipe_face[ 50]));
+      computeEyeGaze(pointToArray(mediapipe_face[263]),
+                     pointToArray(mediapipe_face[473]),
+                     pointToArray(mediapipe_face[398]),
+                     pointToArray(mediapipe_face[173]),
+                     pointToArray(mediapipe_face[468]),
+                     pointToArray(mediapipe_face[ 33]));
    }
    else if (wasTracking) {
       //codeArea.getElement().value = trackingInfo;
@@ -772,11 +778,28 @@ let computeHeadMatrix = (a,b,c) => {
    headMatrix = [ X[0],X[1],X[2],0,
                   Y[0],Y[1],Y[2],0,
                   Z[0],Z[1],Z[2],0,
-	          4*(b[0]-.5),4*(b[1]+.75),b[2],1 ];
+	          4*(b[0]-.5),4*(b[1]+.625),4*b[2],1 ];
+}
+
+// GIVEN EDGES OF EYES AND PUPIL, COMPUTE GAZE DIRECTION
+
+let computeEyeGaze = (la,lb,lc, ra,rb,rc) => {
+   let LX = normalize(subtract(lc,la));
+   let lx = dot(subtract(lb,mix(la,lc,.5)),LX)/norm(subtract(lc,la));
+   let ly = 2 * (lb[1] - mix(la,lc,.5)[1]) / norm(subtract(lc,la));
+
+   let RX = normalize(subtract(rc,ra));
+   let rx = dot(subtract(rb,mix(ra,rc,.5)),RX)/norm(subtract(rc,ra));
+   let ry = 2 * (rb[1] - mix(ra,rc,.5)[1]) / norm(subtract(rc,ra));
+
+   eyeGazeX = lx + rx;
+   eyeGazeY = ly + ry;
 }
 
 let trackingIndex = 0, wasTracking = false, trackingInfo = 'let left=[],right=[],face=[];';
 let headMatrix = identity();
+let eyeGazeX = 0;
+let eyeGazeY = 0;
 
 // Room invitation UI
 function showInvitationUI(roomId) {
