@@ -302,6 +302,8 @@ let cubeEdges = [ [0,1],[2,3],[4,5],[6,7],
                   [0,4],[1,5],[2,6],[3,7] ];
 
 let initSlides = () => {
+   if (!project || !slideData) return;
+   
    let ctx = D.ctx;
    let index = 0;
    for (let n = 0 ; n < slideData.length ; n++) {
@@ -380,6 +382,10 @@ let initSlides = () => {
 }
 
 let setScene = id => {
+   if (!project) {
+      console.log('No project loaded yet, skipping setScene');
+      return;
+   }
    sceneID = id;
    let url = 'projects/' + project + '/scenes/scene' + id + '.js';
    loadScript(url, () => {
@@ -389,7 +395,48 @@ let setScene = id => {
    });
 }
 
-setScene('1');
+// Initialize project (called when project is loaded or switched)
+// Made global so bici.js can call it
+window.initProject = () => {
+   if (!project || !slideData) {
+      console.log('Project or slideData not ready');
+      return;
+   }
+   
+   console.log('Initializing project:', project);
+   
+   // Reset slides state for new project
+   slides = [];
+   slideNames = [];
+   slideIndex = 0;
+   fq = {};
+   fqParsed = false;
+   isFirstTime = true;
+   
+   // Update project switcher UI
+   const currentProjectEl = document.getElementById('current-project');
+   if (currentProjectEl) {
+      currentProjectEl.textContent = project;
+   }
+   const projectSwitcher = document.getElementById('project-switcher');
+   if (projectSwitcher) {
+      projectSwitcher.style.display = 'block';
+   }
+   
+   // Load the first scene
+   setScene('1');
+}
+
+// Show project selector (for switching projects)
+window.showProjectSelector = () => {
+   const selector = document.getElementById('project-selector');
+   if (selector) {
+      selector.style.display = 'flex';
+   }
+}
+
+// Don't auto-load scene until project is selected
+// setScene('1');
 
 let isLightPen = false, isHelp = false;
 
@@ -591,7 +638,8 @@ let timePrev = startTime;
 let isReloadScene = false, reloadTime = 0;
 
 animate = () => {
-   if (isFirstTime) {
+   // Only init slides if a project is loaded
+   if (isFirstTime && project && slideData) {
       initSlides();
       isFirstTime = false;
    }
@@ -635,7 +683,7 @@ animate = () => {
    codeArea.update();
    ctx.drawImage(webcam.canvas, 0,0,640,440, 0,0,w,h);
 
-   if (isInfo) {
+   if (isInfo && slides.length > 0 && slides[slideIndex]) {
       ctx.globalAlpha = isOpaque ? 1 : .5;
       let slide = slides[slideIndex];
       D.left = window.innerWidth - 500 - 20;
@@ -672,7 +720,7 @@ animate = () => {
       penMove(p.x * w / 640, p.y * h / 440);
    pen.draw(pen.strokes);
    chalktalk.update(pen.draw);
-   if (scene.update)
+   if (scene && scene.update)
       scene.update(webcam.headPos);
    help.display(ctx);
 

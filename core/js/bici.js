@@ -29,17 +29,60 @@ async function getFile(file, callback) {
     } catch (error) { }
 }
 
-let srcFiles = `M4, loadImage, webgl, webcam, trackHead, help,
+// Core scripts - loaded once at startup (includes WebRTC)
+let coreFiles = `M4, loadImage, webgl, webcam, trackHead, help,
 	        midi, numberString, pen, keyEvent, matchCurves,
 	        glyphs, chalktalk, codeArea, math, shape, shader,
 	        diagram, webrtc-client, video-ui, implicit, mediapipe, main`.split(',');
 
 let project, slideData;
+let coreLoaded = false;
+let projectSelectorUI = null;
+
+// Load core scripts immediately (called on page load)
+let loadCore = (callback) => {
+   if (coreLoaded) {
+      if (callback) callback();
+      return;
+   }
+   loadScripts(coreFiles, () => {
+      coreLoaded = true;
+      if (callback) callback();
+   });
+}
+
+// Load project-specific content (can be called multiple times to switch projects)
 let loadProject = projectName => {
    project = projectName;
+   
+   // Hide project selector if visible
+   if (projectSelectorUI) {
+      projectSelectorUI.style.display = 'none';
+   }
+   
    getFile('projects/' + project + '/slides.txt', s => {
       slideData = s.split('\n');
-      loadScripts(srcFiles);
+      
+      // If core is already loaded, just initialize the project
+      if (coreLoaded) {
+         if (typeof initProject === 'function') {
+            initProject();
+         }
+      } else {
+         // First time - load core scripts then init
+         loadCore(() => {
+            if (typeof initProject === 'function') {
+               initProject();
+            }
+         });
+      }
    });
+}
+
+// Show project selector UI
+let showProjectSelector = () => {
+   if (projectSelectorUI) {
+      projectSelectorUI.style.display = 'flex';
+   }
 }
 
