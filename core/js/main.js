@@ -694,10 +694,16 @@ animate = () => {
 
    if (mediapipeTasks.isRunning) {
       wasTracking = true;
+/*
       logTracking('left' , mediapipe_hand[0]);
       logTracking('right', mediapipe_hand[1]);
       logTracking('face' , mediapipe_face);
       trackingIndex++;
+*/
+      let pointToArray = p => [ p.x, p.y, p.z ];
+      computeHeadMatrix(pointToArray(mediapipe_face[280]),
+                        pointToArray(mediapipe_face[  4]),
+                        pointToArray(mediapipe_face[ 50]));
    }
    else if (wasTracking) {
       //codeArea.getElement().value = trackingInfo;
@@ -705,7 +711,24 @@ animate = () => {
    }
 }
 
+// GIVEN THREE POINTS ON THE FACE, COMPUTE THE USER'S HEAD POSITION
+
+let computeHeadMatrix = (a,b,c) => {
+   a[1] = -a[1];
+   b[1] = -b[1];
+   c[1] = -c[1];
+   let X = normalize(subtract(c,a));
+   let z = subtract(b,mix(a,c,.5));
+   let Y = normalize(cross(z,X));
+   let Z = normalize(cross(X,Y));
+   headMatrix = [ X[0],X[1],X[2],0,
+                  Y[0],Y[1],Y[2],0,
+                  Z[0],Z[1],Z[2],0,
+	          4*(b[0]-.5),4*(b[1]+.75),b[2],1 ];
+}
+
 let trackingIndex = 0, wasTracking = false, trackingInfo = 'let left=[],right=[],face=[];';
+let headMatrix = identity();
 
 // Room invitation UI
 function showInvitationUI(roomId) {
