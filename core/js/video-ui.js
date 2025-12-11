@@ -3,7 +3,7 @@ class VideoUI {
     this.webrtcClient = webrtcClient;
     this.isVideoEnabled = true;
     this.isAudioEnabled = true;
-    this.isVisible = true;
+    this.isPanelVisible = false;
     this.remoteVideoElements = new Map();
 
     // Create off-screen canvas for remote video (like webcam.canvas)
@@ -25,6 +25,14 @@ class VideoUI {
   }
 
   createUI() {
+    // Create always-visible toggle button at bottom right
+    this.panelToggleBtn = document.createElement('button');
+    this.panelToggleBtn.id = 'webrtc-panel-toggle';
+    this.panelToggleBtn.className = 'panel-toggle-btn';
+    this.panelToggleBtn.title = 'Show Video Panel';
+    this.panelToggleBtn.textContent = '📹';
+    document.body.appendChild(this.panelToggleBtn);
+
     // Create main container - only for local PiP and controls
     this.container = document.createElement('div');
     this.container.id = 'webrtc-container';
@@ -42,9 +50,6 @@ class VideoUI {
         <button id="toggle-audio-btn" class="control-btn" title="Toggle Audio">
           🎤
         </button>
-        <button id="toggle-webrtc-btn" class="control-btn" title="Hide Video">
-          👁️
-        </button>
       </div>
     `;
 
@@ -54,10 +59,14 @@ class VideoUI {
     this.localVideo = document.getElementById('local-video');
     this.toggleVideoBtn = document.getElementById('toggle-video-btn');
     this.toggleAudioBtn = document.getElementById('toggle-audio-btn');
-    this.toggleWebRTCBtn = document.getElementById('toggle-webrtc-btn');
   }
 
   setupEventHandlers() {
+    // Toggle panel visibility (always-visible button)
+    this.panelToggleBtn.addEventListener('click', () => {
+      this.togglePanel();
+    });
+
     // Toggle video
     this.toggleVideoBtn.addEventListener('click', () => {
       this.isVideoEnabled = !this.isVideoEnabled;
@@ -72,11 +81,6 @@ class VideoUI {
       this.webrtcClient.toggleAudio(this.isAudioEnabled);
       this.toggleAudioBtn.textContent = this.isAudioEnabled ? '🎤' : '🎤❌';
       this.toggleAudioBtn.classList.toggle('disabled', !this.isAudioEnabled);
-    });
-
-    // Toggle visibility
-    this.toggleWebRTCBtn.addEventListener('click', () => {
-      this.toggleVisibility();
     });
 
     // Setup WebRTC callbacks
@@ -104,9 +108,9 @@ class VideoUI {
     this.remoteVideo.srcObject = stream;
     this.hasRemoteVideo = true;
 
-    // Show the container if hidden
-    if (this.container.classList.contains('webrtc-hidden')) {
-      this.show();
+    // Show the panel if hidden when remote video connects
+    if (!this.isPanelVisible) {
+      this.showPanel();
     }
   }
 
@@ -158,32 +162,27 @@ class VideoUI {
     // Clear the remote video
     this.remoteVideo.srcObject = null;
     this.hasRemoteVideo = false;
-
-    // Hide if no remote videos left
-    if (this.isVisible) {
-      this.hide();
-    }
   }
 
-  toggleVisibility() {
-    if (this.isVisible) {
-      this.hide();
+  togglePanel() {
+    if (this.isPanelVisible) {
+      this.hidePanel();
     } else {
-      this.show();
+      this.showPanel();
     }
   }
 
-  show() {
+  showPanel() {
     this.container.classList.remove('webrtc-hidden');
-    this.isVisible = true;
-    this.toggleWebRTCBtn.textContent = '👁️';
-    this.toggleWebRTCBtn.title = 'Hide Video';
+    this.isPanelVisible = true;
+    this.panelToggleBtn.classList.add('active');
+    this.panelToggleBtn.title = 'Hide Video Panel';
   }
 
-  hide() {
+  hidePanel() {
     this.container.classList.add('webrtc-hidden');
-    this.isVisible = false;
-    this.toggleWebRTCBtn.textContent = '👁️❌';
-    this.toggleWebRTCBtn.title = 'Show Video';
+    this.isPanelVisible = false;
+    this.panelToggleBtn.classList.remove('active');
+    this.panelToggleBtn.title = 'Show Video Panel';
   }
 }
