@@ -5,7 +5,7 @@ function Scene() {
    this.fragmentShader = Shader.defaultFragmentShader;
    this.update = () => {
       drawObj(cube, mxm(headMatrix,scale(.3,.3,.01)));
-      drawObj(ball, mxm(mxm(headMatrix,move(eyeGazeX,eyeGazeY,0)),scale(.07)), [0,0,0]);
+      drawObj(ball, mxm(mxm(headMatrix,move(eyeGazeX,eyeGazeY,0)),scale(.07,.07*eyeOpen,.07)), [0,0,0]);
    }
 }
 
