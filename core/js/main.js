@@ -801,9 +801,47 @@ animate = () => {
          ctx.fill();
       }
 
+      for (let hand = 0 ; hand < 2 ; hand++)
+         if (mediapipe_hand[hand]) {
+            for (let finger = 0 ; finger < 5 ; finger++)
+               fingerTip[hand][finger] = pointToArray(mediapipe_hand[hand][4 + 4 * finger]);
+
+            handPinch[hand] = 0;
+            for (let finger = 1 ; finger < 3 ; finger++)
+	       if (norm(subtract(fingerTip[hand][finger],fingerTip[hand][0])) < .085 * .1 / (.2 + fingerTip[hand][0][2]))
+	          handPinch[hand] = finger;
+
+            for (let finger = 0 ; finger < 3 ; finger++) {
+               ctx.fillStyle = finger==0 ? '#ff000080' : finger==1 ? '#00ff0080' : '#0000ff80';
+	       if (handPinch[hand] && (finger == 0 || handPinch[hand] == finger)) {
+	          if (finger) {
+		     ctx.fillStyle = finger==1 ? '#ffff0080' : '#ff00ff80';
+                     let p0 = fingerTip[hand][0];
+                     let pf = fingerTip[hand][finger];
+                     let px = mx * (p0[0] + pf[0]);
+                     let py = my * (p0[1] + pf[1]);
+                     ctx.beginPath();
+		     let r = 1.4 * Math.min(40, 40 * .1 / (.2 + p0[2]));
+                     ctx.arc(px, py, r, 0,2*Math.PI);
+                     ctx.fill();
+		  }
+	       }
+	       else {
+                  let p = fingerTip[hand][finger];
+                  let px = 2 * mx * p[0];
+                  let py = 2 * my * p[1];
+                  ctx.beginPath();
+		  let r = Math.min(40, 40 * .1 / (.2 + p[2]));
+                  ctx.arc(px, py, r, 0,2*Math.PI);
+                  ctx.fill();
+	       }
+            }
+         }
    }
    else if (wasTracking) {
-      //codeArea.getElement().value = trackingInfo;
+/*
+      codeArea.getElement().value = trackingInfo;
+*/
       wasTracking = false;
    }
 }
@@ -844,7 +882,7 @@ let computeEyeGaze = (la,lb,lc,ld, le,lf,lg,
    let lo = norm(subtract(lc,ld)) / norm(subtract(le,lg));
    let ro = norm(subtract(rc,rd)) / norm(subtract(re,rg));
 
-   eyeOpen  = (lo + ro) / 2;
+   eyeOpen = (lo + ro) / 2;
 }
 
 let trackingIndex = 0, wasTracking = false, trackingInfo = 'let left=[],right=[],face=[];';
@@ -852,6 +890,8 @@ let headMatrix = identity();
 let eyeOpen  = 1;
 let eyeGazeX = 0;
 let eyeGazeY = 0;
+let fingerTip = [[],[]];
+let handPinch = [0,0];
 
 // Room invitation UI
 function showInvitationUI(roomId) {

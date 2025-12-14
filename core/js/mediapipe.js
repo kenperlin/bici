@@ -91,7 +91,7 @@ mediapipeTasks.predictWebcam = () => {
          for (let axis in landmarks[j])
             mediapipe_hand[i][j][axis] = landmarks[j][axis];
       }
-
+/*
       mediapipeTasks.drawUtils.drawConnectors(
         landmarks,
         mediapipe.HandLandmarker.HAND_CONNECTIONS,
@@ -100,11 +100,11 @@ mediapipeTasks.predictWebcam = () => {
           lineWidth: 5
         }
       );
-
+*/
       const selected = new Set([4, 8, 12]);
       scene.penRadius = getTotalDist(landmarks[4], landmarks[8], landmarks[12]);
       scene.penPos = getAveragePos(landmarks[4], landmarks[8], landmarks[12]);
-
+/*
       for (let j = 0; j < landmarks.length; j++) {
         const landmark = landmarks[j];
         const dot_color =
@@ -117,6 +117,7 @@ mediapipeTasks.predictWebcam = () => {
           lineWidth: 2
         });
       }
+*/
     }
 
   }
