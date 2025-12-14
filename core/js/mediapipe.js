@@ -131,7 +131,7 @@ mediapipeTasks.predictWebcam = () => {
          for (let axis in landmarks[i])
             mediapipe_face[i][axis] = landmarks[i][axis];
       }
-
+/*
       mediapipeTasks.drawUtils.drawConnectors(
         landmarks,
         mediapipe.FaceLandmarker.FACE_LANDMARKS_TESSELATION,
@@ -147,6 +147,7 @@ mediapipeTasks.predictWebcam = () => {
         mediapipe.FaceLandmarker.FACE_LANDMARKS_LEFT_EYE,
         { color: "#FF3030" }
       );
+*/
     }
   }
 

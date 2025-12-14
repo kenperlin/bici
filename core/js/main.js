@@ -749,23 +749,67 @@ animate = () => {
       trackingIndex++;
 */
       let pointToArray = p => [ p.x, p.y, p.z ];
+
       computeHeadMatrix(pointToArray(mediapipe_face[280]),
                         pointToArray(mediapipe_face[  4]),
                         pointToArray(mediapipe_face[ 50]));
-      computeEyeGaze(pointToArray(mediapipe_face[263]),
-                     pointToArray(mediapipe_face[473]),
-                     pointToArray(mediapipe_face[398]),
-                     pointToArray(mediapipe_face[173]),
-                     pointToArray(mediapipe_face[468]),
-                     pointToArray(mediapipe_face[ 33]));
+
+      computeEyeGaze(
+         pointToArray(mediapipe_face[263]), // outer lid       // LEFT EYE
+         pointToArray(mediapipe_face[398]), // inner lid
+
+         pointToArray(mediapipe_face[374]), // lower lid
+         pointToArray(mediapipe_face[386]), // upper lid
+
+         pointToArray(mediapipe_face[477]), // bottom of pupil
+         pointToArray(mediapipe_face[473]), // center of pupil
+         pointToArray(mediapipe_face[475]), // top of pupil
+
+         pointToArray(mediapipe_face[173]), // outer lid       // RIGHT EYE
+         pointToArray(mediapipe_face[ 33]), // inner lid
+
+         pointToArray(mediapipe_face[144]), // lower lid
+         pointToArray(mediapipe_face[159]), // upper lid
+
+         pointToArray(mediapipe_face[472]), // bottom of pupil
+         pointToArray(mediapipe_face[468]), // center of pupil
+         pointToArray(mediapipe_face[470]), // top of pupil
+      );
+
+      let mx = screen.width/2, my = screen.height/2;
+
+      ctx.fillStyle = eyeOpen < .5 ? '#000000' : '#ffffff40';
+      if (! headX) {
+         headX = mx;
+         headY = my/2;
+      }
+      let x = mx + 3 * mx * headMatrix[8];
+      let y = my - 3 * mx * headMatrix[9];
+      headX = .5 * headX + .5 * x;
+      headY = .5 * headY + .5 * y;
+
+      ctx.beginPath();
+      ctx.ellipse(headX,headY,100,100*eyeOpen,0,0,2*Math.PI);
+      ctx.fill();
+
+      if (eyeOpen >= .5) {
+         ctx.fillStyle = 'black';
+         ctx.beginPath();
+         let ex = 200 * eyeGazeX;
+         let ey = 400 * eyeGazeY + 100 - 35 * headY / my - 25 * Math.abs(headX - mx) / my;
+         ctx.arc(headX + ex, headY + ey, 20,0,2*Math.PI);
+         ctx.fill();
+      }
+
    }
    else if (wasTracking) {
       //codeArea.getElement().value = trackingInfo;
       wasTracking = false;
    }
 }
+let headX, headY;
 
-// GIVEN THREE POINTS ON THE FACE, COMPUTE THE USER'S HEAD POSITION
+// GIVEN THREE POINTS ON THE FACE, COMPUTE THE USER'S HEAD MATRIX
 
 let computeHeadMatrix = (a,b,c) => {
    a[1] = -a[1];
@@ -781,23 +825,31 @@ let computeHeadMatrix = (a,b,c) => {
 	          4*(b[0]-.5),4*(b[1]+.625),4*b[2],1 ];
 }
 
-// GIVEN EDGES OF EYES AND PUPIL, COMPUTE GAZE DIRECTION
+// GIVEN EDGES OF EYES AND PUPIL, COMPUTE EYE GAZE AND EYE OPEN
 
-let computeEyeGaze = (la,lb,lc, ra,rb,rc) => {
-   let LX = normalize(subtract(lc,la));
-   let lx = dot(subtract(lb,mix(la,lc,.5)),LX)/norm(subtract(lc,la));
-   let ly = 2 * (lb[1] - mix(la,lc,.5)[1]) / norm(subtract(lc,la));
+let computeEyeGaze = (la,lb,lc,ld, le,lf,lg,
+                      ra,rb,rc,rd, re,rf,rg) => {
 
-   let RX = normalize(subtract(rc,ra));
-   let rx = dot(subtract(rb,mix(ra,rc,.5)),RX)/norm(subtract(rc,ra));
-   let ry = 2 * (rb[1] - mix(ra,rc,.5)[1]) / norm(subtract(rc,ra));
+   let LX = normalize(subtract(lb,la));
+   let lx = dot(subtract(lf,mix(la,lb,.5)),LX)/norm(subtract(lb,la));
+   let ly = 2 * (lf[1] - mix(la,lb,.5)[1]) / norm(subtract(lb,la));
+
+   let RX = normalize(subtract(rb,ra));
+   let rx = dot(subtract(rf,mix(ra,rb,.5)),RX)/norm(subtract(rb,ra));
+   let ry = 2 * (rf[1] - mix(ra,rb,.5)[1]) / norm(subtract(rb,ra));
 
    eyeGazeX = lx + rx;
    eyeGazeY = ly + ry;
+
+   let lo = norm(subtract(lc,ld)) / norm(subtract(le,lg));
+   let ro = norm(subtract(rc,rd)) / norm(subtract(re,rg));
+
+   eyeOpen  = (lo + ro) / 2;
 }
 
 let trackingIndex = 0, wasTracking = false, trackingInfo = 'let left=[],right=[],face=[];';
 let headMatrix = identity();
+let eyeOpen  = 1;
 let eyeGazeX = 0;
 let eyeGazeY = 0;
 
