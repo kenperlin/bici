@@ -115,36 +115,35 @@ let trackingUpdate = () => {
 
       for (let hand = 0 ; hand < 2 ; hand++)
          if (mediapipe_hand[hand]) {
-            for (let finger = 0 ; finger < 5 ; finger++)
-               fingerTip[hand][finger] = pointToArray(mediapipe_hand[hand][4 + 4 * finger]);
+	    let r = p => Math.min(1, .1 / (.2 + p[2]));
+	    let FT = fingerTip[hand];
+
+            for (let f = 0 ; f < 5 ; f++)
+               FT[f] = pointToArray(mediapipe_hand[hand][4 + 4 * f]);
 
             handPinch[hand] = 0;
-            for (let finger = 1 ; finger < 3 ; finger++)
-               if (norm(subtract(fingerTip[hand][finger],fingerTip[hand][0])) < .085 * .1 / (.2 + fingerTip[hand][0][2]))
-                  handPinch[hand] = finger;
+            for (let f = 1 ; f < 3 ; f++)
+               if (norm(subtract(FT[f],FT[0])) < (f==1?.085:.11) * r(FT[0]))
+                  handPinch[hand] = f;
 
-            for (let finger = 0 ; finger < 3 ; finger++) {
-               ctx.fillStyle = finger==0 ? '#ff000080' : finger==1 ? '#00ff0080' : '#0000ff80';
-               if (handPinch[hand] && (finger == 0 || handPinch[hand] == finger)) {
-                  if (finger) {
-                     ctx.fillStyle = finger==1 ? '#ffff0080' : '#ff00ff80';
-                     let p0 = fingerTip[hand][0];
-                     let pf = fingerTip[hand][finger];
-                     let px = mx * (p0[0] + pf[0]);
-                     let py = my * (p0[1] + pf[1]);
+            for (let f = 0 ; f < 3 ; f++) {
+               ctx.fillStyle = f==0 ? '#ff000080' : f==1 ? '#00ff0080' : '#0000ff80';
+               if (handPinch[hand] && (f == 0 || handPinch[hand] == f)) {
+                  if (f) {
+                     ctx.fillStyle = f==1 ? '#ffff0080' : '#ff00ff80';
+                     let px = mx * (FT[0][0] + FT[f][0]);
+                     let py = my * (FT[0][1] + FT[f][1]);
                      ctx.beginPath();
-                     let r = 1.4 * Math.min(40, 40 * .1 / (.2 + p0[2]));
-                     ctx.arc(px, py, r, 0,2*Math.PI);
+                     ctx.arc(px, py, 60 * r(FT[0]), 0,2*Math.PI);
                      ctx.fill();
                   }
                }
                else {
-                  let p = fingerTip[hand][finger];
+                  let p = fingerTip[hand][f];
                   let px = 2 * mx * p[0];
                   let py = 2 * my * p[1];
                   ctx.beginPath();
-                  let r = Math.min(40, 40 * .1 / (.2 + p[2]));
-                  ctx.arc(px, py, r, 0,2*Math.PI);
+                  ctx.arc(px, py, 40 * r(p), 0,2*Math.PI);
                   ctx.fill();
                }
             }
