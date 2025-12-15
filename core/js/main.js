@@ -659,6 +659,7 @@ animate = () => {
    if (time - startTime > 1 && ! fqParsed) {
       for (let name in fq) {
          let index = fq[name].index;
+         let diagram = fq[name].diagram;
          slides[index] = fq[name].image ? fq[name].image : fq[name].diagram;
          slideNames[index] = name;
       }
@@ -682,6 +683,12 @@ animate = () => {
    let p = webcam.update();
    codeArea.update();
    ctx.drawImage(webcam.canvas, 0,0,640,440, 0,0,w,h);
+
+   // Patch to fix race condition in loading diagrams
+   if (slides.length > 0 && ! slides[slideIndex])
+      for (let name in fq)
+         if (fq[name].index == slideIndex)
+            slides[slideIndex] = fq[name].diagram;
 
    if (isInfo && slides.length > 0 && slides[slideIndex]) {
       ctx.globalAlpha = isOpaque ? 1 : .5;

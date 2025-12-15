@@ -1,1 +1,1 @@
-Test of head tracking
+Test of head tracking\nand shared state
