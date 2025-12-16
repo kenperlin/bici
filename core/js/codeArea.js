@@ -80,6 +80,20 @@ function CodeArea(x,y) {
          codeArea.cols = Math.max(codeArea.cols, lines[n].length-1);
    }
 
+   this.setValue = (name, t) => {
+      t = Math.max(0, Math.min(.9999, t));
+      let text = codeArea.value;
+      let i = text.indexOf(name);
+      if (i >= 0) {
+         let j = i + name.length;
+	 let v = '' + (1000*t>>0);
+	 v = v.length==1 ? '00' + v : v.length==2 ? '0' + v : v;
+         text = text.substring(0,j+4) + v + text.substring(j+7);
+         codeArea.value = text;
+         isReloadScene = true;
+      }
+   }
+
    this.changeFontSize = factor => {
       fontSize *= factor;
    }

@@ -1,25 +1,25 @@
 function Diagram() {
    let px = 0, py = 0;
    this.onDrag = (x,y) => {
-      let text = codeArea.getElement().value;
-      let setValue = (S, t) => {
-         let i = text.indexOf(S);
+      let setValue = (name, t) => {
+         let text = codeArea.getElement().value;
+         let i = text.indexOf(name);
 	 if (i >= 0) {
-            text = text.substring(0,i+5) + (10*t>>0) + text.substring(i+6);
+	    let j = i + name.length;
+            text = text.substring(0,j+4) + (10*t>>0) + text.substring(j+5);
+            codeArea.getElement().value = text;
 	    isReloadScene = true;
 	 }
       }
-      setValue('R', .5 + .5 * x);
-      setValue('G', .5 + .5 * y);
-      if (isReloadScene)
-         codeArea.getElement().value = text;
+      codeArea.setValue('red'  , .5 + .5 * x);
+      codeArea.setValue('green', .5 + .5 * y);
       px = x;
       py = y;
    }
    this.update = ctx => {
       this.fillColor('white').fillRect([-1,-1],[1,1]);
-      this.line([-.5,0],[.5,0],1);
-      this.line([0,-.5],[0,.5],1);
+      this.drawColor('red').line([-.5,0],[.5,0],1);
+      this.drawColor('green').line([0,-.5],[0,.5],1);
       this.fillColor('black').fillRect([px-.05, py-.05],
                                        [px+.05, py+.05]);
    }

@@ -80,14 +80,14 @@ let pen_isInScene = (x,y) =>
    scene && x >= CANVAS3D_LEFT && x < CANVAS3D_LEFT + CANVAS3D_WIDTH &&
             y >= CANVAS3D_TOP  && x < CANVAS3D_TOP  + CANVAS3D_HEIGHT ;
 let pen_xToScene = x => 2 * (x - CANVAS3D_LEFT) / CANVAS3D_WIDTH  - 1;
-let pen_yToScene = y => 2 * (CANVAS3D_TOP  - y) / CANVAS3D_HEIGHT - 1;
+let pen_yToScene = y => 1 - 2 * (y - CANVAS3D_TOP) / CANVAS3D_HEIGHT;
 
 let penDown = () => {
    if (pen_isDown)
       return;
    pen_isDown = true;
 
-   if (pen_isInScene(pen.x,pen.y)) {
+   if (!(isInfo && D.isIn()) && pen_isInScene(pen.x,pen.y)) {
       pen_isDownInScene = true;
       if (scene.onDown)
          scene.onDown(pen_xToScene(pen.x), pen_yToScene(pen.y));
