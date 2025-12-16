@@ -73,12 +73,25 @@ function Pen() {
    }
 }
 
-let isPenDown = false;
+let pen_isDown = false;
+let pen_isDownInScene = false;
+
+let pen_isInScene = (x,y) =>
+   scene && x >= CANVAS3D_LEFT && x < CANVAS3D_LEFT + CANVAS3D_WIDTH &&
+            y >= CANVAS3D_TOP  && x < CANVAS3D_TOP  + CANVAS3D_HEIGHT ;
+let pen_xToScene = x => 2 * (x - CANVAS3D_LEFT) / CANVAS3D_WIDTH  - 1;
+let pen_yToScene = y => 2 * (CANVAS3D_TOP  - y) / CANVAS3D_HEIGHT - 1;
 
 let penDown = () => {
-   if (isPenDown)
+   if (pen_isDown)
       return;
-   isPenDown = true;
+   pen_isDown = true;
+
+   if (pen_isInScene(pen.x,pen.y)) {
+      pen_isDownInScene = true;
+      if (scene.onDown)
+         scene.onDown(pen_xToScene(pen.x), pen_yToScene(pen.y));
+   }
 
    if (isInfo) {
       let slide = slides[slideIndex];
@@ -114,7 +127,11 @@ let penDown = () => {
 }
 
 let penUp = () => {
-   isPenDown = false;
+   pen_isDown = false;
+
+   if (pen_isDownInScene && scene.onUp)
+      scene.onUp(pen_xToScene(pen.x), pen_yToScene(pen.y));
+   pen_isDownInScene = false;
 
    if (isInfo) {
       let slide = slides[slideIndex];
@@ -142,6 +159,13 @@ let penUp = () => {
 }
 
 let penMove = (x,y) => {
+
+   if (pen_isInScene(x,y) && ! pen_isDown && scene.onMove)
+      scene.onMove(pen_xToScene(x), pen_yToScene(y));
+
+   if (pen_isDownInScene && scene.onDrag)
+      scene.onDrag(pen_xToScene(x), pen_yToScene(y));
+
    if (isInfo) {
       D.x = x - D.left;
       D.y = y - D.top;
@@ -177,6 +201,9 @@ let penMove = (x,y) => {
       });
       return;
    }
+
+   if (pen_isDownInScene)
+      return;
 
    pen.move(x,y);
    if (isMove)
