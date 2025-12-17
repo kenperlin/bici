@@ -38,7 +38,8 @@ let coreFiles = `M4, loadImage, webgl, webcam, trackHead, help,
 
 let project, slideData;
 let coreLoaded = false;
-let projectSelectorUI = null;
+// projectSelectorUI is set globally from index.html - don't redeclare with 'let'
+// This ensures the reference is properly shared between bici.js and index.html
 
 // Load core scripts immediately (called on page load)
 let loadCore = (callback) => {
@@ -56,9 +57,11 @@ let loadCore = (callback) => {
 let loadProject = projectName => {
    project = projectName;
    
-   // Hide project selector if visible
-   if (projectSelectorUI) {
-      projectSelectorUI.style.display = 'none';
+   // Hide project selector - use .hidden class to move off-screen and disable pointer events
+   // This ensures it doesn't block mouse events on canvas3D and codeArea
+   // Use window.projectSelectorUI to access the global variable set in index.html
+   if (window.projectSelectorUI) {
+      window.projectSelectorUI.classList.add('hidden');
    }
    
    getFile('projects/' + project + '/slides.txt', s => {
@@ -82,8 +85,9 @@ let loadProject = projectName => {
 
 // Show project selector UI
 let showProjectSelector = () => {
-   if (projectSelectorUI) {
-      projectSelectorUI.style.display = 'flex';
+   // Use window.projectSelectorUI to access the global variable set in index.html
+   if (window.projectSelectorUI) {
+      window.projectSelectorUI.classList.remove('hidden');
    }
 }
 

@@ -4,6 +4,7 @@ document.body.appendChild(canvas2D);
 canvas2D.style.position = 'absolute';
 canvas2D.style.top = 0;
 canvas2D.style.left = 0;
+canvas2D.style.pointerEvents = 'none'; // Allow clicks to pass through to codeArea and canvas3D
 
 let canvas3D = document.createElement('canvas');
 document.body.appendChild(canvas3D);

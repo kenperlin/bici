@@ -25,6 +25,15 @@
     justify-content: center;
     z-index: 900;
     font-family: 'Segoe UI', Arial, sans-serif;
+    transition: opacity 0.3s ease;
+  }
+  
+  /* IMPORTANT: When hidden, move off-screen and disable pointer events */
+  /* This prevents the overlay from blocking mouse events on canvas3D and codeArea */
+  #project-selector.hidden {
+    left: -9999px;
+    opacity: 0;
+    pointer-events: none;
   }
   
   #project-selector h1 {
@@ -137,8 +146,9 @@
 </div>
 
 <script>
-  // Store reference to project selector UI
-  projectSelectorUI = document.getElementById('project-selector');
+  // Store reference to project selector UI globally
+  // This is accessed by bici.js loadProject() and showProjectSelector()
+  window.projectSelectorUI = document.getElementById('project-selector');
   
   // Load core scripts immediately (starts WebRTC connection)
   loadCore();

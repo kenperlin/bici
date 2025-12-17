@@ -16,6 +16,7 @@ mediapipeCanvas.style.position = "absolute";
 mediapipeCanvas.style.top = "0";
 mediapipeCanvas.style.left = "0";
 mediapipeCanvas.style.zIndex = 1;
+mediapipeCanvas.style.pointerEvents = "none"; // Allow clicks to pass through to elements below
 mediapipeCanvas.width = screen.width;
 mediapipeCanvas.height = screen.height;
 const canvasCtx = mediapipeCanvas.getContext("2d");
