@@ -65,7 +65,7 @@ let keyDown = key => {
 }
 
 window.keyUp = key => {
-   let toggleCode = () => codeArea.getElement().style.left = (isCode = ! isCode) ? 20 : -2000;
+   let toggleCode = () => codeArea.setVisible(isCode = ! isCode);
 
    if (isOpeningURL) {
       isOpeningURL = false;
@@ -133,6 +133,7 @@ window.keyUp = key => {
    case 'a' : isOpeningURL = true; break;
    case 'b' : webcam.isBlur = ! webcam.isBlur; break;
    case 'c' : toggleCode(); break;
+   case 'C' : codeArea.isOverlay = ! codeArea.isOverlay; break;
    case 'd' : isDrawpad = ! isDrawpad; break;
    case 'e' : isLoadingSrcFile = true; break;
    case 'f' : webcam.isFloaters = ! webcam.isFloaters; break;

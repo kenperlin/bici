@@ -467,8 +467,7 @@ if (webrtcClient) {
          shift3D = state.isScene ? 1 : 0;
       }
       if (state.isCode !== undefined) {
-         isCode = state.isCode;
-         codeArea.getElement().style.left = isCode ? 20 : -2000;
+         codeArea.setVisible(isCode = state.isCode);
       }
       if (state.isOpaque !== undefined) {
          isOpaque = state.isOpaque;

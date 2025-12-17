@@ -3,7 +3,7 @@ let help = {
 
 display : ctx => {
 
-   let fs = fontSize * 1.65 >> 0;
+   let fs = fontSize * 1.48;
 
    if (help.isSplash) {
       ctx.fillStyle = '#ffffff80';
@@ -40,6 +40,7 @@ Hot keys
 a (+ key) Open a pre-defined URL.
 b Toggle blurred region in video.
 c Toggle editable code for 3D scene.
+C Toggle editable code overlay.
 d Toggle drawing pad.
 e (+ key) Show src code in text editor.
 f Toggle floaters behind me.
