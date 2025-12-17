@@ -87,10 +87,8 @@ let trackingUpdate = () => {
          pointToArray(mediapipe_face[468]), // center of pupil
          pointToArray(mediapipe_face[470]), // top of pupil
       );
-
       let mx = screen.width/2, my = screen.height/2;
 
-      ctx.fillStyle = eyeOpen < .5 ? '#000000' : '#ffffff40';
       if (! headX) {
          headX = mx;
          headY = my/2;
@@ -100,17 +98,24 @@ let trackingUpdate = () => {
       headX = .5 * headX + .5 * x;
       headY = .5 * headY + .5 * y;
 
-      ctx.beginPath();
-      ctx.ellipse(headX,headY,100,100*eyeOpen,0,0,2*Math.PI);
-      ctx.fill();
-
-      if (eyeOpen >= .5) {
-         ctx.fillStyle = 'black';
+      for (let eye = -1 ; eye <= 1 ; eye += 2) {
+         ctx.fillStyle = eyeOpen < .4 ? '#00000080' : '#ffffff40';
          ctx.beginPath();
-         let ex = 200 * eyeGazeX;
-         let ey = 400 * eyeGazeY + 100 - 35 * headY / my - 25 * Math.abs(headX - mx) / my;
-         ctx.arc(headX + ex, headY + ey, 20,0,2*Math.PI);
+         ctx.ellipse(headX + 70 * eye, headY, 35, 35 * eyeOpen, 0, 0, 2 * Math.PI);
          ctx.fill();
+
+         if (eyeOpen >= .4) {
+            ctx.fillStyle = '#00000040';
+            ctx.beginPath();
+            let ex = 50 * eyeGazeX;
+            let ey = 50 * eyeGazeY + 23
+	           -  9 * headY / my
+	           -  8 * Math.abs(headX - mx) / my
+	           - 40 * Math.pow(Math.max(0, eyeOpen - .7) / .3, 1.5) * .3
+	           - 20 * Math.pow(Math.max(0, .7 - eyeOpen) / .3, 1.5) * .3;
+            ctx.arc(headX + 70 * eye + ex, headY + ey, 20, 0, 2 * Math.PI);
+            ctx.fill();
+         }
       }
 
       for (let hand = 0 ; hand < 2 ; hand++)
@@ -127,14 +132,14 @@ let trackingUpdate = () => {
                   handPinch[hand] = f;
 
             for (let f = 0 ; f < 3 ; f++) {
-               ctx.fillStyle = f==0 ? '#ff000080' : f==1 ? '#00ff0080' : '#0000ff80';
+               ctx.fillStyle = f==0 ? '#ff000080' : f==1 ? '#00ff0040' : '#0060ff40';
                if (handPinch[hand] && (f == 0 || handPinch[hand] == f)) {
                   if (f) {
                      ctx.fillStyle = f==1 ? '#ffff0080' : '#ff00ff80';
                      let px = mx * (FT[0][0] + FT[f][0]);
                      let py = my * (FT[0][1] + FT[f][1]);
                      ctx.beginPath();
-                     ctx.arc(px, py, 60 * r(FT[0]), 0,2*Math.PI);
+                     ctx.arc(px, py, 30 * r(FT[0]), 0,2*Math.PI);
                      ctx.fill();
                   }
                }
