@@ -422,6 +422,8 @@ window.initProject = () => {
    const projectSwitcher = document.getElementById('project-switcher');
    if (projectSwitcher) {
       projectSwitcher.style.display = 'block';
+      projectSwitcher.style.left = 15;
+      projectSwitcher.style.top = screen.height - 80;
    }
    
    // Load the first scene
