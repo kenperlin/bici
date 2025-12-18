@@ -18,6 +18,7 @@ function CodeArea(x,y) {
    codeOverlay.style.pointerEvents = 'none';
    codeOverlay.width = 605;
    codeOverlay.height = screen.height;
+   let ctx = codeOverlay.getContext('2d');
 
    codeArea.style.overflowY = 'scroll';
    codeArea.addEventListener('mousemove', event => {
@@ -86,6 +87,12 @@ function CodeArea(x,y) {
       codeArea.style.left = isVisible ? 20 : -2000;
    }
 
+   let drawOverlayRect = (col,row,nCols,nRows) => {
+      let charWidth  = 0.60 * fontSize;
+      let charHeight = 1.15 * fontSize;
+      ctx.strokeRect(charWidth * (col+.35), charHeight * (row+.15), nCols * charWidth, nRows * charHeight);
+   }
+
    this.update = () => {
       codeArea.style.backgroundColor = isOpaque ? 'white' : 'rgba(255,255,255,.6)';
       codeArea.style.fontSize = (fontSize >> 0) + 'px';
@@ -95,17 +102,14 @@ function CodeArea(x,y) {
       for (let n = 0 ; n < lines.length ; n++)
          codeArea.cols = Math.max(codeArea.cols, lines[n].length-1);
 
-      let ctx = codeOverlay.getContext('2d');
       ctx.clearRect(0,0,codeOverlay.width,codeOverlay.height);
       if (this.isOverlay) {
-         let charWidth  = 0.60 * fontSize;
-         let charHeight = 1.15 * fontSize;
          if (this.isVisible) {
             ctx.strokeStyle = '#00000080';
 	    for (let row = 0 ; row < codeArea.rows ; row++)
 	    for (let col = 0 ; col < codeArea.cols + 2 ; col++)
 	       if ((row & 1) && (col & 1))
-                  ctx.strokeRect(charWidth * (col+.35), charHeight * (row+.15), charWidth, charHeight);
+                  drawOverlayRect(col, row, 1, 1);
          }
       }
    }
