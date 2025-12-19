@@ -153,7 +153,7 @@ function CodeArea(x,y) {
 	    let row = yToRow(handPinch[hand].y) - 1;
 	    ctx.lineWidth = 2;
 	    ctx.strokeStyle = 'black';
-	    drawOverlayRect(col, row, 1, 1);
+	    drawOverlayRect(col>>0, row>>0, 1, 1);
 	    //highlightCharAt(handPinch[hand].x, handPinch[hand].y, '#00000020');
          }
    }
