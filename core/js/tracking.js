@@ -103,6 +103,11 @@ let trackingUpdate = () => {
          ctx.beginPath();
          ctx.ellipse(headX + 70 * eye, headY, 35, 35 * eyeOpen, 0, 0, 2 * Math.PI);
          ctx.fill();
+         ctx.strokeStyle = '#00000040';
+         ctx.lineWidth = 2;
+         ctx.beginPath();
+         ctx.ellipse(headX + 70 * eye, headY, 35, 35 * eyeOpen, 0, 0, 2 * Math.PI);
+         ctx.stroke();
 
          if (eyeOpen >= .4) {
             ctx.fillStyle = '#00000040';
@@ -111,7 +116,7 @@ let trackingUpdate = () => {
             let ey = 50 * eyeGazeY + 23
 	           -  9 * headY / my
 	           -  8 * Math.abs(headX - mx) / my
-	           - 40 * Math.pow(Math.max(0, eyeOpen - .7) / .3, 1.5) * .3
+	           - 30 * Math.pow(Math.max(0, eyeOpen - .7) / .3, 1.5) * .3
 	           - 20 * Math.pow(Math.max(0, .7 - eyeOpen) / .3, 1.5) * .3;
             ctx.arc(headX + 70 * eye + ex, headY + ey, 20, 0, 2 * Math.PI);
             ctx.fill();
@@ -126,14 +131,14 @@ let trackingUpdate = () => {
             for (let f = 0 ; f < 5 ; f++)
                FT[f] = pointToArray(mediapipe_hand[hand][4 + 4 * f]);
 
-            handPinch[hand] = 0;
+            handPinch[hand].f = 0;
             for (let f = 1 ; f < 3 ; f++)
                if (norm(subtract(FT[f],FT[0])) < (f==1?.085:.11) * r(FT[0]))
-                  handPinch[hand] = f;
+                  handPinch[hand].f = f;
 
             for (let f = 0 ; f < 3 ; f++) {
                ctx.fillStyle = f==0 ? '#ff000080' : f==1 ? '#00ff0040' : '#0060ff40';
-               if (handPinch[hand] && (f == 0 || handPinch[hand] == f)) {
+               if (handPinch[hand].f && (f == 0 || handPinch[hand].f == f)) {
                   if (f) {
                      ctx.fillStyle = f==1 ? '#ffff0080' : '#ff00ff80';
                      let px = mx * (FT[0][0] + FT[f][0]);
@@ -141,6 +146,8 @@ let trackingUpdate = () => {
                      ctx.beginPath();
                      ctx.arc(px, py, 30 * r(FT[0]), 0,2*Math.PI);
                      ctx.fill();
+		     handPinch[hand].x = px;
+		     handPinch[hand].y = py;
                   }
                }
                else {
@@ -168,5 +175,5 @@ let eyeOpen  = 1;
 let eyeGazeX = 0;
 let eyeGazeY = 0;
 let fingerTip = [[],[]];
-let handPinch = [0,0];
+let handPinch = [{f:0},{f:0}];
 

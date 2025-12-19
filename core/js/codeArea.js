@@ -87,10 +87,19 @@ function CodeArea(x,y) {
       codeArea.style.left = isVisible ? 20 : -2000;
    }
 
+   let xToCol = x => (x - parseInt(codeOverlay.style.left)) / (0.60 * fontSize) + .35;
+   let yToRow = y => (y - parseInt(codeOverlay.style.top )) / (1.15 * fontSize) + .15;
+
    let drawOverlayRect = (col,row,nCols,nRows) => {
       let charWidth  = 0.60 * fontSize;
       let charHeight = 1.15 * fontSize;
       ctx.strokeRect(charWidth * (col+.35), charHeight * (row+.15), nCols * charWidth, nRows * charHeight);
+   }
+
+   let fillOverlayRect = (col,row,nCols,nRows) => {
+      let charWidth  = 0.60 * fontSize;
+      let charHeight = 1.15 * fontSize;
+      ctx.fillRect(charWidth * (col+.35), charHeight * (row+.15), nCols * charWidth, nRows * charHeight);
    }
 
    this.update = () => {
@@ -106,12 +115,41 @@ function CodeArea(x,y) {
       if (this.isOverlay) {
          if (this.isVisible) {
             ctx.strokeStyle = '#00000080';
+/*
 	    for (let row = 0 ; row < codeArea.rows ; row++)
 	    for (let col = 0 ; col < codeArea.cols + 2 ; col++)
 	       if ((row & 1) && (col & 1))
                   drawOverlayRect(col, row, 1, 1);
+*/
+            for (let n = 0 ; n < lines.length ; n++)
+	    for (let i = 0, col = 0 ; i < lines[n].length ; i++, col++) {
+	       let ch = lines[n].charAt(i);
+	       if (ch == ' ')
+	          drawOverlayRect(col, n, 1, 1);
+	       else if (ch == '\t') {
+	          let nc = 8 - col % 8;
+	          drawOverlayRect(col, n, nc, 1);
+	          col += nc - 1;
+                }
+            }
          }
       }
+
+      let highlightCharAt = (x,y,color) => {
+	 let col = xToCol(x);
+	 let row = yToRow(y);
+	 if (col >= 0 && col < codeArea.cols+2 && row >= 0 && row < codeArea.rows) {
+	    ctx.fillStyle = color;
+            fillOverlayRect(col>>0, row>>0, 1, 1);
+         }
+      }
+
+      highlightCharAt(pen.x, pen.y, '#00000060');
+
+      for (let hand = 0 ; hand < 2 ; hand++)
+         if (handPinch[hand].f)
+	    highlightCharAt(handPinch[hand].x, handPinch[hand].y,
+                            handPinch[hand].f == 1 ? '#80800060' : '#80008060');
    }
 
    this.setValue = (name, t) => {
