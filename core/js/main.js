@@ -398,6 +398,9 @@ let setScene = id => {
 
 // Initialize project (called when project is loaded or switched)
 // Made global so bici.js can call it
+
+const projectSwitcher = document.getElementById('project-switcher');
+
 window.initProject = () => {
    if (!project || !slideData) {
       console.log('Project or slideData not ready');
@@ -419,7 +422,6 @@ window.initProject = () => {
    if (currentProjectEl) {
       currentProjectEl.textContent = project;
    }
-   const projectSwitcher = document.getElementById('project-switcher');
    if (projectSwitcher) {
       projectSwitcher.style.display = 'block';
       projectSwitcher.style.left = 15;
@@ -739,6 +741,9 @@ animate = () => {
    }
 
    trackingUpdate();
+
+   projectSwitcher.style.top = document.documentElement.clientHeight - 50;
+   console.log(document.documentElement.clientHeight);
 }
 
 // Room invitation UI
