@@ -114,6 +114,7 @@ function CodeArea(x,y) {
       ctx.clearRect(0,0,codeOverlay.width,codeOverlay.height);
       if (this.isOverlay) {
          if (this.isVisible) {
+	    ctx.lineWidth = 1;
             ctx.strokeStyle = '#00000080';
 /*
 	    for (let row = 0 ; row < codeArea.rows ; row++)
@@ -147,9 +148,14 @@ function CodeArea(x,y) {
       highlightCharAt(pen.x, pen.y, '#00000060');
 
       for (let hand = 0 ; hand < 2 ; hand++)
-         if (handPinch[hand].f)
-	    highlightCharAt(handPinch[hand].x, handPinch[hand].y,
-                            handPinch[hand].f == 1 ? '#80800060' : '#80008060');
+         if (handPinch[hand].f) {
+	    let col = xToCol(handPinch[hand].x) - 1;
+	    let row = yToRow(handPinch[hand].y) - 1;
+	    ctx.lineWidth = 2;
+	    ctx.strokeStyle = 'black';
+	    drawOverlayRect(col, row, 1, 1);
+	    //highlightCharAt(handPinch[hand].x, handPinch[hand].y, '#00000020');
+         }
    }
 
    this.setValue = (name, t) => {
