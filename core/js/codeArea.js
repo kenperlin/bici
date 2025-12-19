@@ -112,7 +112,7 @@ function CodeArea(x,y) {
          codeArea.cols = Math.max(codeArea.cols, lines[n].length-1);
 
       ctx.clearRect(0,0,codeOverlay.width,codeOverlay.height);
-      if (this.isOverlay) {
+      if (this.isVisible && this.isOverlay) {
          if (this.isVisible) {
 	    ctx.lineWidth = 1;
             ctx.strokeStyle = '#00000080';
@@ -134,28 +134,27 @@ function CodeArea(x,y) {
                 }
             }
          }
-      }
 
-      let highlightCharAt = (x,y,color) => {
-	 let col = xToCol(x);
-	 let row = yToRow(y);
-	 if (col >= 0 && col < codeArea.cols+2 && row >= 0 && row < codeArea.rows) {
-	    ctx.fillStyle = color;
-            fillOverlayRect(col>>0, row>>0, 1, 1);
+         let highlightCharAt = (x,y,color) => {
+	    let col = xToCol(x);
+	    let row = yToRow(y);
+	    if (col >= 0 && col < codeArea.cols+2 && row >= 0 && row < codeArea.rows) {
+	       ctx.fillStyle = color;
+               fillOverlayRect(col>>0, row>>0, 1, 1);
+            }
          }
+
+         highlightCharAt(pen.x, pen.y, '#00000060');
+
+         for (let hand = 0 ; hand < 2 ; hand++)
+            if (handPinch[hand].f) {
+	       let col = xToCol(handPinch[hand].x) - 1;
+	       let row = yToRow(handPinch[hand].y) - 1;
+	       ctx.lineWidth = 2;
+	       ctx.strokeStyle = 'black';
+	       drawOverlayRect(col>>0, row>>0, 1, 1);
+            }
       }
-
-      highlightCharAt(pen.x, pen.y, '#00000060');
-
-      for (let hand = 0 ; hand < 2 ; hand++)
-         if (handPinch[hand].f) {
-	    let col = xToCol(handPinch[hand].x) - 1;
-	    let row = yToRow(handPinch[hand].y) - 1;
-	    ctx.lineWidth = 2;
-	    ctx.strokeStyle = 'black';
-	    drawOverlayRect(col>>0, row>>0, 1, 1);
-	    //highlightCharAt(handPinch[hand].x, handPinch[hand].y, '#00000020');
-         }
    }
 
    this.setValue = (name, t) => {

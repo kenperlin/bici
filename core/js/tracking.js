@@ -93,10 +93,20 @@ let trackingUpdate = () => {
          headX = mx;
          headY = my/2;
       }
-      let x = mx + 3 * mx * headMatrix[8];
-      let y = my - 3 * mx * headMatrix[9];
+      let x = mx + 4.5 * mx * headMatrix[8];
+      let y = my - 4.5 * mx * headMatrix[9];
       headX = .5 * headX + .5 * x;
       headY = .5 * headY + .5 * y;
+
+      let isWithin = (px,py, x,y,w,h) => px >= x && px < x+w && py >= y && py < y+h;
+
+      let textArea = codeArea.getElement();
+      let cx = parseInt(textArea.style.left);
+      let cy = parseInt(textArea.style.top );
+      if (isWithin(headX, headY, cx,cy,605,screen.height))
+         textArea.focus();
+      else
+         textArea.blur();
 
       for (let eye = -1 ; eye <= 1 ; eye += 2) {
          ctx.fillStyle = eyeOpen < .4 ? '#00000080' : '#ffffff40';
@@ -113,9 +123,10 @@ let trackingUpdate = () => {
             ctx.fillStyle = '#00000040';
             ctx.beginPath();
             let ex = 50 * eyeGazeX;
+	    let t = Math.abs(headX - mx) / my;
             let ey = 50 * eyeGazeY + 23
-	           -  9 * headY / my
-	           -  8 * Math.abs(headX - mx) / my
+	           -  (9-3*t) * headY / my
+	           -  8 * t
 	           - 30 * Math.pow(Math.max(0, eyeOpen - .7) / .3, 1.5) * .3
 	           - 20 * Math.pow(Math.max(0, .7 - eyeOpen) / .3, 1.5) * .3;
             ctx.arc(headX + 70 * eye + ex, headY + ey, 20, 0, 2 * Math.PI);

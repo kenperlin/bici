@@ -743,7 +743,6 @@ animate = () => {
    trackingUpdate();
 
    projectSwitcher.style.top = document.documentElement.clientHeight - 50;
-   console.log(document.documentElement.clientHeight);
 }
 
 // Room invitation UI
