@@ -167,6 +167,10 @@ function CodeArea(x,y) {
 	 v = v.length==1 ? '00' + v : v.length==2 ? '0' + v : v;
          text = text.substring(0,j+4) + v + text.substring(j+7);
          codeArea.value = text;
+         
+         window.isReloading = true;
+         codeArea.dispatchEvent(new Event('input', { bubbles: true }));
+         
          isReloadScene = true;
       }
    }
