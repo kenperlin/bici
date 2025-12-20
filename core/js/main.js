@@ -197,7 +197,8 @@ function initializeYjs(roomId) {
    const textarea = codeArea.getElement();
    let isLocalUpdate = false;
    let reloadTimer = null;
-   let isReloading = false;
+   // Use window.isReloading for global state shared with codeArea.js
+   window.isReloading = window.isReloading || false;
 
    // When Yjs text changes, update textarea
    ytext.observe(event => {
@@ -210,7 +211,7 @@ function initializeYjs(roomId) {
 
       // Only update textarea and reload when there's a trigger (Meta key or shift+drag)
       // NOT on every keystroke from remote user
-      if (isReloading || hasSliderMarker || window.isShift) {
+      if (window.isReloading || hasSliderMarker || window.isShift) {
          // Update textarea with Yjs text
          if (textarea.value !== newText) {
             const cursorPos = textarea.selectionStart;
@@ -222,7 +223,7 @@ function initializeYjs(roomId) {
          // Reload the scene
          if (typeof codeArea.callback === 'function') {
             codeArea.callback();
-            isReloading = false;
+            window.isReloading = false;
          }
       }
 
@@ -239,9 +240,9 @@ function initializeYjs(roomId) {
       let newText = textarea.value;
 
       // Update Yjs if text changed OR if we're reloading (even with same text)
-      if (currentText !== newText || isReloading) {
+      if (currentText !== newText || window.isReloading) {
          // Add invisible marker for real-time sync when shift is held OR when reloading
-         if (window.isShift || isReloading) {
+         if (window.isShift || window.isReloading) {
             newText = newText + '\u200B';
          }
 

@@ -60,7 +60,7 @@ function CodeArea(x,y) {
 	 ey = 0;
       }
       if (this.callback && event.key == 'Meta') {
-         isReloading = true;
+         window.isReloading = true;
          // Trigger input event to sync reload to other users via Yjs
          codeArea.dispatchEvent(new Event('input', { bubbles: true }));
          this.callback();
