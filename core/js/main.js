@@ -654,9 +654,15 @@ animate = () => {
    timePrev = time;
 
    if (isReloadScene && time - reloadTime > .1) {
-      eval(codeArea.getElement().value);
-      autodraw = true;
-      gl_start(canvas3D, scene = new Scene());
+      try {
+         // Remove zero-width space markers (\u200B) added by Yjs sync before eval
+         const code = codeArea.getElement().value.replace(/\u200B/g, '');
+         eval(code);
+         autodraw = true;
+         gl_start(canvas3D, scene = new Scene());
+      } catch (e) {
+         console.error('Scene code error:', e);
+      }
       reloadTime = time;
       isReloadScene = false;
    }
