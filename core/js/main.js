@@ -469,7 +469,6 @@ if (webrtcClient) {
       }
       if (state.isScene !== undefined) {
          isScene = state.isScene;
-         shift3D = state.isScene ? 1 : 0;
       }
       if (state.isCode !== undefined) {
          codeArea.setVisible(isCode = state.isCode);
