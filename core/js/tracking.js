@@ -108,6 +108,7 @@ let trackingUpdate = () => {
       else
          textArea.blur();
 
+      if (isTrackingVisible)
       for (let eye = -1 ; eye <= 1 ; eye += 2) {
          ctx.fillStyle = eyeOpen < .4 ? '#00000080' : '#ffffff40';
          ctx.beginPath();
@@ -151,23 +152,25 @@ let trackingUpdate = () => {
                ctx.fillStyle = f==0 ? '#ff000080' : f==1 ? '#00ff0040' : '#0060ff40';
                if (handPinch[hand].f && (f == 0 || handPinch[hand].f == f)) {
                   if (f) {
-                     ctx.fillStyle = f==1 ? '#ffff0080' : '#ff00ff80';
-                     let px = mx * (FT[0][0] + FT[f][0]);
-                     let py = my * (FT[0][1] + FT[f][1]);
-                     ctx.beginPath();
-                     ctx.arc(px, py, 30 * r(FT[0]), 0,2*Math.PI);
-                     ctx.fill();
-		     handPinch[hand].x = px;
-		     handPinch[hand].y = py;
+		     handPinch[hand].x = mx * (FT[0][0] + FT[f][0]);
+		     handPinch[hand].y = my * (FT[0][1] + FT[f][1]);
+		     if (isTrackingVisible) {
+                        ctx.fillStyle = f==1 ? '#ffff0080' : '#ff00ff80';
+                        ctx.beginPath();
+                        ctx.arc(handPinch[hand].x, handPinch[hand].y, 30 * r(FT[0]), 0,2*Math.PI);
+                        ctx.fill();
+                     }
                   }
                }
                else {
-                  let p = fingerTip[hand][f];
-                  let px = 2 * mx * p[0];
-                  let py = 2 * my * p[1];
-                  ctx.beginPath();
-                  ctx.arc(px, py, 40 * r(p), 0,2*Math.PI);
-                  ctx.fill();
+	          if (isTrackingVisible) {
+                     let p = fingerTip[hand][f];
+                     let px = 2 * mx * p[0];
+                     let py = 2 * my * p[1];
+                     ctx.beginPath();
+                     ctx.arc(px, py, 40 * r(p), 0,2*Math.PI);
+                     ctx.fill();
+                  }
                }
             }
          }
@@ -180,6 +183,7 @@ let trackingUpdate = () => {
 }
 
 let trackingIndex = 0, wasTracking = false, trackingInfo = 'let left=[],right=[],face=[];';
+let isTrackingVisible = true;
 let headX, headY;
 let headMatrix = identity();
 let eyeOpen  = 1;

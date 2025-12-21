@@ -3,7 +3,7 @@ let help = {
 
 display : ctx => {
 
-   let fs = fontSize * 1.48;
+   let fs = fontSize * 1.45;
 
    if (help.isSplash) {
       ctx.fillStyle = '#ffffff80';
@@ -15,7 +15,7 @@ display : ctx => {
 
    if (help.isHelp) {
       ctx.fillStyle = '#ffffff80';      
-      ctx.fillRect(18, 20, 470 * fs / 40, .85 * fs * help.text.length + 5);
+      ctx.fillRect(18, 20, 500 * fs / 40, .85 * fs * help.text.length + 5);
       ctx.fillStyle = 'black';      
       ctx.font = 'bold ' + fs + 'px Arial';
       ctx.fillText(help.text[0], 26, 20 + fs);
@@ -51,6 +51,7 @@ j (+ key) Jump to a particular slide.
 l Toggle lightpen (small blue object).
 m Hold down to move a sketch.
 M Toggle mediapipe face/hand tracking.
+N Toggle no visible tracking feedback.
 o Toggle whether slides are opaque.
 p Toggle show/hide tracked blue pixels.
 r Toggle if 3D scene is shifted right.
