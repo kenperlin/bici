@@ -175,6 +175,17 @@ function CodeArea(x,y) {
       }
    }
 
+   this.getVar = name => {
+      let text = codeArea.value;
+      let i = text.indexOf('let ' + name);
+      if (i >= 0) {
+         let j = i + 4 + name.length + 3;
+	 let k = text.indexOf(';', j);
+	 return text.substring(j, k);
+      }
+      return null;
+   }
+
    this.changeFontSize = factor => {
       fontSize *= factor;
    }
