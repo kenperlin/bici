@@ -157,16 +157,16 @@ function CodeArea(x,y) {
       }
    }
 
-   this.setValue = (name, t) => {
-      t = Math.max(0, Math.min(.9999, t));
+   this.setVar = (name, value) => {
       let text = codeArea.value;
-      let i = text.indexOf(name);
+      let i = text.indexOf('let ' + name);
       if (i >= 0) {
-         let j = i + name.length;
-	 let v = '' + (1000*t>>0);
-	 v = v.length==1 ? '00' + v : v.length==2 ? '0' + v : v;
-         text = text.substring(0,j+4) + v + text.substring(j+7);
-         codeArea.value = text;
+	 if (typeof value == 'number' && ! Number.isInteger(value))
+	    value = Math.sign(value) * (1000 * Math.abs(value) + .5 >> 0) / 1000;
+
+         let j = i + 4 + name.length;
+         let k = text.indexOf(';', j);
+         codeArea.value = text.substring(0,j) + ' = ' + value + text.substring(k);
          
          window.isReloading = true;
          codeArea.dispatchEvent(new Event('input', { bubbles: true }));

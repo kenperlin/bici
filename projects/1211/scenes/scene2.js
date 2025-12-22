@@ -13,8 +13,8 @@ function Scene() {
               [red,green,.5]);
    }
    this.onDrag = (x,y) => {
-      codeArea.setValue('x', .5 + .5 * x);
-      codeArea.setValue('y', .5 + .5 * y);
+      codeArea.setVar('x', .5 + .5 * x);
+      codeArea.setVar('y', .5 + .5 * y);
    }
 }
 
