@@ -1,9 +1,11 @@
 function TicTacToe(scene, board, turn) {
    let T = Shape.torusMesh(30,15,.3);
    let C = Shape.cubeMesh();
+   let isMyTurn = true;
    scene.vertexShader   = Shader.defaultVertexShader;
    scene.fragmentShader = Shader.shinyFragmentShader;
    scene.update = () => {
+      isMyTurn = ! isMultiPlayer() || (turn==1) == isFirstPlayer();
       drawObj(C, mxm(move(0, .3,0),scale(1,.02,.02)));
       drawObj(C, mxm(move(0,-.3,0),scale(1,.02,.02)));
       drawObj(C, mxm(move( .3,0,0),scale(.02,1,.02)));
@@ -21,14 +23,14 @@ function TicTacToe(scene, board, turn) {
       }
    }
    scene.onUp = (x,y) => {
-      if (isMultiPlayer() && (turn==1) != isFirstPlayer())
-         return;
-      let col = x < -.3 ? 0 : x < .3 ? 1 : 2;
-      let row = y < -.3 ? 0 : y < .3 ? 1 : 2;
-      if (col >= 0 && col < 3 && row >= 0 && row < 3)
-         board[col + 3 * row] = turn;
-      codeArea.setVar('board', '[' + board + ']');
-      codeArea.setVar('turn', 3 - turn);
+      if (isMyTurn) {
+         let col = x < -.3 ? 0 : x < .3 ? 1 : 2;
+         let row = y < -.3 ? 0 : y < .3 ? 1 : 2;
+         if (col >= 0 && col < 3 && row >= 0 && row < 3)
+            board[col + 3 * row] = turn;
+         codeArea.setVar('board', '[' + board + ']');
+         codeArea.setVar('turn', 3 - turn);
+      }
    }
 }
 
