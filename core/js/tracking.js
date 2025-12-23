@@ -108,37 +108,43 @@ let trackingUpdate = () => {
       else
          textArea.blur();
 
-      if (isTrackingVisible)
-      for (let eye = -1 ; eye <= 1 ; eye += 2) {
-         ctx.fillStyle = eyeOpen < .4 ? '#00000080' : '#ffffff40';
-         ctx.beginPath();
-         ctx.ellipse(headX + 70 * eye, headY, 35, 35 * eyeOpen, 0, 0, 2 * Math.PI);
-         ctx.fill();
-         ctx.strokeStyle = '#00000040';
-         ctx.lineWidth = 2;
-         ctx.beginPath();
-         ctx.ellipse(headX + 70 * eye, headY, 35, 35 * eyeOpen, 0, 0, 2 * Math.PI);
-         ctx.stroke();
-
-         if (eyeOpen >= .4) {
-            ctx.fillStyle = '#00000040';
+      if (isTrackingObvious)
+         for (let eye = -1 ; eye <= 1 ; eye += 2) {
+            ctx.fillStyle = eyeOpen < .4 ? '#00000080' : '#ffffff40';
             ctx.beginPath();
-            let ex = 50 * eyeGazeX;
-	    let t = Math.abs(headX - mx) / my;
-            let ey = 50 * eyeGazeY + 23
-	           -  (9-3*t) * headY / my
-	           -  8 * t
-	           - 30 * Math.pow(Math.max(0, eyeOpen - .7) / .3, 1.5) * .3
-	           - 20 * Math.pow(Math.max(0, .7 - eyeOpen) / .3, 1.5) * .3;
-            ctx.arc(headX + 70 * eye + ex, headY + ey, 20, 0, 2 * Math.PI);
+            ctx.ellipse(headX + 70 * eye, headY, 35, 35 * eyeOpen, 0, 0, 2 * Math.PI);
             ctx.fill();
+            ctx.strokeStyle = '#00000040';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.ellipse(headX + 70 * eye, headY, 35, 35 * eyeOpen, 0, 0, 2 * Math.PI);
+            ctx.stroke();
+
+            if (eyeOpen >= .4) {
+               ctx.fillStyle = '#00000040';
+               ctx.beginPath();
+               let ex = 50 * eyeGazeX;
+               let t = Math.abs(headX - mx) / my;
+               let ey = 50 * eyeGazeY + 23
+                      -  (9-3*t) * headY / my
+                      -  8 * t
+                      - 30 * Math.pow(Math.max(0, eyeOpen - .7) / .3, 1.5) * .3
+                      - 20 * Math.pow(Math.max(0, .7 - eyeOpen) / .3, 1.5) * .3;
+               ctx.arc(headX + 70 * eye + ex, headY + ey, 20, 0, 2 * Math.PI);
+               ctx.fill();
+            }
          }
+      else {
+         ctx.strokeStyle = '#00000060';
+         ctx.lineWidth = 2;
+	 let h = eyeOpen > .5 ? 40 : 10;
+         ctx.strokeRect(headX - 20, headY - h/2, 40, h);
       }
 
       for (let hand = 0 ; hand < 2 ; hand++)
          if (mediapipe_hand[hand]) {
-	    let r = p => Math.min(1, .1 / (.2 + p[2]));
-	    let FT = fingerTip[hand];
+            let r = p => Math.min(1, .1 / (.2 + p[2]));
+            let FT = fingerTip[hand];
 
             for (let f = 0 ; f < 5 ; f++)
                FT[f] = pointToArray(mediapipe_hand[hand][4 + 4 * f]);
@@ -152,24 +158,40 @@ let trackingUpdate = () => {
                ctx.fillStyle = f==0 ? '#ff000080' : f==1 ? '#00ff0040' : '#0060ff40';
                if (handPinch[hand].f && (f == 0 || handPinch[hand].f == f)) {
                   if (f) {
-		     handPinch[hand].x = mx * (FT[0][0] + FT[f][0]);
-		     handPinch[hand].y = my * (FT[0][1] + FT[f][1]);
-		     if (isTrackingVisible) {
+                     handPinch[hand].x = mx * (FT[0][0] + FT[f][0]);
+                     handPinch[hand].y = my * (FT[0][1] + FT[f][1]);
+                     if (isTrackingObvious) {
                         ctx.fillStyle = f==1 ? '#ffff0080' : '#ff00ff80';
                         ctx.beginPath();
                         ctx.arc(handPinch[hand].x, handPinch[hand].y, 30 * r(FT[0]), 0,2*Math.PI);
                         ctx.fill();
                      }
+                     else {
+                        ctx.fillStyle = '#00000060';
+                        ctx.beginPath();
+                        ctx.arc(handPinch[hand].x, handPinch[hand].y, 15 * r(FT[0]), 0,2*Math.PI);
+                        ctx.fill();
+                     }
                   }
                }
                else {
-	          if (isTrackingVisible) {
+                  if (isTrackingObvious) {
                      let p = fingerTip[hand][f];
                      let px = 2 * mx * p[0];
                      let py = 2 * my * p[1];
                      ctx.beginPath();
                      ctx.arc(px, py, 40 * r(p), 0,2*Math.PI);
                      ctx.fill();
+                  }
+                  else {
+                     let p = fingerTip[hand][f];
+                     let px = 2 * mx * p[0];
+                     let py = 2 * my * p[1];
+                     ctx.strokeStyle = '#00000060';
+                     ctx.lineWidth = 2;
+                     ctx.beginPath();
+                     ctx.arc(px, py, 20 * r(p), 0,2*Math.PI);
+                     ctx.stroke();
                   }
                }
             }
@@ -183,7 +205,7 @@ let trackingUpdate = () => {
 }
 
 let trackingIndex = 0, wasTracking = false, trackingInfo = 'let left=[],right=[],face=[];';
-let isTrackingVisible = true;
+let isTrackingObvious = true;
 let headX, headY;
 let headMatrix = identity();
 let eyeOpen  = 1;
