@@ -153,6 +153,10 @@ if (typeof WebRTCClient !== 'undefined') {
    });
 }
 
+// Check whether this is the only client, and whether it is the master client.
+let isSinglePlayer = () => webrtcClient.peerConnections.size == 0;
+let isFirstPlayer  = () => webrtcClient.isMasterClient;
+
 // Initialize Yjs for collaborative editing (called after room is joined)
 function initializeYjs(roomId) {
    console.log('[BICI] initializeYjs called with roomId:', roomId);

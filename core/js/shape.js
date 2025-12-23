@@ -42,6 +42,17 @@ sphere: (nu,nv) => Shape.parametric((u,v) => {
    return [x,y,z, x,y,z];
 },nu,nv),
 
+torus: (nu,nv,r) => Shape.parametric((u,v,r) => {
+   let theta = 2 * Math.PI * u;
+   let phi   = 2 * Math.PI * v;
+   let cu = Math.cos(theta);
+   let su = Math.sin(theta);
+   let cv = Math.cos(phi);
+   let sv = Math.sin(phi);
+   let x = cu * (1 + r * cv), y = su * (1 + r * cv), z = r * sv;
+   return [x,y,z, cu*cv,su*cv,sv];
+},nu,nv,r),
+
 tube: n => Shape.parametric((u,v) => {
    let theta = 2 * Math.PI * u;
    let c = Math.cos(theta);
@@ -60,6 +71,13 @@ sphereMesh: (nu, nv) => {
    return {
       triangle_strip: true,
       data: new Float32Array(Shape.sphere(nu,nv))
+   };
+},
+
+torusMesh: (nu, nv, r) => {
+   return {
+      triangle_strip: true,
+      data: new Float32Array(Shape.torus(nu,nv,r))
    };
 },
 
