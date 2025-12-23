@@ -1,3 +1,4 @@
+SRC js/tictactoe.js
 Test of head tracking\nand shared state
 values.js
 sliders.js
