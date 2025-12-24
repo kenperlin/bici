@@ -1,12 +1,12 @@
 
 let Shape = {
 
-square: [
-  -1,-1, 0, 0, 0, 1, 0,0,   1,-1, 0, 0, 0, 1, 1,0,   1, 1, 0, 0, 0, 1, 1,1, 
-   1, 1, 0, 0, 0, 1, 1,1,  -1, 1, 0, 0, 0, 1, 0,1,  -1,-1, 0, 0, 0, 1, 0,0, 
+squareData: [
+  -1,-1, 0, 0, 0, 1, 0,0,  -1, 1, 0, 0, 0, 1, 0,1,
+   1,-1, 0, 0, 0, 1, 1,0,   1, 1, 0, 0, 0, 1, 1,1, 
 ],
 
-cube: [
+cubeData: [
   -1,-1,-1, 0, 0,-1, 0,1,   1,-1,-1, 0, 0,-1, 1,1,   1, 1,-1, 0, 0,-1, 1,0, 
    1, 1,-1, 0, 0,-1, 1,0,  -1, 1,-1, 0, 0,-1, 0,0,  -1,-1,-1, 0, 0,-1, 0,1, 
   -1,-1, 1, 0, 0, 1, 0,0,   1,-1, 1, 0, 0, 1, 1,0,   1, 1, 1, 0, 0, 1, 1,1, 
@@ -37,9 +37,17 @@ parametric: (f,nu,nv,other) => {
    return V.flat();
 },
 
-sphere: (nu,nv) => Shape.parametric((u,v) => {
-   let theta = 2 * Math.PI * u;
-   let phi = Math.PI * (v - 1/2);
+sphereData: (nu,nv) => Shape.parametric((u,v,other) => {
+   let tLo = 0, tHi = 2 * Math.PI;
+   let pLo = -Math.PI/2, pHi = Math.PI/2;
+   if (other) {
+      tLo = other[0] ?? tLo;
+      tHi = other[1] ?? tHi;
+      pLo = other[2] ?? pLo;
+      pHi = other[3] ?? pHi;
+   }
+   let theta = tLo + u * (tHi - tLo);
+   let phi   = pLo + v * (pHi - pLo);
    let cu = Math.cos(theta);
    let su = Math.sin(theta);
    let cv = Math.cos(phi);
@@ -48,7 +56,7 @@ sphere: (nu,nv) => Shape.parametric((u,v) => {
    return [x,y,z, x,y,z];
 },nu,nv),
 
-torus: (nu,nv,r) => Shape.parametric((u,v,r) => {
+torusData: (nu,nv,r) => Shape.parametric((u,v,r) => {
    let theta = 2 * Math.PI * u;
    let phi   = 2 * Math.PI * v;
    let cu = Math.cos(theta);
@@ -59,8 +67,13 @@ torus: (nu,nv,r) => Shape.parametric((u,v,r) => {
    return [x,y,z, cu*cv,su*cv,sv];
 },nu,nv,r),
 
-tube: n => Shape.parametric((u,v) => {
-   let theta = 2 * Math.PI * u;
+tubeData: n => Shape.parametric((u,v,other) => {
+   let tLo = 0, tHi = 2 * Math.PI;
+   if (other) {
+      tLo = other[0] ?? tLo;
+      tHi = other[1] ?? tHi;
+   }
+   let theta = tLo + u * (tHi - tLo);
    let c = Math.cos(theta);
    let s = Math.sin(theta);
    return [c,s,2*v-1, c,s,0];
@@ -68,36 +81,36 @@ tube: n => Shape.parametric((u,v) => {
 
 squareMesh: () => {
    return {
-      triangle_strip: false,
-      data: new Float32Array(Shape.square)
+      triangle_strip: true,
+      data: new Float32Array(Shape.squareData)
    };
 },
 
 cubeMesh: () => {
    return {
       triangle_strip: false,
-      data: new Float32Array(Shape.cube)
+      data: new Float32Array(Shape.cubeData)
    };
 },
 
 sphereMesh: (nu, nv) => {
    return {
       triangle_strip: true,
-      data: new Float32Array(Shape.sphere(nu,nv))
+      data: new Float32Array(Shape.sphereData(nu,nv))
    };
 },
 
 torusMesh: (nu, nv, r) => {
    return {
       triangle_strip: true,
-      data: new Float32Array(Shape.torus(nu,nv,r))
+      data: new Float32Array(Shape.torusData(nu,nv,r))
    };
 },
 
 tubeMesh: n => {
    return {
       triangle_strip: true,
-      data: new Float32Array(Shape.tube(n))
+      data: new Float32Array(Shape.tubeData(n))
    };
 },
 
