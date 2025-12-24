@@ -19,6 +19,12 @@ let textureShader = `
    case 14: T = texture(uSampler[14], vUV); break;
    case 15: T = texture(uSampler[15], vUV); break;
    }
+
+   // Special case if texture is ascii characters.
+
+   if (uTexture == 15 && min(T.r,min(T.g,T.b)) > .9)
+      discard;
+
    fragColor = vec4(c * T.rgb, T.a);
 `;
 

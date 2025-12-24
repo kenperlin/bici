@@ -315,6 +315,7 @@ let initSlides = () => {
    for (let n = 0 ; n < slideData.length ; n++) {
 
       let file = slideData[n];
+      console.log(n, file);
 
       if (file.indexOf('URL') == 0) {
          let info = file.split(' ');
@@ -325,6 +326,7 @@ let initSlides = () => {
       if (file.indexOf('SRC') == 0) {
          let info = file.split(' ');
          loadScript('projects/' + project + '/' + info[1]);
+	 console.log('loading script', 'projects/' + project + '/' + info[1]);
          continue;
       }
 
@@ -387,6 +389,15 @@ let initSlides = () => {
    }
 }
 
+let startNewScene = () => {
+   scene = new Scene();
+   if (scene.vertexShader == undefined)
+      scene.vertexShader = Shader.defaultVertexShader;
+   if (scene.fragmentShader == undefined)
+      scene.fragmentShader = Shader.shinyFragmentShader;
+   gl_start(canvas3D, scene);
+}
+
 let setScene = id => {
    if (!project) {
       console.log('No project loaded yet, skipping setScene');
@@ -396,7 +407,7 @@ let setScene = id => {
    let url = 'projects/' + project + '/scenes/scene' + id + '.js';
    loadScript(url, () => {
       autodraw = true;
-      gl_start(canvas3D, scene = new Scene());
+      startNewScene();
       getFile(url, str => codeArea.getElement().value = str);
    });
 }
@@ -662,7 +673,7 @@ animate = () => {
          const code = codeArea.getElement().value.replace(/\u200B/g, '');
          eval(code);
          autodraw = true;
-         gl_start(canvas3D, scene = new Scene());
+	 startNewScene();
       } catch (e) {
          console.error('Scene code error:', e);
       }

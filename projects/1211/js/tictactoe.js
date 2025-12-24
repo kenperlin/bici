@@ -2,8 +2,6 @@ function TicTacToe(scene, board, turn) {
    let T = Shape.torusMesh(30,15,.3);
    let C = Shape.cubeMesh();
    let isMyTurn = true;
-   //addTexture(0, 'brick.png');
-   //addTexture(1, 'polygon.png');
    scene.vertexShader   = Shader.defaultVertexShader;
    scene.fragmentShader = Shader.shinyFragmentShader;
    scene.update = () => {
@@ -15,17 +13,13 @@ function TicTacToe(scene, board, turn) {
       for (let n = 0 ; n < 9 ; n++) {
          let x = .6 * ((n % 3 ) - 1);
          let y = .6 * ((n/3>>0) - 1);
-	 if (board[n] == 1) {
-            //setUniform('1i', 'uTexture', 0);
+	 if (board[n] == 1)
 	    for (let s = -1 ; s <= 1 ; s += 2)
 	       drawObj(C, mxm(move(x,y,0),
 	                  mxm(turnZ(s * Math.PI/4),
 	                      scale(.3,.04,.04))));
-         }
-	 if (board[n] == 2) {
-            //setUniform('1i', 'uTexture', 1);
+	 if (board[n] == 2)
 	    drawObj(T, mxm(move(x,y,0),scale(.2)));
-         }
       }
       setUniform('1i', 'uTexture', -1);
    }

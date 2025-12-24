@@ -38,7 +38,7 @@ let addTexture = (index, src) => {
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
       gl.generateMipmap(gl.TEXTURE_2D);
    }
-   image.src = 'projects/' + project + '/images/' + src;
+   image.src = src.indexOf('/') >= 0 ? src : 'projects/' + project + '/images/' + src;
 }
 function gl_start(canvas, scene) {
    setTimeout(function() {
@@ -75,6 +75,7 @@ function gl_start(canvas, scene) {
 	 setUniform('1iv', 'uSampler', [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]);
       }
       canvas.setShaders(scene.vertexShader, scene.fragmentShader);
+      addTexture(15, 'core/images/fixed-width-font.png');
       if (intervalID)
          clearInterval(intervalID);
       intervalID = setInterval(function() {
@@ -107,13 +108,15 @@ let drawMesh = mesh => {
                  0, mesh.data.length / vertexSize);
 }
 
-let drawObj = (mesh, matrix, color) => {
+let drawObj = (mesh, matrix, color, textureID) => {
    autodraw = false;
    let m = mxm(perspective(0,0,-.5),matrix);
    setUniform('Matrix4fv', 'uMF', false, m);
    setUniform('Matrix4fv', 'uMI', false, inverse(m));
    setUniform('3fv', 'uColor', color ?? [1,1,1]);
+   setUniform('1i', 'uTexture', textureID !== undefined ? textureID : -1);
    drawMesh(mesh);
+   setUniform('1i', 'uTexture', -1);
 }
 
 let animate = () => {}
