@@ -71,7 +71,8 @@ function gl_start(canvas, scene) {
          gl.enable(gl.DEPTH_TEST);
          gl.depthFunc(gl.LEQUAL);
 	 vertexMap(['aPos',3,'aNor',3,'aUV',2]);
-	 setUniform('1i', 'uSampler', 0);
+         setUniform('1i', 'uTexture', -1);
+	 setUniform('1iv', 'uSampler', [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]);
       }
       canvas.setShaders(scene.vertexShader, scene.fragmentShader);
       if (intervalID)

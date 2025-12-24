@@ -1,11 +1,25 @@
 
 let textureShader = `
-   vec4 T;
-   if (uTextured) {
-      T = texture(uSampler, vUV);
-      c *= T.rgb;
+   vec4 T = vec4(1.);
+   switch (uTexture) {
+   case  0: T = texture(uSampler[ 0], vUV); break;
+   case  1: T = texture(uSampler[ 1], vUV); break;
+   case  2: T = texture(uSampler[ 2], vUV); break;
+   case  3: T = texture(uSampler[ 3], vUV); break;
+   case  4: T = texture(uSampler[ 4], vUV); break;
+   case  5: T = texture(uSampler[ 5], vUV); break;
+   case  6: T = texture(uSampler[ 6], vUV); break;
+   case  7: T = texture(uSampler[ 7], vUV); break;
+   case  8: T = texture(uSampler[ 8], vUV); break;
+   case  9: T = texture(uSampler[ 9], vUV); break;
+   case 10: T = texture(uSampler[10], vUV); break;
+   case 11: T = texture(uSampler[11], vUV); break;
+   case 12: T = texture(uSampler[12], vUV); break;
+   case 13: T = texture(uSampler[13], vUV); break;
+   case 14: T = texture(uSampler[14], vUV); break;
+   case 15: T = texture(uSampler[15], vUV); break;
    }
-   fragColor = vec4(c, uTextured ? T.a : 1.);
+   fragColor = vec4(c * T.rgb, T.a);
 `;
 
 let Shader = {
@@ -35,8 +49,8 @@ in  vec3 vPos, vNor;
 in  vec2 vUV;
 out vec4 fragColor;
 uniform vec3 uColor;
-uniform bool uTextured;
-uniform sampler2D uSampler;
+uniform int uTexture;
+uniform sampler2D uSampler[16];
 
 void main() {
    vec3 nor = normalize(vNor);
@@ -52,8 +66,8 @@ in  vec3 vPos, vNor;
 in  vec2 vUV;
 out vec4 fragColor;
 uniform vec3 uColor;
-uniform bool uTextured;
-uniform sampler2D uSampler;
+uniform int uTexture;
+uniform sampler2D uSampler[16];
 
 void main() {
    vec3 L = vec3(.577), N = normalize(vNor);
