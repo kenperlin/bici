@@ -17,14 +17,14 @@ vec3 phong(vec3 N, vec3 L, vec3 W, vec3 diffuse, vec4 specular) {
 `;
 let isImplicit = false;
 let intervalID, autodraw = true;
-let vertexSize = 6;
+let vertexSize = 8;
 let mesh = {
   triangle_strip: true,
   data: new Float32Array([
-     -1, 1,0, 0,0,1,
-      1, 1,0, 0,0,1,
-     -1,-1,0, 0,0,1,
-      1,-1,0, 0,0,1,
+     -1, 1,0, 0,0,1, 0,0,
+      1, 1,0, 0,0,1, 0,0,
+     -1,-1,0, 0,0,1, 0,0,
+      1,-1,0, 0,0,1, 0,0,
    ])
 };
 let addTexture = (index, src) => {
@@ -70,7 +70,8 @@ function gl_start(canvas, scene) {
          gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
          gl.enable(gl.DEPTH_TEST);
          gl.depthFunc(gl.LEQUAL);
-	 vertexMap(['aPos',3,'aNor',3]);
+	 vertexMap(['aPos',3,'aNor',3,'aUV',2]);
+	 setUniform('1i', 'uSampler', 0);
       }
       canvas.setShaders(scene.vertexShader, scene.fragmentShader);
       if (intervalID)

@@ -2,14 +2,17 @@ function TicTacToe(scene, board, turn) {
    let T = Shape.torusMesh(30,15,.3);
    let C = Shape.cubeMesh();
    let isMyTurn = true;
+   addTexture(0, 'brick.png');
    scene.vertexShader   = Shader.defaultVertexShader;
    scene.fragmentShader = Shader.shinyFragmentShader;
    scene.update = () => {
+      setUniform('1i', 'uTextured', 0);
       isMyTurn = ! isMultiPlayer() || (turn==1) == isFirstPlayer();
       drawObj(C, mxm(move(0, .3,0),scale(1,.02,.02)));
       drawObj(C, mxm(move(0,-.3,0),scale(1,.02,.02)));
       drawObj(C, mxm(move( .3,0,0),scale(.02,1,.02)));
       drawObj(C, mxm(move(-.3,0,0),scale(.02,1,.02)));
+      //setUniform('1i', 'uTextured', 1);
       for (let n = 0 ; n < 9 ; n++) {
          let x = .6 * ((n % 3 ) - 1);
          let y = .6 * ((n/3>>0) - 1);
