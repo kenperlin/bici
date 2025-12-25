@@ -114,5 +114,19 @@ tubeMesh: n => {
    };
 },
 
+charMesh: ch => {
+   let mesh = Shape.squareMesh();
+   mesh.textureID = 15;
+   let n = ch.charCodeAt(0) - 32;
+   let row = 7 - (n / 12 >> 0);
+   let col =      n % 12;
+   for (let i = 0 ; i < mesh.data.length ; i += vertexSize) {
+      mesh.data[i] *= .6;
+      mesh.data[i + 6] = (col + mesh.data[i + 6]) / 12;
+      mesh.data[i + 7] = (row + mesh.data[i + 7]) /  8;
+   }
+   return mesh;
+},
+
 };
 
