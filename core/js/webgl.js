@@ -109,14 +109,19 @@ let drawMesh = mesh => {
 }
 
 let drawObj = (mesh, matrix, color) => {
-   autodraw = false;
-   let m = mxm(perspective(0,0,-.5),matrix);
-   setUniform('Matrix4fv', 'uMF', false, m);
-   setUniform('Matrix4fv', 'uMI', false, inverse(m));
-   setUniform('3fv', 'uColor', color ?? [1,1,1]);
-   setUniform('1i', 'uTexture', mesh.textureID ?? -1);
-   drawMesh(mesh);
-   setUniform('1i', 'uTexture', -1);
+   if (Array.isArray(mesh))
+      for (let n = 0 ; n < mesh.length ; n++)
+         drawObj(mesh[n].mesh, mxm(matrix, mesh[n].matrix), mesh[n].color);
+   else {
+      autodraw = false;
+      let m = mxm(perspective(0,0,-.5),matrix);
+      setUniform('Matrix4fv', 'uMF', false, m);
+      setUniform('Matrix4fv', 'uMI', false, inverse(m));
+      setUniform('3fv', 'uColor', color ?? mesh.color ?? [1,1,1]);
+      setUniform('1i', 'uTexture', mesh.textureID ?? -1);
+      drawMesh(mesh);
+      setUniform('1i', 'uTexture', -1);
+   }
 }
 
 let animate = () => {}
