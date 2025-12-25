@@ -461,7 +461,9 @@ window.showProjectSelector = () => {
 
 let isLightPen = false, isHelp = false;
 
-codeArea.callback = () => isReloadScene = true;
+codeArea.callback = () => {
+   window.isReloadScene = true;
+};
 
 let w = canvas2D.width = screen.width;
 let h = canvas2D.height = screen.height;
@@ -654,7 +656,8 @@ D.ctx.lineWidth = 3;
 
 let startTime = Date.now() / 1000;
 let timePrev = startTime;
-let isReloadScene = false, reloadTime = 0;
+window.isReloadScene = false;
+let reloadTime = 0;
 
 animate = () => {
    // Only init slides if a project is loaded
@@ -666,19 +669,26 @@ animate = () => {
    let time = Date.now() / 1000;
    let deltaTime = time - timePrev;
    timePrev = time;
-
-   if (isReloadScene && time - reloadTime > .1) {
+   
+   if (window.isReloadScene && time - reloadTime > .1) {
       try {
          // Remove zero-width space markers (\u200B) added by Yjs sync before eval
          const code = codeArea.getElement().value.replace(/\u200B/g, '');
-         eval(code);
+         // Use window.eval to ensure Scene is defined in global scope
+         window.eval(code);
          autodraw = true;
 	 startNewScene();
+         
+         // Also clean up markers from the textarea to prevent accumulation
+         const textarea = codeArea.getElement();
+         if (textarea.value.includes('\u200B')) {
+            textarea.value = textarea.value.replace(/\u200B/g, '');
+         }
       } catch (e) {
          console.error('Scene code error:', e);
       }
       reloadTime = time;
-      isReloadScene = false;
+      window.isReloadScene = false;
    }
 
    if (time - startTime > 1 && ! fqParsed) {
