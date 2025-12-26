@@ -75,7 +75,8 @@ function gl_start(canvas, scene) {
 	 setUniform('1iv', 'uSampler', [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]);
       }
       canvas.setShaders(scene.vertexShader, scene.fragmentShader);
-      addTexture(15, 'core/images/fixed-width-font.png');
+      //addTexture(15, 'core/images/fixed-width-font.png');
+      addTexture(15, 'core/images/font.png');
       if (intervalID)
          clearInterval(intervalID);
       intervalID = setInterval(function() {
@@ -111,10 +112,10 @@ let drawMesh = mesh => {
 let drawObj = (mesh, matrix, color) => {
    if (Array.isArray(mesh))
       for (let n = 0 ; n < mesh.length ; n++)
-         drawObj(mesh[n].mesh, mxm(matrix, mesh[n].matrix), mesh[n].color);
+         drawObj(mesh[n].mesh, mxm(matrix, mesh[n].matrix ?? identity()), mesh[n].color);
    else {
       autodraw = false;
-      let m = mxm(perspective(0,0,-.5),matrix);
+      let m = mxm(perspective(0,0,-.5), matrix);
       setUniform('Matrix4fv', 'uMF', false, m);
       setUniform('Matrix4fv', 'uMI', false, inverse(m));
       setUniform('3fv', 'uColor', color ?? mesh.color ?? [1,1,1]);

@@ -7,16 +7,23 @@ function Scene() {
       codeArea.setVar('y', clip(y+.5));
    }
 
-   let ch = 'ABCDEFGHI', tile = [];
-   for (let n = 0 ; n < 9 ; n++)
+   let ch = 'ABCDEFGHIJKLMNOP', tile = [];
+   for (let n = 0 ; n < ch.length ; n++)
       tile.push(createTile(ch.substring(n,n+1)));
 
-   this.update = () => {
-      let t = Date.now() / 1000;
+   let t0 = Date.now() / 1000;;
 
-      for (let i = 0 ; i < 3 ; i++)
-      for (let j = 0 ; j < 3 ; j++)
-         drawObj(tile[i+3*j], mxm(move(x-.5+.5*(i-1),y-.5+.5*(j-1),0), turnY(t)));
+   this.update = () => {
+      let t = (Date.now() / 1000 - t0) / 2;
+      let s = .5 + .5 * Math.sin(2 * Math.PI * t);
+      s = s * s * (3 - s - s);
+      t += .11 * (2 * s - 1) + .5;
+
+      for (let i = 0 ; i < 4 ; i++)
+      for (let j = 0 ; j < 4 ; j++)
+         drawObj(tile[i+3*j], mxm(move(x + (i-2.5)*.45,
+	                               y + (j-2.5)*.45 - .1, 0),
+				  turnY(Math.PI*t+Math.PI*(i+j&1))));
    }
 }
 
