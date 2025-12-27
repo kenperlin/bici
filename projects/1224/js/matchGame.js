@@ -10,8 +10,12 @@ function MatchGame(scene,S,A,X,seq) {
    scene.onUp = (x,y) => {
       for (let n = 0 ; n < 16 ; n++)
          if ( Math.abs(x - tx(n)) < .2 &&
-              Math.abs(y - ty(n)) < .2 && ! X[n])
+              Math.abs(y - ty(n)) < .2 && ! X[n]) {
             S[n] = 1 - S[n];
+            for (let i = 0 ; i < 16 ; i++)
+	       if (i != n && ! X[i] && ch.charAt(i) != ch.charAt(n))
+	          S[i] = 0;
+         }
       sync();
    }
    let ch = 'ABCDEFGHEDCGHBFA', tile = [];
@@ -30,25 +34,17 @@ function MatchGame(scene,S,A,X,seq) {
 	 let a = A[n];
          if (S[n]) {
 	    A[n] = Math.min(1, A[n] + .01);
-	    if (a < 1 && A[n] == 1) {
-	       if (seq[1] != -1)
-	          seq[0] = seq[1];
-	       seq[1] = n;
-	       if (ch.charAt(seq[0]) ==
-	           ch.charAt(seq[1])) {
-	          X[seq[0]] = 1;
-	          X[seq[1]] = 1;
-	       }
-	       sync();
-            }
+	    if (a < 1 && A[n] == 1)
+               for (let i = 0 ; i < 16 ; i++)
+	          if (i != n && S[i] && ch.charAt(i) == ch.charAt(n)) {
+	             X[i] = 1;
+	             X[n] = 1;
+		     sync();
+		     break;
+	          }
          }
-         else {
+         else
 	    A[n] = Math.max(0, A[n] - .01);
-	    if (a>0 && A[n]==0 && n==seq[1]) {
-	       seq[0] = seq[1] = -1;
-               sync();
-	    }
-         }
       }
    }
 }
