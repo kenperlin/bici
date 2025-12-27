@@ -1,10 +1,7 @@
-function MatchGame(scene,S,A,X,seq) {
+function MatchGame(scene,S,A,X) {
    let sync = () => {
       codeArea.setVar('S', S);
-      for (let n = 0 ; n < A.length ; n++)
-         A[n] = (1000 * A[n] >> 0) / 1000;
       codeArea.setVar('A', A);
-      codeArea.setVar('seq', seq);
       codeArea.setVar('X', X);
    }
    scene.onUp = (x,y) => {
@@ -24,6 +21,8 @@ function MatchGame(scene,S,A,X,seq) {
    let tx = n => ((n&3)  - .25) * .4 - .5;
    let ty = n => ((n>>2) - .25) * .4 - .6;
 
+   let round = t => (100 * t + .5 >> 0) / 100;
+
    scene.update = () => {
       for (let n = 0 ; n < 16 ; n++) {
          drawObj(tile[n],
@@ -33,7 +32,7 @@ function MatchGame(scene,S,A,X,seq) {
 		     X[n] ? [1,1,1] : null);
 	 let a = A[n];
          if (S[n]) {
-	    A[n] = Math.min(1, A[n] + .01);
+	    A[n] = Math.min(1, round(A[n] + .01));
 	    if (a < 1 && A[n] == 1)
                for (let i = 0 ; i < 16 ; i++)
 	          if (i != n && S[i] && ch.charAt(i) == ch.charAt(n)) {
@@ -44,7 +43,7 @@ function MatchGame(scene,S,A,X,seq) {
 	          }
          }
          else
-	    A[n] = Math.max(0, A[n] - .01);
+	    A[n] = Math.max(0, round(A[n] - .01));
       }
    }
 }

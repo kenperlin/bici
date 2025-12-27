@@ -2,6 +2,5 @@ function Scene() {
    let S = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
    let A = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
    let X = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
-   let seq = [-1,-1];
-   new MatchGame(this,S,A,X,seq);
+   new MatchGame(this,S,A,X);
 }
