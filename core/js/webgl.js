@@ -112,7 +112,7 @@ let drawMesh = mesh => {
 let drawObj = (mesh, matrix, color) => {
    if (Array.isArray(mesh))
       for (let n = 0 ; n < mesh.length ; n++)
-         drawObj(mesh[n].mesh, mxm(matrix, mesh[n].matrix ?? identity()), mesh[n].color);
+         drawObj(mesh[n].mesh, mxm(matrix, mesh[n].matrix ?? identity()), color ?? mesh[n].color);
    else {
       autodraw = false;
       let m = mxm(perspective(0,0,-.5), matrix);

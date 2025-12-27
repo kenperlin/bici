@@ -29,7 +29,7 @@ function TicTacToe(scene, board, turn) {
          let row = y < -.3 ? 0 : y < .3 ? 1 : 2;
          if (col >= 0 && col < 3 && row >= 0 && row < 3)
             board[col + 3 * row] = turn;
-         codeArea.setVar('board', '[' + board + ']');
+         codeArea.setVar('board', board);
          codeArea.setVar('turn', 3 - turn);
       }
    }

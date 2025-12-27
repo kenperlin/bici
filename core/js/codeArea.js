@@ -163,6 +163,8 @@ function CodeArea(x,y) {
       if (i >= 0) {
 	 if (typeof value == 'number' && ! Number.isInteger(value))
 	    value = Math.sign(value) * (1000 * Math.abs(value) + .5 >> 0) / 1000;
+	 else if (Array.isArray(value))
+	    value = '[' + value + ']';
 
          let j = i + 4 + name.length;
          let k = text.indexOf(';', j);

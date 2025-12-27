@@ -1,4 +1,5 @@
 SRC js/gameCube.js
 SRC js/createTile.js
-Test of letter cubes
+SRC js/matchGame.js
+Letter tile games
 sliders.js
