@@ -80,6 +80,16 @@ let codeArea = new CodeArea(-2000, 20);
 let chalktalk = new Chalktalk();
 let pen = new Pen();
 
+let overlayCanvas = document.createElement('canvas');
+document.body.appendChild(overlayCanvas);
+overlayCanvas.style.position = 'absolute';
+overlayCanvas.style.left = 0;
+overlayCanvas.style.top = 0;
+overlayCanvas.style.pointerEvents = 'none';
+overlayCanvas.width = screen.width;
+overlayCanvas.height = screen.height;
+let octx = overlayCanvas.getContext('2d');
+
 // Show error notification to user
 function showErrorNotification(title, message, details) {
    const notification = document.createElement('div');
@@ -716,6 +726,9 @@ animate = () => {
       }
       fqParsed = true;
    }
+
+   // Clear the overlay canvas before doing anything else for this animation frame.
+   octx.clearRect(0,0,screen.width,screen.height);
 
    let scrollPosition = window.pageYOffset;
    document.body.style.overflow = 'hidden';
