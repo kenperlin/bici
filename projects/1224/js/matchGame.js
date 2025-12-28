@@ -27,7 +27,6 @@ function MatchGame(scene,S,A,X) {
    let round = t => (100 * t + .5 >> 0) / 100;
 
    scene.update = () => {
-      console.log(A[0]);
       for (let n = 0 ; n < 16 ; n++) {
          drawObj(tile[n],
 	         mxm(move(tx(n),ty(n),0),
@@ -35,6 +34,17 @@ function MatchGame(scene,S,A,X) {
 		         scale(.9))),
 		 X[n] ? [1,1,1] : null);
          A[n] = Math.max(0, Math.min(1, round(A[n] + (S[n] ? .01 : -.01))));
+      }
+
+      let score = 0;
+      for (let n = 0 ; n < 16 ; n++)
+         score += X[n] + A[n];
+      if (score == 32) {
+         octx.font = '40px Helvetica';
+         octx.fillStyle = '#000000';
+         octx.fillText('CONGRATULATIONS,', CANVAS3D_LEFT +  50, CANVAS3D_TOP - 10 - 50);
+         octx.fillText('YOU FOUND'       , CANVAS3D_LEFT + 130, CANVAS3D_TOP - 10);
+         octx.fillText('EVERY MATCH!'    , CANVAS3D_LEFT + 100, CANVAS3D_TOP - 10 + 50);
       }
    }
 }
