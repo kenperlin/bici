@@ -157,35 +157,78 @@ function CodeArea(x,y) {
       }
    }
 
-   this.setVar = (name, value) => {
-      // In multiplayer mode, only master should sync to Yjs to prevent duplicate updates
-      // Secondary clients send their setVar calls to master via WebRTC
-      if (typeof webrtcClient !== 'undefined' && webrtcClient && !webrtcClient.isMaster()) {
-         // Send the setVar action to master
-         webrtcClient.sendAction({
-            type: 'setVar',
-            name: name,
-            value: value
-         });
-         return;
-      }
-
-      let text = codeArea.value;
+   // Internal helper to apply a single var change to the text
+   let applyVarToText = (text, name, value) => {
       let i = text.indexOf('let ' + name);
       if (i >= 0) {
-	 if (typeof value == 'number' && ! Number.isInteger(value))
-	    value = Math.sign(value) * (1000 * Math.abs(value) + .5 >> 0) / 1000;
-	 else if (Array.isArray(value))
-	    value = '[' + value + ']';
+         if (typeof value == 'number' && ! Number.isInteger(value))
+            value = Math.sign(value) * (1000 * Math.abs(value) + .5 >> 0) / 1000;
+         else if (Array.isArray(value))
+            value = '[' + value + ']';
 
          let j = i + 4 + name.length;
          let k = text.indexOf(';', j);
-         codeArea.value = text.substring(0,j) + ' = ' + value + text.substring(k);
+         return text.substring(0,j) + ' = ' + value + text.substring(k);
+      }
+      return text;
+   };
+
+   // Auto-batching for setVar calls
+   // Multiple setVar calls in the same execution frame are automatically batched
+   // This prevents the "flash" bug in multiplayer where intermediate states cause visual glitches
+   let pendingVars = {};
+   let flushScheduled = false;
+
+   let flushPendingVars = () => {
+      flushScheduled = false;
+      if (Object.keys(pendingVars).length === 0) return;
+
+      // In multiplayer mode, only master should sync to Yjs
+      // Secondary clients send batched vars to master via WebRTC
+      if (typeof webrtcClient !== 'undefined' && webrtcClient && !webrtcClient.isMaster()) {
+         webrtcClient.sendAction({
+            type: 'setVars',
+            vars: pendingVars
+         });
+         pendingVars = {};
+         return;
+      }
+
+      // Master: apply all pending var changes atomically
+      let text = codeArea.value;
+      for (let name in pendingVars) {
+         text = applyVarToText(text, name, pendingVars[name]);
+      }
+      codeArea.value = text;
+      pendingVars = {};
          
-         window.isReloading = true;
-         codeArea.dispatchEvent(new Event('input', { bubbles: true }));
+      window.isReloading = true;
+      codeArea.dispatchEvent(new Event('input', { bubbles: true }));
          
-         window.isReloadScene = true;
+      window.isReloadScene = true;
+   };
+
+   this.setVar = (name, value) => {
+      // Queue the var change - will be flushed after current synchronous code completes
+      // This automatically batches multiple setVar calls in the same frame
+      pendingVars[name] = value;
+
+      if (!flushScheduled) {
+         flushScheduled = true;
+         // Use queueMicrotask to flush after all synchronous setVar calls complete
+         queueMicrotask(flushPendingVars);
+      }
+   }
+
+   // Explicit batch set (still available for clarity, but setVar auto-batches now)
+   this.setVars = (vars) => {
+      for (let name in vars) {
+         pendingVars[name] = vars[name];
+      }
+
+      if (!flushScheduled) {
+         flushScheduled = true;
+         queueMicrotask(flushPendingVars);
       }
    }
 

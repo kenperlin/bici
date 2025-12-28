@@ -624,6 +624,14 @@ let processAction = (action, fromClientId) => {
             codeArea.setVar(action.name, action.value);
          }
          break;
+
+      case 'setVars':
+         // Secondary client sent a batched setVars action - apply all vars atomically
+         // This prevents the "flash" bug where intermediate states cause visual glitches
+         if (typeof codeArea !== 'undefined' && codeArea.setVars) {
+            codeArea.setVars(action.vars);
+         }
+         break;
    }
 };
 
