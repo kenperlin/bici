@@ -616,6 +616,14 @@ let processAction = (action, fromClientId) => {
             pen.move(action.x, action.y);
          }
          break;
+
+      case 'setVar':
+         // Secondary client sent a setVar action - master processes it and syncs to Yjs
+         // This ensures only one client (master) writes to Yjs, preventing duplicate text
+         if (typeof codeArea !== 'undefined' && codeArea.setVar) {
+            codeArea.setVar(action.name, action.value);
+         }
+         break;
    }
 };
 

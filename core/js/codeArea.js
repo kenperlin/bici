@@ -158,6 +158,18 @@ function CodeArea(x,y) {
    }
 
    this.setVar = (name, value) => {
+      // In multiplayer mode, only master should sync to Yjs to prevent duplicate updates
+      // Secondary clients send their setVar calls to master via WebRTC
+      if (typeof webrtcClient !== 'undefined' && webrtcClient && !webrtcClient.isMaster()) {
+         // Send the setVar action to master
+         webrtcClient.sendAction({
+            type: 'setVar',
+            name: name,
+            value: value
+         });
+         return;
+      }
+
       let text = codeArea.value;
       let i = text.indexOf('let ' + name);
       if (i >= 0) {
@@ -173,7 +185,7 @@ function CodeArea(x,y) {
          window.isReloading = true;
          codeArea.dispatchEvent(new Event('input', { bubbles: true }));
          
-         isReloadScene = true;
+         window.isReloadScene = true;
       }
    }
 
