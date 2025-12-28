@@ -10,6 +10,9 @@ function MatchGame(scene,S,A,X) {
               Math.abs(y - ty(n)) < .2 && ! X[n]) {
             S[n] = 1 - S[n];
             for (let i = 0 ; i < 16 ; i++)
+	       if (i != n && S[i] && ch.charAt(i) == ch.charAt(n))
+	          X[i] = X[n] = 1;
+            for (let i = 0 ; i < 16 ; i++)
 	       if (i != n && ! X[i] && ch.charAt(i) != ch.charAt(n))
 	          S[i] = 0;
          }
@@ -24,26 +27,14 @@ function MatchGame(scene,S,A,X) {
    let round = t => (100 * t + .5 >> 0) / 100;
 
    scene.update = () => {
+      console.log(A[0]);
       for (let n = 0 ; n < 16 ; n++) {
          drawObj(tile[n],
-                 mxm(move(tx(n),ty(n),0),
-                 mxm(turnY(Math.PI*ease(1-A[n])),
-		     scale(.9))),
-		     X[n] ? [1,1,1] : null);
-	 let a = A[n];
-         if (S[n]) {
-	    A[n] = Math.min(1, round(A[n] + .01));
-	    if (a < 1 && A[n] == 1)
-               for (let i = 0 ; i < 16 ; i++)
-	          if (i != n && S[i] && ch.charAt(i) == ch.charAt(n)) {
-	             X[i] = 1;
-	             X[n] = 1;
-		     sync();
-		     break;
-	          }
-         }
-         else
-	    A[n] = Math.max(0, round(A[n] - .01));
+	         mxm(move(tx(n),ty(n),0),
+                     mxm(turnY(Math.PI * ease(1 - A[n])),
+		         scale(.9))),
+		 X[n] ? [1,1,1] : null);
+         A[n] = Math.max(0, Math.min(1, round(A[n] + (S[n] ? .01 : -.01))));
       }
    }
 }
