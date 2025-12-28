@@ -389,8 +389,7 @@ let initSlides = () => {
 		     ctx.font = line.substring(i+6, j);
 		     line = line.substring(j+1);
 		  }
-                  let w = ctx.measureText(line).width;
-                  ctx.fillText(line, 250 - w/2, 210 + 60 * (n - (lines.length-1)/2));
+                  centeredText(ctx, line, 250, 210 + 60 * (n - (lines.length-1)/2));
                }
 	       ctx.restore();
             }
@@ -684,6 +683,8 @@ let startTime = Date.now() / 1000;
 let timePrev = startTime;
 window.isReloadScene = false;
 let reloadTime = 0;
+
+let centeredText = (ctx,text,x,y) => ctx.fillText(text, x-ctx.measureText(text).width/2, y);
 
 animate = () => {
    // Only init slides if a project is loaded

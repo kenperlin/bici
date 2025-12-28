@@ -21,10 +21,26 @@ function MatchGame(scene,S,A,X) {
    let ch = 'ABCDEFGHEDCGHBFA', tile = [];
    for (let n = 0 ; n < ch.length ; n++)
       tile.push(createTile(ch.substring(n,n+1)));
-   let tx = n => ((n&3)  - .25) * .4 - .5;
-   let ty = n => ((n>>2) - .25) * .4 - .6;
+   let tx = n => ((n&3)  - .25) * .4 - .50;
+   let ty = n => ((n>>2) - .25) * .4 - .65;
 
    let round = t => (100 * t + .5 >> 0) / 100;
+
+   let message = text => {
+      let x = CANVAS3D_LEFT + CANVAS3D_WIDTH / 2;
+      let y = CANVAS3D_TOP - 20;
+
+      octx.fillStyle = '#ffffff60';
+      octx.beginPath();
+      octx.roundRect(x - 200, y - 90, 400, 180, 40);
+      octx.fill();
+
+      octx.font = '35px Helvetica';
+      octx.fillStyle = '#000000';
+      let line = text.split('\n');
+      for (let n = 0 ; n < line.length ; n++)
+         centeredText(octx, line[n], x, y - 35 + 50 * n);
+   }
 
    scene.update = () => {
       for (let n = 0 ; n < 16 ; n++) {
@@ -39,13 +55,10 @@ function MatchGame(scene,S,A,X) {
       let score = 0;
       for (let n = 0 ; n < 16 ; n++)
          score += X[n] + A[n];
-      if (score == 32) {
-         octx.font = '40px Helvetica';
-         octx.fillStyle = '#000000';
-         octx.fillText('CONGRATULATIONS,', CANVAS3D_LEFT +  50, CANVAS3D_TOP - 10 - 50);
-         octx.fillText('YOU FOUND'       , CANVAS3D_LEFT + 130, CANVAS3D_TOP - 10);
-         octx.fillText('EVERY MATCH!'    , CANVAS3D_LEFT + 100, CANVAS3D_TOP - 10 + 50);
-      }
+      if (score == 0)
+         message('TRY TO FIND\nALL MATCHING PAIRS\nOF TILES.');
+      if (score == 32)
+         message('CONGRATULATIONS\nYOU FOUND\nEVERY MATCH!');
    }
 }
 
