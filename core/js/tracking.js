@@ -69,7 +69,7 @@ let trackingUpdate = () => {
          tracking_blinkTime = Date.now() / 1000;
    }
 
-   if (mediapipeTasks.isRunning) {
+   if (mediapipe.isRunning) {
       wasTracking = true;
 
       if (tracking_isLogging) {
@@ -82,38 +82,38 @@ let trackingUpdate = () => {
                                ',z:' + round(data[n].z) + '},\n';
             trackingInfo += '];\n';
          }
-         logTracking('left' , mediapipe_hand[0]);
-         logTracking('right', mediapipe_hand[1]);
-         logTracking('face' , mediapipe_face);
+         logTracking('left' , mediapipe.handResults[0]?.landmarks);
+         logTracking('right', mediapipe.handResults[1]?.landmarks);
+         logTracking('face' , mediapipe.faceResults);
          trackingIndex++;
       }
 
       let pointToArray = p => [ p.x, p.y, p.z ];
 
-      headMatrix = computeHeadMatrix(pointToArray(mediapipe_face[352]),
-                                     pointToArray(mediapipe_face[ 10]),
-                                     pointToArray(mediapipe_face[123]));
+      headMatrix = computeHeadMatrix(pointToArray(mediapipe.faceResults[352]),
+                                     pointToArray(mediapipe.faceResults[ 10]),
+                                     pointToArray(mediapipe.faceResults[123]));
 
       computeEyeGaze(
-         pointToArray(mediapipe_face[263]), // outer lid       // LEFT EYE
-         pointToArray(mediapipe_face[398]), // inner lid
+         pointToArray(mediapipe.faceResults[263]), // outer lid       // LEFT EYE
+         pointToArray(mediapipe.faceResults[398]), // inner lid
 
-         pointToArray(mediapipe_face[374]), // lower lid
-         pointToArray(mediapipe_face[386]), // upper lid
+         pointToArray(mediapipe.faceResults[374]), // lower lid
+         pointToArray(mediapipe.faceResults[386]), // upper lid
 
-         pointToArray(mediapipe_face[477]), // bottom of pupil
-         pointToArray(mediapipe_face[473]), // center of pupil
-         pointToArray(mediapipe_face[475]), // top of pupil
+         pointToArray(mediapipe.faceResults[477]), // bottom of pupil
+         pointToArray(mediapipe.faceResults[473]), // center of pupil
+         pointToArray(mediapipe.faceResults[475]), // top of pupil
 
-         pointToArray(mediapipe_face[173]), // outer lid       // RIGHT EYE
-         pointToArray(mediapipe_face[ 33]), // inner lid
+         pointToArray(mediapipe.faceResults[173]), // outer lid       // RIGHT EYE
+         pointToArray(mediapipe.faceResults[ 33]), // inner lid
 
-         pointToArray(mediapipe_face[144]), // lower lid
-         pointToArray(mediapipe_face[159]), // upper lid
+         pointToArray(mediapipe.faceResults[144]), // lower lid
+         pointToArray(mediapipe.faceResults[159]), // upper lid
 
-         pointToArray(mediapipe_face[472]), // bottom of pupil
-         pointToArray(mediapipe_face[468]), // center of pupil
-         pointToArray(mediapipe_face[470]), // top of pupil
+         pointToArray(mediapipe.faceResults[472]), // bottom of pupil
+         pointToArray(mediapipe.faceResults[468]), // center of pupil
+         pointToArray(mediapipe.faceResults[470]), // top of pupil
       );
       let mx = screen.width/2, my = screen.height/2;
 
@@ -221,12 +221,15 @@ let trackingUpdate = () => {
       }
 
       for (let hand = 0 ; hand < 2 ; hand++)
-         if (mediapipe_hand[hand]) {
+         if (mediapipe.handResults[hand]) {
             let r = p => Math.min(1, .1 / (.2 + p[2]));
             let FT = fingerTip[hand];
 
             for (let f = 0 ; f < 5 ; f++)
-               FT[f] = pointToArray(mediapipe_hand[hand][4 + 4 * f]);
+               FT[f] = pointToArray(mediapipe.handResults[hand].landmarks[4 + 4 * f]);
+
+            handPinch[hand].x = mx * (FT[0][0] + FT[1][0]);
+            handPinch[hand].y = my * (FT[0][1] + FT[1][1]);
 
             handPinch[hand].x = mx * (FT[0][0] + FT[1][0]);
             handPinch[hand].y = my * (FT[0][1] + FT[1][1]);

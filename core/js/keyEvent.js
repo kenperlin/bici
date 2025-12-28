@@ -143,7 +143,7 @@ window.keyUp = key => {
    case 'l' : isLightPen = ! isLightPen; break;
    case 'm' : isMove = false; break;
    case 'L' : tracking_isLarge = ! tracking_isLarge; break;
-   case 'M' : mediapipeTasks.toggleRunning(); break;
+   case 'M' : mediapipe.toggleRunning(); break;
    case 'N' : tracking_isObvious = ! tracking_isObvious; break;
    case 'o' : isOpaque = ! isOpaque; break;
    case 'p' : webcam.isPen = ! webcam.isPen; break;

@@ -1,195 +1,225 @@
-let mediapipe;
-let mediapipeTasks = {};
+class Mediapipe {
+  constructor(video, canvas) {
+    if (!canvas) {
+      canvas = document.createElement("canvas");
+      canvas.id = "mediapipe-canvas";
+      canvas.style.position = "absolute";
+      canvas.style.top = "0";
+      canvas.style.left = "0";
+      canvas.style.zIndex = 1;
+      canvas.style.pointerEvents = "none"; // Allow clicks to pass through to elements below
+      canvas.width = screen.width;
+      canvas.height = screen.height;
+      document.body.appendChild(canvas);
+    }
 
-async function loadMediapipe() {
-  mediapipe = await import(
-    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0"
-  );
-}
+    this.canvas = canvas;
+    this.canvasCtx = canvas.getContext("2d");
+    this.video = video;
 
-window.mediapipe_hand = [];
-window.mediapipe_face = [];
+    this.isReady = false;
+    this.isRunning = false;
+    this.debugMode = true;
 
-const mediapipeCanvas = document.createElement("canvas");
-mediapipeCanvas.id = "mediapipe-canvas";
-mediapipeCanvas.style.position = "absolute";
-mediapipeCanvas.style.top = "0";
-mediapipeCanvas.style.left = "0";
-mediapipeCanvas.style.zIndex = 1;
-mediapipeCanvas.style.pointerEvents = "none"; // Allow clicks to pass through to elements below
-mediapipeCanvas.width = screen.width;
-mediapipeCanvas.height = screen.height;
-const canvasCtx = mediapipeCanvas.getContext("2d");
+    this.handLandmarker = null;
+    this.faceLandmarker = null;
+    this.tasks = null;
+    this.drawUtils = null;
+    this._mediapipeTasks = null;
 
-document.body.appendChild(mediapipeCanvas);
+    this.handResults = [];
+    this.faceResults = [];
 
-loadMediapipe()
-  .then(() => {
-    mediapipeTasks.drawUtils = new mediapipe.DrawingUtils(canvasCtx);
+    this.init()
+      .then(() => {
+        const startPredictionLoop = setInterval(() => {
+          if (
+            this.video.srcObject && // userMedia is loaded
+            this.video.readyState >= 2 // video has data
+          ) {
+            this.isReady = true;
+            if (this.isRunning) this.predictWebcam();
+            clearInterval(startPredictionLoop);
+          }
+        }, 100);
+      })
+      .catch((e) => {
+        console.error("Error importing mediapipe: " + e);
+      });
+  }
 
-    const createHandLandmarker = async () => {
-      const vision = await mediapipe.FilesetResolver.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+  async init() {
+    this._mediapipeTasks = await import(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0"
+    );
+
+    this.drawUtils = new this._mediapipeTasks.DrawingUtils(this.canvasCtx);
+
+    const vision = await this._mediapipeTasks.FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+    );
+
+    this.handLandmarker =
+      await this._mediapipeTasks.HandLandmarker.createFromOptions(vision, {
+        baseOptions: {
+          modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`,
+          delegate: "GPU"
+        },
+        runningMode: "VIDEO",
+        numHands: 2
+      });
+    this.faceLandmarker =
+      await this._mediapipeTasks.FaceLandmarker.createFromOptions(vision, {
+        baseOptions: {
+          modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task`,
+          delegate: "GPU"
+        },
+        outputFaceBlendshapes: true,
+        runningMode: "VIDEO",
+        numFaces: 1
+      });
+  }
+
+  predict() {
+    if (this.video.lastVideoTime !== this.video.currentTime) {
+      this.video.lastVideoTime = this.video.currentTime;
+
+      let handResults = this.handLandmarker.detectForVideo(
+        this.video,
+        performance.now()
+      );
+      let faceResults = this.faceLandmarker.detectForVideo(
+        webcam,
+        performance.now()
       );
 
-      mediapipeTasks.handLandmarker = await mediapipe.HandLandmarker.createFromOptions(
-        vision,
-        {
-          baseOptions: {
-            modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`,
-            delegate: "GPU"
-          },
-          runningMode: "VIDEO",
-          numHands: 2
-        }
-      );
-      mediapipeTasks.faceLandmarker = await mediapipe.FaceLandmarker.createFromOptions(
-        vision,
-        {
-          baseOptions: {
-            modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task`,
-            delegate: "GPU"
-          },
-          outputFaceBlendshapes: true,
-          runningMode: "VIDEO",
-          numFaces: 1
-        }
-      );
-    };
-    createHandLandmarker();
+      this.processResults(handResults, faceResults);
+    }
 
-    const startPredictionLoop = setInterval(() => {
-      if (
-        webcam.srcObject && // userMedia is loaded
-        mediapipeTasks.handLandmarker && // hand landmarker is loaded
-        mediapipeTasks.faceLandmarker && // face landmarker is loaded
-        videoSrc.readyState >= 2 // video has data
-      ) {
-        mediapipeTasks.isReady = true;
-        if(mediapipeTasks.isRunning) mediapipeTasks.predictWebcam();
-        clearInterval(startPredictionLoop);
-      }
-    }, 100);
-  })
-  .catch((e) => {
-    console.log("Error importing mediapipe");
-    console.log(e);
-  });
+    if (this.debugMode) {
+      this.drawDebug();
+    }
 
-mediapipeTasks.predictWebcam = () => {
-  canvasCtx.save();
-  canvasCtx.clearRect(0, 0, mediapipeCanvas.width, mediapipeCanvas.height);
-  
-  let handResults = mediapipeTasks.handLandmarker.detectForVideo(webcam, performance.now());
-  if (handResults.landmarks) {
-    for (let i = 0; i < handResults.landmarks.length; i++) {
-      let landmarks = handResults.landmarks[i];
-      landmarks = remapLandmarks(landmarks)
+    if (this.isRunning) {
+      window.requestAnimationFrame(this.predict.bind(this));
+    }
+  }
 
-      mediapipe_hand[i] = [];
-      for (let j = 0 ; j < landmarks.length ; j++) {
-         mediapipe_hand[i][j] = {};
-         for (let axis in landmarks[j])
-            mediapipe_hand[i][j][axis] = landmarks[j][axis];
-      }
-/*
-      mediapipeTasks.drawUtils.drawConnectors(
-        landmarks,
-        mediapipe.HandLandmarker.HAND_CONNECTIONS,
+  toggleRunning() {
+    if (!this.isReady) {
+      console.log("Mediapipe is not ready yet, please try again.");
+      return;
+    }
+
+    if (this.isRunning) {
+      this.canvas.hidden = true;
+      this.isRunning = false;
+    } else {
+      this.canvas.hidden = false;
+      this.isRunning = true;
+      this.predict();
+    }
+  }
+
+  drawDebug() {
+    this.canvasCtx.save();
+    this.canvasCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+    for (const hand of this.handResults) {
+      this.drawUtils.drawConnectors(
+        hand.landmarks,
+        this._mediapipeTasks.HandLandmarker.HAND_CONNECTIONS,
         {
           color: "#00FF00",
-          lineWidth: 5
+          lineWidth: 2
         }
       );
-*/
-      const selected = new Set([4, 8, 12]);
-      scene.penRadius = getTotalDist(landmarks[4], landmarks[8], landmarks[12]);
-      scene.penPos = getAveragePos(landmarks[4], landmarks[8], landmarks[12]);
-/*
-      for (let j = 0; j < landmarks.length; j++) {
-        const landmark = landmarks[j];
-        const dot_color =
-          (scene.penRadius < 0.01 || scene.penRadius > 0.5) && selected.has(j)
-            ? "#00ffccff"
-            : "#FF0000";
-
-        mediapipeTasks.drawUtils.drawLandmarks([landmark], {
-          color: dot_color,
-          lineWidth: 2
-        });
-      }
-*/
+      this.drawUtils.drawLandmarks(hand.landmarks, {
+        color: "#00FF00",
+        lineWidth: 2
+      });
     }
 
-  }
-
-  let faceResults = mediapipeTasks.faceLandmarker.detectForVideo(webcam, performance.now());
-  if (faceResults.faceLandmarks) {
-    for (let landmarks of faceResults.faceLandmarks) {
-      landmarks = remapLandmarks(landmarks)
-
-      for (let i = 0 ; i < landmarks.length ; i++) {
-         mediapipe_face[i] = {};
-         for (let axis in landmarks[i])
-            mediapipe_face[i][axis] = landmarks[i][axis];
-      }
-/*
-      mediapipeTasks.drawUtils.drawConnectors(
-        landmarks,
-        mediapipe.FaceLandmarker.FACE_LANDMARKS_TESSELATION,
+    if (this.faceResults) {
+      this.drawUtils.drawConnectors(
+        this.faceResults,
+        this._mediapipeTasks.FaceLandmarker.FACE_LANDMARKS_TESSELATION,
         { color: "#C0C0C070", lineWidth: 1 }
       );
-      mediapipeTasks.drawUtils.drawConnectors(
-        landmarks,
-        mediapipe.FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE,
+      this.drawUtils.drawConnectors(
+        this.faceResults,
+        this._mediapipeTasks.FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE,
         { color: "#FF3030" }
       );
-      mediapipeTasks.drawUtils.drawConnectors(
-        landmarks,
-        mediapipe.FaceLandmarker.FACE_LANDMARKS_LEFT_EYE,
+      this.drawUtils.drawConnectors(
+        this.faceResults,
+        this._mediapipeTasks.FaceLandmarker.FACE_LANDMARKS_LEFT_EYE,
         { color: "#FF3030" }
       );
-*/
     }
+
+    this.canvasCtx.restore();
   }
 
-  canvasCtx.restore();
+  processResults(handResults, faceResults) {
+    let transformLandmark = (lm) => ({
+      x: 1 - lm.x,
+      y: lm.y + 0.04,
+      z: lm.z
+    });
 
-  if (mediapipeTasks.isRunning === true) {
-    window.requestAnimationFrame(mediapipeTasks.predictWebcam);
+    let averageLandmarks = (lm1, lm2) => ({
+      x: (lm1.x + lm2.x) / 2,
+      y: (lm1.y + lm2.y) / 2,
+      z: (lm1.z + lm2.z) / 2
+    });
+
+    let newHands = [];
+
+    // Transform results to mirror
+    for (let i = 0; i < handResults.landmarks?.length ?? 0; i++) {
+      const handedness =
+        handResults.handednesses[i][0].displayName.toLowerCase();
+      const landmarks = handResults.landmarks[i].map(transformLandmark);
+      const worldLandmarks =
+        handResults.worldLandmarks[i].map(transformLandmark);
+      newHands.push({ landmarks, worldLandmarks, handedness });
+    }
+    // Smooth results by averaging
+    for (let i = 0; i < newHands.length; i++) {
+      let newHand = newHands[i];
+      let oldHand = this.handResults.find(
+        (hand) => hand.handedness === newHand.handedness
+      );
+      if (!oldHand) continue;
+
+      for (let j = 0; j < oldHand.landmarks.length; j++) {
+        newHands[i].landmarks[j] = averageLandmarks(
+          oldHand.landmarks[j],
+          newHand.landmarks[j]
+        );
+        newHands[i].worldLandmarks[j] = averageLandmarks(
+          oldHand.worldLandmarks[j],
+          newHand.worldLandmarks[j]
+        );
+      }
+    }
+
+    let newFace = [];
+    if (faceResults.faceLandmarks) {
+      // Transform results to mirror
+      newFace = faceResults.faceLandmarks[0].map(transformLandmark);
+
+      // Smooth results by averaging
+      let oldFace = this.faceResults;
+      for (let i = 0; i < oldFace.length; i++) {
+        newFace[i] = averageLandmarks(newFace[i], oldFace[i]);
+      }
+    }
+
+    this.faceResults = newFace;
+    this.handResults = newHands;
   }
 }
 
-mediapipeTasks.toggleRunning = () => {
-  if(!mediapipeTasks.isReady) {
-    console.log("Mediapipe is not ready yet, please try again.")
-    return;
-  }
-
-  if(mediapipeTasks.isRunning) {
-    mediapipeCanvas.hidden = true;
-    mediapipeTasks.isRunning = false;
-  } else {
-    mediapipeCanvas.hidden = false;
-    mediapipeTasks.isRunning = true;
-    mediapipeTasks.predictWebcam()
-  }
-}
-
-function remapLandmarks(landmarks) {
-  return landmarks.map((lm) => ({
-    x: 1 - lm.x,
-    y: lm.y + 0.04,
-    z: lm.z
-  }))
-}
-
-function getAveragePos(a, b, c) {
-  return { x: (a.x + b.x + c.x) / 3, y: (a.y + b.y + c.y) / 3 };
-}
-function getTotalDist(a, b, c) {
-  const ab = Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2);
-  const bc = Math.pow(b.x - c.x, 2) + Math.pow(b.y - c.y, 2);
-  const ca = Math.pow(c.x - a.x, 2) + Math.pow(c.y - a.y, 2);
-  return ab + bc + ca;
-}
+window.mediapipe = new Mediapipe(webcam);
