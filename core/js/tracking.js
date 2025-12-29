@@ -9,14 +9,16 @@ let trackingUpdate = () => {
       a[1] = -a[1];
       b[1] = -b[1];
       c[1] = -c[1];
-      let X = normalize(subtract(c,a));
-      let z = subtract(b,mix(a,c,.5));
-      let Y = normalize(cross(z,X));
-      let Z = normalize(cross(X,Y));
-      headMatrix = [ X[0],X[1],X[2],0,
-                     Y[0],Y[1],Y[2],0,
-                        Z[0],Z[1],Z[2],0,
-                     4*(b[0]-.5),4*(b[1]+.625),4*b[2],1 ];
+      let X = normalize(subtract(a,c));
+      let y = subtract(b,mix(a,c,.5));
+      let Z = normalize(cross(X,y));
+      let Y = normalize(cross(Z,X));
+      Z = normalize(add(Z,resize(Y,.3)));
+      Y = normalize(cross(Z,X));
+      return [ X[0],X[1],X[2],0,
+               Y[0],Y[1],Y[2],0,
+               Z[0],Z[1],Z[2],0,
+               4*(b[0]-.5),4*(b[1]+.625),4*b[2],1 ];
    }
 
    // GIVEN EDGES OF EYES AND PUPIL, COMPUTE EYE GAZE AND EYE OPEN
@@ -62,9 +64,9 @@ let trackingUpdate = () => {
 
       let pointToArray = p => [ p.x, p.y, p.z ];
 
-      computeHeadMatrix(pointToArray(mediapipe_face[280]),
-                        pointToArray(mediapipe_face[  4]),
-                        pointToArray(mediapipe_face[ 50]));
+      headMatrix = computeHeadMatrix(pointToArray(mediapipe_face[352]),
+                                     pointToArray(mediapipe_face[ 10]),
+                                     pointToArray(mediapipe_face[123]));
 
       computeEyeGaze(
          pointToArray(mediapipe_face[263]), // outer lid       // LEFT EYE
@@ -93,10 +95,9 @@ let trackingUpdate = () => {
          headX = mx;
          headY = my/2;
       }
-      let x = mx + 4.5 * mx * headMatrix[8];
-      let y = my - 4.5 * mx * headMatrix[9];
-      headX = .5 * headX + .5 * x;
-      headY = .5 * headY + .5 * y;
+
+      headX = mx + 4.5 * mx * headMatrix[8];
+      headY = my - 4.5 * mx * headMatrix[9];
 
       let isWithin = (px,py, x,y,w,h) => px >= x && px < x+w && py >= y && py < y+h;
 
@@ -107,7 +108,7 @@ let trackingUpdate = () => {
       let ch = textArea.rows * 21;
       if (isWithin(headX, headY, -1000,-1000,1000+cx+cw,1000+cy+ch)) {
          textArea.focus();
-	 octx.fillStyle = '#0000ff40';
+	 octx.fillStyle = '#0080ff40';
 	 octx.fillRect(cx,cy,cw,ch);
       }
       else
