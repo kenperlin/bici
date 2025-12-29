@@ -5,7 +5,7 @@ function MatchGame(scene,S,A,X) {
                 'A','B','C','D','E','F','G','H'];
    for (let k = 1 ; k < 100 ; k++)
    for (let i = 0 ; i < 16 ; i++)
-      if (noise(k+.5, i+.5, seed) > 0) {
+      if (noise(k+.5, i+.5, seed + 123.456 * sceneCounter) > 0) {
          let j = (i + k) % 16;
          let tmp  = label[i];
          label[i] = label[j];

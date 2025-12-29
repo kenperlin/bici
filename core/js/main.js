@@ -407,6 +407,8 @@ let startNewScene = () => {
    gl_start(canvas3D, scene);
 }
 
+let sceneCounter = 0;
+
 let setScene = id => {
    if (!project) {
       console.log('No project loaded yet, skipping setScene');
@@ -416,6 +418,7 @@ let setScene = id => {
    let url = 'projects/' + project + '/scenes/scene' + id + '.js';
    loadScript(url, () => {
       autodraw = true;
+      sceneCounter++;
       startNewScene();
       getFile(url, str => codeArea.getElement().value = str);
    });
@@ -464,9 +467,6 @@ window.showProjectSelector = () => {
       selector.style.display = 'flex';
    }
 }
-
-// Don't auto-load scene until project is selected
-// setScene('1');
 
 let isLightPen = false, isHelp = false;
 
