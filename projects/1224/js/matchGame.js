@@ -1,4 +1,10 @@
-function MatchGame(scene,S,A,X) {
+function MatchGame(scene,U,M) {
+
+   let A_name = '_matchGame_A_' + sceneCounter;
+   if (! window[A_name])
+      window[A_name] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+   let A = window[A_name];
+
    let seed = webrtcClient.roomId.charCodeAt(0) +
               webrtcClient.roomId.charCodeAt(1) / 128;
    let label = ['A','B','C','D','E','F','G','H',
@@ -15,18 +21,17 @@ function MatchGame(scene,S,A,X) {
    scene.onUp = (x,y) => {
       for (let n = 0 ; n < 16 ; n++)
          if ( Math.abs(x - tx(n)) < .2 &&
-              Math.abs(y - ty(n)) < .2 && ! X[n]) {
-            S[n] = 1 - S[n];
+              Math.abs(y - ty(n)) < .2 && ! M[n]) {
+            U[n] = 1 - U[n];
             for (let i = 0 ; i < 16 ; i++)
-	       if (i != n && S[i] && label[i] == label[n])
-	          X[i] = X[n] = 1;
+	       if (i != n && U[i] && label[i] == label[n])
+	          M[i] = M[n] = 1;
             for (let i = 0 ; i < 16 ; i++)
-	       if (i != n && ! X[i] && label[i] != label[n])
-	          S[i] = 0;
+	       if (i != n && ! M[i] && label[i] != label[n])
+	          U[i] = 0;
          }
-      codeArea.setVar('S', S);
-      codeArea.setVar('A', A);
-      codeArea.setVar('X', X);
+      codeArea.setVar('U', U);
+      codeArea.setVar('M', M);
    }
    let tile = [];
    for (let n = 0 ; n < 16 ; n++)
@@ -58,13 +63,13 @@ function MatchGame(scene,S,A,X) {
 	         mxm(move(tx(n),ty(n),0),
                      mxm(turnY(Math.PI * ease(1 - A[n])),
 		         scale(.9))),
-		 X[n] ? [1,1,1] : null);
-         A[n] = Math.max(0, Math.min(1, round(A[n] + (S[n] ? .01 : -.01))));
+		 M[n] ? [1,1,1] : null);
+         A[n] = Math.max(0, Math.min(1, round(A[n] + (U[n] ? .01 : -.01))));
       }
 
       let score = 0;
       for (let n = 0 ; n < 16 ; n++)
-         score += X[n] + A[n];
+         score += M[n] + A[n];
       if (score == 0)
          message('TRY TO FIND\nALL MATCHING PAIRS\nOF TILES.');
       if (score == 32)

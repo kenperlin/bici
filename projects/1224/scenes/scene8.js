@@ -1,6 +1,6 @@
 function Scene() {
-   let S = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
-   let A = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
-   let X = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
-   new MatchGame(this,S,A,X);
+   // U: Up facing tiles  M: Matching tiles
+   let U = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+   let M = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+   new MatchGame(this, U, M);
 }
