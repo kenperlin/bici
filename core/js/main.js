@@ -409,6 +409,17 @@ let startNewScene = () => {
 
 let sceneCounter = 0;
 
+let sceneSeed = () => webrtcClient.roomId.charCodeAt(0)
+                    + webrtcClient.roomId.charCodeAt(1) / 128
+                    + 123.456 * sceneCounter;
+
+let sceneVar = (name, initialValue) => {
+   let varName = '_sceneVar_' + name + '_' + sceneCounter;
+   if (! window[varName])
+      window[varName] = initialValue;
+   return window[varName];
+}
+
 let setScene = id => {
    if (!project) {
       console.log('No project loaded yet, skipping setScene');

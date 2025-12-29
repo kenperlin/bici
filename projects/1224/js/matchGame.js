@@ -1,22 +1,19 @@
 function MatchGame(scene,U,M) {
 
-   let A_name = '_matchGame_A_' + sceneCounter;
-   if (! window[A_name])
-      window[A_name] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
-   let A = window[A_name];
-
-   let seed = webrtcClient.roomId.charCodeAt(0) +
-              webrtcClient.roomId.charCodeAt(1) / 128;
    let label = ['A','B','C','D','E','F','G','H',
                 'A','B','C','D','E','F','G','H'];
+
+   let seed = sceneSeed();
    for (let k = 1 ; k < 100 ; k++)
    for (let i = 0 ; i < 16 ; i++)
-      if (noise(k+.5, i+.5, seed + 123.456 * sceneCounter) > 0) {
+      if (k % 16 && noise(k + .5, i + .5, seed) > 0) {
          let j = (i + k) % 16;
          let tmp  = label[i];
          label[i] = label[j];
          label[j] = tmp;
       }
+
+   let A = sceneVar('A', [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]);
 
    scene.onUp = (x,y) => {
       for (let n = 0 ; n < 16 ; n++)
