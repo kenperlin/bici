@@ -20,8 +20,11 @@ canvas3D.style.left = -2000;
 canvas3D.width = CANVAS3D_WIDTH;
 canvas3D.height = CANVAS3D_HEIGHT;
 
-let xToScene = x => 2 * (x - parseInt(canvas3D.style.left)) / canvas3D.width - 1;
-let yToScene = y => 1 - 2 * (y - parseInt(canvas3D.style.top)) / canvas3D.width;
+let canvas3D_x = () => parseInt(canvas3D.style.left);
+let canvas3D_y = () => parseInt(canvas3D.style.top );
+
+let xToScene = x => 2 * (x - canvas3D_x()) / canvas3D.width - 1;
+let yToScene = y => 1 - 2 * (y - canvas3D_y()) / canvas3D.width;
 
 let canvas3D_move = (x,y) => {
    if (scene && scene.onMove && ! canvas3D.isDown)

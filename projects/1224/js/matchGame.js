@@ -54,14 +54,21 @@ function MatchGame(scene,U,M) {
          centeredText(octx, line[n], x, y - 35 + 50 * n);
    }
 
+   let time;
+
    scene.update = () => {
+
+      let newTime = Date.now() / 1000;
+      let deltaTime = time ? newTime - time : .01;
+      time = newTime;
+
       for (let n = 0 ; n < 16 ; n++) {
          drawObj(tile[n],
 	         mxm(move(tx(n),ty(n),0),
                      mxm(turnY(Math.PI * ease(1 - A[n])),
 		         scale(.9))),
 		 M[n] ? [1,1,1] : null);
-         A[n] = Math.max(0, Math.min(1, round(A[n] + (U[n] ? .01 : -.01))));
+         A[n] = Math.max(0, Math.min(1, round(A[n] + (U[n]?1:-1) * deltaTime)));
       }
 
       let score = 0;
