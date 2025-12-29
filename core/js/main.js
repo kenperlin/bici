@@ -20,34 +20,36 @@ canvas3D.style.left = -2000;
 canvas3D.width = CANVAS3D_WIDTH;
 canvas3D.height = CANVAS3D_HEIGHT;
 
-let xToScene = event => {
-   let rect = event.srcElement.getBoundingClientRect();
-   return 2 * (event.clientX - rect.left) / rect.width - 1;
-}
-let yToScene = event => {
-   let rect = event.srcElement.getBoundingClientRect();
-   return 1 - 2 * (event.clientY - rect.top) / rect.width;
+let xToScene = x => 2 * (x - parseInt(canvas3D.style.left)) / canvas3D.width - 1;
+let yToScene = y => 1 - 2 * (y - parseInt(canvas3D.style.top)) / canvas3D.width;
+
+let canvas3D_move = (x,y) => {
+   if (scene && scene.onMove && ! canvas3D.isDown)
+      scene.onMove(xToScene(x), yToScene(y));
+   if (scene && scene.onDrag && canvas3D.isDown)
+      scene.onDrag(xToScene(x), yToScene(y));
 }
 
-canvas3D.addEventListener('mousemove', event => {
-   if (scene && scene.onMove && ! canvas3D.isDown)
-      scene.onMove(xToScene(event), yToScene(event));
-   if (scene && scene.onDrag && canvas3D.isDown)
-      scene.onDrag(xToScene(event), yToScene(event));
-});
-canvas3D.addEventListener('mousedown', event => {
+let canvas3D_down = (x,y) => {
    canvas3D.isDown = true;
    if (scene && scene.onDown)
-      scene.onDown(xToScene(event), yToScene(event));
-});
-canvas3D.addEventListener('mouseup', event => {
+      scene.onDown(xToScene(x), yToScene(y));
+}
+
+let canvas3D_up = (x,y) => {
    canvas3D.isDown = false;
    if (scene && scene.onUp)
-      scene.onUp(xToScene(event), yToScene(event));
-});
-canvas2D.addEventListener('mouseup', event => {
+      scene.onUp(xToScene(x), yToScene(y));
+}
+
+let canvas2D_up = () => {
    canvas3D.isDown = false;
-});
+}
+
+canvas3D.addEventListener('mousemove', event => canvas3D_move(event.clientX, event.clientY));
+canvas3D.addEventListener('mousedown', event => canvas3D_down(event.clientX, event.clientY));
+canvas3D.addEventListener('mouseup'  , event => canvas3D_up(event.clientX, event.clientY));
+canvas2D.addEventListener('mouseup'  , event => canvas2D_up());
 
 let canvasDiagram = document.createElement('canvas');
 document.body.appendChild(canvasDiagram);
