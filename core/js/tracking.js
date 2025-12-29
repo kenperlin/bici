@@ -103,8 +103,13 @@ let trackingUpdate = () => {
       let textArea = codeArea.getElement();
       let cx = parseInt(textArea.style.left);
       let cy = parseInt(textArea.style.top );
-      if (isWithin(headX, headY, cx,cy,605,screen.height))
+      let cw = textArea.cols * 11.5;
+      let ch = textArea.rows * 21;
+      if (isWithin(headX, headY, -1000,-1000,1000+cx+cw,1000+cy+ch)) {
          textArea.focus();
+	 octx.fillStyle = '#0000ff40';
+	 octx.fillRect(cx,cy,cw,ch);
+      }
       else
          textArea.blur();
 
