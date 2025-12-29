@@ -168,6 +168,7 @@ let trackingUpdate = () => {
          const t = Math.min(Math.max((x - low) / (high - low), 0), 1);
          return t * t * (3 - 2 * t);
       }
+
       let codeBounds = textArea.getBoundingClientRect();
       let codeDist = isCode ? getSignedDistanceRect(headX, headY, codeBounds) : Infinity;
       let sceneBounds = canvas3D.getBoundingClientRect();
@@ -175,18 +176,24 @@ let trackingUpdate = () => {
       let slideBounds = {left: D.left, right: D.left + D.w, top: D.top, bottom: D.top + D.h};
       let slideDist = isInfo ? getSignedDistanceRect(headX, headY, slideBounds) : Infinity;
 
-      let closest = {bounds: null, dist: Infinity};
-      if(codeDist < closest.dist) {
-         closest = {bounds: codeBounds, dist: codeDist}
-      }
-      if(sceneDist < closest.dist) {
-         closest = {bounds: sceneBounds, dist: sceneDist}
-      }
-      if(slideDist < closest.dist) {
-         closest = {bounds: slideBounds, dist: slideDist}
-      }
-      if(closest.dist < Infinity && closest.bounds) {
-         let confidence = smoothstep(500, -50, closest.dist) * 0.8 + 0.2
+      let elements = [
+        { bounds: codeBounds, dist: codeDist },
+        { bounds: sceneBounds, dist: sceneDist },
+        { bounds: slideBounds, dist: slideDist }
+      ];
+      elements = elements.filter((it) => it.dist !== Infinity)
+      elements.sort((a, b) => a.dist - b.dist);
+      
+      // Softmax weights
+      let expWeights = elements.map((it) => Math.exp((elements[0].dist - it.dist) / 200));
+      let sum = expWeights.reduce((acc, cur) => acc + cur, 0);
+
+      elements.forEach((e, i) => e.weight = expWeights[i] / sum);
+
+      console.log(elements)
+      let closest = elements[0];
+      if(closest) {
+         let confidence = 0.75 * closest.weight + 0.25 * smoothstep(0, -50, closest.dist)
          ctx.save();
 
          ctx.beginPath();
@@ -206,6 +213,19 @@ let trackingUpdate = () => {
 
          ctx.restore();
       }
+
+      elements.sort((a, b) => a.bounds.left - b.bounds.left)
+      ctx.save();
+      for(let i = 0; i < elements.length; i++) {
+         ctx.fillStyle = "#FF0000"; 
+         ctx.fillRect(
+            20, 
+            800 + i * 30, 
+            elements[i].weight * 500, 
+            20
+         );
+      }
+      ctx.restore();
       
 
       if (tracking_isObvious)

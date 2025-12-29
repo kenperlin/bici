@@ -107,7 +107,7 @@ class Mediapipe {
 
   toggleRunning() {
     if (!this.isReady) {
-      console.log("Mediapipe is not ready yet, please try again.");
+      showErrorNotification("Mediapipe is not ready yet.","Please try again in a few seconds.");
       return;
     }
 
@@ -206,7 +206,7 @@ class Mediapipe {
     }
 
     let newFace = [];
-    if (faceResults.faceLandmarks) {
+    if (faceResults.faceLandmarks?.length) {
       // Transform results to mirror
       newFace = faceResults.faceLandmarks[0].map(transformLandmark);
 
