@@ -138,19 +138,75 @@ let trackingUpdate = () => {
       }
 
       let isWithin = (px,py, x,y,w,h) => px >= x && px < x+w && py >= y && py < y+h;
-
+      
       let textArea = codeArea.getElement();
-      let cx = parseInt(textArea.style.left);
-      let cy = parseInt(textArea.style.top );
-      let cw = textArea.cols * 11.5;
-      let ch = textArea.rows * 21;
-      if (codeArea.containsPoint(pen.x,pen.y) || isWithin(headX, headY, -1000,-1000,1000+cx+cw,1000+cy+ch)) {
-         textArea.focus();
-	 octx.fillStyle = '#0080ff40';
-	 octx.fillRect(cx,cy,cw,ch);
+      // let cx = parseInt(textArea.style.left);
+      // let cy = parseInt(textArea.style.top );
+      // let cw = textArea.cols * 11.5;
+      // let ch = textArea.rows * 21;
+      // if (codeArea.containsPoint(pen.x,pen.y) || isWithin(headX, headY, -1000,-1000,1000+cx+cw,1000+cy+ch)) {
+      //    textArea.focus();
+      //  octx.fillStyle = '#0080ff40';
+      //  octx.fillRect(cx,cy,cw,ch);
+      // }
+      // else
+      //    textArea.blur();
+      
+      function getSignedDistanceRect(x, y, rect) {
+         const dxOut = Math.max(rect.left - x, 0, x - rect.right);
+         const dyOut = Math.max(rect.top - y, 0, y - rect.bottom);
+         const distOut = Math.hypot(dxOut, dyOut);
+         
+         const dxIn = Math.min(x - rect.left, rect.right - x);
+         const dyIn = Math.min(y - rect.top, rect.bottom - y);
+         const distIn = Math.min(dxIn, dyIn);
+         
+         return distOut > 0 ? distOut : -distIn;
       }
-      else
-         textArea.blur();
+      
+      function smoothstep(low, high, x) {
+         const t = Math.min(Math.max((x - low) / (high - low), 0), 1);
+         return t * t * (3 - 2 * t);
+      }
+      let codeBounds = textArea.getBoundingClientRect();
+      let codeDist = isCode ? getSignedDistanceRect(headX, headY, codeBounds) : Infinity;
+      let sceneBounds = canvas3D.getBoundingClientRect();
+      let sceneDist = isScene ? getSignedDistanceRect(headX, headY, sceneBounds) : Infinity;
+      let slideBounds = {left: D.left, right: D.left + D.w, top: D.top, bottom: D.top + D.h};
+      let slideDist = isInfo ? getSignedDistanceRect(headX, headY, slideBounds) : Infinity;
+
+      let closest = {bounds: null, dist: Infinity};
+      if(codeDist < closest.dist) {
+         closest = {bounds: codeBounds, dist: codeDist}
+      }
+      if(sceneDist < closest.dist) {
+         closest = {bounds: sceneBounds, dist: sceneDist}
+      }
+      if(slideDist < closest.dist) {
+         closest = {bounds: slideBounds, dist: slideDist}
+      }
+      if(closest.dist < Infinity && closest.bounds) {
+         let confidence = smoothstep(500, -50, closest.dist) * 0.8 + 0.2
+         ctx.save();
+
+         ctx.beginPath();
+         ctx.rect(
+            closest.bounds.left, 
+            closest.bounds.top, 
+            closest.bounds.right - closest.bounds.left, 
+            closest.bounds.bottom - closest.bounds.top
+         );
+
+         ctx.shadowColor = `rgba(0, 255, 255, ${confidence})`;
+         ctx.shadowBlur = 24 * confidence;
+
+         ctx.strokeStyle = `rgba(0, 255, 255, ${confidence})`;
+         ctx.lineWidth = 2 + confidence * 4;
+         ctx.stroke();
+
+         ctx.restore();
+      }
+      
 
       if (tracking_isObvious)
          for (let eye = -1 ; eye <= 1 ; eye += 2) {
