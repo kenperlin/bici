@@ -103,7 +103,8 @@ function CodeArea(x,y) {
       for (let n = 0 ; n < lines.length ; n++)
          codeArea.cols = Math.max(codeArea.cols, lines[n].length-1);
 
-      if (this.isVisible && this.isOverlay) {
+      if (this.isVisible) {
+/*
          if (this.isVisible) {
   	    octx.lineWidth = 1;
             octx.strokeStyle = '#00000080';
@@ -119,7 +120,7 @@ function CodeArea(x,y) {
                 }
             }
          }
-
+*/
          let highlightCharAt = (x,y,color) => {
 	    let col = xToCol(x);
 	    let row = yToRow(y);
@@ -134,7 +135,7 @@ function CodeArea(x,y) {
          for (let hand = 0 ; hand < 2 ; hand++)
             if (handPinch[hand].f) {
 	       let col = xToCol(handPinch[hand].x) - 1;
-	       let row = yToRow(handPinch[hand].y) - 1;
+	       let row = yToRow(handPinch[hand].y) - .5;
   	       octx.lineWidth = 2;
   	       octx.strokeStyle = 'black';
 	       drawOverlayRect(col>>0, row>>0, 1, 1);

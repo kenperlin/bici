@@ -133,7 +133,6 @@ window.keyUp = key => {
    case 'a' : isOpeningURL = true; break;
    case 'b' : webcam.isBlur = ! webcam.isBlur; break;
    case 'c' : toggleCode(); break;
-   case 'C' : codeArea.isOverlay = ! codeArea.isOverlay; break;
    case 'd' : isDrawpad = ! isDrawpad; break;
    case 'e' : isLoadingSrcFile = true; break;
    case 'f' : webcam.isFloaters = ! webcam.isFloaters; break;

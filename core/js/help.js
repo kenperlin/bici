@@ -40,7 +40,6 @@ Hot keys
 a (+ key) Open a pre-defined URL.
 b Toggle blurred region in video.
 c Toggle editable code for 3D scene.
-C Toggle editable code overlay.
 d Toggle drawing pad.
 e (+ key) Show src code in text editor.
 f Toggle floaters behind me.

@@ -1,7 +1,7 @@
 
 let isLoggingTracking = false;
 
-let headXPoints = [];
+let headPoints = [];
 
 let trackingUpdate = () => {
 
@@ -117,10 +117,10 @@ let trackingUpdate = () => {
       headX = mx + 4.5 * mx * headMatrix[8];
       headY = my - 4.5 * mx * headMatrix[9];
 
-      headXPoints.push([headX, headY]);
-      if (headXPoints.length > 8) {
-         headXPoints.shift();
-	 let h = smoothPoints(headXPoints);
+      headPoints.push([headX, headY]);
+      if (headPoints.length > 8) {
+         headPoints.shift();
+	 let h = smoothPoints(headPoints);
 	 headX = h[0];
 	 headY = h[1];
       }
