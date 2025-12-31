@@ -14,6 +14,9 @@ let trackingUpdate = () => {
       x *= s / 10;
       y *= s / 10;
       let d = Math.sqrt(x * x + y * y);
+      if (d > 140)
+         return P[P.length-1];
+
       if (d > 70) {
          x *= 70 / d;
          y *= 70 / d;
