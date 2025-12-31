@@ -30,7 +30,7 @@ async function getFile(file, callback) {
 }
 
 // Core scripts - loaded once at startup (includes WebRTC)
-let coreFiles = `M4, loadImage, webgl, webcam, trackHead, help,
+let coreFiles = `M4, pca, loadImage, webgl, webcam, trackHead, help,
 	        midi, numberString, pen, keyEvent, matchCurves,
 	        glyphs, chalktalk, codeArea, math, shape, shader,
 	        diagram, sliders, webrtc-client, video-ui, implicit,

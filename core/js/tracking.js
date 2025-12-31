@@ -1,7 +1,25 @@
 
 let isLoggingTracking = false;
 
+let headXPoints = [];
+
 let trackingUpdate = () => {
+
+   let smoothPoints = P => {
+      let p = pca(P);
+      let x = p.principalComponents[0][0] * p.eigenvalues[0];
+      let y = p.principalComponents[0][1] * p.eigenvalues[0];
+      let s = Math.sign( (P[P.length-1][0] - P[0][0]) * x +
+                         (P[P.length-1][1] - P[0][1]) * y );
+      x *= s / 10;
+      y *= s / 10;
+      let d = Math.sqrt(x * x + y * y);
+      if (d > 70) {
+         x *= 70 / d;
+         y *= 70 / d;
+      }
+      return [ p.mean[0] + x, p.mean[1] + y ];
+   }
 
    // GIVEN THREE POINTS ON THE FACE, COMPUTE THE USER'S HEAD MATRIX
 
@@ -98,6 +116,14 @@ let trackingUpdate = () => {
 
       headX = mx + 4.5 * mx * headMatrix[8];
       headY = my - 4.5 * mx * headMatrix[9];
+
+      headXPoints.push([headX, headY]);
+      if (headXPoints.length > 8) {
+         headXPoints.shift();
+	 let h = smoothPoints(headXPoints);
+	 headX = h[0];
+	 headY = h[1];
+      }
 
       let isWithin = (px,py, x,y,w,h) => px >= x && px < x+w && py >= y && py < y+h;
 
@@ -213,7 +239,7 @@ let trackingUpdate = () => {
                else
 	          canvas3D_move(x,y);
             }
-	    else if (prevHhandPinch[hand].f == 1 && handPinch[hand].f == 0)
+	    else if (prevHandPinch[hand].f == 1 && handPinch[hand].f == 0)
 	       canvas3D_up();
 
             prevHandPinch[hand].f = handPinch[hand].f;
