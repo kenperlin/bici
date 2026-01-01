@@ -1,15 +1,21 @@
 
-let isLoggingTracking = false;
-
-let headXYs = [];
+let tracking_eyeGazeXYs = [];
+let tracking_headXYs = [];
+let tracking_isLogging = false;
+let tracking_isVerbose = false;
 
 let trackingUpdate = () => {
 
    // USE PRINCIPAL COMPONENT ANALYSIS TO DETECT AND THEN STEADY FIXATIONS
 
-   let steadyFixations = P => {
+   let steadyFixations = (P, e) => {
       let p = pca(P);
-      return p.eigenvalues[0] < 100 ? p.mean : P[P.length-1];
+      if (tracking_isVerbose) {
+         octx.fillStyle = '#0080ff';
+         octx.font = '50px Helvetica';
+         centeredText(octx, p.eigenvalues[0] >> 0, screen.width/2, 50);
+      }
+      return p.eigenvalues[0] < e ? p.mean : P[P.length-1];
    }
 
    // GIVEN THREE POINTS ON THE FACE, COMPUTE THE USER'S HEAD MATRIX
@@ -55,7 +61,7 @@ let trackingUpdate = () => {
    if (mediapipeTasks.isRunning) {
       wasTracking = true;
 
-      if (isLoggingTracking) {
+      if (tracking_isLogging) {
          let logTracking = (name, data) => {
             let round = t => (1000 * t >> 0) / 1000;
             trackingInfo += name + '[' + trackingIndex + '] = [\n';
@@ -108,12 +114,28 @@ let trackingUpdate = () => {
       headX = mx + 4.5 * mx * headMatrix[8];
       headY = my - 4.5 * mx * headMatrix[9];
 
-      headXYs.push([headX, headY]);
-      if (headXYs.length > 8) {
-         headXYs.shift();
-	 let headXY = steadyFixations(headXYs);
+      // MAINTAIN A SMALL QUEUE IN ORDER TO STEADY HEAD GAZE FIXATIONS
+
+      tracking_headXYs.push([headX, headY]);
+      if (tracking_headXYs.length > 8) {
+         tracking_headXYs.shift();
+	 let headXY = steadyFixations(tracking_headXYs, 100);
 	 headX = headXY[0];
 	 headY = headXY[1];
+      }
+
+      // MAINTAIN A SMALL QUEUE IN ORDER TO STEADY EYE GAZE FIXATIONS
+
+      let ex = 100 * eyeGazeX;
+      let ey = 100 * eyeGazeY;
+      tracking_eyeGazeXYs.push([ex, ey]);
+      if (tracking_eyeGazeXYs.length > 8) {
+         tracking_eyeGazeXYs.shift();
+	 tracking_isVerbose = true;
+	 let exy = steadyFixations(tracking_eyeGazeXYs, 10);
+	 tracking_isVerbose = false;
+	 eyeGazeX = exy[0] / 100;
+	 eyeGazeY = exy[1] / 100;
       }
 
       let isWithin = (px,py, x,y,w,h) => px >= x && px < x+w && py >= y && py < y+h;
@@ -162,6 +184,13 @@ let trackingUpdate = () => {
          octx.lineWidth = 2;
 	 let h = eyeOpen > .5 ? 40 : 10;
          octx.strokeRect(headX - 20, headY - h/2, 40, h);
+
+         if (eyeOpen >= .4) {
+            octx.fillStyle = '#00000060';
+	    let x = headX + 3500 * eyeGazeX;
+	    let y = headY + 5000 * eyeGazeY + 300;
+//          octx.fillRect(x - 10, y - 10, 20, 20);
+         }
       }
 
       for (let hand = 0 ; hand < 2 ; hand++)
@@ -237,7 +266,7 @@ let trackingUpdate = () => {
          }
    }
    else if (wasTracking) {
-      if (isLoggingTracking)
+      if (tracking_isLogging)
          codeArea.getElement().value = trackingInfo;
       wasTracking = false;
    }
