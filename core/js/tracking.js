@@ -1,27 +1,15 @@
 
 let isLoggingTracking = false;
 
-let headPoints = [];
+let headXYs = [];
 
 let trackingUpdate = () => {
 
-   let smoothPoints = P => {
-      let p = pca(P);
-      let x = p.principalComponents[0][0] * p.eigenvalues[0];
-      let y = p.principalComponents[0][1] * p.eigenvalues[0];
-      let s = Math.sign( (P[P.length-1][0] - P[0][0]) * x +
-                         (P[P.length-1][1] - P[0][1]) * y );
-      x *= s / 10;
-      y *= s / 10;
-      let d = Math.sqrt(x * x + y * y);
-      if (d > 140)
-         return P[P.length-1];
+   // USE PRINCIPAL COMPONENT ANALYSIS TO DETECT AND THEN STEADY FIXATIONS
 
-      if (d > 70) {
-         x *= 70 / d;
-         y *= 70 / d;
-      }
-      return [ p.mean[0] + x, p.mean[1] + y ];
+   let steadyFixations = P => {
+      let p = pca(P);
+      return p.eigenvalues[0] < 100 ? p.mean : P[P.length-1];
    }
 
    // GIVEN THREE POINTS ON THE FACE, COMPUTE THE USER'S HEAD MATRIX
@@ -120,12 +108,12 @@ let trackingUpdate = () => {
       headX = mx + 4.5 * mx * headMatrix[8];
       headY = my - 4.5 * mx * headMatrix[9];
 
-      headPoints.push([headX, headY]);
-      if (headPoints.length > 8) {
-         headPoints.shift();
-	 let h = smoothPoints(headPoints);
-	 headX = h[0];
-	 headY = h[1];
+      headXYs.push([headX, headY]);
+      if (headXYs.length > 8) {
+         headXYs.shift();
+	 let headXY = steadyFixations(headXYs);
+	 headX = headXY[0];
+	 headY = headXY[1];
       }
 
       let isWithin = (px,py, x,y,w,h) => px >= x && px < x+w && py >= y && py < y+h;
