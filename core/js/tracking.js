@@ -131,7 +131,7 @@ let trackingUpdate = () => {
       tracking_eyeGazeXYs.push([ex, ey]);
       if (tracking_eyeGazeXYs.length > 8) {
          tracking_eyeGazeXYs.shift();
-	 tracking_isVerbose = true;
+//	 tracking_isVerbose = true;
 	 let exy = steadyFixations(tracking_eyeGazeXYs, 10);
 	 tracking_isVerbose = false;
 	 eyeGazeX = exy[0] / 100;
@@ -181,12 +181,14 @@ let trackingUpdate = () => {
          }
       else {
          octx.strokeStyle = '#00000060';
+         octx.fillStyle = '#00000060';
          octx.lineWidth = 2;
 	 let h = eyeOpen > .5 ? 40 : 10;
          octx.strokeRect(headX - 20, headY - h/2, 40, h);
+	 if (eyeOpen < .4)
+            octx.fillRect(headX - 20, headY - h/2, 40, h);
 
          if (eyeOpen >= .4) {
-            octx.fillStyle = '#00000060';
 	    let x = headX + 3500 * eyeGazeX;
 	    let y = headY + 5000 * eyeGazeY + 300;
 //          octx.fillRect(x - 10, y - 10, 20, 20);
