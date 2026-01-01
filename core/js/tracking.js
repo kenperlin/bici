@@ -117,7 +117,7 @@ let trackingUpdate = () => {
       // MAINTAIN A SMALL QUEUE IN ORDER TO STEADY HEAD GAZE FIXATIONS
 
       tracking_headXYs.push([headX, headY]);
-      if (tracking_headXYs.length > 8) {
+      if (tracking_headXYs.length > 32) {
          tracking_headXYs.shift();
 	 let headXY = steadyFixations(tracking_headXYs, 100);
 	 headX = headXY[0];
@@ -250,19 +250,24 @@ let trackingUpdate = () => {
                }
             }
 
-            let x = handPinch[hand].x;
-            let y = handPinch[hand].y;
-            if (x >= canvas3D_x() && x < canvas3D_x() + canvas3D.width &&
-	        y >= canvas3D_y() && y < canvas3D_y() + canvas3D.height ) {
-               if (prevHandPinch[hand].f == 0 && handPinch[hand].f == 1)
-	          canvas3D_down(x,y);
-               else if (prevHandPinch[hand].f == 1 && handPinch[hand].f == 0)
-	          canvas3D_up(x,y);
-               else
-	          canvas3D_move(x,y);
+	    let pinchOnCanvas3D = (x,y) => {
+	       let isOverCanvas3D = x >= canvas3D_x() && x < canvas3D_x() + canvas3D.width &&
+	                            y >= canvas3D_y() && y < canvas3D_y() + canvas3D.height ;
+               if (isOverCanvas3D) {
+                  if (prevHandPinch[hand].f == 0 && handPinch[hand].f == 1)
+	             canvas3D_down(x,y);
+                  else if (prevHandPinch[hand].f == 1 && handPinch[hand].f == 0)
+	             canvas3D_up(x,y);
+                  else
+	             canvas3D_move(x,y);
+               }
+	       else if (prevHandPinch[hand].f == 1 && handPinch[hand].f == 0)
+	          canvas3D_up();
+               return isOverCanvas3D;
             }
-	    else if (prevHandPinch[hand].f == 1 && handPinch[hand].f == 0)
-	       canvas3D_up();
+
+	    if (! pinchOnCanvas3D(handPinch[hand].x, handPinch[hand].y))
+	       pinchOnCanvas3D(headX, headY);
 
             prevHandPinch[hand].f = handPinch[hand].f;
          }
