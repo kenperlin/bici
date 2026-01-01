@@ -1,6 +1,9 @@
 // ECLIPSE
 function Scene() {
 
+mesh = { data: new Float32Array([-1, 1,0, -1,-1,0,  1,1,0,
+                                 -1,-1,0,  1,-1,0,  1,1,0]) };
+
 this.vertexShader = `\
 #version 300 es
 in  vec3 aPos;
@@ -56,6 +59,7 @@ void main(void) {
 let startTime = Date.now()/1000;
 
 this.update = viewPoint => {
+   vertexMap(['aPos', 3]);
    let time = Date.now()/1000 - startTime;
    setUniform('1f', 'uTime', time);
    setUniform('3fv', 'uViewPoint', viewPoint);

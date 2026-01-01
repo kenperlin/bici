@@ -119,6 +119,7 @@ let drawMeshAt = (mesh, m, n) => {
 // PLACE AND RENDER THE TEAPOT
 
 this.update = () => {
+   vertexMap(['aPos', 3, 'aNor', 3]);
    let m = mxm(perspective(0,0,-.05),
            mxm(scale(.25),
            mxm(move(0,-2.4,0),

@@ -4,7 +4,7 @@ function Scene() {
 
    let createPathsMesh = (lineWidth, paths) => {
       let vertices = [];
-      let addVertex = pos => vertices.push(pos,[0,0,1]);
+      let addVertex = pos => vertices.push(pos,[0,0,1],[0,0]);
       for (let n = 0 ; n < paths.length ; n++) {
          let path = paths[n];
          for (let i = 0 ; i < path.length-1 ; i++) {
@@ -89,6 +89,7 @@ let draw = (mesh, matrix, color) => {
 }
 
 this.update = () => {
+   vertexMap(['aPos', 3, 'aNor', 3, 'aUV', 2]);
    let time = Date.now() / 1000;
    draw(mesh, mxm(move(-.25,-.7,0),
               mxm(turnY(Math.sin(time)),

@@ -106,6 +106,7 @@ void main() {
 // PLACE THE PATCH IN THE SCENE
 
 this.update = () => {
+   vertexMap(['aPos', 3, 'aNor', 3]);
    let m = mxm(perspective(0,0,-.5),
            mxm(turnY(_.theta??0),turnX(_.phi??0)));
    setUniform('Matrix4fv', 'uMF', false, m);

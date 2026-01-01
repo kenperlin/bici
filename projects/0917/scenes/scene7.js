@@ -11,6 +11,9 @@ You can also use the surface normal to add
 
 function Scene() {
 
+mesh = { data: new Float32Array([-1, 1,0, -1,-1,0,  1,1,0,
+                                 -1,-1,0,  1,-1,0,  1,1,0]) };
+
 let NS = 3;
 let NL = 3;
 
@@ -93,6 +96,7 @@ let normalize = v => {
 }
 
 this.update = viewPoint => {
+   vertexMap(['aPos', 3]);
    let time = Date.now()/1000 - startTime;
    setUniform('1f', 'uTime', time);
    setUniform('3fv', 'uViewPoint', viewPoint);

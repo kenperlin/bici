@@ -98,6 +98,7 @@ let t2 = {
 };
 
 this.update = () => {
+   vertexMap(['aPos', 3, 'aNor', 3]);
    let time = Date.now() / 1000 - startTime;
    drawMeshAt(t1, [1,0,0], mxm(turnX( time),
                            mxm(turnY( time),

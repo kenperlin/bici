@@ -90,6 +90,7 @@ let startTime = Date.now() / 1000;
 // ANIMATE ALONG THE PATH AND RENDER THE SHAPE
 
 this.update = () => {
+   vertexMap(['aPos', 3, 'aNor', 3]);
    let time = Date.now() / 1000;
    let p = evalBezier(time/2 % 1, _.BX, _.BY);
    let m = mxm(perspective(0,0,-.5),

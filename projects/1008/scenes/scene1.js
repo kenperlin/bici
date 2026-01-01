@@ -33,7 +33,9 @@ void main() {
 
 let startTime = Date.now()/1000;
 
-this.update = () => { }
+this.update = () => {
+   vertexMap(['aPos', 3, 'aNor', 3]);
+}
 
 }
 

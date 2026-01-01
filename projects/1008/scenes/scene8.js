@@ -190,6 +190,7 @@ let myBCap = {
 let myMesh = glueMeshes(glueMeshes(myTube, myTCap), myBCap);
 
 this.update = () => {
+   vertexMap(['aPos', 3, 'aNor', 3]);
    let time = Date.now() / 1000 - startTime;
    matrix.identity().turnX(time);
    matrix.scale(.4);

@@ -30,7 +30,23 @@ function Scene(){
       }
    `,
 
-   this.fragmentShader = Shader.shinyFragmentShader;
+   this.fragmentShader = `#version 300 es
+      precision highp float;
+      in  vec3 vPos, vNor;
+      out vec4 fragColor;
+      uniform vec3 uColor;
+      uniform int uTexture;
+      uniform sampler2D uSampler[16];
+
+      void main() { 
+         vec3 L = vec3(.577), N = normalize(vNor);
+         float d = dot(L,N), r = 2. * dot(L,N) * N.z - L.z;
+         vec3 c = sqrt( uColor * vec3(.1 + max(0.,d)+max(0.,-d)*.5)
+                        + pow(max(0., r),20.)
+                        + pow(max(0.,-r),20.)*.5 );
+         fragColor = vec4(c, 1.);
+      }
+   `;
 
    this.update = () => {
       let time = Date.now() / 1000;

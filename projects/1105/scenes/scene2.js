@@ -36,7 +36,21 @@ function Scene(){
       }
    `,
 
-   this.fragmentShader = Shader.defaultFragmentShader;
+   this.fragmentShader = `#version 300 es
+      precision highp float;
+      in  vec3 vPos, vNor;
+      out vec4 fragColor;
+      uniform vec3 uColor;
+      uniform int uTexture;
+      uniform sampler2D uSampler[16];
+
+      void main() {
+         vec3 nor = normalize(vNor);
+         vec3 c = sqrt(uColor * (.1 + max(0., dot(vec3( .5),nor))
+                              + max(0., dot(vec3(-.5),nor))));
+         fragColor = vec4(c, 1.);
+      }
+   `;
 
    this.update = () => {
       let time = Date.now() / 1000;

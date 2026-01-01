@@ -60,6 +60,7 @@ void main() {
 let startTime = Date.now()/1000;
 
 this.update = () => {
+   vertexMap(['aPos', 3, 'aNor', 3]);
    let time = Date.now() / 1000 - startTime;
    let mf = mxm(perspective(0,0,-.5),
             mxm(turnX(time),
