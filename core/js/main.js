@@ -769,7 +769,10 @@ animate = () => {
    if (slides.length > 0 && ! slides[slideIndex])
       for (let name in fq)
          if (fq[name].index == slideIndex)
-            slides[slideIndex] = fq[name].diagram;
+	    if (name.indexOf('.png') > 0 || name.indexOf('.jpg') > 0)
+               slides[slideIndex] = fq[name].image;
+            else
+               slides[slideIndex] = fq[name].diagram;
 
    if (isInfo && slides.length > 0 && slides[slideIndex]) {
       ctx.globalAlpha = isOpaque ? 1 : .5;
