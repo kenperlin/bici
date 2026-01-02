@@ -63,8 +63,6 @@ canvasDiagram.style.left = -2000;
 canvasDiagram.width = 500;
 canvasDiagram.height = 500;
 
-let _ = {};
-
 let colors = [ '#ff0000', '#008f00', '#0080ff', '#ff00ff', '#000000' ];
 
 let transition = (a,b,startTime) => {

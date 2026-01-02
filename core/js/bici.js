@@ -29,6 +29,9 @@ async function getFile(file, callback) {
     } catch (error) { }
 }
 
+// The global object that will contain commonly used functions.
+let _ = {};
+
 // Core scripts - loaded once at startup (includes WebRTC)
 let coreFiles = `M4, pca, loadImage, webgl, webcam, trackHead, help,
 	        midi, numberString, pen, keyEvent, matchCurves,

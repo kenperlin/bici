@@ -79,6 +79,12 @@ function CodeArea(x,y) {
       codeArea.style.left = isVisible ? 20 : -2000;
    }
 
+   this.containsPoint = (x,y) => {
+      let col = xToCol(x);
+      let row = yToRow(y);
+      return col >= 0 && col < codeArea.cols+2 && row >= 0 && row < codeArea.rows;
+   }
+
    let xToCol = x => (x - ox) / (0.60 * fontSize) + .35;
    let yToRow = y => (y - oy) / (1.15 * fontSize) + .15;
 
@@ -104,29 +110,10 @@ function CodeArea(x,y) {
          codeArea.cols = Math.max(codeArea.cols, lines[n].length-1);
 
       if (this.isVisible) {
-/*
-         if (this.isVisible) {
-  	    octx.lineWidth = 1;
-            octx.strokeStyle = '#00000080';
-            for (let n = 0 ; n < lines.length ; n++)
-	    for (let i = 0, col = 0 ; i < lines[n].length ; i++, col++) {
-	       let ch = lines[n].charAt(i);
-	       if (ch == ' ')
-	          drawOverlayRect(col, n, 1, 1);
-	       else if (ch == '\t') {
-	          let nc = 8 - col % 8;
-	          drawOverlayRect(col, n, nc, 1);
-	          col += nc - 1;
-                }
-            }
-         }
-*/
          let highlightCharAt = (x,y,color) => {
-	    let col = xToCol(x);
-	    let row = yToRow(y);
-	    if (col >= 0 && col < codeArea.cols+2 && row >= 0 && row < codeArea.rows) {
+	    if (this.containsPoint(x,y)) {
   	       octx.fillStyle = color;
-               fillOverlayRect(col>>0, row>>0, 1, 1);
+               fillOverlayRect(xToCol(x)>>0, yToRow(y)>>0, 1, 1);
             }
          }
 

@@ -1,5 +1,4 @@
 
-let tracking_eyeGazeXYs = [];
 let tracking_headXYs = [];
 let tracking_isLogging = false;
 let tracking_isVerbose = false;
@@ -8,14 +7,16 @@ let trackingUpdate = () => {
 
    // USE PRINCIPAL COMPONENT ANALYSIS TO DETECT AND THEN STEADY FIXATIONS
 
-   let steadyFixations = (P, e) => {
+   let steadyFixations = (P, e, x, y) => {
       let p = pca(P);
       if (tracking_isVerbose) {
          octx.fillStyle = '#0080ff';
          octx.font = '50px Helvetica';
          centeredText(octx, p.eigenvalues[0] >> 0, screen.width/2, 50);
       }
-      return p.eigenvalues[0] < e ? p.mean : P[P.length-1];
+      if (p.eigenvalues[0] < e)
+         return [ (x + p.mean[0]) / 2, (y + p.mean[1]) / 2 ];
+      return P[P.length-1];
    }
 
    // GIVEN THREE POINTS ON THE FACE, COMPUTE THE USER'S HEAD MATRIX
@@ -117,25 +118,11 @@ let trackingUpdate = () => {
       // MAINTAIN A SMALL QUEUE IN ORDER TO STEADY HEAD GAZE FIXATIONS
 
       tracking_headXYs.push([headX, headY]);
-      if (tracking_headXYs.length > 32) {
+      if (tracking_headXYs.length > 1) {
          tracking_headXYs.shift();
-	 let headXY = steadyFixations(tracking_headXYs, 100);
+	 let headXY = steadyFixations(tracking_headXYs, 100, headX, headY);
 	 headX = headXY[0];
 	 headY = headXY[1];
-      }
-
-      // MAINTAIN A SMALL QUEUE IN ORDER TO STEADY EYE GAZE FIXATIONS
-
-      let ex = 100 * eyeGazeX;
-      let ey = 100 * eyeGazeY;
-      tracking_eyeGazeXYs.push([ex, ey]);
-      if (tracking_eyeGazeXYs.length > 8) {
-         tracking_eyeGazeXYs.shift();
-//	 tracking_isVerbose = true;
-	 let exy = steadyFixations(tracking_eyeGazeXYs, 10);
-	 tracking_isVerbose = false;
-	 eyeGazeX = exy[0] / 100;
-	 eyeGazeY = exy[1] / 100;
       }
 
       let isWithin = (px,py, x,y,w,h) => px >= x && px < x+w && py >= y && py < y+h;
@@ -145,7 +132,7 @@ let trackingUpdate = () => {
       let cy = parseInt(textArea.style.top );
       let cw = textArea.cols * 11.5;
       let ch = textArea.rows * 21;
-      if (isWithin(headX, headY, -1000,-1000,1000+cx+cw,1000+cy+ch)) {
+      if (codeArea.containsPoint(pen.x,pen.y) || isWithin(headX, headY, -1000,-1000,1000+cx+cw,1000+cy+ch)) {
          textArea.focus();
 	 octx.fillStyle = '#0080ff40';
 	 octx.fillRect(cx,cy,cw,ch);
