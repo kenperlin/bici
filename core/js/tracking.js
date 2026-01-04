@@ -4,6 +4,7 @@ let tracking_isLarge   = false;
 let tracking_isLogging = false;
 let tracking_isObvious = false;
 let tracking_isVerbose = false;
+let tracking_blinkTime = -1;
 
 let trackingUpdate = () => {
 
@@ -60,6 +61,9 @@ let trackingUpdate = () => {
       let ro = norm(subtract(rc,rd)) / norm(subtract(re,rg));
 
       eyeOpen = (lo + ro) / 2;
+
+      if (eyeOpen < .4 && tracking_blinkTime < 0)
+         tracking_blinkTime = Date.now() / 1000;
    }
 
    if (mediapipeTasks.isRunning) {
@@ -193,7 +197,7 @@ let trackingUpdate = () => {
 	 if (eyeOpen < .4)
             octx.fillRect(headX - 20, headY - h/2, 40, h);
 
-         // VISUAL FEEDBACK FOR EYE GAZE IS DISABLED UNTIL WE GET IT RIGHT.
+         // DISABLE EYE GAZE VISUAL FEEDBACK UNTIL WE GET IT RIGHT.
 
          if (eyeOpen >= .4) {
 	    let x = headX + 3500 * eyeGazeX;
@@ -201,6 +205,8 @@ let trackingUpdate = () => {
 //          octx.fillRect(x - 20, y - h/4, 40, h);
          }
       }
+
+      // IF LARGE MODE IS ENABLED, DO HEAD TRACKING OVER A LARGER AREA.
 
       let l2x = x => (x - (w/2-h/2)) * canvas3D.width  / h + canvas3D_x();
       let l2y = y =>  y              * canvas3D.height / h + canvas3D_y();
@@ -212,6 +218,17 @@ let trackingUpdate = () => {
          hy = l2y(hy);
          octx.fillStyle = 'black';
          octx.fillRect(hx-8,hy-8,16,16);
+      }
+
+      // A LONG BLINK ACTS AS A CLICK AT THE HEAD GAZE POSITION.
+
+      if (eyeOpen >= .4 && tracking_blinkTime > 0) {
+         let blinkDuration = Date.now() / 1000 - tracking_blinkTime;
+	 if (blinkDuration > .2) {
+	    canvas3D_down(hx,hy);
+	    canvas3D_up(hx,hy);
+         }
+         tracking_blinkTime = -1;
       }
 
       for (let hand = 0 ; hand < 2 ; hand++)
