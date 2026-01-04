@@ -147,20 +147,6 @@ let trackingUpdate = () => {
       else
          textArea.blur();
 
-      // IF ENLARGED HEAD TRACKING, GIVE VISUAL FEEDBACK.
-
-      if (tracking_isLarge) {
-         octx.strokeStyle = '#00000020';
-         octx.lineWidth = 8;
-         octx.fillStyle = '#00000020';
-         for (let j = 0 ; j < 4 ; j++)
-         for (let i = 0 ; i < 4 ; i++) {
-            let x = w/2 - .3 * h + .2 * h * i;
-            let y = .275 * h + .2 * h * j;
-            octx.strokeRect(x - .1 * h, y - .1 * h, .18 * h, .18 * h);
-         }
-      }
-
       if (tracking_isObvious)
          for (let eye = -1 ; eye <= 1 ; eye += 2) {
             octx.fillStyle = eyeOpen < .4 ? '#00000080' : '#ffffff40';

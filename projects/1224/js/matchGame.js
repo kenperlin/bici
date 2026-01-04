@@ -82,6 +82,21 @@ function MatchGame(scene,U,M) {
          message('TRY TO FIND\nALL MATCHING PAIRS\nOF TILES.');
       if (score == 32)
          message('CONGRATULATIONS!\nYOU FOUND\nEVERY MATCH.');
+
+      // IF ENLARGED HEAD TRACKING, GIVE VISUAL FEEDBACK.
+
+      if (tracking_isLarge) {
+         let w = screen.width, h = screen.height;
+         octx.strokeStyle = '#00000020';
+         octx.lineWidth = 8;
+         octx.fillStyle = '#00000020';
+         for (let j = 0 ; j < 4 ; j++)
+         for (let i = 0 ; i < 4 ; i++) {
+            let x = w/2 - .3 * h + .2 * h * i;
+            let y = .275 * h + .2 * h * j;
+            octx.strokeRect(x - .1 * h, y - .1 * h, .18 * h, .18 * h);
+         }
+      }
    }
 }
 
