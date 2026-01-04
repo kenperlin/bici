@@ -776,6 +776,9 @@ animate = () => {
       ctx.globalAlpha = isOpaque ? 1 : .5;
       let slide = slides[slideIndex];
       D.left = window.innerWidth - 500 - 20;
+      D.w = slide.width ?? 500;
+      D.h = slide.height ?? 500;
+      
       if (! slide.update)
          ctx.drawImage(slide, D.left, D.top, 500, 500*slide.height/slide.width);
       else {

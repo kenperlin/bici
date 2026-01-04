@@ -19,7 +19,7 @@ class Mediapipe {
 
     this.isReady = false;
     this.isRunning = false;
-    this.debugMode = true;
+    this.debugMode = false;
 
     this.handLandmarker = null;
     this.faceLandmarker = null;

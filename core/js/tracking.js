@@ -190,7 +190,6 @@ let trackingUpdate = () => {
 
       elements.forEach((e, i) => e.weight = expWeights[i] / sum);
 
-      console.log(elements)
       let closest = elements[0];
       if(closest) {
          let confidence = 0.75 * closest.weight + 0.25 * smoothstep(0, -50, closest.dist)
@@ -204,28 +203,28 @@ let trackingUpdate = () => {
             closest.bounds.bottom - closest.bounds.top
          );
 
-         ctx.shadowColor = `rgba(0, 255, 255, ${confidence})`;
+         ctx.shadowColor = `rgba(0, 128, 255, ${confidence})`;
          ctx.shadowBlur = 24 * confidence;
 
-         ctx.strokeStyle = `rgba(0, 255, 255, ${confidence})`;
+         ctx.strokeStyle = `rgba(0, 128, 255, ${confidence})`;
          ctx.lineWidth = 2 + confidence * 4;
          ctx.stroke();
 
          ctx.restore();
       }
 
-      elements.sort((a, b) => a.bounds.left - b.bounds.left)
-      ctx.save();
-      for(let i = 0; i < elements.length; i++) {
-         ctx.fillStyle = "#FF0000"; 
-         ctx.fillRect(
-            20, 
-            800 + i * 30, 
-            elements[i].weight * 500, 
-            20
-         );
-      }
-      ctx.restore();
+      // elements.sort((a, b) => a.bounds.left - b.bounds.left)
+      // ctx.save();
+      // for(let i = 0; i < elements.length; i++) {
+      //    ctx.fillStyle = "#FF0000"; 
+      //    ctx.fillRect(
+      //       20, 
+      //       800 + i * 30, 
+      //       elements[i].weight * 500, 
+      //       20
+      //    );
+      // }
+      // ctx.restore();
       
 
       if (tracking_isObvious)
