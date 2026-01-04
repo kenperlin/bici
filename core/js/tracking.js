@@ -9,17 +9,17 @@ let trackingUpdate = () => {
 
    // USE PRINCIPAL COMPONENT ANALYSIS TO DETECT AND THEN STEADY FIXATIONS
 
-   let isSteady = false;
-
-   let steadyFixations = (P, e, x, y) => {
+   let steadyFixations = (P, x, y, eLo, eHi) => {
       let p = pca(P);
       if (tracking_isVerbose) {
          octx.fillStyle = '#0080ff';
          octx.font = '50px Helvetica';
          centeredText(octx, p.eigenvalues[0] >> 0, screen.width/2, 50);
       }
-      let isSteady = p.eigenvalues[0] < e;
-      return isSteady ? p.mean : P[P.length-1];
+      let t = (p.eigenvalues[0] - eLo) / (eHi - eLo);
+      t = Math.max(0, Math.min(1, t));
+      return [ p.mean[0] * (1-t) + P[P.length-1][0] * t,
+               p.mean[1] * (1-t) + P[P.length-1][1] * t ];
    }
 
    // GIVEN THREE POINTS ON THE FACE, COMPUTE THE USER'S HEAD MATRIX
@@ -123,7 +123,7 @@ let trackingUpdate = () => {
       tracking_headXYs.push([headX, headY]);
       if (tracking_headXYs.length > 16) {
          tracking_headXYs.shift();
-	 let headXY = steadyFixations(tracking_headXYs, 1000, headX, headY);
+	 let headXY = steadyFixations(tracking_headXYs, headX, headY, 100, 2000);
 	 headX = headXY[0];
 	 headY = headXY[1];
       }
@@ -143,16 +143,18 @@ let trackingUpdate = () => {
       else
          textArea.blur();
 
+      // IF ENLARGED HEAD TRACKING, GIVE VISUAL FEEDBACK.
+
       if (tracking_isLarge) {
-            octx.strokeStyle = '#00000020';
-            octx.lineWidth = 8;
-            octx.fillStyle = '#00000020';
-	    for (let j = 0 ; j < 4 ; j++)
-	    for (let i = 0 ; i < 4 ; i++) {
-	       let x = w/2 - .3 * h + .2 * h * i;
-	       let y = .275 * h + .2 * h * j;
-	       octx.strokeRect(x - .1 * h, y - .1 * h, .18 * h, .18 * h);
-	    }
+         octx.strokeStyle = '#00000020';
+         octx.lineWidth = 8;
+         octx.fillStyle = '#00000020';
+         for (let j = 0 ; j < 4 ; j++)
+         for (let i = 0 ; i < 4 ; i++) {
+            let x = w/2 - .3 * h + .2 * h * i;
+            let y = .275 * h + .2 * h * j;
+            octx.strokeRect(x - .1 * h, y - .1 * h, .18 * h, .18 * h);
+         }
       }
 
       if (tracking_isObvious)
@@ -188,8 +190,10 @@ let trackingUpdate = () => {
 	 let h = eyeOpen > .5 ? 40 : 10;
          octx.lineWidth = 4;
          octx.strokeRect(headX - 20, headY - h/2, 40, h);
-	 if (eyeOpen < .4 || isSteady)
+	 if (eyeOpen < .4)
             octx.fillRect(headX - 20, headY - h/2, 40, h);
+
+         // VISUAL FEEDBACK FOR EYE GAZE IS DISABLED UNTIL WE GET IT RIGHT.
 
          if (eyeOpen >= .4) {
 	    let x = headX + 3500 * eyeGazeX;
