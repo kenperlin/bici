@@ -9,10 +9,10 @@ canvas2D.style.pointerEvents = 'none'; // Allow clicks to pass through to codeAr
 let canvas3D = document.createElement('canvas');
 document.body.appendChild(canvas3D);
 
-const CANVAS3D_TOP    = 440;
-const CANVAS3D_LEFT   = 500;
 const CANVAS3D_WIDTH  = 500;
 const CANVAS3D_HEIGHT = 500;
+const CANVAS3D_TOP    = screen.height - CANVAS3D_HEIGHT - 40;
+const CANVAS3D_LEFT   = (screen.width - CANVAS3D_WIDTH) / 2 - 10;
 
 canvas3D.style.position = 'absolute';
 canvas3D.style.top = CANVAS3D_TOP;

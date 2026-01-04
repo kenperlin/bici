@@ -142,8 +142,9 @@ window.keyUp = key => {
    case 'j' : isJumpingToSlide = true; break;
    case 'l' : isLightPen = ! isLightPen; break;
    case 'm' : isMove = false; break;
+   case 'L' : tracking_isLarge = ! tracking_isLarge; break;
    case 'M' : mediapipeTasks.toggleRunning(); break;
-   case 'N' : isTrackingObvious = ! isTrackingObvious; break;
+   case 'N' : tracking_isObvious = ! tracking_isObvious; break;
    case 'o' : isOpaque = ! isOpaque; break;
    case 'p' : webcam.isPen = ! webcam.isPen; break;
    case 'r' : shift3D = 1 - shift3D; break;

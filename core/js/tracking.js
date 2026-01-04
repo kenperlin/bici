@@ -1,11 +1,15 @@
 
-let tracking_headXYs = [];
+let tracking_headXYs   = [];
+let tracking_isLarge   = false;
 let tracking_isLogging = false;
+let tracking_isObvious = false;
 let tracking_isVerbose = false;
 
 let trackingUpdate = () => {
 
    // USE PRINCIPAL COMPONENT ANALYSIS TO DETECT AND THEN STEADY FIXATIONS
+
+   let isSteady = false;
 
    let steadyFixations = (P, e, x, y) => {
       let p = pca(P);
@@ -14,9 +18,8 @@ let trackingUpdate = () => {
          octx.font = '50px Helvetica';
          centeredText(octx, p.eigenvalues[0] >> 0, screen.width/2, 50);
       }
-      if (p.eigenvalues[0] < e)
-         return [ (x + p.mean[0]) / 2, (y + p.mean[1]) / 2 ];
-      return P[P.length-1];
+      let isSteady = p.eigenvalues[0] < e;
+      return isSteady ? p.mean : P[P.length-1];
    }
 
    // GIVEN THREE POINTS ON THE FACE, COMPUTE THE USER'S HEAD MATRIX
@@ -118,9 +121,9 @@ let trackingUpdate = () => {
       // MAINTAIN A SMALL QUEUE IN ORDER TO STEADY HEAD GAZE FIXATIONS
 
       tracking_headXYs.push([headX, headY]);
-      if (tracking_headXYs.length > 1) {
+      if (tracking_headXYs.length > 16) {
          tracking_headXYs.shift();
-	 let headXY = steadyFixations(tracking_headXYs, 100, headX, headY);
+	 let headXY = steadyFixations(tracking_headXYs, 1000, headX, headY);
 	 headX = headXY[0];
 	 headY = headXY[1];
       }
@@ -140,7 +143,19 @@ let trackingUpdate = () => {
       else
          textArea.blur();
 
-      if (isTrackingObvious)
+      if (tracking_isLarge) {
+            octx.strokeStyle = '#00000020';
+            octx.lineWidth = 8;
+            octx.fillStyle = '#00000020';
+	    for (let j = 0 ; j < 4 ; j++)
+	    for (let i = 0 ; i < 4 ; i++) {
+	       let x = w/2 - .3 * h + .2 * h * i;
+	       let y = .275 * h + .2 * h * j;
+	       octx.strokeRect(x - .1 * h, y - .1 * h, .18 * h, .18 * h);
+	    }
+      }
+
+      if (tracking_isObvious)
          for (let eye = -1 ; eye <= 1 ; eye += 2) {
             octx.fillStyle = eyeOpen < .4 ? '#00000080' : '#ffffff40';
             octx.beginPath();
@@ -171,15 +186,28 @@ let trackingUpdate = () => {
          octx.fillStyle = '#00000060';
          octx.lineWidth = 2;
 	 let h = eyeOpen > .5 ? 40 : 10;
+         octx.lineWidth = 4;
          octx.strokeRect(headX - 20, headY - h/2, 40, h);
-	 if (eyeOpen < .4)
+	 if (eyeOpen < .4 || isSteady)
             octx.fillRect(headX - 20, headY - h/2, 40, h);
 
          if (eyeOpen >= .4) {
 	    let x = headX + 3500 * eyeGazeX;
 	    let y = headY + 5000 * eyeGazeY + 300;
-//          octx.fillRect(x - 10, y - 10, 20, 20);
+//          octx.fillRect(x - 20, y - h/4, 40, h);
          }
+      }
+
+      let l2x = x => (x - (w/2-h/2)) * canvas3D.width  / h + canvas3D_x();
+      let l2y = y =>  y              * canvas3D.height / h + canvas3D_y();
+
+      let hx = headX;
+      let hy = headY;
+      if (tracking_isLarge) {
+         hx = l2x(hx);
+         hy = l2y(hy);
+         octx.fillStyle = 'black';
+         octx.fillRect(hx-8,hy-8,16,16);
       }
 
       for (let hand = 0 ; hand < 2 ; hand++)
@@ -189,6 +217,9 @@ let trackingUpdate = () => {
 
             for (let f = 0 ; f < 5 ; f++)
                FT[f] = pointToArray(mediapipe_hand[hand][4 + 4 * f]);
+
+            handPinch[hand].x = mx * (FT[0][0] + FT[1][0]);
+            handPinch[hand].y = my * (FT[0][1] + FT[1][1]);
 
             handPinch[hand].f = 0;
             for (let f = 1 ; f < 3 ; f++)
@@ -201,7 +232,7 @@ let trackingUpdate = () => {
                   if (f) {
                      handPinch[hand].x = mx * (FT[0][0] + FT[f][0]);
                      handPinch[hand].y = my * (FT[0][1] + FT[f][1]);
-                     if (isTrackingObvious) {
+                     if (tracking_isObvious) {
                         octx.fillStyle = f==1 ? '#ffff0080' : '#ff00ff80';
                         octx.beginPath();
                         octx.arc(handPinch[hand].x, handPinch[hand].y, 30 * r(FT[0]), 0,2*Math.PI);
@@ -216,7 +247,7 @@ let trackingUpdate = () => {
                   }
                }
                else {
-                  if (isTrackingObvious) {
+                  if (tracking_isObvious) {
                      let p = fingerTip[hand][f];
                      let px = 2 * mx * p[0];
                      let py = 2 * my * p[1];
@@ -254,7 +285,7 @@ let trackingUpdate = () => {
             }
 
 	    if (! pinchOnCanvas3D(handPinch[hand].x, handPinch[hand].y))
-	       pinchOnCanvas3D(headX, headY);
+	       pinchOnCanvas3D(hx, hy);
 
             prevHandPinch[hand].f = handPinch[hand].f;
          }
@@ -267,7 +298,6 @@ let trackingUpdate = () => {
 }
 
 let trackingIndex = 0, wasTracking = false, trackingInfo = 'let left=[],right=[],face=[];';
-let isTrackingObvious = false;
 let headX, headY;
 let headMatrix = identity();
 let eyeOpen  = 1;

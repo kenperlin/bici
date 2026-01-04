@@ -3,7 +3,7 @@ let help = {
 
 display : ctx => {
 
-   let fs = fontSize * 1.45;
+   let fs = fontSize * 1.39;
 
    if (help.isSplash) {
       ctx.fillStyle = '#ffffff80';
@@ -48,6 +48,7 @@ h Toggle this help menu.
 i Toggle show/hide slides.
 j (+ key) Jump to a particular slide.
 l Toggle lightpen (small blue object).
+L Toggle large area head tracking.
 m Hold down to move a sketch.
 M Toggle mediapipe face/hand tracking.
 N Toggle no visible tracking feedback.
