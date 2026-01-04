@@ -15,10 +15,14 @@ function MatchGame(scene,U,M) {
 
    let A = sceneVar('A', [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]);
 
+   let contains = (n,x,y) => Math.abs(x - tx(n)) < .2 && Math.abs(y - ty(n)) < .2;
+
+   let mx, my;
+   scene.onMove = (x,y) => { mx = x; my = y; }
+
    scene.onUp = (x,y) => {
       for (let n = 0 ; n < 16 ; n++)
-         if ( Math.abs(x - tx(n)) < .2 &&
-              Math.abs(y - ty(n)) < .2 && ! M[n]) {
+         if (contains(n,x,y) && ! M[n]) {
             U[n] = 1 - U[n];
             for (let i = 0 ; i < 16 ; i++)
 	       if (i != n && U[i] && label[i] == label[n])
@@ -67,7 +71,7 @@ function MatchGame(scene,U,M) {
 	         mxm(move(tx(n),ty(n),0),
                      mxm(turnY(Math.PI * ease(1 - A[n])),
 		         scale(.9))),
-		 M[n] ? [1,1,1] : null);
+		 M[n] ? [1,1,1] : contains(n,mx,my) ? [1,.67,.41] : null);
          A[n] = Math.max(0, Math.min(1, round(A[n] + (U[n]?1:-1) * deltaTime)));
       }
 
