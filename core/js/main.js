@@ -25,24 +25,25 @@ let canvas3D_y = () => parseInt(canvas3D.style.top );
 
 let xToScene = x => 2 * (x - canvas3D_x()) / canvas3D.width - 1;
 let yToScene = y => 1 - 2 * (y - canvas3D_y()) / canvas3D.width;
+let zToScene = z => -2 * z / canvas3D.width - 2.5;
 
-let canvas3D_move = (x,y) => {
+let canvas3D_move = (x,y,z) => {
    if (scene && scene.onMove && ! canvas3D.isDown)
-      scene.onMove(xToScene(x), yToScene(y));
+      scene.onMove(xToScene(x), yToScene(y), zToScene(z));
    if (scene && scene.onDrag && canvas3D.isDown)
-      scene.onDrag(xToScene(x), yToScene(y));
+      scene.onDrag(xToScene(x), yToScene(y), zToScene(z));
 }
 
-let canvas3D_down = (x,y) => {
+let canvas3D_down = (x,y,z) => {
    canvas3D.isDown = true;
    if (scene && scene.onDown)
-      scene.onDown(xToScene(x), yToScene(y));
+      scene.onDown(xToScene(x), yToScene(y), zToScene(z));
 }
 
-let canvas3D_up = (x,y) => {
+let canvas3D_up = (x,y,z) => {
    canvas3D.isDown = false;
    if (scene && scene.onUp)
-      scene.onUp(xToScene(x), yToScene(y));
+      scene.onUp(xToScene(x), yToScene(y), zToScene(z));
 }
 
 let canvas2D_up = () => {

@@ -60,7 +60,7 @@ t Toggle my semi-transparency.
 T Toggle my total transparency.
 u Toggle UFO within blue-plate world.
 v Toggle if 3D view is tracking head.
-V Toggle show/hide head tracking data.
+V Toggle head+hands tracking data.
 x Copy clipboard buffer to the console.
 w Toggle world seen thru blue plate.
 \' Convert strokes to a sketch.

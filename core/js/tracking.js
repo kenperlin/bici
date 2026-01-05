@@ -314,9 +314,7 @@ let trackingUpdate = () => {
 
             handPinch[hand].x = mx * (FT[0][0] + FT[1][0]);
             handPinch[hand].y = my * (FT[0][1] + FT[1][1]);
-
-            handPinch[hand].x = mx * (FT[0][0] + FT[1][0]);
-            handPinch[hand].y = my * (FT[0][1] + FT[1][1]);
+            handPinch[hand].z = mx * (FT[0][2] + FT[1][2]);
 
             handPinch[hand].f = 0;
             for (let f = 1 ; f < 3 ; f++)
@@ -329,6 +327,7 @@ let trackingUpdate = () => {
                   if (f) {
                      handPinch[hand].x = mx * (FT[0][0] + FT[f][0]);
                      handPinch[hand].y = my * (FT[0][1] + FT[f][1]);
+                     handPinch[hand].z = mx * (FT[0][2] + FT[f][2]);
                      if (tracking_isObvious) {
                         octx.fillStyle = f==1 ? '#ffff0080' : '#ff00ff80';
                         octx.beginPath();
@@ -365,23 +364,25 @@ let trackingUpdate = () => {
                }
             }
 
-	    let pinchOnCanvas3D = (x,y) => {
+	    let pinchOnCanvas3D = (x,y,z) => {
 	       let isOverCanvas3D = x >= canvas3D_x() && x < canvas3D_x() + canvas3D.width &&
 	                            y >= canvas3D_y() && y < canvas3D_y() + canvas3D.height ;
                if (isOverCanvas3D) {
+	          x = 2 * x - 1.5 * canvas3D_x();
+	          y = 2 * y - 1.5 * canvas3D_y() - 40;
                   if (prevHandPinch[hand].f == 0 && handPinch[hand].f == 1)
-	             canvas3D_down(x,y);
+	             canvas3D_down(x,y,z);
                   else if (prevHandPinch[hand].f == 1 && handPinch[hand].f == 0)
-	             canvas3D_up(x,y);
+	             canvas3D_up(x,y,z);
                   else
-	             canvas3D_move(x,y);
+	             canvas3D_move(x,y,z);
                }
 	       else if (prevHandPinch[hand].f == 1 && handPinch[hand].f == 0)
 	          canvas3D_up();
                return isOverCanvas3D;
             }
 
-	    if (! pinchOnCanvas3D(handPinch[hand].x, handPinch[hand].y))
+	    if (! pinchOnCanvas3D(handPinch[hand].x, handPinch[hand].y, handPinch[hand].z))
 	       pinchOnCanvas3D(hx, hy);
 
             prevHandPinch[hand].f = handPinch[hand].f;
