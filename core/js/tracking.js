@@ -3,7 +3,7 @@ let tracking_headXYs   = [];
 let tracking_isLarge   = false;
 let tracking_isLogging = false;
 let tracking_isObvious = false;
-let tracking_isVerbose = false;
+let tracking_debugMode = false;
 let tracking_blinkTime = -1;
 let tracking_l2x = x => (x - (screen.width - screen.height) / 2) * canvas3D.width  / screen.height + canvas3D_x();
 let tracking_l2y = y =>  y                                       * canvas3D.height / screen.height + canvas3D_y();
@@ -15,7 +15,7 @@ let trackingUpdate = () => {
 
    let steadyFixations = (P, x, y, eLo, eHi) => {
       let p = pca(P);
-      if (tracking_isVerbose) {
+      if (tracking_debugMode) {
          octx.fillStyle = '#0080ff';
          octx.font = '50px Helvetica';
          centeredText(octx, p.eigenvalues[0] >> 0, screen.width/2, 50);
@@ -171,7 +171,7 @@ let trackingUpdate = () => {
       domDistances.sort((a, b) => a.dist - b.dist);
       
       // Softmax weights
-      let expWeights = domDistances.map((it) => Math.exp((domDistances[0].dist - it.dist) / 200));
+      let expWeights = domDistances.map((it) => Math.exp((domDistances[0].dist - it.dist) / 100));
       let sum = expWeights.reduce((acc, cur) => acc + cur, 0);
 
       domDistances.forEach((e, i) => e.weight = expWeights[i] / sum);
@@ -199,10 +199,12 @@ let trackingUpdate = () => {
          octx.restore();
       }
 
+      let focusThreshold = 600 * (Math.max(0.5, closest?.weight ?? 0) - 0.5)
       if (
-        closest &&
-        closest.element === textArea &&
-        closest.dist < 800 * (Math.max(0.5, closest.weight) - 0.5) // Softness of selection proportional to confidence
+        (closest &&
+          closest.element === textArea &&
+          closest.dist <  focusThreshold)|| // Softness of selection proportional to confidence
+        codeArea.containsPoint(pen.x, pen.y)
       ) {
         textArea.focus();
         octx.fillStyle = "#0080ff40";
@@ -216,18 +218,22 @@ let trackingUpdate = () => {
         textArea.blur();
       }
 
-      // domDistances.sort((a, b) => a.bounds.left - b.bounds.left)
-      // octx.save();
-      // for(let i = 0; i < domDistances.length; i++) {
-      //    octx.fillStyle = "#FF0000"; 
-      //    octx.fillRect(
-      //       20, 
-      //       800 + i * 30, 
-      //       domDistances[i].weight * 500, 
-      //       20
-      //    );
-      // }
-      // octx.restore();
+      if(tracking_debugMode && domDistances.length > 1) {
+         let distances = domDistances.toSorted((a, b) => a.bounds.left - b.bounds.left)
+         octx.save();
+         octx.font = '24px Helvetica';
+         octx.fillStyle = "#0080FF"; 
+         octx.fillText("Gaze DOM Selection Confidence", 20, 750);
+         for(let i = 0; i < distances.length; i++) {
+            octx.fillRect(
+               20, 
+               800 + i * 30, 
+               distances[i].weight * 500, 
+               20
+            );
+         }
+         octx.restore();
+      }
       
 
       if (tracking_isObvious)

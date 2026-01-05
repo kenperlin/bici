@@ -152,8 +152,10 @@ window.keyUp = key => {
    case 't' : webcam.opacity = 1.5 - webcam.opacity; break;
    case 'T' : webcam.opacity = 1.01 - webcam.opacity; break;
    case 'u' : webcam.ufoTime = webcam.ufoTime ? 0 : Date.now() / 1000; break;
-   case 'v' : webcam.isTrackHead = ! webcam.isTrackHead; break;
-   case 'V' : webcam.showTrackHead = ! webcam.showTrackHead; break;
+   case 'V' : 
+      mediapipe.debugMode = !mediapipe.debugMode;
+      tracking_debugMode = !tracking_debugMode;
+      break;
    case 'w' : webcam.isWorld = ! webcam.isWorld; break;
    case 'x' : navigator.clipboard.readText()
                        .then(text => console.log('Clipboard content:', text))

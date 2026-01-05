@@ -89,6 +89,7 @@ overlayCanvas.style.position = 'absolute';
 overlayCanvas.style.left = 0;
 overlayCanvas.style.top = 0;
 overlayCanvas.style.pointerEvents = 'none';
+overlayCanvas.style.zIndex = 2;
 overlayCanvas.width = screen.width;
 overlayCanvas.height = screen.height;
 let octx = overlayCanvas.getContext('2d');
