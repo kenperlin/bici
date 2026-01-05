@@ -5,6 +5,9 @@ let tracking_isLogging = false;
 let tracking_isObvious = false;
 let tracking_isVerbose = false;
 let tracking_blinkTime = -1;
+let tracking_l2x = x => (x - (screen.width - screen.height) / 2) * canvas3D.width  / screen.height + canvas3D_x();
+let tracking_l2y = y =>  y                                       * canvas3D.height / screen.height + canvas3D_y();
+let tracking_isSteadyEnabled = false;
 
 let trackingUpdate = () => {
 
@@ -124,12 +127,14 @@ let trackingUpdate = () => {
 
       // MAINTAIN A SMALL QUEUE IN ORDER TO STEADY HEAD GAZE FIXATIONS
 
-      tracking_headXYs.push([headX, headY]);
-      if (tracking_headXYs.length > 16) {
-         tracking_headXYs.shift();
-	 let headXY = steadyFixations(tracking_headXYs, headX, headY, 100, 2000);
-	 headX = headXY[0];
-	 headY = headXY[1];
+      if (tracking_isSteadyEnabled) {
+         tracking_headXYs.push([headX, headY]);
+         if (tracking_headXYs.length > 16) {
+            tracking_headXYs.shift();
+	    let headXY = steadyFixations(tracking_headXYs, headX, headY, 100, 2000);
+	    headX = headXY[0];
+	    headY = headXY[1];
+         }
       }
 
       let isWithin = (px,py, x,y,w,h) => px >= x && px < x+w && py >= y && py < y+h;
@@ -200,10 +205,8 @@ let trackingUpdate = () => {
       let hx = headX;
       let hy = headY;
       if (tracking_isLarge) {
-         hx = l2x(hx);
-         hy = l2y(hy);
-         octx.fillStyle = 'black';
-         octx.fillRect(hx-8,hy-8,16,16);
+         hx = tracking_l2x(hx);
+         hy = tracking_l2y(hy);
       }
 
       // A LONG BLINK ACTS AS A CLICK AT THE HEAD GAZE POSITION.

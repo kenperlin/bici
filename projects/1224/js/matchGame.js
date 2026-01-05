@@ -86,6 +86,7 @@ function MatchGame(scene,U,M) {
       // IF ENLARGED HEAD TRACKING, GIVE VISUAL FEEDBACK.
 
       if (tracking_isLarge) {
+         tracking_isSteadyEnabled = true;
          let w = screen.width, h = screen.height;
          octx.strokeStyle = '#00000020';
          octx.lineWidth = 8;
@@ -96,6 +97,10 @@ function MatchGame(scene,U,M) {
             let y = .275 * h + .2 * h * j;
             octx.strokeRect(x - .1 * h, y - .1 * h, .18 * h, .18 * h);
          }
+         octx.fillStyle = 'black';
+         octx.fillRect(tracking_l2x(headX) - 8,
+	               tracking_l2y(headY) - 8, 16, 16);
+
       }
    }
 }
