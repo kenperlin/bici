@@ -137,21 +137,7 @@ let trackingUpdate = () => {
          }
       }
 
-      let isWithin = (px,py, x,y,w,h) => px >= x && px < x+w && py >= y && py < y+h;
-      
       let textArea = codeArea.getElement();
-      // let cx = parseInt(textArea.style.left);
-      // let cy = parseInt(textArea.style.top );
-      // let cw = textArea.cols * 11.5;
-      // let ch = textArea.rows * 21;
-      // if (codeArea.containsPoint(pen.x,pen.y) || isWithin(headX, headY, -1000,-1000,1000+cx+cw,1000+cy+ch)) {
-      //    textArea.focus();
-      //  octx.fillStyle = '#0080ff40';
-      //  octx.fillRect(cx,cy,cw,ch);
-      // }
-      // else
-      //    textArea.blur();
-      
       function getSignedDistanceRect(x, y, rect) {
          const dxOut = Math.max(rect.left - x, 0, x - rect.right);
          const dyOut = Math.max(rect.top - y, 0, y - rect.bottom);
@@ -176,55 +162,72 @@ let trackingUpdate = () => {
       let slideBounds = {left: D.left, right: D.left + D.w, top: D.top, bottom: D.top + D.h};
       let slideDist = isInfo ? getSignedDistanceRect(headX, headY, slideBounds) : Infinity;
 
-      let elements = [
-        { bounds: codeBounds, dist: codeDist },
-        { bounds: sceneBounds, dist: sceneDist },
-        { bounds: slideBounds, dist: slideDist }
+      domDistances = [
+        { bounds: codeBounds, dist: codeDist, element: textArea },
+        { bounds: sceneBounds, dist: sceneDist, element: canvas3D },
+        { bounds: slideBounds, dist: slideDist, element: canvasDiagram }
       ];
-      elements = elements.filter((it) => it.dist !== Infinity)
-      elements.sort((a, b) => a.dist - b.dist);
+      domDistances = domDistances.filter((it) => it.dist !== Infinity)
+      domDistances.sort((a, b) => a.dist - b.dist);
       
       // Softmax weights
-      let expWeights = elements.map((it) => Math.exp((elements[0].dist - it.dist) / 200));
+      let expWeights = domDistances.map((it) => Math.exp((domDistances[0].dist - it.dist) / 200));
       let sum = expWeights.reduce((acc, cur) => acc + cur, 0);
 
-      elements.forEach((e, i) => e.weight = expWeights[i] / sum);
+      domDistances.forEach((e, i) => e.weight = expWeights[i] / sum);
 
-      let closest = elements[0];
+      let closest = domDistances[0];
       if(closest) {
          let confidence = 0.75 * closest.weight + 0.25 * smoothstep(0, -50, closest.dist)
-         ctx.save();
+         octx.save();
 
-         ctx.beginPath();
-         ctx.rect(
+         octx.beginPath();
+         octx.rect(
             closest.bounds.left, 
             closest.bounds.top, 
             closest.bounds.right - closest.bounds.left, 
             closest.bounds.bottom - closest.bounds.top
          );
 
-         ctx.shadowColor = `rgba(0, 128, 255, ${confidence})`;
-         ctx.shadowBlur = 24 * confidence;
+         octx.shadowColor = `rgba(0, 128, 255, ${confidence})`;
+         octx.shadowBlur = 24 * confidence;
 
-         ctx.strokeStyle = `rgba(0, 128, 255, ${confidence})`;
-         ctx.lineWidth = 2 + confidence * 4;
-         ctx.stroke();
+         octx.strokeStyle = `rgba(0, 128, 255, ${confidence})`;
+         octx.lineWidth = 2 + confidence * 4;
+         octx.stroke();
 
-         ctx.restore();
+         octx.restore();
       }
 
-      // elements.sort((a, b) => a.bounds.left - b.bounds.left)
-      // ctx.save();
-      // for(let i = 0; i < elements.length; i++) {
-      //    ctx.fillStyle = "#FF0000"; 
-      //    ctx.fillRect(
+      if (
+        closest &&
+        closest.element === textArea &&
+        closest.dist < 800 * (Math.max(0.5, closest.weight) - 0.5) // Softness of selection proportional to confidence
+      ) {
+        textArea.focus();
+        octx.fillStyle = "#0080ff40";
+        octx.fillRect(
+          closest.bounds.left,
+          closest.bounds.top,
+          closest.bounds.right - closest.bounds.left,
+          closest.bounds.bottom - closest.bounds.top
+        );
+      } else {
+        textArea.blur();
+      }
+
+      // domDistances.sort((a, b) => a.bounds.left - b.bounds.left)
+      // octx.save();
+      // for(let i = 0; i < domDistances.length; i++) {
+      //    octx.fillStyle = "#FF0000"; 
+      //    octx.fillRect(
       //       20, 
       //       800 + i * 30, 
-      //       elements[i].weight * 500, 
+      //       domDistances[i].weight * 500, 
       //       20
       //    );
       // }
-      // ctx.restore();
+      // octx.restore();
       
 
       if (tracking_isObvious)
@@ -395,3 +398,4 @@ let fingerTip = [[],[]];
 let handPinch = [{f:0},{f:0}];
 let prevHandPinch = [{f:0},{f:0}];
 
+let domDistances = []
