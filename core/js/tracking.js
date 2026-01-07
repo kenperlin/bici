@@ -199,20 +199,19 @@ let trackingUpdate = () => {
          octx.restore();
       }
 
-      let focusThreshold = 600 * (Math.max(0.5, closest?.weight ?? 0) - 0.5)
-      if (
-        (closest &&
-          closest.element === textArea &&
-          closest.dist <  focusThreshold)|| // Softness of selection proportional to confidence
-        codeArea.containsPoint(pen.x, pen.y)
-      ) {
+      let focusThreshold = 600 * (Math.max(0.5, closest?.weight ?? 0) - 0.5); // Softness of selection proportional to confidence
+      let isCodeLookedAt =
+        closest?.element === textArea &&
+        closest?.dist < focusThreshold;
+
+      if (isCode && (isCodeLookedAt || codeArea.containsPoint(pen.x, pen.y))) {
         textArea.focus();
         octx.fillStyle = "#0080ff40";
         octx.fillRect(
-          closest.bounds.left,
-          closest.bounds.top,
-          closest.bounds.right - closest.bounds.left,
-          closest.bounds.bottom - closest.bounds.top
+          codeBounds.left,
+          codeBounds.top,
+          codeBounds.right - codeBounds.left,
+          codeBounds.bottom - codeBounds.top
         );
       } else {
         textArea.blur();
