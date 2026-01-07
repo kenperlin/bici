@@ -368,12 +368,13 @@ let trackingUpdate = () => {
 	       let isOverCanvas3D = x >= canvas3D_x() && x < canvas3D_x() + canvas3D.width &&
 	                            y >= canvas3D_y() && y < canvas3D_y() + canvas3D.height ;
                if (isOverCanvas3D) {
+	          let id = (hand==0 ? 'left' : 'right') + '.' + handPinch[hand].f;
                   if (prevHandPinch[hand].f == 0 && handPinch[hand].f == 1)
-	             canvas3D_down(x,y,z);
+	             canvas3D_down(x,y,z,id);
                   else if (prevHandPinch[hand].f == 1 && handPinch[hand].f == 0)
-	             canvas3D_up(x,y,z);
+	             canvas3D_up(x,y,z,id);
                   else
-	             canvas3D_move(x,y,z);
+	             canvas3D_move(x,y,z,id);
                }
 	       else if (prevHandPinch[hand].f == 1 && handPinch[hand].f == 0)
 	          canvas3D_up();
