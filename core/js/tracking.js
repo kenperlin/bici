@@ -172,7 +172,7 @@ let trackingUpdate = () => {
       domDistances.forEach((e, i) => e.weight = expWeights[i] / sum);
 
       let closest = domDistances[0];
-      if(closest) {
+      if(closest && !focusedElement) {
          let confidence = 0.75 * closest.weight + 0.25 * smoothstep(0, -50, closest.dist)
          octx.save();
 
@@ -199,7 +199,13 @@ let trackingUpdate = () => {
         closest?.element === textArea &&
         closest?.dist < focusThreshold;
 
-      if (isCode && (isCodeLookedAt || codeArea.containsPoint(pen.x, pen.y))) {
+      if (
+        isCode &&
+        (focusedElement == null || focusedElement.element == textArea) &&
+        (isCodeLookedAt ||
+          codeArea.containsPoint(pen.x, pen.y) ||
+          focusedElement?.element == textArea)
+      ) {
         textArea.focus();
         octx.fillStyle = "#0080ff40";
         octx.fillRect(
@@ -299,7 +305,7 @@ let trackingUpdate = () => {
       gestureTracker.update(mediapipe.handResults)
 
       let drawHands = () => {
-         let zScale = z => Math.min(1, .1 / (.2 + z));
+         let zScale = z => Math.max(0.1, Math.min(1, .1 / (.2 + z)));
          octx.save();
          for(const hand of mediapipe.handResults) {
             const currentHand = hand.handedness;
@@ -366,6 +372,7 @@ let eyeOpen  = 1;
 let eyeGazeX = 0;
 let eyeGazeY = 0;
 let domDistances = [];
+let focusedElement;
 
 let initializeGestureTracking = () => {
    let indexPinch = new PinchGesture("indexPinch", [1], 0.1);
@@ -418,16 +425,38 @@ let initializeGestureTracking = () => {
    let detectSpreadEnd = (hand) => {
       const scaleFac = Math.min(1, .1 / (.2 + hand.landmarks[4].z));
       let distances = getFingerThumbDistances([1, 2, 3, 4], hand);
-      return distances.every((d) => d > 0.4 * scaleFac)
+      return distances.every((d) => d > 0.3 * scaleFac)
    };
-
 
    let spreadGesture = new MotionGesture("spread", detectSpreadStart, detectSpreadEnd, 300);
    spreadGesture.onTriggerAB = (self, hand) => {
-      console.log('triggered AB')
+      if((focusedElement = domDistances[0]) == null) return;
+
+      domDistances.forEach((elem) => {
+         elem.element.style.opacity = 0;
+      })
+
+      let element = focusedElement.element;
+      element.style.transition = "all 0.1s ease-in-out";
+      element.style.opacity = 1;
+      element.style.top = '50%';
+      element.style.left = '50%';
+      element.style.transform = 'translate(-50%, -50%) scale(1.25)';
+
    }
    spreadGesture.onTriggerBA = (self, hand) => {
-      console.log('triggered BA')
+      if(!focusedElement) return;
+
+      let element = focusedElement.element;
+      element.style.top = focusedElement.bounds.top;
+      element.style.left = focusedElement.bounds.left;
+      element.style.transform = 'none';
+      focusedElement = null
+
+      domDistances.forEach((elem) => {
+         elem.element.style.opacity = 1;
+      })
+
    }
 
    const gestureTracker = new GestureTracker();

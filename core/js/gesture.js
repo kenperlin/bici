@@ -54,11 +54,12 @@ class HandGesture {
 }
 
 class MotionGesture {
-  constructor(id, conditionFnA, conditionFnB, maxTimeInterval = 500) {
+  constructor(id, conditionFnA, conditionFnB, maxTimeInterval = 500, triggerCooldown = 500) {
     this.id = id;
     this.conditionFnA = conditionFnA;
     this.conditionFnB = conditionFnB;
     this.maxTimeInterval = maxTimeInterval;
+    this.triggerCooldown = triggerCooldown;
 
     this.onTriggerAB = () => {};
     this.onTriggerBA = () => {};
@@ -71,19 +72,28 @@ class MotionGesture {
       left: 0,
       right: 0,
     }
+    this.lastTrigger = {
+      left: 0,
+      right: 0,
+    }
   }
 
   update(hand, timestamp = Date.now()) {
     const h = hand.handedness;
+    if(timestamp - this.lastTrigger[h] < this.triggerCooldown) return;
     
     if (this.conditionFnB(hand)) {
-      if (timestamp - this.lastA[h] < this.maxTimeInterval)
+      if (timestamp - this.lastA[h] < this.maxTimeInterval) {
         this._onTriggerAB(this, hand);
+        this.lastTrigger[h] = timestamp
+      }
       this.lastB[h] = timestamp;
     }
     if (this.conditionFnA(hand)) {
-      if (timestamp - this.lastB[h] < this.maxTimeInterval)
+      if (timestamp - this.lastB[h] < this.maxTimeInterval) {
         this._onTriggerBA(this, hand);
+        this.lastTrigger[h] = timestamp
+      }
       this.lastA[h] = timestamp;
     }
   }
