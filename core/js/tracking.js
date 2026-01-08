@@ -311,7 +311,6 @@ let trackingUpdate = () => {
             const activeGesture = gestureTracker.activeGestures[currentHand];
             if(activeGesture) {
                const activeGestureState = activeGesture.state[currentHand];
-               console.log(activeGesture.state)
                activeGesture.fingers.forEach((it) => fingersToDraw.delete(it));
                fingersToDraw.delete(0);
 
@@ -410,9 +409,31 @@ let initializeGestureTracking = () => {
    
    let middlePinch = new PinchGesture("middlePinch", [2], 0.1);
    
+   let detectSpreadStart = (hand) => {
+      const scaleFac = Math.min(1, .1 / (.2 + hand.landmarks[4].z));
+      let distances = getFingerThumbDistances([1, 2, 3, 4], hand);
+      return distances.every((d) => d < 0.15 * scaleFac)
+   };
+
+   let detectSpreadEnd = (hand) => {
+      const scaleFac = Math.min(1, .1 / (.2 + hand.landmarks[4].z));
+      let distances = getFingerThumbDistances([1, 2, 3, 4], hand);
+      return distances.every((d) => d > 0.4 * scaleFac)
+   };
+
+
+   let spreadGesture = new MotionGesture("spread", detectSpreadStart, detectSpreadEnd, 300);
+   spreadGesture.onTriggerAB = (self, hand) => {
+      console.log('triggered AB')
+   }
+   spreadGesture.onTriggerBA = (self, hand) => {
+      console.log('triggered BA')
+   }
+
    const gestureTracker = new GestureTracker();
    gestureTracker.add(indexPinch);
    gestureTracker.add(middlePinch);
+   gestureTracker.add(spreadGesture);
 
    window.gestureTracker = gestureTracker;   
 }

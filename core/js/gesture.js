@@ -53,17 +53,62 @@ class HandGesture {
   }
 }
 
+class MotionGesture {
+  constructor(id, conditionFnA, conditionFnB, maxTimeInterval = 500) {
+    this.id = id;
+    this.conditionFnA = conditionFnA;
+    this.conditionFnB = conditionFnB;
+    this.maxTimeInterval = maxTimeInterval;
+
+    this.onTriggerAB = () => {};
+    this.onTriggerBA = () => {};
+
+    this.lastA = {
+      left: 0,
+      right: 0,
+    }
+    this.lastB = {
+      left: 0,
+      right: 0,
+    }
+  }
+
+  update(hand, timestamp = Date.now()) {
+    const h = hand.handedness;
+    
+    if (this.conditionFnB(hand)) {
+      if (timestamp - this.lastA[h] < this.maxTimeInterval)
+        this._onTriggerAB(this, hand);
+      this.lastB[h] = timestamp;
+    }
+    if (this.conditionFnA(hand)) {
+      if (timestamp - this.lastB[h] < this.maxTimeInterval)
+        this._onTriggerBA(this, hand);
+      this.lastA[h] = timestamp;
+    }
+  }
+
+  _onTriggerAB(hand) {
+    this.onTriggerAB?.(this, hand);
+  }
+  _onTriggerBA(hand) {
+    this.onTriggerBA?.(this, hand);
+  }
+}
+
 class GestureTracker {
   constructor() {
     this.gestures = [];
     this.activeGestures = {
       left: null,
-      right: null,
+      right: null
     };
   }
 
   add(gesture, handedness, priority = 0) {
+    if (gesture instanceof MotionGesture) priority = Infinity;
     this.gestures.push({ gesture, handedness, priority });
+    this.gestures.sort((a, b) => b.priority - a.priority);
   }
 
   remove(id) {
@@ -72,37 +117,31 @@ class GestureTracker {
 
   update(hands) {
     const now = Date.now();
+
     for (const hand of hands) {
-      const currentHand = hand.handedness;
+      const h = hand.handedness;
       let activeGesture = null;
 
       for (const { gesture, handedness } of this.gestures) {
-        if (handedness && handedness !== currentHand) continue;
+        if (handedness && handedness !== h) continue;
         if (gesture.update(hand, now)) {
           activeGesture = gesture;
           break;
         }
       }
 
-      this.activeGestures[currentHand] = activeGesture;
+      this.activeGestures[h] = activeGesture;
     }
   }
 }
 
 class PinchGesture extends HandGesture {
-  constructor(id, fingers, distance, activationThreshold = 1, activeCooldown = 33) {
-    let pointToArray = p => [ p.x, p.y, p.z ];
+  constructor(id, fingers, maxDistance, activationThreshold = 1, activeCooldown = 33) {
     let detectPinch = (hand) => {
-      const thumbPt = pointToArray(hand.landmarks[4]);
-      const scaleFac = Math.min(1, .1 / (.2 + thumbPt[2]));
-
-      for(let i = 0; i < fingers.length; i++) {
-        const fingerPt = pointToArray(hand.landmarks[4 + 4 * fingers[i]])
-        const isPinching = norm(subtract(fingerPt, thumbPt)) < distance * scaleFac;
-        if(!isPinching) return false;
-      }
-      return true;
-    }
+      const scaleFac = Math.min(1, .1 / (.2 + hand.landmarks[4].z));
+      let distances = getFingerThumbDistances(fingers, hand);
+      return distances.every((d) => d < maxDistance * scaleFac)
+    };
 
     super(id, activationThreshold, activeCooldown, detectPinch);
     this.fingers = fingers;
@@ -142,4 +181,16 @@ class PinchGesture extends HandGesture {
     this.updateState(hand);
     super._onActive(hand)
   }
+}
+
+function getFingerThumbDistances(fingers, hand) {
+  let pointToArray = p => [ p.x, p.y, p.z ];
+  let distances = [];
+  const thumbPt = pointToArray(hand.landmarks[4]);
+
+  for (let i = 0; i < fingers.length; i++) {
+    const fingerPt = pointToArray(hand.landmarks[4 + 4 * fingers[i]]);
+    distances[i] = norm(subtract(fingerPt, thumbPt))
+  }
+  return distances;
 }
