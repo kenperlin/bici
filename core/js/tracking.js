@@ -9,7 +9,7 @@ let tracking_l2x = x => (x - (screen.width - screen.height) / 2) * canvas3D.widt
 let tracking_l2y = y =>  y                                       * canvas3D.height / screen.height + canvas3D_y();
 let tracking_isSteadyEnabled = false;
 
-let tracking_frameHands = false;
+let tracking_frameHands = true;
 let frameToElement = (x, y, element) => {
    x -= (screen.width - screen.height) / 2;
 
@@ -331,7 +331,7 @@ let trackingUpdate = () => {
          octx.save();
          for(const hand of mediapipe.handResults) {
             const currentHand = hand.handedness;
-            const fingersToDraw = new Set([0, 1, 2, 3, 4])
+            const fingersToDraw = new Set([0, 1, 2])
             
             octx.fillStyle = "#00000060";
             octx.strokeStyle = "#00000060";
@@ -356,7 +356,8 @@ let trackingUpdate = () => {
             }
 
             for(const fingerNum of fingersToDraw) {
-               const fingerPt = toScreen(hand.landmarks[4 + 4 * fingerNum]);
+               const fingerPt = hand.landmarks[4 + 4 * fingerNum];
+               const screenFingerPt = toScreen(fingerPt);
                
                let radius = 20 * zScale(fingerPt.z);
                if(tracking_isObvious) {
@@ -368,11 +369,18 @@ let trackingUpdate = () => {
                   radius *= 2;
 
                   octx.beginPath();
-                  octx.arc(fingerPt.x, fingerPt.y, radius, 0, 2 * Math.PI);
+                  octx.arc(screenFingerPt.x, screenFingerPt.y, radius, 0, 2 * Math.PI);
                   octx.fill();
+
                } else {
                   octx.beginPath();
-                  octx.arc(fingerPt.x, fingerPt.y, radius, 0, 2 * Math.PI);
+                  octx.arc(screenFingerPt.x, screenFingerPt.y, radius, 0, 2 * Math.PI);
+                  octx.stroke();
+
+                  octx.beginPath();
+                  octx.moveTo(fingerPt.x * screen.width, fingerPt.y * screen.height);
+                  octx.lineTo(screenFingerPt.x, screenFingerPt.y);
+
                   octx.stroke();
                }
             }
