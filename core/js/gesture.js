@@ -81,7 +81,7 @@ class MotionGesture {
   update(hand, timestamp = Date.now()) {
     const h = hand.handedness;
     if(timestamp - this.lastTrigger[h] < this.triggerCooldown) return;
-    
+
     if (this.conditionFnB(hand)) {
       if (timestamp - this.lastA[h] < this.maxTimeInterval) {
         this._onTriggerAB(this, hand);
@@ -168,9 +168,9 @@ class PinchGesture extends HandGesture {
       newState.z += fingerPt.z;
     }
     
-    newState.x *= screen.width / (this.fingers.length + 1);
-    newState.y *= screen.height / (this.fingers.length + 1);
-    newState.z *= screen.width / (this.fingers.length + 1);
+    newState.x /= (this.fingers.length + 1);
+    newState.y /= (this.fingers.length + 1);
+    newState.z /= (this.fingers.length + 1);
     newState.duration = (this.state[h]?.duration ?? 0) + 1;
 
     this.state[h] = newState;

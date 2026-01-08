@@ -9,6 +9,28 @@ let tracking_l2x = x => (x - (screen.width - screen.height) / 2) * canvas3D.widt
 let tracking_l2y = y =>  y                                       * canvas3D.height / screen.height + canvas3D_y();
 let tracking_isSteadyEnabled = false;
 
+let tracking_frameHands = false;
+let frameToElement = (x, y, element) => {
+   x -= (screen.width - screen.height) / 2;
+
+   const rect = element.getBoundingClientRect();
+   x = x * rect.width / screen.height + rect.left
+   y = y * rect.height / screen.height + rect.top;
+
+   return [x, y]
+}
+
+let toScreen = (point) => {
+   let newPoint = {...point}
+   newPoint.x *= screen.width;
+   newPoint.y *= screen.height;
+
+   if(tracking_frameHands && domDistances[0]) {
+      ([newPoint.x, newPoint.y] = frameToElement(newPoint.x, newPoint.y, domDistances[0].element))
+   }
+   return newPoint
+}
+
 let trackingUpdate = () => {
 
    // USE PRINCIPAL COMPONENT ANALYSIS TO DETECT AND THEN STEADY FIXATIONS
@@ -309,18 +331,18 @@ let trackingUpdate = () => {
          octx.save();
          for(const hand of mediapipe.handResults) {
             const currentHand = hand.handedness;
-            const fingersToDraw = new Set([0, 1, 2])
+            const fingersToDraw = new Set([0, 1, 2, 3, 4])
             
             octx.fillStyle = "#00000060";
             octx.strokeStyle = "#00000060";
 
             const activeGesture = gestureTracker.activeGestures[currentHand];
             if(activeGesture) {
-               const activeGestureState = activeGesture.state[currentHand];
+               const activeGestureState = toScreen(activeGesture.state[currentHand]);
                activeGesture.fingers.forEach((it) => fingersToDraw.delete(it));
                fingersToDraw.delete(0);
 
-               let radius = 15 * zScale(activeGestureState.z / screen.width);
+               let radius = 15 * zScale(activeGestureState.z);
                if(tracking_isObvious) {
                   switch(activeGesture.id) {
                      case "indexPinch": octx.fillStyle = '#ffff0080'; break;
@@ -334,7 +356,8 @@ let trackingUpdate = () => {
             }
 
             for(const fingerNum of fingersToDraw) {
-               const fingerPt = hand.landmarks[4 + 4 * fingerNum];
+               const fingerPt = toScreen(hand.landmarks[4 + 4 * fingerNum]);
+               
                let radius = 20 * zScale(fingerPt.z);
                if(tracking_isObvious) {
                   switch(fingerNum) {
@@ -345,11 +368,11 @@ let trackingUpdate = () => {
                   radius *= 2;
 
                   octx.beginPath();
-                  octx.arc(fingerPt.x * screen.width, fingerPt.y * screen.height, radius, 0, 2 * Math.PI);
+                  octx.arc(fingerPt.x, fingerPt.y, radius, 0, 2 * Math.PI);
                   octx.fill();
                } else {
                   octx.beginPath();
-                  octx.arc(fingerPt.x * screen.width, fingerPt.y * screen.height, radius, 0, 2 * Math.PI);
+                  octx.arc(fingerPt.x, fingerPt.y, radius, 0, 2 * Math.PI);
                   octx.stroke();
                }
             }
@@ -379,10 +402,11 @@ let initializeGestureTracking = () => {
    
    indexPinch.onStart = ({state, id}, hand) => {
       const h = hand.handedness;
-      if(canvas3D_containsPoint(state[h].x, state[h].y)) {
+      const {x, y, z} = toScreen(state[h]);
+      if(canvas3D_containsPoint(x, y)) {
          state[h].pointer = hand.handedness;
          const eventId = `${id}.${state[h].pointer}`;
-         canvas3D_down(state[h].x, state[h].y, state[h].z, eventId)
+         canvas3D_down(x, y, z, eventId)
       } else if(canvas3D_containsPoint(headX, headY)) {
          state[h].pointer = 'head';
          const eventId = `${id}.${state[h].pointer}`;
@@ -394,11 +418,12 @@ let initializeGestureTracking = () => {
       const h = hand.handedness;
       if(!state[h].pointer) return;
 
+      const {x, y, z} = toScreen(state[h]);
       const eventId = `${id}.${state[h].pointer}`;
       if(state[h].pointer === 'head') {
          canvas3D_move(headX, headY, 0, eventId)
       } else {
-         canvas3D_move(state[h].x, state[h].y, state[h].z, eventId)
+         canvas3D_move(x, y, z, eventId)
       }
    };
    
@@ -406,11 +431,12 @@ let initializeGestureTracking = () => {
       const h = hand.handedness;
       if(!state[h].pointer) return;
 
+      const {x, y, z} = toScreen(state[h]);
       const eventId = `${id}.${state[h].pointer}`;
       if(state[h].pointer === 'head') {
          canvas3D_up(headX, headY, 0, eventId)
       } else {
-         canvas3D_up(state[h].x, state[h].y, state[h].z, eventId)
+         canvas3D_up(x, y, z, eventId)
       }
    };
    
@@ -430,7 +456,7 @@ let initializeGestureTracking = () => {
 
    let spreadGesture = new MotionGesture("spread", detectSpreadStart, detectSpreadEnd, 300);
    spreadGesture.onTriggerAB = (self, hand) => {
-      if((focusedElement = domDistances[0]) == null) return;
+      if(focusedElement || (focusedElement = domDistances[0]) == null) return;
 
       domDistances.forEach((elem) => {
          elem.element.style.opacity = 0;
