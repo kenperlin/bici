@@ -8,43 +8,55 @@ class HandGesture {
     this.onStart = () => {};
     this.onEnd = () => {};
     this.onActive = () => {};
-    this.state = {};
 
-    this.lastActiveTime = 0;
-    this.confidence = 0;
-    this.isActive = false;
+    this.state = {left: {}, right: {}};
+
+    this.lastActiveTime = {left: 0, right: 0};
+    this.confidence = {left: 0, right: 0};
+    this.isActive = {left: false, right: false};
   }
 
   update(hand, timestamp = Date.now()) {
+    const h = hand.handedness;
     const conditionMet = this.conditionFn(hand);
 
-    this.confidence += conditionMet ? 1 : -1;
-    this.confidence = Math.min(Math.max(0, this.confidence), this.activationThreshold);
-
-    if (!this.isActive && this.confidence >= this.activationThreshold) {
-      this.isActive = true;
-      this.onStart?.(hand);
-    } else if (this.isActive && this.confidence == 0) {
-      this.isActive = false;
-      this.onEnd?.(hand);
+    this.confidence[h] += conditionMet ? 1 : -1;
+    this.confidence[h] = Math.min(Math.max(0, this.confidence[h]), this.activationThreshold);
+    
+    if (!this.isActive[h] && this.confidence[h] >= this.activationThreshold) {
+      this.isActive[h] = true;
+      this._onStart?.(hand);
+    } else if (this.isActive[h] && this.confidence[h] == 0) {
+      this.isActive[h] = false;
+      this._onEnd?.(hand);
     }
 
     if (
-      this.isActive &&
-      timestamp - this.lastActiveTime > this.activeCooldown
+      this.isActive[h] &&
+      timestamp - this.lastActiveTime[h] > this.activeCooldown
     ) {
-      this.lastActiveTime = timestamp;
-      this.onActive?.(hand);
+      this.lastActiveTime[h] = timestamp;
+      this._onActive?.(hand);
     }
 
-    return this.isActive;
+    return this.isActive[h];
+  }
+
+  _onStart(hand) {
+    this.onStart?.(this, hand);
+  }
+  _onEnd(hand) {
+    this.onEnd?.(this, hand);
+  }
+  _onActive(hand) {
+    this.onActive?.(this, hand);
   }
 }
 
 class GestureTracker {
   constructor() {
     this.gestures = [];
-    this.activeIds = {
+    this.activeGestures = {
       left: null,
       right: null,
     };
@@ -62,24 +74,23 @@ class GestureTracker {
     const now = Date.now();
     for (const hand of hands) {
       const currentHand = hand.handedness;
-      let activeId = null;
+      let activeGesture = null;
 
       for (const { gesture, handedness } of this.gestures) {
         if (handedness && handedness !== currentHand) continue;
         if (gesture.update(hand, now)) {
-          activeId = gesture.id;
+          activeGesture = gesture;
           break;
         }
       }
 
-      this.activeIds[currentHand] = activeId;
+      this.activeGestures[currentHand] = activeGesture;
     }
   }
 }
 
 class PinchGesture extends HandGesture {
   constructor(id, fingers, distance, activationThreshold = 1, activeCooldown = 33) {
-    
     let pointToArray = p => [ p.x, p.y, p.z ];
     let detectPinch = (hand) => {
       const thumbPt = pointToArray(hand.landmarks[4]);
@@ -94,34 +105,41 @@ class PinchGesture extends HandGesture {
     }
 
     super(id, activationThreshold, activeCooldown, detectPinch);
+    this.fingers = fingers;
+  }
 
-    this.onActive = (hand) => {
-      let newState = {...hand.landmarks[4]};
+  updateState(hand) {
+    const h = hand.handedness;
+    let newState = {...this.state[h], ...hand.landmarks[4]};
 
-      for(let i = 0; i < fingers.length; i++) {
-        const fingerPt = hand.landmarks[4 + 4 * fingers[i]]
-        newState.x += fingerPt.x;
-        newState.y += fingerPt.y;
-        newState.z += fingerPt.z;
-      }
-      
-      newState.x *= screen.width / (fingers.length + 1);
-      newState.y *= screen.height / (fingers.length + 1);
-      newState.z *= screen.width / (fingers.length + 1);
-      newState.duration = (this.state?.duration ?? 0) + 1;
-
-      this.state = newState;
+    for(let i = 0; i < this.fingers.length; i++) {
+      const fingerPt = hand.landmarks[4 + 4 * this.fingers[i]]
+      newState.x += fingerPt.x;
+      newState.y += fingerPt.y;
+      newState.z += fingerPt.z;
     }
+    
+    newState.x *= screen.width / (this.fingers.length + 1);
+    newState.y *= screen.height / (this.fingers.length + 1);
+    newState.z *= screen.width / (this.fingers.length + 1);
+    newState.duration = (this.state[h]?.duration ?? 0) + 1;
 
-    this.onEnd = () => {
-      this.state = {};
-    }
+    this.state[h] = newState;
+  }
+
+
+  _onStart(hand) {
+    this.updateState(hand);
+    super._onStart(hand);
+  }
+
+  _onEnd(hand) {
+    this.state[hand.handedness] = {};
+    super._onEnd(hand)
+  }
+
+  _onActive(hand) {
+    this.updateState(hand);
+    super._onActive(hand)
   }
 }
-
-let indexPinch = new PinchGesture('indexPinch', [1], 0.085);
-let middlePinch = new PinchGesture('middle', [2], 0.085);
-
-const gestureTracker = new GestureTracker();
-gestureTracker.add(indexPinch);
-gestureTracker.add(middlePinch);

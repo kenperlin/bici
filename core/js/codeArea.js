@@ -111,22 +111,24 @@ function CodeArea(x,y) {
 
       if (this.isVisible) {
          let highlightCharAt = (x,y,color) => {
-	    if (this.containsPoint(x,y)) {
-  	       octx.fillStyle = color;
+            if (this.containsPoint(x,y)) {
+  	            octx.fillStyle = color;
                fillOverlayRect(xToCol(x)>>0, yToRow(y)>>0, 1, 1);
             }
          }
 
          highlightCharAt(pen.x, pen.y, '#00000060');
 
-         for (let hand = 0 ; hand < 2 ; hand++)
-            if (handPinch[hand].f) {
-	       let col = xToCol(handPinch[hand].x) - 1;
-	       let row = yToRow(handPinch[hand].y) - .5;
-  	       octx.lineWidth = 2;
-  	       octx.strokeStyle = 'black';
-	       drawOverlayRect(col>>0, row>>0, 1, 1);
+         for (const h in gestureTracker.activeGestures) {
+            const gesture = gestureTracker.activeGestures[h];
+            if(gesture && gesture.id === "indexPinch") {
+               let col = xToCol(gesture.state[h].x) - 1;
+               let row = yToRow(gesture.state[h].y) - .5;
+               octx.lineWidth = 2;
+               octx.strokeStyle = 'black';
+               drawOverlayRect(col>>0, row>>0, 1, 1);
             }
+         }
       }
    }
 

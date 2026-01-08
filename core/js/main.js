@@ -22,6 +22,12 @@ canvas3D.height = CANVAS3D_HEIGHT;
 
 let canvas3D_x = () => parseInt(canvas3D.style.left);
 let canvas3D_y = () => parseInt(canvas3D.style.top );
+let canvas3D_containsPoint = (x, y) =>
+   x >= canvas3D_x() &&
+   x < canvas3D_x() + canvas3D.width &&
+   y >= canvas3D_y() &&
+   y < canvas3D_y() + canvas3D.height;
+
 
 let xToScene = x => 2 * (x - canvas3D_x()) / canvas3D.width - 1;
 let yToScene = y => 1 - 2 * (y - canvas3D_y()) / canvas3D.width;
@@ -59,9 +65,9 @@ let canvas2D_up = () => {
    canvas3D.isDown = false;
 }
 
-canvas3D.addEventListener('mousemove', event => canvas3D_move(event.clientX, event.clientY));
-canvas3D.addEventListener('mousedown', event => canvas3D_down(event.clientX, event.clientY));
-canvas3D.addEventListener('mouseup'  , event => canvas3D_up(event.clientX, event.clientY));
+canvas3D.addEventListener('mousemove', event => canvas3D_move(event.clientX, event.clientY, 0, "mouse"));
+canvas3D.addEventListener('mousedown', event => canvas3D_down(event.clientX, event.clientY, 0, "mouse"));
+canvas3D.addEventListener('mouseup'  , event => canvas3D_up(event.clientX, event.clientY, 0, "mouse"));
 canvas2D.addEventListener('mouseup'  , event => canvas2D_up());
 
 let canvasDiagram = document.createElement('canvas');
