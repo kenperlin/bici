@@ -136,6 +136,7 @@ window.keyUp = key => {
    case 'd' : isDrawpad = ! isDrawpad; break;
    case 'e' : isLoadingSrcFile = true; break;
    case 'f' : webcam.isFloaters = ! webcam.isFloaters; break;
+   case 'F' : tracking_frameHands = ! tracking_frameHands; break;
    case 'g' : webcam.grabImage(); break;
    case 'h' : help.isHelp = ! help.isHelp; break;
    case 'i' : isInfo = ! isInfo; break;

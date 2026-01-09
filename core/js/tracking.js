@@ -8,8 +8,8 @@ let tracking_blinkTime = -1;
 let tracking_l2x = x => (x - (screen.width - screen.height) / 2) * canvas3D.width  / screen.height + canvas3D_x();
 let tracking_l2y = y =>  y                                       * canvas3D.height / screen.height + canvas3D_y();
 let tracking_isSteadyEnabled = false;
+let tracking_frameHands = false;
 
-let tracking_frameHands = true;
 let frameToElement = (x, y, element) => {
    x -= (screen.width - screen.height) / 2;
 
