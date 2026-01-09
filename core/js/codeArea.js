@@ -121,9 +121,13 @@ function CodeArea(x,y) {
 
          for (const h in gestureTracker.activeGestures) {
             const gesture = gestureTracker.activeGestures[h];
-            if(gesture && gesture.id === "indexPinch") {
-               let col = xToCol(gesture.state[h].x) - 1;
-               let row = yToRow(gesture.state[h].y) - .5;
+            if(gesture?.id === "indexPinch") {
+               let x = gesture.state[h].x * screen.width;
+               let y = gesture.state[h].y * screen.height;
+               if(!this.containsPoint(x, y)) continue;
+
+               let col = xToCol(x) - 1;
+               let row = yToRow(y) - .5;
                octx.lineWidth = 2;
                octx.strokeStyle = 'black';
                drawOverlayRect(col>>0, row>>0, 1, 1);
