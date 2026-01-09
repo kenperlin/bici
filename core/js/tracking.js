@@ -24,6 +24,7 @@ let toScreen = (point) => {
    let newPoint = {...point}
    newPoint.x *= screen.width;
    newPoint.y *= screen.height;
+   newPoint.z *= screen.width;
 
    if(tracking_frameHands && domDistances[0]) {
       ([newPoint.x, newPoint.y] = frameToElement(newPoint.x, newPoint.y, domDistances[0].element))
@@ -342,7 +343,7 @@ let trackingUpdate = () => {
                activeGesture.fingers.forEach((it) => fingersToDraw.delete(it));
                fingersToDraw.delete(0);
 
-               let radius = 15 * zScale(activeGestureState.z);
+               let radius = 15 * zScale(activeGestureState.z / screen.width);
                if(tracking_isObvious) {
                   switch(activeGesture.id) {
                      case "indexPinch": octx.fillStyle = '#ffff0080'; break;
@@ -359,7 +360,7 @@ let trackingUpdate = () => {
                const fingerPt = hand.landmarks[4 + 4 * fingerNum];
                const screenFingerPt = toScreen(fingerPt);
                
-               let radius = 20 * zScale(fingerPt.z);
+               let radius = 20 * zScale(fingerPt.z / screen.width);
                if(tracking_isObvious) {
                   switch(fingerNum) {
                      case 0: octx.fillStyle = '#ff000080'; break;
