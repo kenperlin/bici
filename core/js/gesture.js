@@ -183,8 +183,8 @@ class PinchGesture extends HandGesture {
   }
 
   _onEnd(hand) {
-    this.state[hand.handedness] = {};
     super._onEnd(hand)
+    this.state[hand.handedness] = {};
   }
 
   _onActive(hand) {
