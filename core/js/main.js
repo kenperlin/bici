@@ -484,7 +484,7 @@ window.initProject = () => {
    if (projectSwitcher) {
       projectSwitcher.style.display = 'block';
       projectSwitcher.style.left = 15;
-      projectSwitcher.style.top = screen.height - 80;
+      projectSwitcher.style.top = screen.height - 50;
    }
    
    // Load the first scene
@@ -840,7 +840,7 @@ animate = () => {
 
    trackingUpdate();
 
-   projectSwitcher.style.top = document.documentElement.clientHeight - 50;
+   projectSwitcher.style.top = document.documentElement.clientHeight - 43;
 }
 
 // Room invitation UI
