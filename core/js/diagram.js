@@ -37,6 +37,10 @@ let addDiagramProperties = (diagram, ctx) => {
    diagram.drawColor = lc => { ctx.strokeStyle = lc    ; return diagram; }
    diagram.fillColor = fc => { ctx.fillStyle = fc      ; return diagram; }
    diagram.font      = f  => { ctx.font      = f       ; return diagram; }
+   diagram.setFont   = (size,face) => {
+      ctx.font = (size*w/2) + 'px ' + (face ?? 'Helvetica');
+      return diagram;
+   }
 
    diagram.arc = (a,r,t0,t1) => {
       let A = mxp(a);

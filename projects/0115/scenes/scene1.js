@@ -1,15 +1,8 @@
 /*
 (1) VISION: A statement of what we aim to enable in the long run.
-
 (2) THEORY: A new structural theory of user interaction.
-
 (3) ENGINEERING: Our plan to build an open-source toolkit to support developing that theory.
-
 (4) EVALUATION: Some specific use cases through which we will use (3) to research (2).
-
-	Building an interactive structural diagram
-	Creating and iterating on a 3D model
-	Search and organization through a corpus of data
 */
 
 function Scene() {
@@ -21,13 +14,12 @@ function Scene() {
       octx.save();
 
       diagram.lineWidth(.02);
-      diagram.font('40px Helvetica');
-
+      diagram.setFont(.053);
       diagram.fillColor('white').textBox('Our plan for our NSF funded VALIS project', [0, y + .25]);
+      diagram.fillColor('white').textBox('Our plan for our NSF funded VALIS project', [0, y + .25]);
+      diagram.setFont(.04);
 
 if (state >= 1) {
-
-      diagram.font('30px Helvetica');
 
       diagram.fillColor('#ffb0c0').textBox(`\
 1. VISION

@@ -4,7 +4,7 @@ document.body.appendChild(canvas2D);
 canvas2D.style.position = 'absolute';
 canvas2D.style.top = 0;
 canvas2D.style.left = 0;
-canvas2D.style.pointerEvents = 'none'; // Allow clicks to pass through to codeArea and canvas3D
+//canvas2D.style.pointerEvents = 'none'; // Allow clicks to pass through to codeArea and canvas3D
 
 let canvas3D = document.createElement('canvas');
 document.body.appendChild(canvas3D);
@@ -47,9 +47,15 @@ let canvas3D_down = (x,y,z,id='id') => {
    if (! canvas3D.isDown)
       canvas3D.isDown = {};
 
-   canvas3D.isDown[id] = true;
-   if (scene && scene.onDown)
-      scene.onDown(xToScene(x), yToScene(y), zToScene(z), id);
+   if (scene) {
+      x = xToScene(x);
+      y = yToScene(y);
+      if (x*x < 1 && y*y < 1) {
+         canvas3D.isDown[id] = true;
+	 if (scene.onDown)
+            scene.onDown(x, y, zToScene(z), id);
+      }
+   }
 }
 
 let canvas3D_up = (x,y,z,id='id') => {
@@ -61,14 +67,11 @@ let canvas3D_up = (x,y,z,id='id') => {
       scene.onUp(xToScene(x), yToScene(y), zToScene(z), id);
 }
 
-let canvas2D_up = () => {
-   canvas3D.isDown = false;
-}
-
 canvas3D.addEventListener('mousemove', event => canvas3D_move(event.clientX, event.clientY, 0, "mouse"));
 canvas3D.addEventListener('mousedown', event => canvas3D_down(event.clientX, event.clientY, 0, "mouse"));
-canvas3D.addEventListener('mouseup'  , event => canvas3D_up(event.clientX, event.clientY, 0, "mouse"));
-canvas2D.addEventListener('mouseup'  , event => canvas2D_up());
+canvas3D.addEventListener('mouseup'  , event => canvas3D_up  (event.clientX, event.clientY, 0, "mouse"));
+canvas2D.addEventListener('mousemove', event => canvas3D_move(event.clientX, event.clientY, 0, "mouse"));
+canvas2D.addEventListener('mouseup'  , event => canvas3D_up  (event.clientX, event.clientY, 0, "mouse"));
 
 let canvasDiagram = document.createElement('canvas');
 document.body.appendChild(canvasDiagram);
@@ -763,7 +766,6 @@ animate = () => {
 
    // Clear the overlay canvas before doing anything else for this animation frame.
    octx.clearRect(0,0,screen.width,screen.height);
-   console.log('clear overlay');
 
    let scrollPosition = window.pageYOffset;
    document.body.style.overflow = 'hidden';
