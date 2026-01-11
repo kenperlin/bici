@@ -52,26 +52,34 @@ let addDiagramProperties = (diagram, ctx) => {
       fill();
       return diagram;
    }
-   diagram.drawRect = (lo,hi) => {
+   diagram.drawRect = (lo,hi,r) => {
       lo = mxp(lo);
       hi = mxp(hi);
       ctx.beginPath();
-      ctx.moveTo(lo[0],lo[1]);
-      ctx.lineTo(hi[0],lo[1]);
-      ctx.lineTo(hi[0],hi[1]);
-      ctx.lineTo(lo[0],hi[1]);
-      ctx.lineTo(lo[0],lo[1]);
+      if (r)
+         ctx.roundRect(lo[0],lo[1],hi[0]-lo[0],hi[1]-lo[1],r*w/2);
+      else {
+         ctx.moveTo(lo[0],lo[1]);
+         ctx.lineTo(hi[0],lo[1]);
+         ctx.lineTo(hi[0],hi[1]);
+         ctx.lineTo(lo[0],hi[1]);
+         ctx.lineTo(lo[0],lo[1]);
+      }
       ctx.stroke();
       return diagram;
    }
-   diagram.fillRect = (lo,hi) => {
+   diagram.fillRect = (lo,hi,r) => {
       lo = mxp(lo);
       hi = mxp(hi);
       ctx.beginPath();
-      ctx.moveTo(lo[0],lo[1]);
-      ctx.lineTo(hi[0],lo[1]);
-      ctx.lineTo(hi[0],hi[1]);
-      ctx.lineTo(lo[0],hi[1]);
+      if (r)
+         ctx.roundRect(lo[0],lo[1],hi[0]-lo[0],hi[1]-lo[1],r*w/2);
+      else {
+         ctx.moveTo(lo[0],lo[1]);
+         ctx.lineTo(hi[0],lo[1]);
+         ctx.lineTo(hi[0],hi[1]);
+         ctx.lineTo(lo[0],hi[1]);
+      }
       ctx.fill();
       return diagram;
    }
@@ -91,21 +99,41 @@ let addDiagramProperties = (diagram, ctx) => {
    diagram.line = (a,b,arrowHead) => {
       let A = mxp(a), B = mxp(b);
 
-      ctx.beginPath();
-      ctx.moveTo(A[0], A[1]);
-      ctx.lineTo(B[0], B[1]);
-      ctx.stroke();
+      if (! arrowHead) {
+         ctx.beginPath();
+         ctx.moveTo(A[0], A[1]);
+         ctx.lineTo(B[0], B[1]);
+         ctx.stroke();
+      }
 
       if (arrowHead) {
+         let a = Math.abs(arrowHead);
          let dx = B[0]-A[0], dy = B[1]-A[1], ds = Math.sqrt(dx*dx+dy*dy);
-         dx *= 10 / ds * arrowHead;
-         dy *= 10 / ds * arrowHead;
+         dx *= 10 / ds * a;
+         dy *= 10 / ds * a;
+
+	 if (arrowHead < 0) {
+	    A[0] += dx;
+	    A[1] += dy;
+            ctx.beginPath();
+            ctx.moveTo(A[0]-dx   , A[1]-dy   );
+            ctx.lineTo(A[0]+dx-dy, A[1]+dy+dx);
+            ctx.lineTo(A[0]+dx+dy, A[1]+dy-dx);
+            fill();
+	 }
+
+	 B[0] -= dx;
+	 B[1] -= dy;
+         ctx.beginPath();
+         ctx.moveTo(B[0]+dx   , B[1]+dy   );
+         ctx.lineTo(B[0]-dx+dy, B[1]-dy-dx);
+         ctx.lineTo(B[0]-dx-dy, B[1]-dy+dx);
+         fill();
 
          ctx.beginPath();
-         ctx.moveTo(B[0]+dx*.4  , B[1]+dy*.4  );
-         ctx.lineTo(B[0]-2*dx+dy, B[1]-2*dy-dx);
-         ctx.lineTo(B[0]-2*dx-dy, B[1]-2*dy+dx);
-         fill();
+         ctx.moveTo(A[0], A[1]);
+         ctx.lineTo(B[0], B[1]);
+         ctx.stroke();
       }
       return diagram;
    }
@@ -128,6 +156,34 @@ let addDiagramProperties = (diagram, ctx) => {
       ctx.fillStyle = ctx.strokeStyle;
       ctx.fillText(str, A[0] - w/2, A[1] + 10);
       ctx.fillStyle = saveFillStyle;
+
+      return diagram;
+   }
+   diagram.textBox = (text, a) => {
+      let lines = text.split('\n'), n = lines.length;
+
+      let lh = parseInt(ctx.font) * 2/w, th = n * lh + lh;
+
+      let lw = [], tw = 0;
+      for (let i = 0 ; i < n ; i++)
+         lw.push(ctx.measureText(lines[i]).width * 2/w);
+      for (let i = 0 ; i < n ; i++)
+         tw = Math.max(tw, lw[i]);
+      tw += lh;
+
+      diagram.fillRect([ a[0]-tw/2, a[1]-th/2 ], [ a[0]+tw/2, a[1]+th/2 ], lh/2);
+
+      let saveStrokeStyle = ctx.strokeStyle;
+      ctx.strokeStyle = 'black';
+
+      let saveLineWidth = ctx.lineWidth;
+      ctx.lineWidth = lh*w/40;
+      diagram.drawRect([ a[0]-tw/2, a[1]-th/2 ], [ a[0]+tw/2, a[1]+th/2 ], lh/2);
+      ctx.lineWidth = saveLineWidth;;
+
+      for (let i = 0 ; i < n ; i++)
+         diagram.text(lines[i], [ a[0], a[1] - (i-n/2+.5) * lh ]);
+      ctx.strokeStyle = saveStrokeStyle;
 
       return diagram;
    }
