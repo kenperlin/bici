@@ -386,6 +386,8 @@ let initSlides = () => {
       else if (isDiagram) {
          loadScript('projects/' + project + '/diagrams/' + file, () => {
             let diagram = new Diagram();
+	    diagram.width = D.w;
+	    diagram.height = D.h;
 	    addDiagramProperties(diagram, ctx);
             fq[name].diagram = diagram;
          });

@@ -1,6 +1,6 @@
 let addDiagramProperties = (diagram, ctx) => {
-   let w  = diagram.width  = diagram.width  ?? D.w;
-   let h  = diagram.height = diagram.height ?? D.h;
+   let w  = diagram.width ;
+   let h  = diagram.height;
    let xp = x => (.5     + x * .5) * w;
    let yp = y => (.5*h/w - y * .5) * w;
    let M = new M4();
@@ -148,6 +148,22 @@ let addDiagramProperties = (diagram, ctx) => {
       }
       ctx.stroke();
    }
+   diagram._images = {};
+   diagram.image = (image, a, scale) => {
+      if (typeof image == 'string')
+         if (diagram._images[image] === undefined) {
+            diagram._images[image] = null;
+            loadImage(image, img => diagram._images[image] = img);
+         }
+	 else
+	    diagram.image(diagram._images[image], a, scale);
+      else if (image) {
+         let A = mxp(a);
+	 let width = scale * w/2;
+	 let height = width * image.height / image.width;
+	 ctx.drawImage(image, A[0]-width/2, A[1]-height/2, width, height);
+      }
+   }
    diagram.text = (str, a, isLeft) => {
       let A = mxp(a);
       let w = isLeft ? 0 : ctx.measureText(str).width;
@@ -187,4 +203,9 @@ let addDiagramProperties = (diagram, ctx) => {
 
       return diagram;
    }
+
+   return diagram;
 }
+
+let overlayDiagram = () => addDiagramProperties({ width: screen.width, height: screen.height }, octx);
+

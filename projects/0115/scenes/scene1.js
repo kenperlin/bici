@@ -15,12 +15,13 @@
 function Scene() {
    let state = 0, nStates = 5;
    this.onUp = () => state = (state + 1) % nStates;
-   let diagram = { width: screen.width, height: screen.height };
-   addDiagramProperties(diagram, octx);
-   diagram.lineWidth(.02);
+   let diagram = overlayDiagram();
    let y = -.4;
    this.update = () => {
-      octx.font = '40px Helvetica';
+      octx.save();
+
+      diagram.lineWidth(.02);
+      diagram.font('40px Helvetica');
 
       octx.fillStyle = '#ffffff';
       diagram.textBox('Our plan for our NSF funded VALIS project', [0, y + .25]);
@@ -85,6 +86,7 @@ test our theory\
 
 }
 
+      octx.restore();
    }
 
 }
