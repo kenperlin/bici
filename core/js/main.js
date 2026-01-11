@@ -763,6 +763,7 @@ animate = () => {
 
    // Clear the overlay canvas before doing anything else for this animation frame.
    octx.clearRect(0,0,screen.width,screen.height);
+   console.log('clear overlay');
 
    let scrollPosition = window.pageYOffset;
    document.body.style.overflow = 'hidden';
@@ -831,7 +832,7 @@ animate = () => {
       penMove(p.x * w / 640, p.y * h / 440);
    pen.draw(pen.strokes);
    chalktalk.update(pen.draw);
-   if (scene && scene.update)
+   if (scene && scene.update && isScene)
       scene.update(webcam.headPos);
    help.display(ctx);
 

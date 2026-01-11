@@ -23,15 +23,13 @@ function Scene() {
       diagram.lineWidth(.02);
       diagram.font('40px Helvetica');
 
-      octx.fillStyle = '#ffffff';
-      diagram.textBox('Our plan for our NSF funded VALIS project', [0, y + .25]);
+      diagram.fillColor('white').textBox('Our plan for our NSF funded VALIS project', [0, y + .25]);
 
 if (state >= 1) {
 
-      octx.font = '30px Helvetica';
+      diagram.font('30px Helvetica');
 
-      octx.fillStyle = '#ffc0c0';
-      diagram.textBox(`\
+      diagram.fillColor('#ffb0c0').textBox(`\
 1. VISION
 
 What VALIS
@@ -43,10 +41,9 @@ the long run\
 
 if (state >= 2) {
 
-     diagram.line([-.64,y],[-.52,y],2);
+     diagram.drawColor('white').line([-.64,y],[-.52,y],2);
 
-      octx.fillStyle = '#c0ffc0';
-      diagram.textBox(`\
+      diagram.fillColor('#c0ffc0').textBox(`\
 2. THEORY
 
 A new structural
@@ -58,10 +55,9 @@ user interaction\
 
 if (state >= 3) {
 
-     diagram.line([-.18,y],[-.06,y],2);
+     diagram.drawColor('white').line([-.18,y],[-.06,y],2);
 
-      octx.fillStyle = '#a0d0ff';
-      diagram.textBox(`\
+      diagram.fillColor('#a0d0ff').textBox(`\
 3. ENGINEERING
 
 Build an open-source
@@ -73,10 +69,9 @@ and test our theory\
 
 if (state >= 4) {
 
-     diagram.line([.37,y],[.49,y],2);
+     diagram.drawColor('white').line([.37,y],[.49,y],2);
 
-      octx.fillStyle = '#e0c0ff';
-      diagram.textBox(`\
+      diagram.fillColor('#e0c0ff').textBox(`\
 4. EVALUATION
 
 Specific use cases
