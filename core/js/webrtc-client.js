@@ -29,6 +29,17 @@ class WebRTCClient {
     this.connectedClients = [];
   }
 
+  /**
+   * Set up the call on WebRTC.
+   * 
+   * Once a websocket connection is initiated on the client side, the server itself 
+   * broadcasts the list of all clients using which each client can then make an offer.
+   * The other client sends an answer over the server following which ICE candidates 
+   * are exchanged. For now, Google STUN servers are being used which should be changed
+   * to the users own servers if they plan to scale.
+   * 
+   * @returns (Promise) local camera stream (can be added to a video element)
+   */
   async init() {
     try {
       // Get user media with smaller resolution for better performance
