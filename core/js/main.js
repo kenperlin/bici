@@ -834,8 +834,11 @@ animate = () => {
       penMove(p.x * w / 640, p.y * h / 440);
    pen.draw(pen.strokes);
    chalktalk.update(pen.draw);
-   if (scene && scene.update && isScene)
+   if (scene && scene.update && isScene) {
+      octx.save();
       scene.update(webcam.headPos);
+      octx.restore();
+   }
    help.display(ctx);
 
    if (isLightPen) {

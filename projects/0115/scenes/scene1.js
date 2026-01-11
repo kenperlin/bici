@@ -11,7 +11,6 @@ function Scene() {
    let diagram = overlayDiagram();
    let y = -.4;
    this.update = () => {
-      octx.save();
 
       diagram.lineWidth(.02);
       diagram.setFont(.053);
@@ -73,9 +72,7 @@ test our theory\
 
 }
 
-      octx.restore();
    }
-
 }
 
 
