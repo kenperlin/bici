@@ -1,5 +1,5 @@
 function Scene() {
-   let state = 0, nStates = 13;
+   let state = 0, nStates = 14;
    this.onUp = () => state = (state + 1) % nStates;
    let diagram = overlayDiagram();
    let y = -.4;
@@ -25,8 +25,15 @@ if (state >= 3)
 if (state >= 4)
       diagram.textBox('Data search and\norganization', [.67,-.15]);
 
+let Y = [.2,-.04,-.15,-.26,-.37,-.48];
+
 if (state >= 5) {
-      diagram.line([-.74,.2],[-.74,state<6?.2:state<7?-.04:state<8?-.18:state<9?-.32:-.46]);
+      diagram.line([-.74,Y[0]],[-.74, state < 6 ? Y[0]
+                                    : state < 7 ? Y[1]
+				    : state < 8 ? Y[2]
+				    : state < 9 ? Y[3]
+				    : state <10 ? Y[4]
+				    :             Y[5]]);
 
       diagram.setFont(.053)
              .textBox('Focus of our\nresearch\nquestions', [-.74,.22], 0)
@@ -34,27 +41,30 @@ if (state >= 5) {
 }
 
 if (state >= 6)
-      diagram.textBox('Speed', [-.74,-.04]);
+      diagram.textBox('Speed', [-.74,Y[1]]);
 
 if (state >= 7)
-      diagram.textBox('Accuracy', [-.74,-.18]);
+      diagram.textBox('Accuracy', [-.74,Y[2]]);
 
 if (state >= 8)
-      diagram.textBox('User preference', [-.74,-.32]);
+      diagram.textBox('User preference', [-.74,Y[3]]);
 
 if (state >= 9)
-      diagram.textBox('Cognitive load', [-.74,-.46]);
+      diagram.textBox('Cognitive load', [-.74,Y[4]]);
 
 if (state >= 10)
+      diagram.textBox('Learnability', [-.74,Y[5]]);
+
+if (state >= 11)
       diagram.setFont(.053)
              .textBox('Tools', [-.3,-.4], 0)
 	     .setFont(.048);
 
-if (state >= 11)
+if (state >= 12)
       diagram.drawColor('white').line([-.19,-.37],[-.02,-.325],2)
              .textBox('Testing protocols', [.2,-.325]);
 
-if (state >= 12)
+if (state >= 13)
       diagram.line([-.19,-.42],[-.02,-.475],2)
              .textBox('Data analysis', [.165,-.475]);
 
