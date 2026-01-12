@@ -14,7 +14,7 @@ function Scene() {
 
       diagram.lineWidth(.02);
       diagram.setFont(.053);
-      diagram.fillColor('white').textBox('Our plan for\nour NSF funded\nVALIS project', [-.72, .45]);
+      diagram.fillColor('white').textBox('The plan for our\nVALIS project', [-.72, .49]);
       diagram.setFont(.04);
 
 if (state >= 1) {

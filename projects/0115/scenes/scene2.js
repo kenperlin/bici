@@ -10,7 +10,7 @@ function Scene() {
 
       diagram.lineWidth(.02);
       diagram.setFont(.053);
-      diagram.fillColor('#ffb0c0').textBox('VISION', [-.83, .55]);
+      diagram.fillColor('#ffb0c0').textBox('VISION', [-.83, .545]);
 
 if (state >= 1) {
 
@@ -19,7 +19,7 @@ Improve one-to-one collaboration
 between people, by combining
 embodied interaction
 with AI assistance.\
-`, [.52,.46]);
+`, [.52,.44]);
 
 }
 

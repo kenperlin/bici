@@ -103,13 +103,6 @@ let addDiagramProperties = (diagram, ctx) => {
    diagram.line = (a,b,arrowHead) => {
       let A = mxp(a), B = mxp(b);
 
-      if (! arrowHead) {
-         ctx.beginPath();
-         ctx.moveTo(A[0], A[1]);
-         ctx.lineTo(B[0], B[1]);
-         ctx.stroke();
-      }
-
       if (arrowHead) {
          let a = Math.abs(arrowHead);
          let dx = B[0]-A[0], dy = B[1]-A[1], ds = Math.sqrt(dx*dx+dy*dy);
@@ -133,12 +126,13 @@ let addDiagramProperties = (diagram, ctx) => {
          ctx.lineTo(B[0]-dx+dy, B[1]-dy-dx);
          ctx.lineTo(B[0]-dx-dy, B[1]-dy+dx);
          fill();
-
-         ctx.beginPath();
-         ctx.moveTo(A[0], A[1]);
-         ctx.lineTo(B[0], B[1]);
-         ctx.stroke();
       }
+
+      ctx.beginPath();
+      ctx.moveTo(A[0], A[1]);
+      ctx.lineTo(B[0], B[1]);
+      ctx.stroke();
+
       return diagram;
    }
    diagram.curve = (n, f) => {
