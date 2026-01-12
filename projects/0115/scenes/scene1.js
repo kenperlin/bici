@@ -6,7 +6,7 @@
 */
 
 function Scene() {
-   let state = 0, nStates = 5;
+   let state = -1, nStates = 5;
    this.onUp = () => state = (state + 1) % nStates;
    let diagram = overlayDiagram();
    let y = -.4;
@@ -14,8 +14,7 @@ function Scene() {
 
       diagram.lineWidth(.02);
       diagram.setFont(.053);
-      diagram.fillColor('white').textBox('Our plan for our NSF funded VALIS project', [0, y + .25]);
-      diagram.fillColor('white').textBox('Our plan for our NSF funded VALIS project', [0, y + .25]);
+      diagram.fillColor('white').textBox('Our plan for\nour NSF funded\nVALIS project', [-.72, .45]);
       diagram.setFont(.04);
 
 if (state >= 1) {
@@ -26,13 +25,13 @@ if (state >= 1) {
 What VALIS
 will enable in
 the long run\
-`, [-.78,y]);
+`, [-.775,y]);
 
 }
 
 if (state >= 2) {
 
-     diagram.drawColor('white').line([-.64,y],[-.52,y],2);
+     diagram.drawColor('white').line([-.625,y],[-.525,y],2);
 
       diagram.fillColor('#c0ffc0').textBox(`\
 2. THEORY
@@ -46,7 +45,7 @@ user interaction\
 
 if (state >= 3) {
 
-     diagram.drawColor('white').line([-.18,y],[-.06,y],2);
+     diagram.drawColor('white').line([-.17,y],[-.07,y],2);
 
       diagram.fillColor('#a0d0ff').textBox(`\
 3. ENGINEERING
@@ -60,7 +59,7 @@ and test our theory\
 
 if (state >= 4) {
 
-     diagram.drawColor('white').line([.37,y],[.49,y],2);
+     diagram.drawColor('white').line([.375,y],[.48,y],2);
 
       diagram.fillColor('#e0c0ff').textBox(`\
 4. EVALUATION
@@ -74,6 +73,7 @@ test our theory\
 
    }
 }
+
 
 
 
