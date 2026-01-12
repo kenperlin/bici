@@ -1,6 +1,3 @@
-/*
-(1) VISION: A statement of what we aim to enable in the long run.
-*/
 
 function Scene() {
    let state = 0, nStates = 7;

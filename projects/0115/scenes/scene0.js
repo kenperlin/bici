@@ -1,0 +1,2 @@
+
+function Scene() { } // EMPTY SCENE

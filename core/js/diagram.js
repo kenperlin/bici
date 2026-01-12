@@ -173,7 +173,7 @@ let addDiagramProperties = (diagram, ctx) => {
 
       return diagram;
    }
-   diagram.textBox = (text, a) => {
+   diagram.textBox = (text, a, r) => {
       let lines = text.split('\n'), n = lines.length;
 
       let lh = parseInt(ctx.font) * 2.5/w, th = n * lh + lh;
@@ -185,14 +185,16 @@ let addDiagramProperties = (diagram, ctx) => {
          tw = Math.max(tw, lw[i]);
       tw += lh;
 
-      diagram.fillRect([ a[0]-tw/2, a[1]-th/2+lh/4 ], [ a[0]+tw/2, a[1]+th/2-lh/16 ], lh/2);
+      r = r ?? lh/2;
+
+      diagram.fillRect([ a[0]-tw/2, a[1]-th/2+lh/4 ], [ a[0]+tw/2, a[1]+th/2-lh/16 ], r);
 
       let saveStrokeStyle = ctx.strokeStyle;
       ctx.strokeStyle = 'black';
 
       let saveLineWidth = ctx.lineWidth;
       ctx.lineWidth = lh*w/40;
-      diagram.drawRect([ a[0]-tw/2, a[1]-th/2+lh/4 ], [ a[0]+tw/2, a[1]+th/2-lh/16 ], lh/2);
+      diagram.drawRect([ a[0]-tw/2, a[1]-th/2+lh/4 ], [ a[0]+tw/2, a[1]+th/2-lh/16 ], r);
       ctx.lineWidth = saveLineWidth;;
 
       for (let i = 0 ; i < n ; i++)

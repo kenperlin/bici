@@ -34,7 +34,7 @@ can enable now:\
 
 if (state >= 3) {
 
-      diagram.drawColor('white').line([-.65,-.1],[-.65,-.26],2);
+      diagram.drawColor('black').line([-.65,-.1],[-.65,-.26],2);
 
       diagram.textBox(`\
 Better collaboration
@@ -55,7 +55,7 @@ enable in the future:\
 
 if (state >= 5) {
 
-      diagram.drawColor('white').line([.55,-.1],[.55,-.26],2);
+      diagram.drawColor('black').line([.55,-.1],[.55,-.26],2);
 
       diagram.textBox(`\
 Better collaboration
