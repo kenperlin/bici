@@ -1,14 +1,16 @@
-/*
-   Use the 640x480 video feed image to track the user's head.
+/**
+ * Use the 640x480 video feed image to track the user's head.
    This algorithm assumes that the wall behind the head is white.
-   Return value is [x,y,z] position of the head.
 
    Approach:
       Find the top of the head.
       Find the left and right edges of the head.
       From those three values, derive the x,y,z positio of the head.
-*/
 
+ * @param {Uint8ClampedArray} data pixel data containing the image being drawn on the canvas. In the current context this is the webcam stream
+ * @param {boolean} isShowingTracking true or false depending on if we want the tracking to be visible
+ * @returns [x, y, z] position of the head
+ */
 let trackHead = (data, isShowingTracking) => {
 
    let highlightRect = (col, row, w, h) => {
