@@ -173,7 +173,7 @@ let addDiagramProperties = (diagram, ctx) => {
 
       return diagram;
    }
-   diagram.textBox = (text, a, r) => {
+   diagram.textBox = (text, a, r, opacity) => {
       let lines = text.split('\n'), n = lines.length;
 
       let lh = parseInt(ctx.font) * 2.5/w, th = n * lh + lh;
@@ -187,7 +187,11 @@ let addDiagramProperties = (diagram, ctx) => {
 
       r = r ?? lh/2;
 
+      if (opacity && opacity < 1)
+         octx.globalAlpha = 0.5;
       diagram.fillRect([ a[0]-tw/2, a[1]-th/2+lh/4 ], [ a[0]+tw/2, a[1]+th/2-lh/16 ], r);
+      if (opacity && opacity < 1)
+         octx.globalAlpha = 1.0;
 
       let saveStrokeStyle = ctx.strokeStyle;
       ctx.strokeStyle = 'black';

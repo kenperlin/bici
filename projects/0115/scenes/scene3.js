@@ -1,6 +1,5 @@
-
 function Scene() {
-   let state = 0, nStates = 10;
+   let state = 0, nStates = 11;
    this.onUp = () => state = (state + 1) % nStates;
    let diagram = overlayDiagram();
    this.update = () => {
@@ -11,47 +10,50 @@ function Scene() {
 
 if (state >= 1) {
 
-      //diagram.textBox('Non-linear benefits\nof combining\nembodiment\nwith AI', [.68, .43]);
-      diagram.textBox('We still need to narrow\nour theoretical focus', [.67, .51]);
+      diagram.textBox('We still need to narrow\nour theoretical focus', [.66, .51]);
 
 }
 
 if (state >= 2) {
 
-      diagram.setFont(.04);
+      diagram.setFont(.035);
 
-      diagram.textBox('Multimodal\nembodied input', [-.25, -.36]);
+      diagram.textBox('Multimodal\n+ embodied input', [-.297, -.53]);
 }
 
 if (state >= 3) {
 
-      diagram.textBox('Combining speech\nwith gesture', [.25, -.36]);
+      diagram.textBox('Combine speech\nwith gesture', [.20, -.53]);
 }
 
 if (state >= 4) {
 
 
-      diagram.textBox('Remapping\nembodied input', [-.25, -.1]);
+      diagram.textBox('Remapping\nembodied input', [-.311, -.40]);
 }
 
 if (state >= 5) {
 
-      diagram.textBox('Interacting\nwith large data', [.25, -.1]);
+      diagram.textBox('Interacting\nwith large data', [.22, -.40]);
 }
 
 if (state >= 6) {
 
 
-      diagram.textBox('One person\nversus two people', [-.25, .16]);
+      diagram.textBox('One person\nversus two people', [-.29, -.27]);
 }
 
 if (state >= 7) {
 
-      diagram.textBox('AI: gesture, layout,\nchat, text-to-code ...', [.25, .16]);
+      diagram.textBox('Synchronous vs.\nasynchronous', [.205, -.27]);
 }
+
 if (state >= 8) {
 
-      diagram.setFont(.035);
+      diagram.textBox('AI: gesture, layout, text-to-code, hints, summaries ...', [-.047, -.16]);
+}
+
+if (state >= 9) {
 
       diagram.textBox(`\
 TYPES OF SPEECH
@@ -76,7 +78,7 @@ vs Interactional\
 `, [-.78,-.07], 0);
 }
 
-if (state >= 9) {
+if (state >= 10) {
 
       diagram.textBox(`\
 TYPES OF GESTURE
@@ -99,42 +101,8 @@ Head
 Eyes
 
 Static vs Dynamic\
-`, [.77, -.07], 0);
+`, [.76, -.07], 0);
 }
 
    }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

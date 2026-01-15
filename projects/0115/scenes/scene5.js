@@ -25,7 +25,7 @@ if (state >= 3)
 if (state >= 4)
       diagram.textBox('Data search and\norganization', [.67,-.15]);
 
-let Y = [.2,-.04,-.15,-.26,-.37,-.48];
+let Y = [.2,-.02,-.14,-.26,-.38,-.50];
 
 if (state >= 5) {
       diagram.line([-.74,Y[0]],[-.74, state < 6 ? Y[0]
@@ -70,33 +70,7 @@ if (state >= 13)
 
 if (state >= 14)
       diagram.line([-.19,-.43],[-.02,-.525],2)
-             .textBox('Workshops', [.165,-.525]);
+             .textBox('Workshops', [.141,-.525]);
 
    }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
