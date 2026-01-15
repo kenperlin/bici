@@ -291,9 +291,19 @@ let trackingUpdate = () => {
          octx.lineWidth = 2;
 	 let h = eyeOpen > .5 ? 40 : 10;
          octx.lineWidth = 4;
+/*
          octx.strokeRect(headX - 20, headY - h/2, 40, h);
 	 if (eyeOpen < .4)
             octx.fillRect(headX - 20, headY - h/2, 40, h);
+*/
+         octx.beginPath();
+	 octx.ellipse(headX, headY, 25, 35, 0, 0, 2 * Math.PI);
+         octx.stroke();
+	 {
+	    let e = 10 * eyeOpen;
+	    octx.fillRect(headX - 9 - 6, headY - 2 - e/2, 12, e);
+	    octx.fillRect(headX + 9 - 6, headY - 2 - e/2, 12, e);
+	 }
 
          // DISABLE EYE GAZE VISUAL FEEDBACK UNTIL WE GET IT RIGHT.
 
@@ -395,6 +405,13 @@ let trackingUpdate = () => {
          codeArea.getElement().value = trackingInfo;
       wasTracking = false;
    }
+
+   for (let hand = 0 ; hand <= 1 ; hand++)
+      if (mediapipe.handResults[hand])
+         drawShadowHand(octx, mediapipe.handResults[hand].landmarks,
+	    headX - .1 * screen.width,
+	    headY - .1 * screen.height,
+	    .2);
 }
 
 let trackingIndex = 0, wasTracking = false, trackingInfo = 'let left=[],right=[],face=[];';

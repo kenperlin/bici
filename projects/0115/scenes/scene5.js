@@ -1,5 +1,5 @@
 function Scene() {
-   let state = 0, nStates = 14;
+   let state = 0, nStates = 15;
    this.onUp = () => state = (state + 1) % nStates;
    let diagram = overlayDiagram();
    let y = -.4;
@@ -61,15 +61,20 @@ if (state >= 11)
 	     .setFont(.048);
 
 if (state >= 12)
-      diagram.drawColor('white').line([-.19,-.37],[-.02,-.325],2)
-             .textBox('Testing protocols', [.2,-.325]);
+      diagram.drawColor('white').line([-.19,-.37],[-.02,-.275],2)
+             .textBox('Testing protocols', [.2,-.275]);
 
 if (state >= 13)
-      diagram.line([-.19,-.42],[-.02,-.475],2)
-             .textBox('Data analysis', [.165,-.475]);
+      diagram.line([-.19,-.4],[-.02,-.4],2)
+             .textBox('Data analysis', [.165,-.4]);
+
+if (state >= 14)
+      diagram.line([-.19,-.43],[-.02,-.525],2)
+             .textBox('Workshops', [.165,-.525]);
 
    }
 }
+
 
 
 

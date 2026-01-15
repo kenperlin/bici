@@ -37,7 +37,7 @@ let coreFiles = `M4, pca, loadImage, webgl, webcam, trackHead, help,
 	        midi, numberString, pen, keyEvent, matchCurves,
 	        glyphs, chalktalk, codeArea, math, shape, shader,
 	        diagram, sliders, webrtc-client, video-ui, implicit,
-		mediapipe, gesture, tracking, main`.split(',');
+		mediapipe, gesture, shadowHand, tracking, main`.split(',');
 
 let project, slideData;
 let coreLoaded = false;

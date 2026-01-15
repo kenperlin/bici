@@ -722,6 +722,13 @@ let reloadTime = 0;
 
 let centeredText = (ctx,text,x,y) => ctx.fillText(text, x-ctx.measureText(text).width/2, y);
 
+let screenMessage = text => {
+   octx.save();
+   octx.font = '30px Courier';
+   centeredText(octx, text, screen.width / 2, 30);
+   octx.restore();
+}
+
 animate = () => {
    // Only init slides if a project is loaded
    if (isFirstTime && project && slideData) {
