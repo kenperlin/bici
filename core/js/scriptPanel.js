@@ -212,6 +212,42 @@ function ScriptPanel () {
         outputTextarea.value = 'Asking Gemini...';
     
         try {
+            // Add system context about available scene controls
+            const systemPrompt = `You are helping control a 3D scene. The scene has the following properties that can be modified:
+                - scaleValue: controls the size of objects (default 0.3, range 0.1 to 1.0)
+                - color: RGB color array where each value is 0-1 (e.g., [1,0,0] for red, [0,1,0] for green, [0,0,1] for blue, [1,1,0] for yellow)
+                
+
+                When the user asks to modify the scene, respond with:
+                1. A natural language confirmation
+                2. A JSON command block wrapped in \`\`\`json tags with the format:
+                \`\`\`json
+                {
+                "scaleValue": <number>,
+                "color": [<r>, <g>, <b>]
+                }
+                \`\`\`
+
+                Only include properties that need to be changed.
+
+                Examples:
+                - "make it yellow" → {"color": [1, 1, 0]}
+                - "make it red" → {"color": [1, 0, 0]}
+                - "make it bigger" → {"scaleValue": 0.6}
+                - "make it small and red" → {"scaleValue": 0.2, "color": [1, 0, 0]}`;
+
+
+            // Prepend system context to conversation history if it's the first message
+            const historyWithSystem = conversationHistory.length === 0 
+                ? [{
+                    role: 'user',
+                    parts: [{ text: systemPrompt }]
+                }, {
+                    role: 'model',
+                    parts: [{ text: 'I understand. I can help you modify the 3D scene by changing the scale and color. Just tell me what you want to change!' }]
+                }]
+                : [];
+
             const response = await fetch('/api/gemini', {
                 method: 'POST',
                 headers: {
@@ -219,7 +255,7 @@ function ScriptPanel () {
                 },
                 body: JSON.stringify({ 
                     prompt: prompt,
-                    history: conversationHistory
+                    history: [...historyWithSystem, ...conversationHistory]
                 })
             });
     
@@ -228,6 +264,9 @@ function ScriptPanel () {
             if (response.ok) {
                 outputTextarea.value = data.response;
                 savedOutputContent = data.response;
+
+                // Parse and execute commands from Gemini's response
+                this.parseAndExecuteCommands(data.response);
                 
                 // Add to conversation history
                 conversationHistory.push({
@@ -249,6 +288,25 @@ function ScriptPanel () {
         } catch (error) {
             outputTextarea.value = 'Error: Failed to connect to server';
             console.error('Error:', error);
+        }
+    }
+
+    this.parseAndExecuteCommands = (response) => {
+        try {
+            const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
+            
+            if (jsonMatch && jsonMatch[1]) {
+                const commands = JSON.parse(jsonMatch[1]);
+                
+                // Dispatch custom event with commands
+                window.dispatchEvent(new CustomEvent('sceneCommand', {
+                    detail: commands
+                }));
+                
+                console.log('Dispatched scene command:', commands);
+            }
+        } catch (error) {
+            console.error('Error parsing commands:', error);
         }
     }
 

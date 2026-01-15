@@ -376,6 +376,22 @@ let setScene = id => {
    loadScript(url, () => {
       autodraw = true;
       gl_start(canvas3D, scene = new Scene());
+
+      // Listen for scene commands
+      window.addEventListener('sceneCommand', (event) => {
+         const commands = event.detail;
+         
+         if (commands.scaleValue !== undefined) {
+             scene.scaleValue = commands.scaleValue;
+             console.log(`Set scaleValue to ${commands.scaleValue}`);
+         }
+         
+         if (commands.color !== undefined) {
+             scene.color = commands.color;
+             console.log(`Set color to [${commands.color.join(', ')}]`);
+         }
+     });
+
       getFile(url, str => codeArea.getElement().value = str);
    });
 }
