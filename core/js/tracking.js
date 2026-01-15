@@ -174,11 +174,11 @@ let trackingUpdate = () => {
       }
 
       let codeBounds = textArea.getBoundingClientRect();
-      let codeDist = isCode ? getSignedDistanceRect(headX, headY, codeBounds) : Infinity;
+      let codeDist = isCode ? getSignedDistanceRect(head_x(), head_y(), codeBounds) : Infinity;
       let sceneBounds = canvas3D.getBoundingClientRect();
-      let sceneDist = isScene ? getSignedDistanceRect(headX, headY, sceneBounds) : Infinity;
+      let sceneDist = isScene ? getSignedDistanceRect(head_x(), head_y(), sceneBounds) : Infinity;
       let slideBounds = {left: D.left, right: D.left + D.w, top: D.top, bottom: D.top + D.h};
-      let slideDist = isInfo ? getSignedDistanceRect(headX, headY, slideBounds) : Infinity;
+      let slideDist = isInfo ? getSignedDistanceRect(head_x(), head_y(), slideBounds) : Infinity;
 
       domDistances = [
         { bounds: codeBounds, dist: codeDist, element: textArea },
@@ -263,25 +263,25 @@ let trackingUpdate = () => {
          for (let eye = -1 ; eye <= 1 ; eye += 2) {
             octx.fillStyle = eyeOpen < .4 ? '#00000080' : '#ffffff40';
             octx.beginPath();
-            octx.ellipse(headX + 70 * eye, headY, 35, 35 * eyeOpen, 0, 0, 2 * Math.PI);
+            octx.ellipse(head_x() + 70 * eye, head_y(), 35, 35 * eyeOpen, 0, 0, 2 * Math.PI);
             octx.fill();
             octx.strokeStyle = '#00000040';
             octx.lineWidth = 2;
             octx.beginPath();
-            octx.ellipse(headX + 70 * eye, headY, 35, 35 * eyeOpen, 0, 0, 2 * Math.PI);
+            octx.ellipse(head_x() + 70 * eye, head_y(), 35, 35 * eyeOpen, 0, 0, 2 * Math.PI);
             octx.stroke();
 
             if (eyeOpen >= .4) {
                octx.fillStyle = '#00000040';
                octx.beginPath();
                let ex = 50 * eyeGazeX;
-               let t = Math.abs(headX - mx) / my;
+               let t = Math.abs(head_x() - mx) / my;
                let ey = 50 * eyeGazeY + 23
-                      -  (9-3*t) * headY / my
+                      -  (9-3*t) * head_y() / my
                       -  8 * t
                       - 30 * Math.pow(Math.max(0, eyeOpen - .7) / .3, 1.5) * .3
                       - 20 * Math.pow(Math.max(0, .7 - eyeOpen) / .3, 1.5) * .3;
-               octx.arc(headX + 70 * eye + ex, headY + ey, 20, 0, 2 * Math.PI);
+               octx.arc(head_x() + 70 * eye + ex, head_y() + ey, 20, 0, 2 * Math.PI);
                octx.fill();
             }
          }
@@ -291,25 +291,21 @@ let trackingUpdate = () => {
          octx.lineWidth = 2;
 	 let h = eyeOpen > .5 ? 40 : 10;
          octx.lineWidth = 4;
-/*
-         octx.strokeRect(headX - 20, headY - h/2, 40, h);
-	 if (eyeOpen < .4)
-            octx.fillRect(headX - 20, headY - h/2, 40, h);
-*/
+
          octx.beginPath();
-	 octx.ellipse(headX, headY, 25, 35, 0, 0, 2 * Math.PI);
+	 octx.ellipse(head_x(), head_y(), 25, 35, 0, 0, 2 * Math.PI);
          octx.stroke();
 	 {
 	    let e = 10 * eyeOpen;
-	    octx.fillRect(headX - 9 - 6, headY - 2 - e/2, 12, e);
-	    octx.fillRect(headX + 9 - 6, headY - 2 - e/2, 12, e);
+	    octx.fillRect(head_x() - 9 - 6, head_y() - 2 - e/2, 12, e);
+	    octx.fillRect(head_x() + 9 - 6, head_y() - 2 - e/2, 12, e);
 	 }
 
          // DISABLE EYE GAZE VISUAL FEEDBACK UNTIL WE GET IT RIGHT.
 
          if (eyeOpen >= .4) {
-	    let x = headX + 3500 * eyeGazeX;
-	    let y = headY + 5000 * eyeGazeY + 300;
+	    let x = head_x() + 3500 * eyeGazeX;
+	    let y = head_y() + 5000 * eyeGazeY + 300;
 //          octx.fillRect(x - 20, y - h/4, 40, h);
          }
       }
@@ -319,7 +315,7 @@ let trackingUpdate = () => {
       let l2x = x => (x - (w/2-h/2)) * canvas3D.width  / h + canvas3D_x();
       let l2y = y =>  y              * canvas3D.height / h + canvas3D_y();
 
-      if(tracking_isLarge) {
+      if (tracking_isLarge) {
          headX = tracking_l2x(headX);
          headY = tracking_l2y(headY);
       }
@@ -329,8 +325,8 @@ let trackingUpdate = () => {
       if (eyeOpen >= .4 && tracking_blinkTime > 0) {
          let blinkDuration = Date.now() / 1000 - tracking_blinkTime;
          if (blinkDuration > .2) {
-            canvas3D_down(headX, headY);
-            canvas3D_up(headX, headY);
+            canvas3D_down(head_x(), head_y());
+            canvas3D_up(head_x(), head_y());
          }
          tracking_blinkTime = -1;
       }
@@ -409,9 +405,8 @@ let trackingUpdate = () => {
    for (let hand = 0 ; hand <= 1 ; hand++)
       if (mediapipe.handResults[hand])
          drawShadowHand(octx, mediapipe.handResults[hand].landmarks,
-	    headX - .1 * screen.width,
-	    headY - .1 * screen.height,
-	    .2);
+	    head_x() - .1 * screen.width,
+	    head_y() - .1 * screen.height, .2);
 }
 
 let trackingIndex = 0, wasTracking = false, trackingInfo = 'let left=[],right=[],face=[];';
@@ -422,6 +417,19 @@ let eyeGazeX = 0;
 let eyeGazeY = 0;
 let domDistances = [];
 let focusedElement;
+
+let head_x = () => isHeadFreeze ? headXFreeze : headX;
+let head_y = () => isHeadFreeze ? headYFreeze : headY;
+
+let isHeadFreeze = false, headXFreeze, headYFreeze;
+let toggleHeadFreeze = () => {
+   isHeadFreeze = ! isHeadFreeze;
+   if (isHeadFreeze) {
+      headXFreeze = headX;
+      headYFreeze = headY;
+   }
+   console.log('toggled head freeze', isHeadFreeze, headXFreeze, headYFreeze);
+}
 
 let initializeGestureTracking = () => {
    let indexPinch = new PinchGesture("indexPinch", [1], 0.1);
