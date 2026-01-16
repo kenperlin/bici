@@ -162,6 +162,7 @@ let addDiagramProperties = (diagram, ctx) => {
 	 ctx.drawImage(image, A[0]-width/2, A[1]-height/2, width, height);
       }
    }
+/*
    diagram.text = (str, a, isLeft) => {
       let A = mxp(a);
       let w = isLeft ? 0 : ctx.measureText(str).width;
@@ -171,6 +172,20 @@ let addDiagramProperties = (diagram, ctx) => {
       ctx.fillText(str, A[0] - w/2, A[1] + 10);
       ctx.fillStyle = saveFillStyle;
 
+      return diagram;
+   }
+*/
+   diagram.text = (text, a, justify = .5) => {
+      let A = mxp(a);
+      let lines = ('' + text).split('\n'), n = lines.length;
+      let lh = parseInt(ctx.font);
+      let saveFillStyle = ctx.fillStyle;
+      ctx.fillStyle = ctx.strokeStyle;
+      for (let i = 0 ; i < n ; i++) {
+         let dx = ctx.measureText(lines[i]).width * justify;
+         ctx.fillText(lines[i], A[0] - dx, A[1] - (i-n/2+.1411) * lh);
+      }
+      ctx.fillStyle = saveFillStyle;
       return diagram;
    }
    diagram.textBox = (text, a, r, opacity) => {
