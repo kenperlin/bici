@@ -432,13 +432,6 @@ let head_x = () => isHeadFreeze ? headXFreeze : headX;
 let head_y = () => isHeadFreeze ? headYFreeze : headY;
 
 let isHeadFreeze = false, headXFreeze, headYFreeze;
-let toggleHeadFreeze = () => {
-   isHeadFreeze = ! isHeadFreeze;
-   if (isHeadFreeze) {
-      headXFreeze = headX;
-      headYFreeze = headY;
-   }
-}
 
 let initializeGestureTracking = () => {
    let indexPinch = new PinchGesture("indexPinch", [1], 0.1);

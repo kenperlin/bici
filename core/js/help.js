@@ -3,7 +3,7 @@ let help = {
 
 display : ctx => {
 
-   let fs = fontSize * 1.37;
+   let fs = fontSize * 1.38;
 
    if (help.isSplash) {
       ctx.fillStyle = '#ffffff80';
@@ -63,7 +63,6 @@ v Toggle if 3D view is tracking head.
 V Toggle head+hands tracking data.
 x Copy clipboard buffer to the console.
 w Toggle world seen thru blue plate.
-z Toggle freeze tracked head position.
 \' Convert strokes to a sketch.
 , Make pen line thinner.
 . Make pen line thicker.

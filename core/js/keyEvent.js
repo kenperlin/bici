@@ -161,7 +161,6 @@ window.keyUp = key => {
    case 'x' : navigator.clipboard.readText()
                        .then(text => console.log('Clipboard content:', text))
 		       .catch(err => {}); break;
-   case 'z' : toggleHeadFreeze(); break;
    }
 }
 
