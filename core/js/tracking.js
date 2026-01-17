@@ -402,11 +402,21 @@ let trackingUpdate = () => {
       wasTracking = false;
    }
 
+   let d = 10;
    for (let hand = 0 ; hand <= 1 ; hand++)
       if (mediapipe.handResults[hand])
-         drawShadowHand(octx, mediapipe.handResults[hand].landmarks,
+         d = Math.min(d, drawShadowHand(octx, mediapipe.handResults[hand].landmarks,
 	    head_x() - .1 * screen.width,
-	    head_y() - .1 * screen.height, .2);
+	    head_y() - .1 * screen.height, .2));
+   if (d < .75)
+      isHeadFreeze = false;
+   else if (d != 10) {
+      if (! isHeadFreeze) {
+         headXFreeze = headX;
+         headYFreeze = headY;
+      }
+      isHeadFreeze = true;
+   }
 }
 
 let trackingIndex = 0, wasTracking = false, trackingInfo = 'let left=[],right=[],face=[];';
@@ -428,7 +438,6 @@ let toggleHeadFreeze = () => {
       headXFreeze = headX;
       headYFreeze = headY;
    }
-   console.log('toggled head freeze', isHeadFreeze, headXFreeze, headYFreeze);
 }
 
 let initializeGestureTracking = () => {

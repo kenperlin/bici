@@ -17,17 +17,27 @@ let drawShadowHand = (ctx, F, x=0, y=0, s=1) => {
    let w = ctx.canvas.width, h = ctx.canvas.height;
    sctx.clearRect(0,0,w,h);
 
+   // Function to measure distance between two hand joints
+
+   let distance = (i,j) => {
+      let x = F[i].x - F[j].x;
+      let y = F[i].y - F[j].y;
+      let z = F[i].z - F[j].z;
+      return Math.sqrt(x*x + y*y + z*z);
+   }
+
    // Scale finger thickness depending on visible hand size.
 
    let t = 0;
-   for (n = 1 ; n <= 20 ; n += 4)     // loop over 5 fingers
-   for (let i = 0 ; i < 3 ; i++) {    // loop over 3 finger joints
-      let x = F[n+i+1].x - F[n+i].x;
-      let y = F[n+i+1].y - F[n+i].y;
-      let z = F[n+i+1].z - F[n+i].z;
-      t += Math.sqrt(x*x + y*y + z*z);
-   }
-   let handSize = .017 * s * w * (t < 1 ? Math.sqrt(t) : t);
+   for (let n = 1 ; n <= 20 ; n += 4) // loop over 5 fingers
+   for (let i = 0 ; i < 3 ; i++)      // loop over 3 finger joints
+      t += distance(n+i, n+i+1);
+   t = t < 1 ? Math.sqrt(t) : t;
+   let handSize = .017 * s * w * t;
+
+   let D = [];
+   for (let j = 0 ; j < 5 ; j++)
+      D[j] = distance(0, 4*j+3) / t;
 
    // Draw an opaque shadow of the hand to the shadow canvas.
 
@@ -56,4 +66,6 @@ let drawShadowHand = (ctx, F, x=0, y=0, s=1) => {
    ctx.globalAlpha = 0.3;
    ctx.drawImage(ctx.shadowCanvas, 0,0);
    ctx.globalAlpha = 1.0;
+
+   return D[1] + D[2] + D[3] + D[4];
 }
