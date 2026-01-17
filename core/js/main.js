@@ -725,6 +725,7 @@ let centeredText = (ctx,text,x,y) => ctx.fillText(text, x-ctx.measureText(text).
 let screenMessage = text => {
    octx.save();
    octx.font = '30px Courier';
+   octx.fillStyle = 'black';
    centeredText(octx, text, screen.width / 2, 30);
    octx.restore();
 }
@@ -855,7 +856,9 @@ animate = () => {
 
    trackingUpdate();
 
-   projectSwitcher.style.top = document.documentElement.clientHeight - 43;
+   //projectSwitcher.style.top = document.documentElement.clientHeight - 43;
+   projectSwitcher.style.top = Math.min(screen.height - 80,
+                                        document.documentElement.clientHeight - 43);
 }
 
 // Room invitation UI

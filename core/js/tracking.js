@@ -20,11 +20,18 @@ let frameToElement = (x, y, element) => {
    return [x, y]
 }
 
+let isBothHands = () => mediapipe.handResults[0] && mediapipe.handResults[1];
+
 let toScreen = (point) => {
    let newPoint = {...point}
    newPoint.x *= screen.width;
    newPoint.y *= screen.height;
    newPoint.z *= screen.width;
+
+   if (isBothHands()) {
+      newPoint.x = .2 * newPoint.x + head_x() - .1 * screen.width;
+      newPoint.y = .2 * newPoint.y + head_y() - .1 * screen.height;
+   }
 
    if(tracking_frameHands && domDistances[0]) {
       ([newPoint.x, newPoint.y] = frameToElement(newPoint.x, newPoint.y, domDistances[0].element))
@@ -154,6 +161,8 @@ let trackingUpdate = () => {
 	    headY = headXY[1];
          }
       }
+      headX = Math.max( 40, Math.min(screen.width  - 40, headX));
+      headY = Math.max( 50, Math.min(screen.height - 80, headY));
 
       let textArea = codeArea.getElement();
       function getSignedDistanceRect(x, y, rect) {
@@ -286,28 +295,30 @@ let trackingUpdate = () => {
             }
          }
       else {
-         octx.strokeStyle = '#00000060';
-         octx.fillStyle = '#00000060';
-         octx.lineWidth = 2;
-	 let h = eyeOpen > .5 ? 40 : 10;
-         octx.lineWidth = 4;
+         if (isBothHands()) {
+            octx.strokeStyle = '#00000060';
+            octx.fillStyle = '#00000060';
+            octx.lineWidth = 2;
+	    let h = eyeOpen > .5 ? 40 : 10;
+            octx.lineWidth = 4;
 
-         octx.beginPath();
-	 octx.ellipse(head_x(), head_y(), 25, 35, 0, 0, 2 * Math.PI);
-         octx.stroke();
-	 {
+            octx.beginPath();
+	    octx.ellipse(head_x(), head_y(), 25, 35, 0, 0, 2 * Math.PI);
+            octx.stroke();
+
 	    let e = 10 * eyeOpen;
 	    octx.fillRect(head_x() - 9 - 6, head_y() - 2 - e/2, 12, e);
 	    octx.fillRect(head_x() + 9 - 6, head_y() - 2 - e/2, 12, e);
-	 }
-
+         }
+/*
          // DISABLE EYE GAZE VISUAL FEEDBACK UNTIL WE GET IT RIGHT.
 
          if (eyeOpen >= .4) {
 	    let x = head_x() + 3500 * eyeGazeX;
 	    let y = head_y() + 5000 * eyeGazeY + 300;
-//          octx.fillRect(x - 20, y - h/4, 40, h);
+            octx.fillRect(x - 20, y - h/4, 40, h);
          }
+*/
       }
 
       // IF LARGE MODE IS ENABLED, DO HEAD TRACKING OVER A LARGER AREA.
@@ -344,12 +355,12 @@ let trackingUpdate = () => {
             octx.strokeStyle = "#00000060";
 
             const activeGesture = gestureTracker.activeGestures[currentHand];
-            if(activeGesture) {
+            if (activeGesture) {
                const activeGestureState = toScreen(activeGesture.state[currentHand]);
                activeGesture.fingers.forEach((it) => fingersToDraw.delete(it));
                fingersToDraw.delete(0);
 
-               let radius = 15 * zScale(activeGestureState.z / screen.width);
+               let radius = 25 * zScale(activeGestureState.z / screen.width);
                if(tracking_isObvious) {
                   switch(activeGesture.id) {
                      case "indexPinch": octx.fillStyle = '#ffff0080'; break;
@@ -362,13 +373,13 @@ let trackingUpdate = () => {
                octx.fill();
             }
 
-            for(const fingerNum of fingersToDraw) {
+            for (const fingerNum of fingersToDraw) {
                const fingerPt = hand.landmarks[4 + 4 * fingerNum];
                const screenFingerPt = toScreen(fingerPt);
                
-               let radius = 20 * zScale(fingerPt.z / screen.width);
-               if(tracking_isObvious) {
-                  switch(fingerNum) {
+               let radius = 25 * zScale(fingerPt.z / screen.width);
+               if (tracking_isObvious) {
+                  switch (fingerNum) {
                      case 0: octx.fillStyle = '#ff000080'; break;
                      case 1: octx.fillStyle = '#00ff0080'; break;
                      case 2: octx.fillStyle = '#0000ff80'; break;
@@ -380,6 +391,7 @@ let trackingUpdate = () => {
                   octx.fill();
 
                } else {
+                  octx.lineWidth = 5;
                   octx.beginPath();
                   octx.arc(screenFingerPt.x, screenFingerPt.y, radius, 0, 2 * Math.PI);
                   octx.stroke();
@@ -394,7 +406,8 @@ let trackingUpdate = () => {
          }
          octx.restore();
       }
-      drawHands();
+      if (! isBothHands())
+         drawHands();
    }
    else if (wasTracking) {
       if (tracking_isLogging)
@@ -402,25 +415,27 @@ let trackingUpdate = () => {
       wasTracking = false;
    }
 
-   let d = 10;
-   for (let hand = 0 ; hand <= 1 ; hand++)
-      if (mediapipe.handResults[hand])
-         d = Math.min(d, drawShadowHand(octx, mediapipe.handResults[hand].landmarks,
-	    head_x() - .1 * screen.width,
-	    head_y() - .1 * screen.height, .2));
-   if (d < .75)
-      isHeadFreeze = false;
-   else if (d != 10) {
-      if (! isHeadFreeze) {
-         headXFreeze = headX;
-         headYFreeze = headY;
+   if (isBothHands()) {
+      let d = 10;
+      for (let hand = 0 ; hand <= 1 ; hand++)
+         if (mediapipe.handResults[hand])
+            d = Math.min(d, drawShadowHand(octx, mediapipe.handResults[hand].landmarks,
+	       head_x() - .1 * screen.width,
+	       head_y() - .1 * screen.height, .2));
+      if (d < .75)
+         isHeadFreeze = false;
+      else if (d != 10) {
+         if (! isHeadFreeze) {
+            headXFreeze = headX;
+            headYFreeze = headY;
+         }
+         isHeadFreeze = true;
       }
-      isHeadFreeze = true;
    }
 }
 
 let trackingIndex = 0, wasTracking = false, trackingInfo = 'let left=[],right=[],face=[];';
-let headX, headY;
+let headX = 100, headY = 100;
 let headMatrix = identity();
 let eyeOpen  = 1;
 let eyeGazeX = 0;
