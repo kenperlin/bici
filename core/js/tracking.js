@@ -7,7 +7,7 @@ let tracking_debugMode = false;
 let tracking_blinkTime = -1;
 let tracking_l2x = x => (x - (screen.width - screen.height) / 2) * canvas3D.width  / screen.height + canvas3D_x();
 let tracking_l2y = y =>  y                                       * canvas3D.height / screen.height + canvas3D_y();
-let tracking_isSteadyEnabled = false;
+let tracking_isSteadyEnabled = true;
 let tracking_frameHands = false;
 
 let frameToElement = (x, y, element) => {
@@ -150,8 +150,8 @@ let trackingUpdate = () => {
       );
       let mx = screen.width/2, my = screen.height/2;
 
-      headX = mx + 4.5 * mx * headMatrix[8];
-      headY = my - 4.5 * mx * headMatrix[9];
+      headX = 2/3 * headX + 1/3 * (mx + 4.5 * mx * headMatrix[8]);
+      headY = 2/3 * headY + 1/3 * (my - 4.5 * mx * headMatrix[9]);
 
       // MAINTAIN A SMALL QUEUE IN ORDER TO STEADY HEAD GAZE FIXATIONS
 
