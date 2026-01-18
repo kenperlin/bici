@@ -7,9 +7,7 @@ canvasDiagram.style.left = -2000;
 canvasDiagram.width = 500;
 canvasDiagram.height = 500;
 
-window.fontSize = 18;
 let scene, sceneID, isAlt, isInfo, isOpaque;
-window.isShift = false;
 
 // Initialize Yjs for collaborative code editing
 let ydoc, ytext, ypenStrokes, yjsProvider;
