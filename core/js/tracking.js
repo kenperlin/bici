@@ -469,6 +469,15 @@ let initializeGestureTracking = () => {
    indexPinch.onStart = ({state, id}, hand) => {
       const h = hand.handedness;
       const {x, y, z} = toScreen(state[h]);
+
+      if (isInfo && D.isIn(x - D.left, y - D.top)) {
+	 slide = slides[slideIndex];
+         if (slide.onDown)
+            slide.onDown(slide._px(x - D.left), slide._py(y - D.top));
+         D.isDown = true;
+         return;
+      }
+
       if(canvas3D_containsPoint(x, y)) {
          state[h].pointer = hand.handedness;
          const eventId = `${id}.${state[h].pointer}`;
@@ -481,10 +490,19 @@ let initializeGestureTracking = () => {
    };
    
    indexPinch.onActive = ({state, id}, hand) => {
+
       const h = hand.handedness;
+      const {x, y, z} = toScreen(state[h]);
+
+      if (isInfo && D.isDown) {
+         slide = slides[slideIndex];
+         if (slide.onDrag)
+            slide.onDrag(slide._px(x - D.left), slide._py(y - D.top));
+         return;
+      }
+
       if(!state[h].pointer) return;
 
-      const {x, y, z} = toScreen(state[h]);
       const eventId = `${id}.${state[h].pointer}`;
       if(state[h].pointer === 'head') {
          canvas3D_move(headX, headY, 0, eventId)
@@ -495,9 +513,19 @@ let initializeGestureTracking = () => {
    
    indexPinch.onEnd = ({state, id}, hand) => {
       const h = hand.handedness;
-      if(!state[h].pointer) return;
 
       const {x, y, z} = toScreen(state[h]);
+
+      if (isInfo && D.isDown) {
+         D.isDown = false;
+         slide = slides[slideIndex];
+	 if (slide.onUp)
+            slide.onUp(slide._px(x - D.left), slide._py(y - D.top));
+         return;
+      }
+
+      if(!state[h].pointer) return;
+
       const eventId = `${id}.${state[h].pointer}`;
       if(state[h].pointer === 'head') {
          canvas3D_up(headX, headY, 0, eventId)

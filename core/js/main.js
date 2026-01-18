@@ -709,7 +709,7 @@ let broadcastState = () => {
 let D = {
    ctx : canvasDiagram.getContext('2d'),
    left : screen.width - 20 - 500, top : 20, w : 500, h : 500,
-   isIn : () => D.x >= 0 && D.x < D.w && D.y >= 0 && D.y < D.h,
+   isIn : (x,y) => (x??D.x) >= 0 && (x??D.x) < D.w && (y??D.y) >= 0 && (y??D.y) < D.h,
 };
 D.ctx.font = '30px Helvetica';
 D.ctx.lineCap = 'round';
