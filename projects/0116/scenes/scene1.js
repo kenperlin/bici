@@ -1,4 +1,5 @@
 import { cubeMesh } from '../../../core/modules/shape.js'
+import { drawObj } from '../../../core/modules/webgl.js'
 import * as Shader from '../../../core/modules/shader.js'
 
 export function Scene() {

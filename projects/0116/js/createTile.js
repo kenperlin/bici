@@ -1,4 +1,4 @@
-let createTile = ch => {
+export let createTile = ch => {
    return [
       {
         mesh  : Shape.roundedBox(.17,.17,.02,.02,2),

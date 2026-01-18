@@ -1,4 +1,4 @@
-function HandTyping(scene) {
+export function HandTyping(scene) {
 
    let text = '';
 

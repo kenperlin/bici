@@ -3,4 +3,4 @@ SRC js/createTile.js
 SRC js/matchGame.js
 SRC js/handTyping.js
 Letter tile games
-sliders.js
+values.js

@@ -1,4 +1,6 @@
+import { CodeArea } from "./modules/components/codeArea.js";
 import { SceneCanvas } from "./modules/components/sceneCanvas.js";
+import { SlideDeck } from "./modules/components/slides.js";
 import { gl_start } from "./modules/webgl.js";
 
 async function fetchText(file) {
@@ -29,7 +31,10 @@ projectGrid.addEventListener("click", (e) => {
 
 async function loadProject(name) {
   currentProject.name = name;
-  currentProject.slides = (await fetchText(`projects/${name}/slides.txt`))?.split('\n');
+  let slidesList = (await fetchText(`projects/${name}/slides.txt`))?.split('\n');
+  if(slidesList) {
+    currentProject.slideDeck = new SlideDeck(name, slidesList);
+  }
 
   currentProjectLabel.textContent = name;
   projectSwitcher.style.display = 'block';
@@ -67,3 +72,37 @@ const COMPONENTS = {
 }
 
 const sceneCanvas = new SceneCanvas(document.getElementById('canvas-3d'))
+const codeArea = new CodeArea(document.getElementById('code-editor'))
+
+let startTime = Date.now() / 1000;
+let timePrev = startTime;
+
+const ctx = document.getElementById('canvas-2d').getContext('2d');
+
+function animate() {
+  requestAnimationFrame(animate);
+  const time = Date.now() / 1000;
+  const deltaTime = time - timePrev;
+  timePrev = time;
+
+   // Clear the overlay canvas before doing anything else for this animation frame.
+  //  octx.clearRect(0,0,screen.width,screen.height);
+
+   // Video source is remote video if available, otherwise webcam
+  //  if (videoUI && videoUI.hasRemoteVideo) {
+  //     videoUI.update();
+  //     videoSrc = videoUI.canvas;
+  //  } else
+  //     videoSrc = webcam;
+
+  //  let p = webcam.update();
+  //  codeArea.update();
+  //  ctx.drawImage(webcam.canvas, 0,0,640,440, 0,0,w,h);
+
+  const { slideDeck, scene } = currentProject
+  slideDeck?.draw(ctx);
+  codeArea?.update();
+  scene?.update();
+}
+
+animate()

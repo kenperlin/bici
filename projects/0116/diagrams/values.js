@@ -1,4 +1,4 @@
-function Diagram() {
+export function Diagram() {
    let px = 0, py = 0;
    this.onDrag = (x,y) => {
       codeArea.setVar('red'  , .5 + .5 * x);

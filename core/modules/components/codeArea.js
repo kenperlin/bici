@@ -18,10 +18,81 @@ export class CodeArea {
     this.ey = 0;
     this.dial = 0;
     this.callback = () => {};
+    this.isReloadScene = false;
+    this.lastReloadTime = 0;
 
     this._varsToFlush = {};
     this._isFlushScheduled = false;
 
+    this.initInteractions();
+  }
+
+  _xToCol(x) { 
+    return (x - offsetX) / (charWidthFactor * this.fontSize) + charWidthOffset;
+  }
+  _yToRow(y) {
+    return (y - offsetY) / (charHeightFactor * this.fontSize) + charHeightOffset;
+  }
+
+  setVisible(isVisible) {
+    this.isVisible = isVisible;
+    this.textarea.style.left = isVisible ? 20 : -2000;
+  };
+
+  containsPoint(x, y) {
+    let col = this._xToCol(x);
+    let row = this._yToRow(y);
+    return (
+      col >= 0 && col < this.textarea.cols + 2 && row >= 0 && row < this.textarea.rows
+    );
+  };
+
+  drawOverlayRect(col, row, nCols, nRows, octx, isFill) {
+    let charWidth = charWidthFactor * this.fontSize;
+    let charHeight = charHeightFactor * this.fontSize;
+    
+    let drawFn = isFill ? octx.fillRect : octx.strokeRect;
+    drawFn(
+      offsetX + charWidth * (col + charWidthOffset),
+      offsetY + charHeight * (row + charHeightOffset),
+      nCols * charWidth,
+      nRows * charHeight
+    );
+  };
+
+  update() {
+    let lines = this.textarea.value.split("\n");
+    this.textarea.rows = Math.min((790 / this.fontSize) >> 0, lines.length);
+    this.textarea.cols = lines.reduce((a, b) => Math.max(a.length - 1, b.length - 1), 0)
+    
+    // if (this.isVisible) {
+    //   let highlightCharAt = (x, y, color) => {
+    //     if (this.containsPoint(x, y)) {
+    //       octx.fillStyle = color;
+    //       fillOverlayRect(xToCol(x) >> 0, yToRow(y) >> 0, 1, 1);
+    //     }
+    //   };
+
+    //   highlightCharAt(pen.x, pen.y, "#00000060");
+
+    //   for (const h in gestureTracker.activeGestures) {
+    //     const gesture = gestureTracker.activeGestures[h];
+    //     if (gesture?.id === "indexPinch") {
+    //       let x = gesture.state[h].x * screen.width;
+    //       let y = gesture.state[h].y * screen.height;
+    //       if (!this.containsPoint(x, y)) continue;
+
+    //       let col = xToCol(x) - 1;
+    //       let row = yToRow(y) - 0.5;
+    //       octx.lineWidth = 2;
+    //       octx.strokeStyle = "black";
+    //       drawOverlayRect(col >> 0, row >> 0, 1, 1);
+    //     }
+    //   }
+    // }
+  };
+
+  initInteractions() {
     this.textarea.addEventListener("mousemove", (ev) => {
       if (!ev.shiftKey) return;
       
@@ -59,7 +130,7 @@ export class CodeArea {
         this.ey = 0;
       }
       if (this.callback && event.key == "Meta") {
-        window.isReloading = true;
+        // window.isReloading = true;
         // Trigger input event to sync reload to other users via Yjs
         this.textarea.dispatchEvent(new Event("input", { bubbles: true }));
         this.callback();
@@ -85,75 +156,6 @@ export class CodeArea {
       }
     });
   }
-
-
-  _xToCol(x) { 
-    return (x - offsetX) / (charWidthFactor * this.fontSize) + charWidthOffset;
-  }
-  _yToRow(y) {
-    return (y - offsetY) / (charHeightFactor * this.fontSize) + charHeightOffset;
-  }
-
-  setVisible(isVisible) {
-    this.isVisible = isVisible;
-    this.textarea.style.left = isVisible ? 20 : -2000;
-  };
-
-  containsPoint(x, y) {
-    let col = this._xToCol(x);
-    let row = this._yToRow(y);
-    return (
-      col >= 0 && col < this.textarea.cols + 2 && row >= 0 && row < this.textarea.rows
-    );
-  };
-
-
-
-  drawOverlayRect(col, row, nCols, nRows, octx, isFill) {
-    let charWidth = charWidthFactor * this.fontSize;
-    let charHeight = charHeightFactor * this.fontSize;
-    
-    let drawFn = isFill ? octx.fillRect : octx.strokeRect;
-    drawFn(
-      offsetX + charWidth * (col + charWidthOffset),
-      offsetY + charHeight * (row + charHeightOffset),
-      nCols * charWidth,
-      nRows * charHeight
-    );
-  };
-
-  update() {
-    let lines = this.textarea.value.split("\n");
-    this.textarea.rows = Math.min((790 / this.fontSize) >> 0, lines.length);
-    this.textarea.cols = lines.reduce((a, b) => Math.max(a.length - 1, b.length - 1), 0)
-
-    // if (this.isVisible) {
-    //   let highlightCharAt = (x, y, color) => {
-    //     if (this.containsPoint(x, y)) {
-    //       octx.fillStyle = color;
-    //       fillOverlayRect(xToCol(x) >> 0, yToRow(y) >> 0, 1, 1);
-    //     }
-    //   };
-
-    //   highlightCharAt(pen.x, pen.y, "#00000060");
-
-    //   for (const h in gestureTracker.activeGestures) {
-    //     const gesture = gestureTracker.activeGestures[h];
-    //     if (gesture?.id === "indexPinch") {
-    //       let x = gesture.state[h].x * screen.width;
-    //       let y = gesture.state[h].y * screen.height;
-    //       if (!this.containsPoint(x, y)) continue;
-
-    //       let col = xToCol(x) - 1;
-    //       let row = yToRow(y) - 0.5;
-    //       octx.lineWidth = 2;
-    //       octx.strokeStyle = "black";
-    //       drawOverlayRect(col >> 0, row >> 0, 1, 1);
-    //     }
-    //   }
-    // }
-  };
-
   // Internal helper to apply a single var change to the text
   _applyVarToText(text, name, value) {
     let i = text.indexOf("let " + name);
@@ -206,7 +208,7 @@ export class CodeArea {
 
     // window.isReloading = true;
     this.textarea.dispatchEvent(new Event("input", { bubbles: true }));
-    // window.isReloadScene = true;
+    this.isReloadScene = true;
   };
 
   setVar(name, value) {

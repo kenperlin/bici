@@ -1,4 +1,4 @@
-function GameCube(scene, labels) {
+export function GameCube(scene, labels) {
    let cube = Shape.cubeMesh();
 
    let label = [];

@@ -12,8 +12,6 @@ let scene, sceneID, isAlt, isInfo, isOpaque;
 // Initialize Yjs for collaborative code editing
 let ydoc, ytext, ypenStrokes, yjsProvider;
 
-let codeArea = new CodeArea(-2000, 20);
-
 // Initialize WebRTC
 let webrtcClient, videoUI;
 if (typeof WebRTCClient !== 'undefined') {
@@ -197,120 +195,6 @@ function initializeYjs(roomId) {
 
 let shift3D = 0, t3D = 0, isDrawpad;
 
-let gotoSlide = name => {
-   for (let n = 0 ; n < slideNames.length ; n++)
-      if (name === slideNames[n]) {
-         slideIndex = n;
-         break;
-      }
-}
-
-let isFirstTime = true;
-let slides = [], slideNames = [], slideIndex = 0, fq = {}, fqParsed = false;
-
-let cubeVertices = [ [-1,-1,-1,1],[1,-1,-1,1],[-1,1,-1,1],[1,1,-1,1],
-                     [-1,-1, 1,1],[1,-1, 1,1],[-1,1, 1,1],[1,1, 1,1] ];
-let cubeEdges = [ [0,1],[2,3],[4,5],[6,7],
-                  [0,2],[1,3],[4,6],[5,7],
-                  [0,4],[1,5],[2,6],[3,7] ];
-
-let initSlides = () => {
-   if (!project || !slideData) return;
-   
-   let ctx = D.ctx;
-   let index = 0;
-   for (let n = 0 ; n < slideData.length ; n++) {
-
-      let file = slideData[n];
-      console.log(n, file);
-
-      if (file.indexOf('URL') == 0) {
-         let info = file.split(' ');
-	 URLs[info[1]] = info[2];
-	 continue;
-      }
-
-      if (file.indexOf('SRC') == 0) {
-         let info = file.split(' ');
-         loadScript('projects/' + project + '/' + info[1]);
-	 console.log('loading script', 'projects/' + project + '/' + info[1]);
-         continue;
-      }
-
-      let j = file.indexOf('//');
-      if (j >= 0)
-         file = file.substring(0, j);
-      file = file.trim();
-      if (file.length == 0)
-         continue;
-
-      let name = file;
-      let i = file.indexOf('::');
-      if (i >= 0) {
-         name = file.substring(0, i).trim();
-         file = file.substring(i+2).trim();
-      }
-
-      fq[name] = { index: index++ };
-
-      let isDiagram = file.indexOf('.js') > 0;
-      let isImage   = file.indexOf('.png') > 0 || file.indexOf('.jpg') > 0;
-
-      if (isImage) {
-         loadImage(file, image => fq[name].image = image);
-      }
-
-      else if (isDiagram) {
-         loadScript('projects/' + project + '/diagrams/' + file, () => {
-            let diagram = new Diagram();
-	    diagram.width = D.w;
-	    diagram.height = D.h;
-	    addDiagramProperties(diagram, ctx);
-            fq[name].diagram = diagram;
-         });
-      }
-
-      else {
-         fq[name].diagram = new (function() {
-            this.width = 500;
-            this.height = 400;
-            this._beforeUpdate = () => { }
-            let lines = file.split('\\n');
-            this.update = () => {
-	       ctx.save();
-               ctx.fillStyle = 'white';
-               ctx.fillRect(0,0,this.width,this.height);
-               ctx.font = '40px Helvetica';
-               ctx.fillStyle = 'black';
-               for (let n = 0 ; n < lines.length ; n++) {
-	          let line = lines[n], i, j;
-	          if ((i=line.indexOf('<font'))>=0 && (j=line.indexOf('>',i))>=0) {
-		     ctx.font = line.substring(i+6, j);
-		     line = line.substring(j+1);
-		  }
-                  centeredText(ctx, line, 250, 210 + 60 * (n - (lines.length-1)/2));
-               }
-	       ctx.restore();
-            }
-         })();
-      }
-   }
-}
-
-let sceneCounter = 0;
-
-let sceneSeed = () => webrtcClient.roomId.charCodeAt(0)
-                    + webrtcClient.roomId.charCodeAt(1) / 128
-                    + 123.456 * sceneCounter;
-
-let sceneVar = (name, initialValue) => {
-   let varName = '_sceneVar_' + name + '_' + sceneCounter;
-   if (! window[varName])
-      window[varName] = initialValue;
-   return window[varName];
-}
-
-let isLightPen = false, isHelp = false;
 
 codeArea.callback = () => {
    window.isReloadScene = true;
@@ -500,15 +384,6 @@ let startTime = Date.now() / 1000;
 let timePrev = startTime;
 window.isReloadScene = false;
 let reloadTime = 0;
-
-let centeredText = (ctx,text,x,y) => ctx.fillText(text, x-ctx.measureText(text).width/2, y);
-
-let screenMessage = text => {
-   octx.save();
-   octx.font = '30px Courier';
-   centeredText(octx, text, screen.width / 2, 30);
-   octx.restore();
-}
 
 animate = () => {
    // Only init slides if a project is loaded

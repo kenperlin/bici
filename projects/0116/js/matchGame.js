@@ -1,4 +1,4 @@
-function MatchGame(scene,U,M) {
+export function MatchGame(scene,U,M) {
 
    let label = ['A','B','C','D','E','F','G','H',
                 'A','B','C','D','E','F','G','H'];
