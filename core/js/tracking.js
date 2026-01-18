@@ -302,20 +302,25 @@ let trackingUpdate = () => {
 	    let h = eyeOpen > .5 ? 40 : 10;
             octx.lineWidth = 4;
 
-            octx.beginPath();
-	    octx.ellipse(head_x(), head_y(), 25, 35, 0, 0, 2 * Math.PI);
-            octx.stroke();
+	    let tilt = Math.atan2(headMatrix[4], headMatrix[5]);
+	    octx.translate(head_x(), head_y());
+	    octx.rotate(tilt);
 
-	    let e = 10 * eyeOpen;
+            octx.beginPath();
+	    octx.ellipse(0, 0, 25, 35, 0, 0, 2*Math.PI);
+            octx.stroke();
 
             let theta = Math.PI   * (headX - screen.width/2) / screen.width;
             let phi   = Math.PI/2 * (headY - screen.height/2) / screen.height;
             let dx = 8  * Math.sin(theta);
-            let dy = 12 * Math.sin(phi);
+            let dy = 11 * Math.sin(phi);
             octx.beginPath();
-	    octx.ellipse(head_x() - 11 + dx, head_y() - 2 + dy, 8, e*.7, 0, 0, 2 * Math.PI);
-	    octx.ellipse(head_x() + 11 + dx, head_y() - 2 + dy, 8, e*.7, 0, 0, 2 * Math.PI);
+	    octx.ellipse(dx-11, dy-2, 8, 7*eyeOpen, 0, 0, 2*Math.PI);
+	    octx.ellipse(dx+11, dy-2, 8, 7*eyeOpen, 0, 0, 2*Math.PI);
             octx.fill();
+
+	    octx.rotate(-tilt);
+	    octx.translate(-head_x(), -head_y());
          }
 /*
          // DISABLE EYE GAZE VISUAL FEEDBACK UNTIL WE GET IT RIGHT.
