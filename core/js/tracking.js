@@ -307,8 +307,15 @@ let trackingUpdate = () => {
             octx.stroke();
 
 	    let e = 10 * eyeOpen;
-	    octx.fillRect(head_x() - 9 - 6, head_y() - 2 - e/2, 12, e);
-	    octx.fillRect(head_x() + 9 - 6, head_y() - 2 - e/2, 12, e);
+
+            let theta = Math.PI   * (headX - screen.width/2) / screen.width;
+            let phi   = Math.PI/2 * (headY - screen.height/2) / screen.height;
+            let dx = 8  * Math.sin(theta);
+            let dy = 12 * Math.sin(phi);
+            octx.beginPath();
+	    octx.ellipse(head_x() - 11 + dx, head_y() - 2 + dy, 8, e*.7, 0, 0, 2 * Math.PI);
+	    octx.ellipse(head_x() + 11 + dx, head_y() - 2 + dy, 8, e*.7, 0, 0, 2 * Math.PI);
+            octx.fill();
          }
 /*
          // DISABLE EYE GAZE VISUAL FEEDBACK UNTIL WE GET IT RIGHT.
