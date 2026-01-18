@@ -20,7 +20,12 @@ let frameToElement = (x, y, element) => {
    return [x, y]
 }
 
-let isBothHands = () => mediapipe.handResults[0] && mediapipe.handResults[1];
+let isShadowAvatar = () => mediapipe.handResults[0] && mediapipe.handResults[1];
+
+let toShadowAvatar = point => {
+   point.x = .2 * point.x + head_x() - .1 * screen.width;
+   point.y = .2 * point.y + head_y() - .1 * screen.height;
+}
 
 let toScreen = (point) => {
    let newPoint = {...point}
@@ -28,15 +33,13 @@ let toScreen = (point) => {
    newPoint.y *= screen.height;
    newPoint.z *= screen.width;
 
-   if (isBothHands()) {
-      newPoint.x = .2 * newPoint.x + head_x() - .1 * screen.width;
-      newPoint.y = .2 * newPoint.y + head_y() - .1 * screen.height;
-   }
+   if (isShadowAvatar())
+      toShadowAvatar(newPoint);
 
-   if(tracking_frameHands && domDistances[0]) {
-      ([newPoint.x, newPoint.y] = frameToElement(newPoint.x, newPoint.y, domDistances[0].element))
-   }
-   return newPoint
+   if(tracking_frameHands && domDistances[0])
+      [newPoint.x, newPoint.y] = frameToElement(newPoint.x, newPoint.y, domDistances[0].element);
+
+   return newPoint;
 }
 
 let trackingUpdate = () => {
@@ -295,7 +298,7 @@ let trackingUpdate = () => {
             }
          }
       else {
-         if (isBothHands()) {
+         if (isShadowAvatar()) {
             octx.strokeStyle = '#00000060';
             octx.fillStyle = '#00000060';
             octx.lineWidth = 2;
@@ -418,7 +421,7 @@ let trackingUpdate = () => {
          }
          octx.restore();
       }
-      if (! isBothHands())
+      if (! isShadowAvatar())
          drawHands();
    }
    else if (wasTracking) {
@@ -427,7 +430,7 @@ let trackingUpdate = () => {
       wasTracking = false;
    }
 
-   if (isBothHands()) {
+   if (isShadowAvatar()) {
       let d = 10;
       for (let hand = 0 ; hand <= 1 ; hand++)
          if (mediapipe.handResults[hand])

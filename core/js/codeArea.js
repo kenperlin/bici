@@ -122,12 +122,16 @@ function CodeArea(x,y) {
          for (const h in gestureTracker.activeGestures) {
             const gesture = gestureTracker.activeGestures[h];
             if(gesture?.id === "indexPinch") {
-               let x = gesture.state[h].x * screen.width;
-               let y = gesture.state[h].y * screen.height;
-               if(!this.containsPoint(x, y)) continue;
+	       let p = { x: gesture.state[h].x * screen.width,
+                         y: gesture.state[h].y * screen.height };
 
-               let col = xToCol(x) - 1;
-               let row = yToRow(y) - .5;
+	       if (isShadowAvatar())
+	          toShadowAvatar(p);
+
+               if(!this.containsPoint(p.x, p.y)) continue;
+
+               let col = xToCol(p.x) - 1;
+               let row = yToRow(p.y) - .5;
                octx.lineWidth = 2;
                octx.strokeStyle = 'black';
                drawOverlayRect(col>>0, row>>0, 1, 1);
