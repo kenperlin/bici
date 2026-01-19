@@ -22,9 +22,11 @@ let frameToElement = (x, y, element) => {
 
 let isShadowAvatar = () => mediapipe.handResults[0] && mediapipe.handResults[1];
 
+let as = 0.3; // Avatar scale
+
 let toShadowAvatar = point => {
-   point.x = .2 * point.x + head_x() - .1 * screen.width;
-   point.y = .2 * point.y + head_y() - .1 * screen.height;
+   point.x = head_x() + as * (point.x - screen.width/2);
+   point.y = head_y() + as * (point.y - screen.height/2);
 }
 
 let toScreen = (point) => {
@@ -310,16 +312,16 @@ let trackingUpdate = () => {
 	    octx.rotate(tilt);
 
             octx.beginPath();
-	    octx.ellipse(0, 0, 25, 35, 0, 0, 2*Math.PI);
+	    octx.ellipse(0, 0, as * 125, as * 175, 0, 0, 2*Math.PI);
             octx.stroke();
 
             let theta = Math.PI   * (headX - screen.width/2) / screen.width;
             let phi   = Math.PI/2 * (headY - screen.height/2) / screen.height;
-            let dx = 8  * Math.sin(theta);
-            let dy = 11 * Math.sin(phi);
+            let dx = 40 * Math.sin(theta) * as;
+            let dy = 55 * Math.sin(phi) * as;
             octx.beginPath();
-	    octx.ellipse(dx-11, dy-2, 8, 7*eyeOpen, 0, 0, 2*Math.PI);
-	    octx.ellipse(dx+11, dy-2, 8, 7*eyeOpen, 0, 0, 2*Math.PI);
+	    octx.ellipse(dx - 55*as, dy - 10*as, 40*as, 35*as*eyeOpen, 0, 0, 2*Math.PI);
+	    octx.ellipse(dx + 55*as, dy - 10*as, 40*as, 35*as*eyeOpen, 0, 0, 2*Math.PI);
             octx.fill();
 
 	    octx.rotate(-tilt);
@@ -435,8 +437,8 @@ let trackingUpdate = () => {
       for (let hand = 0 ; hand <= 1 ; hand++)
          if (mediapipe.handResults[hand])
             d = Math.min(d, drawShadowHand(octx, mediapipe.handResults[hand].landmarks,
-	       head_x() - .1 * screen.width,
-	       head_y() - .1 * screen.height, .2));
+	       head_x() - as * screen.width/2,
+	       head_y() - as * screen.height/2, as));
       if (d < .75)
          isHeadFreeze = false;
       else if (d != 10) {
