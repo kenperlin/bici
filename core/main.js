@@ -36,10 +36,9 @@ async function loadProject(name) {
     currentProject.slideDeck = new SlideDeck(name, slidesList);
   }
 
-  currentProjectLabel.textContent = name;
+  currentProjectLabel.textContent = currentProject.name;
   projectSwitcher.style.display = 'block';
-  projectSwitcher.style.left = 15;
-  projectSwitcher.style.top = screen.height - 50;
+  projectSelector.style.display = 'none';
 
   await loadScene(1);
 }
