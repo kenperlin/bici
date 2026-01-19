@@ -19,23 +19,19 @@ function CodeArea(x,y) {
       if (window.isShift)
          slideValue(event.clientX, event.clientY);
    });
-/*
-*/
    let slideValue = (x,y) => {
       if (ey && Math.abs(dial += y-ey) >= 3) {
          let i1 = codeArea.selectionStart;
-         let s0 = numberString.findNumberString(codeArea.value, i1);
+         let s0 = numberString.findNumberString(codeArea.value, i1+1);
          if (s0) {
-            let i0 = i1 - s0.length;
+            let i0 = i1+1 - s0.length;
             let s1 = numberString.increment(s0, -Math.sign(dial));
 
             if (codeArea.value.charAt(i0-1) == ' ' && s0.charAt(0) != '-' && s1.charAt(0) == '-')
                i0--;
-            if (s0.charAt(0) == '-' && s1.charAt(0) != '-')
-               s1 = ' ' + s1;
 
-            codeArea.value = codeArea.value.substring(0,i0) + s1 + codeArea.value.substring(i1);
-            codeArea.selectionStart = codeArea.selectionEnd = i0 + s1.length;
+            codeArea.value = codeArea.value.substring(0,i0) + s1 + codeArea.value.substring(i1+1);
+            codeArea.selectionStart = codeArea.selectionEnd = i0 + s1.length - 1;
 
             // Trigger input event to sync with Yjs
             codeArea.dispatchEvent(new Event('input', { bubbles: true }));
@@ -139,10 +135,11 @@ function CodeArea(x,y) {
 
          highlightCharAt(pen.x, pen.y, '#00000060');
 
+	 let isPinch = false;
          for (const h in gestureTracker.activeGestures) {
             const gesture = gestureTracker.activeGestures[h];
-	    isPinch = false;
-            if(gesture?.id === "indexPinch") {
+            if (gesture?.id === "indexPinch") {
+	       isPinch = true;
                let p = { x: gesture.state[h].x * screen.width,
                          y: gesture.state[h].y * screen.height };
 
@@ -152,20 +149,19 @@ function CodeArea(x,y) {
                if(!this.containsPoint(p.x, p.y)) continue;
 
                let col = xToCol(p.x) - 1;
-               let row = yToRow(p.y) - .5;
+               let row = yToRow(p.y);
                octx.lineWidth = 2;
                octx.strokeStyle = 'black';
                drawOverlayRect(col>>0, row>>0, 1, 1);
 	       if (! wasPinch) {
                   let index = this.pointToIndex(p.x, p.y);
                   if (index >= 0)
-                     codeArea.selectionStart = codeArea.selectionEnd = index;
+                     codeArea.selectionStart = codeArea.selectionEnd = index + 1;
                }
 	       slideValue(p.x, p.y);
-	       isPinch = true;
             }
-	    wasPinch = isPinch;
          }
+	 wasPinch = isPinch;
       }
    }
 

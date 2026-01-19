@@ -1,13 +1,11 @@
 function NumberString() {
    this.findNumberString = (s, i1) => {
-      let i0 = i1 - 1;
-      for (let c ; i0 > 0 && c != '-' ; i0--) {
-         c = s.charAt(i0);
-         if (c != '.' && c != '-' && ! (c >= '0' && c <= '9'))
-            break;
-      }
-      s = s.substring(i0+1,i1);
-      return s.length == 0 || s == '-' ? null : s;
+      let c = s.charAt(i1-1);
+      if (c >= '0' && c <= '9')
+         for (let i0 = i1-1 ; i0 > 0 ; i0--)
+	    if ('-.0123456789'.indexOf(s.charAt(i0-1)) < 0)
+               return s.substring(i0,i1);
+      return null;
    }
    this.increment = (s0, sign) => {
       let number;
