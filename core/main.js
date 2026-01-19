@@ -2,6 +2,7 @@ import { CodeArea } from "./modules/components/codeArea.js";
 import { SceneCanvas } from "./modules/components/sceneCanvas.js";
 import { SlideDeck } from "./modules/components/slides.js";
 import { gl_start } from "./modules/webgl.js";
+import { setupYjsClient, yjsBindCodeArea } from "./modules/yjs/yjs.js";
 
 async function fetchText(file) {
   try {
@@ -58,20 +59,20 @@ async function loadScene(num) {
 
   currentProject.scene = new sceneModule.Scene();
   currentProject.sceneText = await fetchText(scenePath);
+  
+  codeArea.textarea.value = currentProject.sceneText;
   sceneCanvas.registerSceneEvents(currentProject.scene);
 
   gl_start(sceneCanvas.canvas, currentProject.scene)
   console.log(currentProject)
 }
 
-const COMPONENTS = {
-  canvas2D: document.getElementById('canvas-2d'),
-  canvas3D: document.getElementById('canvas-3d'),
-  canvasOverlay: document.getElementById('canvas-overlay'),
-}
-
+const webcam = document.getElementById("webcam");
+const webrtcClient = setupYjsClient(webcam);
 const sceneCanvas = new SceneCanvas(document.getElementById('canvas-3d'))
 const codeArea = new CodeArea(document.getElementById('code-editor'))
+
+yjsBindCodeArea(codeArea);
 
 let startTime = Date.now() / 1000;
 let timePrev = startTime;

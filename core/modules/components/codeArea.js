@@ -1,4 +1,5 @@
 import * as NumberString from "../numberString.js";
+import { getWebRTCClient } from "../yjs/yjs.js";
 
 const offsetX = 20;
 const offsetY = 20;
@@ -64,7 +65,7 @@ export class CodeArea {
     let lines = this.textarea.value.split("\n");
     this.textarea.rows = Math.min((790 / this.fontSize) >> 0, lines.length);
     this.textarea.cols = lines.reduce((a, b) => Math.max(a.length - 1, b.length - 1), 0)
-    
+
     // if (this.isVisible) {
     //   let highlightCharAt = (x, y, color) => {
     //     if (this.containsPoint(x, y)) {
@@ -187,14 +188,15 @@ export class CodeArea {
 
     // In multiplayer mode, only master should sync to Yjs
     // Secondary clients send batched vars to master via WebRTC
-    // if (webrtcClient && !webrtcClient.isMaster()) {
-    //   webrtcClient.sendAction({
-    //     type: "setVars",
-    //     vars: pendingVars
-    //   });
-    //   pendingVars = {};
-    //   return;
-    // }
+    const webrtcClient = getWebRTCClient();
+    if (!webrtcClient.isMaster()) {
+      webrtcClient.sendAction({
+        type: "setVars",
+        vars: pendingVars
+      });
+      pendingVars = {};
+      return;
+    }
 
     // Master: apply all pending var changes atomically
     let newText = this.textarea.value;

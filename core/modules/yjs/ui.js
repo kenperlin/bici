@@ -77,33 +77,6 @@ export function showInvitationUI(roomId) {
    document.getElementById('close-invitation-btn').addEventListener('click', () => {
       invitationUI.remove();
    });
-
-   // Update peer status when someone joins
-   if (webrtcClient) {
-      const originalOnRemoteStreamAdded = webrtcClient.onRemoteStreamAdded;
-      webrtcClient.onRemoteStreamAdded = (clientId, stream) => {
-         if (originalOnRemoteStreamAdded) {
-            originalOnRemoteStreamAdded(clientId, stream);
-         }
-         const peerStatus = document.getElementById('peer-status');
-         if (peerStatus) {
-            peerStatus.textContent = 'Peer connected';
-            peerStatus.style.color = '#4CAF50';
-         }
-      };
-
-      const originalOnRemoteStreamRemoved = webrtcClient.onRemoteStreamRemoved;
-      webrtcClient.onRemoteStreamRemoved = (clientId) => {
-         if (originalOnRemoteStreamRemoved) {
-            originalOnRemoteStreamRemoved(clientId);
-         }
-         const peerStatus = document.getElementById('peer-status');
-         if (peerStatus) {
-            peerStatus.textContent = 'Peer disconnected';
-            peerStatus.style.color = '#f44336';
-         }
-      };
-   }
 }
 
 export function showRoomFullNotification(roomId) {
