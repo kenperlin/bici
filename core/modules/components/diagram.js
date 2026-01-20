@@ -146,7 +146,6 @@ export class TextDiagram {
    }
    
    update() {
-      this.ctx.save();
       this.ctx.fillStyle = "white";
       this.ctx.fillRect(0, 0, this.width, this.height);
       this.ctx.font = "40px Helvetica";
@@ -162,6 +161,5 @@ export class TextDiagram {
          }
          centeredText(this.ctx, line, 250, 210 + 60 * (n - (this.lines.length - 1) / 2));
       }
-      this.ctx.restore();
    };
 }

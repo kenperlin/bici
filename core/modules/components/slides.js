@@ -10,7 +10,8 @@ export class SlideDeck {
     this.urlMap = {};
     this.currentSlide = 0;
 
-    this.rect = { left: 0, top: 0, width: 500, height: 500 };
+    this.isOpaque = false;
+    this.position = { x: WIDTH - 520, y: 20 };
 
     this.init(slidesList);
   }
@@ -59,7 +60,7 @@ export class SlideDeck {
         this.slides.push({ type: "diagram", content: diagram });
       } else {
         let lines = file.split("\\n");
-        const textDiagram = new TextDiagram(lines)
+        const textDiagram = new TextDiagram(lines);
         this.slides.push({ type: "text", content: textDiagram });
       }
     }
@@ -77,29 +78,31 @@ export class SlideDeck {
     this.rect = { left, top, width, height };
   }
 
-  getSlide(idx) {
-    return this.slides[idx ?? this.currentSlide];
+  getSlide(idx = this.currentSlide) {
+    return this.slides[idx];
   }
 
-  draw(ctx, index) {
-    const slide = this.getSlide(index);
+  draw(ctx, idx = this.currentSlide) {
+    const slide = this.getSlide(idx);
     if (!slide) return;
+
+    ctx.save();
+    ctx.translate(this.position.x, this.position.y);
+    ctx.globalAlpha = this.isOpaque ? 1 : 0.5;
 
     if (slide.type === "diagram") {
       slide.content.ctx = ctx;
       slide.content._beforeUpdate();
       slide.content.update();
     } else if (slide.type === "image") {
-      ctx.drawImage(
-        slide.content,
-        this.rect.left,
-        this.rect.top,
-        this.rect.width,
-        this.rect.height
-      );
+      ctx.drawImage(slide.content, 0, 0, 500, 500);
     } else if (slide.type === "text") {
       slide.content.ctx = ctx;
       slide.content.update();
     }
+
+    ctx.font = '20px Courier';
+    ctx.fillText(idx + 1, 10, 30);
+    ctx.restore();
   }
 }

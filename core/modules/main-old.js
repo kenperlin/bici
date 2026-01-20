@@ -250,15 +250,6 @@ animate = () => {
    codeArea.update();
    ctx.drawImage(webcam.canvas, 0,0,640,440, 0,0,w,h);
 
-   // Patch to fix race condition in loading diagrams
-   if (slides.length > 0 && ! slides[slideIndex])
-      for (let name in fq)
-         if (fq[name].index == slideIndex)
-	    if (name.indexOf('.png') > 0 || name.indexOf('.jpg') > 0)
-               slides[slideIndex] = fq[name].image;
-            else
-               slides[slideIndex] = fq[name].diagram;
-
    if (isInfo && slides.length > 0 && slides[slideIndex]) {
       ctx.globalAlpha = isOpaque ? 1 : .5;
       let slide = slides[slideIndex];
