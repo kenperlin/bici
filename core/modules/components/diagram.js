@@ -1,3 +1,4 @@
+import { centeredText } from '../canvasUtils.js';
 import { M4 } from '../M4.js'
 
 export function addDiagramProperties (diagram) {
@@ -133,4 +134,34 @@ export function addDiagramProperties (diagram) {
 
       return diagram;
    }
+}
+
+export class TextDiagram {
+   constructor(lines) {
+      this.width = 500;
+      this.height = 400;
+      this._beforeUpdate = () => {};
+      this.ctx = null;
+      this.lines = lines;
+   }
+   
+   update() {
+      this.ctx.save();
+      this.ctx.fillStyle = "white";
+      this.ctx.fillRect(0, 0, this.width, this.height);
+      this.ctx.font = "40px Helvetica";
+      this.ctx.fillStyle = "black";
+      for (let n = 0; n < this.lines.length; n++) {
+         let line = this.lines[n], i, j;
+         if (
+            (i = line.indexOf("<font")) >= 0 &&
+            (j = line.indexOf(">", i)) >= 0
+         ) {
+            this.ctx.font = line.substring(i + 6, j);
+            line = line.substring(j + 1);
+         }
+         centeredText(this.ctx, line, 250, 210 + 60 * (n - (this.lines.length - 1) / 2));
+      }
+      this.ctx.restore();
+   };
 }

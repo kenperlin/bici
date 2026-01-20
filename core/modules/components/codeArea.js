@@ -70,7 +70,16 @@ export class CodeArea {
       try {
         // Remove zero-width space markers (\u200B) added by Yjs sync before eval
         this.textarea.value = this.textarea.value.replace(/\u200B/g, "");
-        this.onReloadScene(this)
+
+        // Replace imports with absolute URLs for scene reloading
+        const code = this.textarea.value.replace(
+          /from\s+['"]([^'"]+)['"]/g,
+          (_, spec) => {
+            const url = new URL(spec, import.meta.url).href;
+            return `from '${url}'`;
+          }
+        );
+        this.onReloadScene(code)
       } catch (e) {
         console.error("Scene code error:", e);
       }

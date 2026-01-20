@@ -6,14 +6,6 @@ export class VideoUI {
     this.isPanelVisible = false;
     this.remoteVideoElements = new Map();
 
-    // Create off-screen canvas for remote video (like webcam.canvas)
-    this.canvas = document.createElement('canvas');
-    this.canvas.style.position = 'absolute';
-    this.canvas.style.left = '2000px';
-    this.canvas.width = 640;
-    this.canvas.height = 480;
-    this.ctx = this.canvas.getContext('2d');
-
     // Create off-screen video element for remote stream
     this.remoteVideo = document.createElement('video');
     this.remoteVideo.autoplay = true;
@@ -106,7 +98,6 @@ export class VideoUI {
 
     // Set the remote video stream (only support one remote peer for now)
     this.remoteVideo.srcObject = stream;
-    this.hasRemoteVideo = true;
 
     // Show the panel if hidden when remote video connects
     if (!this.isPanelVisible) {
@@ -114,46 +105,8 @@ export class VideoUI {
     }
   }
 
-  // Update method to draw remote video to canvas (like webcam.update)
-  update() {
-    if (this.hasRemoteVideo && this.remoteVideo.readyState >= 2) {
-      // Get actual video dimensions
-      const videoWidth = this.remoteVideo.videoWidth;
-      const videoHeight = this.remoteVideo.videoHeight;
-
-      if (videoWidth && videoHeight) {
-        // Clear canvas first
-        this.ctx.fillStyle = 'black';
-        this.ctx.fillRect(0, 0, 640, 480);
-
-        // Calculate aspect ratio to fit video (contain mode - no stretching)
-        const canvasAspect = 640 / 480;
-        const videoAspect = videoWidth / videoHeight;
-
-        let drawWidth, drawHeight, offsetX, offsetY;
-
-        if (videoAspect > canvasAspect) {
-          // Video is wider - fit to width
-          drawWidth = 640;
-          drawHeight = 640 / videoAspect;
-          offsetX = 0;
-          offsetY = (480 - drawHeight) / 2;
-        } else {
-          // Video is taller - fit to height
-          drawHeight = 480;
-          drawWidth = 480 * videoAspect;
-          offsetX = (640 - drawWidth) / 2;
-          offsetY = 0;
-        }
-
-        // Draw remote video with proper aspect ratio
-        this.ctx.drawImage(this.remoteVideo, offsetX, offsetY, drawWidth, drawHeight);
-      }
-    } else {
-      // Clear canvas if no remote video
-      this.ctx.fillStyle = 'black';
-      this.ctx.fillRect(0, 0, 640, 480);
-    }
+  hasRemoteVideo() {
+    return this.remoteVideo.readyState >= 2;
   }
 
   removeRemoteVideo(clientId) {
@@ -161,7 +114,6 @@ export class VideoUI {
 
     // Clear the remote video
     this.remoteVideo.srcObject = null;
-    this.hasRemoteVideo = false;
   }
 
   togglePanel() {

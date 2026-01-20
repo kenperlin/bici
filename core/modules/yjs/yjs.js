@@ -73,8 +73,6 @@ export function setupYjsClient(webcam) {
         `Error: ${error.name}\nMessage: ${error.message}`
       );
     });
-
-  return webrtcClient;
 }
 
 export function yjsBindCodeArea(codeArea) {

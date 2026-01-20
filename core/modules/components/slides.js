@@ -1,5 +1,5 @@
-import { addDiagramProperties } from "./diagram.js";
-import { centeredText } from "../utils.js";
+import { addDiagramProperties, TextDiagram } from "./diagram.js";
+import { centeredText } from "../canvasUtils.js";
 
 export class SlideDeck {
   constructor(projectName, slidesList) {
@@ -9,6 +9,8 @@ export class SlideDeck {
     this.modules = {};
     this.urlMap = {};
     this.currentSlide = 0;
+
+    this.rect = { left: 0, top: 0, width: 500, height: 500 };
 
     this.init(slidesList);
   }
@@ -56,29 +58,8 @@ export class SlideDeck {
         addDiagramProperties(diagram);
         this.slides.push({ type: "diagram", content: diagram });
       } else {
-        const textDiagram = new (function () {
-          this.width = 500;
-          this.height = 400;
-          this._beforeUpdate = () => {};
-          let lines = file.split("\\n");
-          this.update = () => {
-            this.ctx.save();
-            this.ctx.fillStyle = "white";
-            this.ctx.fillRect(0, 0, this.width, this.height);
-            this.ctx.font = "40px Helvetica";
-            this.ctx.fillStyle = "black";
-            for (let n = 0; n < lines.length; n++) {
-              let line = lines[n], i, j;
-              if ((i = line.indexOf("<font")) >= 0 && (j = line.indexOf(">", i)) >= 0) {
-                this.ctx.font = line.substring(i + 6, j);
-                line = line.substring(j + 1);
-              }
-              centeredText(this.ctx, line, 250, 210 + 60 * (n - (lines.length - 1) / 2));
-            }
-            this.ctx.restore();
-          };
-        })();
-
+        let lines = file.split("\\n");
+        const textDiagram = new TextDiagram(lines)
         this.slides.push({ type: "text", content: textDiagram });
       }
     }
@@ -92,23 +73,33 @@ export class SlideDeck {
     });
   }
 
+  setSize(left, top, width, height) {
+    this.rect = { left, top, width, height };
+  }
+
   getSlide(idx) {
-    return this.slides[idx ?? this.currentSlide]
+    return this.slides[idx ?? this.currentSlide];
   }
 
   draw(ctx, index) {
     const slide = this.getSlide(index);
     if (!slide) return;
 
-    if (slide.type === 'diagram') {
-        slide.content.ctx = ctx;
-        slide.content._beforeUpdate();
-        slide.content.update();
-    } else if (slide.type === 'image') {
-        ctx.drawImage(slide.content, this.left ?? 0, this.top ?? 0, this.width ?? 500, this.height ?? 500);
-    } else if (slide.type === 'text') {
-        slide.content.ctx = ctx;
-        slide.content.update();
+    if (slide.type === "diagram") {
+      slide.content.ctx = ctx;
+      slide.content._beforeUpdate();
+      slide.content.update();
+    } else if (slide.type === "image") {
+      ctx.drawImage(
+        slide.content,
+        this.rect.left,
+        this.rect.top,
+        this.rect.width,
+        this.rect.height
+      );
+    } else if (slide.type === "text") {
+      slide.content.ctx = ctx;
+      slide.content.update();
     }
   }
 }

@@ -1,18 +1,15 @@
-let scene, sceneID, isAlt, isInfo, isOpaque;
+let isAlt, isInfo, isOpaque, isDrawpad, isLightPen, isMove, isScene, isCode, isDrag;
+
 window.isShift = false;
 
 // Initialize Yjs for collaborative code editing
-let ydoc, ytext, ypenStrokes, yjsProvider;
+let ypenStrokes, yjsProvider;
 
 let pen = new Pen();
-let octx = overlayCanvas.getContext('2d');
 
 // Check whether this is the only client, and whether it is the master client.
 let isMultiPlayer = () => ! (webrtcClient.peerConnections.size == 0);
 let isFirstPlayer = () => webrtcClient.isMasterClient;
-
-
-let shift3D = 0, t3D = 0, isDrawpad;
 
 let sceneCounter = 0;
 
@@ -27,9 +24,6 @@ let sceneVar = (name, initialValue) => {
    return window[varName];
 }
 
-let isLightPen = false
-
-let isMove = false, isScene = false, isCode = false, isDrag = false;
 pen.setContext(ctx);
 
 // Setup state synchronization after all variables are initialized
@@ -235,16 +229,6 @@ let startTime = Date.now() / 1000;
 let timePrev = startTime;
 window.isReloadScene = false;
 let reloadTime = 0;
-
-let centeredText = (ctx,text,x,y) => ctx.fillText(text, x-ctx.measureText(text).width/2, y);
-
-let screenMessage = text => {
-   octx.save();
-   octx.font = '30px Courier';
-   octx.fillStyle = 'black';
-   centeredText(octx, text, screen.width / 2, 30);
-   octx.restore();
-}
 
 animate = () => {
 
