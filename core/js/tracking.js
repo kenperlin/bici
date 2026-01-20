@@ -25,8 +25,8 @@ let isShadowAvatar = () => mediapipe.handResults[0] && mediapipe.handResults[1];
 let as = 0.3; // Avatar scale
 
 let toShadowAvatar = point => {
-   point.x = head_x() + as * (point.x - screen.width/2);
-   point.y = head_y() + as * (point.y - screen.height/2);
+   point.x = avatarX + as * (point.x - screen.width/2);
+   point.y = avatarY + as * (point.y - screen.height/2);
 }
 
 let toScreen = (point) => {
@@ -308,7 +308,7 @@ let trackingUpdate = () => {
             octx.lineWidth = 4;
 
 	    let tilt = Math.atan2(headMatrix[4], headMatrix[5]);
-	    octx.translate(head_x(), head_y());
+	    octx.translate(avatarX, avatarY);
 	    octx.rotate(tilt);
 
             octx.beginPath();
@@ -325,7 +325,7 @@ let trackingUpdate = () => {
             octx.fill();
 
 	    octx.rotate(-tilt);
-	    octx.translate(-head_x(), -head_y());
+	    octx.translate(-avatarX, -avatarY);
          }
 /*
          // DISABLE EYE GAZE VISUAL FEEDBACK UNTIL WE GET IT RIGHT.
@@ -433,26 +433,24 @@ let trackingUpdate = () => {
    }
 
    if (isShadowAvatar()) {
-      let d = 10;
+      let d = [5,5];
       for (let hand = 0 ; hand <= 1 ; hand++)
-         if (mediapipe.handResults[hand])
-            d = Math.min(d, drawShadowHand(octx, mediapipe.handResults[hand].landmarks,
-	       head_x() - as * screen.width/2,
-	       head_y() - as * screen.height/2, as));
-      if (d < .75)
-         isHeadFreeze = false;
-      else if (d != 10) {
-         if (! isHeadFreeze) {
-            headXFreeze = headX;
-            headYFreeze = headY;
+         if (mediapipe.handResults[hand]) {
+            let d = drawShadowHand(octx,
+	                       mediapipe.handResults[hand].landmarks,
+	                       avatarX - as * screen.width/2,
+	                       avatarY - as * screen.height/2, as);
+            if (d < 1) {
+               avatarX = screen.width  * mediapipe.handResults[hand].landmarks[0].x;
+               avatarY = screen.height * mediapipe.handResults[hand].landmarks[0].y - 200;
+	    }
          }
-         isHeadFreeze = true;
-      }
    }
 }
 
 let trackingIndex = 0, wasTracking = false, trackingInfo = 'let left=[],right=[],face=[];';
 let headX = 100, headY = 100;
+let avatarX = screen.width/2, avatarY = screen.height/2;
 let headMatrix = identity();
 let eyeOpen  = 1;
 let eyeGazeX = 0;
@@ -460,10 +458,8 @@ let eyeGazeY = 0;
 let domDistances = [];
 let focusedElement;
 
-let head_x = () => isHeadFreeze ? headXFreeze : headX;
-let head_y = () => isHeadFreeze ? headYFreeze : headY;
-
-let isHeadFreeze = false, headXFreeze, headYFreeze;
+let head_x = () => headX;
+let head_y = () => headY;
 
 let initializeGestureTracking = () => {
    let indexPinch = new PinchGesture("indexPinch", [1], 0.1);
