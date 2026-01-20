@@ -4,8 +4,6 @@ window.isShift = false;
 // Initialize Yjs for collaborative code editing
 let ydoc, ytext, ypenStrokes, yjsProvider;
 
-let codeArea = new CodeArea(-2000, 20);
-let chalktalk = new Chalktalk();
 let pen = new Pen();
 let octx = overlayCanvas.getContext('2d');
 
@@ -31,13 +29,6 @@ let sceneVar = (name, initialValue) => {
 
 let isLightPen = false
 
-codeArea.callback = () => {
-   window.isReloadScene = true;
-};
-
-let w = canvas2D.width = screen.width;
-let h = canvas2D.height = screen.height;
-let ctx = canvas2D.getContext('2d');
 let isMove = false, isScene = false, isCode = false, isDrag = false;
 pen.setContext(ctx);
 
@@ -256,56 +247,13 @@ let screenMessage = text => {
 }
 
 animate = () => {
-   // Only init slides if a project is loaded
-   if (isFirstTime && project && slideData) {
-      initSlides();
-      isFirstTime = false;
-   }
 
    let time = Date.now() / 1000;
    let deltaTime = time - timePrev;
    timePrev = time;
    
-   if (window.isReloadScene && time - reloadTime > .1) {
-      try {
-         // Remove zero-width space markers (\u200B) added by Yjs sync before eval
-         const code = codeArea.getElement().value.replace(/\u200B/g, '');
-         // Use window.eval to ensure Scene is defined in global scope
-         window.eval(code);
-         autodraw = true;
-	 startNewScene();
-         
-         // Also clean up markers from the textarea to prevent accumulation
-         const textarea = codeArea.getElement();
-         if (textarea.value.includes('\u200B')) {
-            textarea.value = textarea.value.replace(/\u200B/g, '');
-         }
-      } catch (e) {
-         console.error('Scene code error:', e);
-      }
-      reloadTime = time;
-      window.isReloadScene = false;
-   }
-
-   if (time - startTime > 1 && ! fqParsed) {
-      for (let name in fq) {
-         let index = fq[name].index;
-         let diagram = fq[name].diagram;
-         slides[index] = fq[name].image ? fq[name].image : fq[name].diagram;
-         slideNames[index] = name;
-      }
-      fqParsed = true;
-   }
-
    // Clear the overlay canvas before doing anything else for this animation frame.
    octx.clearRect(0,0,screen.width,screen.height);
-
-   let scrollPosition = window.pageYOffset;
-   document.body.style.overflow = 'hidden';
-   window.scrollTo(0, scrollPosition);
-
-   t3D = Math.max(0, Math.min(1, t3D + (shift3D ? deltaTime : -deltaTime)));
-   canvas3D.style.left = isScene ? CANVAS3D_LEFT + ease(t3D) * 300 : -2000;
 
    // Video source is remote video if available, otherwise webcam
    if (videoUI && videoUI.hasRemoteVideo) {

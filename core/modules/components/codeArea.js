@@ -1,5 +1,5 @@
 import * as NumberString from "../numberString.js";
-import { getWebRTCClient } from "../yjs/yjs.js";
+import { webrtcClient } from "../yjs/yjs.js";
 
 const offsetX = 20;
 const offsetY = 20;
@@ -18,9 +18,9 @@ export class CodeArea {
     this.isVisible = false;
     this.ey = 0;
     this.dial = 0;
-    this.callback = () => {};
     this.isReloadScene = false;
     this.lastReloadTime = 0;
+    this.onReloadScene = () => {}
 
     this._varsToFlush = {};
     this._isFlushScheduled = false;
@@ -37,7 +37,7 @@ export class CodeArea {
 
   setVisible(isVisible) {
     this.isVisible = isVisible;
-    this.textarea.style.left = isVisible ? 20 : -2000;
+    this.textarea.style.left = `${isVisible ? 20 : -2000}px`;
   };
 
   containsPoint(x, y) {
@@ -61,10 +61,22 @@ export class CodeArea {
     );
   };
 
-  update() {
+  update(time = Date.now() / 1000) {
     let lines = this.textarea.value.split("\n");
     this.textarea.rows = Math.min((790 / this.fontSize) >> 0, lines.length);
-    this.textarea.cols = lines.reduce((a, b) => Math.max(a.length - 1, b.length - 1), 0)
+    this.textarea.cols = lines.reduce((acc, cur) => Math.max(acc, cur.length - 1), 0)
+
+    if (this.isReloadScene && time - this.lastReloadTime > 0.1) {
+      try {
+        // Remove zero-width space markers (\u200B) added by Yjs sync before eval
+        this.textarea.value = this.textarea.value.replace(/\u200B/g, "");
+        this.onReloadScene(this)
+      } catch (e) {
+        console.error("Scene code error:", e);
+      }
+      this.lastReloadTime = time;
+      this.isReloadScene = false;
+    }
 
     // if (this.isVisible) {
     //   let highlightCharAt = (x, y, color) => {
@@ -119,7 +131,7 @@ export class CodeArea {
           // Trigger input event to sync with Yjs
           this.textarea.dispatchEvent(new Event("input", { bubbles: true }));
 
-          this.callback?.();
+          this.isReloadScene = true;
         }
         this.dial = 0;
       }
@@ -130,11 +142,11 @@ export class CodeArea {
       if (event.key == "Shift") {
         this.ey = 0;
       }
-      if (this.callback && event.key == "Meta") {
+      if (event.key == "Meta") {
         // window.isReloading = true;
         // Trigger input event to sync reload to other users via Yjs
         this.textarea.dispatchEvent(new Event("input", { bubbles: true }));
-        this.callback();
+        this.isReloadScene = true;
       }
       if (event.key == "Control") {
         let i0 = this.textarea.selectionStart;
@@ -188,7 +200,6 @@ export class CodeArea {
 
     // In multiplayer mode, only master should sync to Yjs
     // Secondary clients send batched vars to master via WebRTC
-    const webrtcClient = getWebRTCClient();
     if (!webrtcClient.isMaster()) {
       webrtcClient.sendAction({
         type: "setVars",

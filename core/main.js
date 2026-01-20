@@ -2,7 +2,7 @@ import { CodeArea } from "./modules/components/codeArea.js";
 import { SceneCanvas } from "./modules/components/sceneCanvas.js";
 import { SlideDeck } from "./modules/components/slides.js";
 import { gl_start } from "./modules/webgl.js";
-import { setupYjsClient, yjsBindCodeArea } from "./modules/yjs/yjs.js";
+import { setupYjsClient, yjsBindCodeArea, yjsBindPen } from "./modules/yjs/yjs.js";
 
 async function fetchText(file) {
   try {
@@ -12,23 +12,6 @@ async function fetchText(file) {
     console.error(`Failed to get text from file ${file}:`, error)
   }
 }
-
-const currentProject = {}
-
-const projectSelector = document.getElementById("project-selector");
-const projectSwitcher = document.getElementById("project-switcher");
-const projectSwitchBtn = document.getElementById("project-switch-btn");
-const currentProjectLabel = document.getElementById("current-project");
-const projectGrid = document.getElementById("project-grid");
-
-projectSwitchBtn.addEventListener("click", () => {
-  projectSelector.classList.remove("hidden");
-})
-
-projectGrid.addEventListener("click", (e) => {
-  const projectName = e.target.dataset.project;
-  if(projectName) loadProject(projectName);
-})
 
 async function loadProject(name) {
   currentProject.name = name;
@@ -57,9 +40,10 @@ async function loadScene(num) {
     console.error(`Failed to load scene ${num} of project ${currentProject.name}:`, e)
   }
 
+  currentProject.sceneModule = sceneModule;
   currentProject.scene = new sceneModule.Scene();
   currentProject.sceneText = await fetchText(scenePath);
-  
+
   codeArea.textarea.value = currentProject.sceneText;
   sceneCanvas.registerSceneEvents(currentProject.scene);
 
@@ -67,20 +51,59 @@ async function loadScene(num) {
   console.log(currentProject)
 }
 
+const currentProject = {};
+
+const projectSelector = document.getElementById("project-selector");
+const projectSwitcher = document.getElementById("project-switcher");
+const projectSwitchBtn = document.getElementById("project-switch-btn");
+const currentProjectLabel = document.getElementById("current-project");
+const projectGrid = document.getElementById("project-grid");
+
+projectSwitchBtn.addEventListener("click", () => {
+  projectSelector.classList.remove("hidden");
+})
+
+projectGrid.addEventListener("click", (e) => {
+  const projectName = e.target.dataset.project;
+  if(projectName) loadProject(projectName);
+})
+
+const ctx = document.getElementById('canvas-2d').getContext('2d');
 const webcam = document.getElementById("webcam");
 const webrtcClient = setupYjsClient(webcam);
+
 const sceneCanvas = new SceneCanvas(document.getElementById('canvas-3d'))
 const codeArea = new CodeArea(document.getElementById('code-editor'))
+codeArea.onReloadScene = async (self) => {
+  // Replace imports with absolute URLs
+  const code = self.textarea.value.replace(
+    /from\s+['"]([^'"]+)['"]/g,
+    (_, spec) => {
+      const url = new URL(spec, import.meta.url).href;
+      return `from '${url}'`;
+    }
+  );
 
+  const url = URL.createObjectURL(
+    new Blob([code], { type: 'text/javascript' })
+  );
+  currentProject.scene = new (await import(url)).Scene();
+  sceneCanvas.registerSceneEvents(currentProject.scene);
+  gl_start(sceneCanvas.canvas, currentProject.scene)
+}
+
+// const pen = new Pen();
+
+// pen.setContext(ctx)
+// yjsBindPen(pen);
 yjsBindCodeArea(codeArea);
 
 let startTime = Date.now() / 1000;
 let timePrev = startTime;
 
-const ctx = document.getElementById('canvas-2d').getContext('2d');
-
 function animate() {
   requestAnimationFrame(animate);
+
   const time = Date.now() / 1000;
   const deltaTime = time - timePrev;
   timePrev = time;
@@ -100,8 +123,8 @@ function animate() {
   //  ctx.drawImage(webcam.canvas, 0,0,640,440, 0,0,w,h);
 
   const { slideDeck, scene } = currentProject
+  codeArea.update();
   slideDeck?.draw(ctx);
-  codeArea?.update();
   scene?.update();
 }
 

@@ -8,14 +8,9 @@ import { WebRTCClient } from "./webrtcClient.js";
 import * as Y from "https://cdn.jsdelivr.net/npm/yjs@13.6.18/+esm";
 
 let ydoc = new Y.Doc();
-let webrtcClient;
 
-export function getWebRTCClient() {
-  if (!webrtcClient) {
-    throw new Error("WebRTC client not initialized yet.");
-  }
-  return webrtcClient;
-}
+export let webrtcClient;
+export let videoUI;
 
 export function setupYjsClient(webcam) {
   webrtcClient = new WebRTCClient();
@@ -64,7 +59,7 @@ export function setupYjsClient(webcam) {
       webcam.srcObject = localStream;
       console.log("[BICI] Set webcam to use WebRTC stream");
 
-      let videoUI = new VideoUI(webrtcClient);
+      videoUI = new VideoUI(webrtcClient);
       videoUI.setLocalStream(localStream);
       // Yjs will be initialized after room is joined
     })
