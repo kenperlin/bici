@@ -1,5 +1,5 @@
 
-let drawShadowHand = (ctx, F, x=0, y=0, s=1) => {
+let drawShadowHand = (ctx, F, x=0, y=0, s=1, isDrawing=true) => {
 
    // Behind the scenes, create a separate shadow canvas.
 
@@ -38,6 +38,9 @@ let drawShadowHand = (ctx, F, x=0, y=0, s=1) => {
    let D = [];
    for (let j = 0 ; j < 5 ; j++)
       D[j] = distance(0, 4*j+3) / t;
+
+   if (! isDrawing)
+      return D[1] + D[2] + D[3] + D[4];
 
    // Draw an opaque shadow of the hand to the shadow canvas.
 

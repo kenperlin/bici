@@ -20,7 +20,8 @@ let frameToElement = (x, y, element) => {
    return [x, y]
 }
 
-let isShadowAvatar = () => mediapipe.handResults[0] && mediapipe.handResults[1];
+let isShadowAvatar = () => avatarX >= 100 && avatarX < screen.width - 100 &&
+                           avatarY >= 100 && avatarY < screen.height - 100;
 
 let as = 0.3; // Avatar scale
 
@@ -432,25 +433,30 @@ let trackingUpdate = () => {
       wasTracking = false;
    }
 
-   if (isShadowAvatar()) {
-      let d = [5,5];
+   if (mediapipe.handResults[0] || mediapipe.handResults[1]) {
+      let x = 0, y = 0, w = 0;
       for (let hand = 0 ; hand <= 1 ; hand++)
          if (mediapipe.handResults[hand]) {
             let d = drawShadowHand(octx,
-	                       mediapipe.handResults[hand].landmarks,
-	                       avatarX - as * screen.width/2,
-	                       avatarY - as * screen.height/2, as);
+                                   mediapipe.handResults[hand].landmarks,
+                                   avatarX - as * screen.width/2,
+                                   avatarY - as * screen.height/2, as, isShadowAvatar());
             if (d < 1) {
-               avatarX = screen.width  * mediapipe.handResults[hand].landmarks[0].x;
-               avatarY = screen.height * mediapipe.handResults[hand].landmarks[0].y - 200;
-	    }
+               x += screen.width  * mediapipe.handResults[hand].landmarks[0].x / d;
+               y += screen.height * mediapipe.handResults[hand].landmarks[0].y / d;
+               w += 1 / d;
+            }
          }
+      if (w) {
+         avatarX = x / w;
+         avatarY = y / w - 200;
+      }
    }
 }
 
 let trackingIndex = 0, wasTracking = false, trackingInfo = 'let left=[],right=[],face=[];';
 let headX = 100, headY = 100;
-let avatarX = screen.width/2, avatarY = screen.height/2;
+let avatarX = 0, avatarY = 0;
 let headMatrix = identity();
 let eyeOpen  = 1;
 let eyeGazeX = 0;
