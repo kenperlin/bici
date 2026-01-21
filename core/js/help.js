@@ -62,6 +62,7 @@ u Toggle UFO within blue-plate world.
 v Toggle if 3D view is tracking head.
 V Toggle head+hands tracking data.
 x Copy clipboard buffer to the console.
+X Toggle AI script panel.
 w Toggle world seen thru blue plate.
 \' Convert strokes to a sketch.
 , Make pen line thinner.

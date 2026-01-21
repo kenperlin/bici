@@ -2,6 +2,11 @@
 document.addEventListener('keydown', e => {
    if (document.activeElement == codeArea.getElement())
       return;
+
+   let scriptTextarea = document.getElementById('scriptInput');
+   if (scriptTextarea && document.activeElement === scriptTextarea)
+      return;
+
    if (e.key.indexOf('Arrow') == 0)
       e.preventDefault();
    keyDown(e.key);
@@ -11,6 +16,11 @@ document.addEventListener('keyup', e => {
    help.isSplash = false;
    if (document.activeElement == codeArea.getElement())
       return;
+
+   let scriptTextarea = document.getElementById('scriptInput');
+   if (scriptTextarea && document.activeElement === scriptTextarea)
+      return;
+
    if (e.key.indexOf('Arrow') == 0)
       e.preventDefault();
 
@@ -66,6 +76,13 @@ let keyDown = key => {
 
 window.keyUp = key => {
    let toggleCode = () => codeArea.setVisible(isCode = ! isCode);
+
+   let toggleScriptPanel = () => {
+      let textarea = document.getElementById('scriptInput');
+      if (!textarea || document.activeElement !== textarea) {
+         scriptPanel.toggle();
+      }
+   }
 
    if (isOpeningURL) {
       isOpeningURL = false;
@@ -161,6 +178,7 @@ window.keyUp = key => {
    case 'x' : navigator.clipboard.readText()
                        .then(text => console.log('Clipboard content:', text))
 		       .catch(err => {}); break;
+   case 'X' : toggleScriptPanel(); break;
    }
 }
 
