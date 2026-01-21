@@ -435,6 +435,7 @@ let trackingUpdate = () => {
 
    if (mediapipe.handResults[0] || mediapipe.handResults[1]) {
       let x = 0, y = 0, w = 0;
+      let lp = [{},{}];
       for (let hand = 0 ; hand <= 1 ; hand++)
          if (mediapipe.handResults[hand]) {
             let d = drawShadowHand(octx,
@@ -442,8 +443,9 @@ let trackingUpdate = () => {
                                    avatarX - as * screen.width/2,
                                    avatarY - as * screen.height/2, as, isShadowAvatar());
             if (d < 1) {
-               x += screen.width  * mediapipe.handResults[hand].landmarks[0].x / d;
-               y += screen.height * mediapipe.handResults[hand].landmarks[0].y / d;
+	       lp[hand] = mediapipe.handResults[hand].landmarks[0];
+               x += screen.width  * lp[hand].x / d;
+               y += screen.height * lp[hand].y / d;
                w += 1 / d;
             }
          }
@@ -451,8 +453,19 @@ let trackingUpdate = () => {
          avatarX = x / w;
          avatarY = y / w - 200;
       }
+      if (lp[0].x && lp[1].x) {
+         let x = lp[1].x - lp[0].x, y = lp[1].y - lp[0].y;
+	 let new_hand_separation = Math.sqrt(x * x + y * y);
+	 if (hand_separation)
+	    as *= new_hand_separation / hand_separation;
+	 hand_separation = new_hand_separation;
+      }
+      else
+	 hand_separation = undefined;
    }
 }
+
+let hand_separation;
 
 let trackingIndex = 0, wasTracking = false, trackingInfo = 'let left=[],right=[],face=[];';
 let headX = 100, headY = 100;
