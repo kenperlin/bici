@@ -101,6 +101,7 @@ let ydoc, ytext, ypenStrokes, yjsProvider;
 let codeArea = new CodeArea(-2000, 20);
 let chalktalk = new Chalktalk();
 let pen = new Pen();
+console.log(pen)
 
 let overlayCanvas = document.createElement('canvas');
 document.body.appendChild(overlayCanvas);

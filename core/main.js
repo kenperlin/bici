@@ -71,7 +71,7 @@ const currentProjectLabel = document.getElementById("current-project");
 const projectGrid = document.getElementById("project-grid");
 
 projectSwitchBtn.addEventListener("click", () => {
-  projectSelector.classList.remove("hidden");
+  projectSelector.style.display = "flex";
 });
 
 projectGrid.addEventListener("click", (e) => {
@@ -133,11 +133,10 @@ function animate() {
   octx.clearRect(0, 0, WIDTH, HEIGHT);
 
   // Video source is remote video if available, otherwise webcam
-  let backgroundVideo = videoUI?.hasRemoteVideo()
-    ? videoUI.remoteVideo
-    : webcam;
+  let hasRemoteVideo = videoUI?.hasRemoteVideo();
+  let backgroundVideo = hasRemoteVideo ? videoUI.remoteVideo : webcam;
 
-  drawVideoToCover(ctx, backgroundVideo, WIDTH, HEIGHT);
+  drawVideoToCover(ctx, backgroundVideo, WIDTH, HEIGHT, !hasRemoteVideo);
 
   const { slideDeck, scene } = currentProject;
   codeArea.update();

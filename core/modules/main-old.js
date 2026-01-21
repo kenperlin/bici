@@ -235,34 +235,7 @@ animate = () => {
    let time = Date.now() / 1000;
    let deltaTime = time - timePrev;
    timePrev = time;
-   
-   // Clear the overlay canvas before doing anything else for this animation frame.
-   octx.clearRect(0,0,screen.width,screen.height);
 
-   // Video source is remote video if available, otherwise webcam
-   if (videoUI && videoUI.hasRemoteVideo) {
-      videoUI.update();
-      videoSrc = videoUI.canvas;
-   } else
-      videoSrc = webcam;
-
-   let p = webcam.update();
-   codeArea.update();
-   ctx.drawImage(webcam.canvas, 0,0,640,440, 0,0,w,h);
-
-   if (isInfo && slides.length > 0 && slides[slideIndex]) {
-      ctx.globalAlpha = isOpaque ? 1 : .5;
-      let slide = slides[slideIndex];
-      D.left = window.innerWidth - 500 - 20;
-      D.w = slide.width ?? 500;
-      D.h = slide.height ?? 500;
-      
-      if (! slide.update)
-         ctx.drawImage(slide, D.left, D.top, 500, 500*slide.height/slide.width);
-      else {
-         slide._beforeUpdate();
-         slide.update(D.ctx);
-         let x = D.left, y = D.top, w = slide.width, h = slide.height;
          ctx.save();
             ctx.beginPath();
             ctx.moveTo(x,y);
@@ -272,14 +245,7 @@ animate = () => {
             ctx.clip();
             ctx.drawImage(canvasDiagram, x, y);
          ctx.restore();
-      }
-      ctx.globalAlpha = 1;
-
-      // Show the id of the current slide in the bottom right corner.
-      ctx.font = '20px Courier';
-      ctx.fillText(choiceKey.charAt(slideIndex), screen.width-15, screen.height-37);
-   }
-
+      
    if (isDrawpad) {
       let w = 500, h = 400, x = window.innerWidth - 20 - w, y = screen.height - 60 - h;
       ctx.fillStyle = isOpaque ? 'white' : '#ffffff80';
@@ -289,12 +255,7 @@ animate = () => {
    if (isLightPen && p)
       penMove(p.x * w / 640, p.y * h / 440);
    pen.draw(pen.strokes);
-   chalktalk.update(pen.draw);
-   if (scene && scene.update && isScene) {
-      octx.save();
-      scene.update(webcam.headPos);
-      octx.restore();
-   }
+
    help.display(ctx);
 
    if (isLightPen) {
@@ -304,111 +265,5 @@ animate = () => {
 
    trackingUpdate();
 
-   //projectSwitcher.style.top = document.documentElement.clientHeight - 43;
-   projectSwitcher.style.top = Math.min(screen.height - 80,
-                                        document.documentElement.clientHeight - 43);
-}
-
-// Room invitation UI
-function showInvitationUI(roomId) {
-   // Remove existing invitation UI if any
-   const existing = document.getElementById('invitation-ui');
-   if (existing) {
-      existing.remove();
-   }
-
-   // Create invitation UI container
-   const invitationUI = document.createElement('div');
-   invitationUI.id = 'invitation-ui';
-   invitationUI.className = 'invitation-container';
-
-   const invitationUrl = `${window.location.origin}${window.location.pathname}?room=${roomId}`;
-
-   invitationUI.innerHTML = `
-      <div class="invitation-content">
-         <div class="room-status">
-            <span class="status-label">Room:</span>
-            <span class="room-code">${roomId}</span>
-         </div>
-         <div class="invitation-link">
-            <input type="text" readonly value="${invitationUrl}" id="invitation-url-input">
-            <button id="copy-invitation-btn">Copy Link</button>
-         </div>
-         <div class="peer-status" id="peer-status">Waiting for peer...</div>
-         <button id="close-invitation-btn">Close</button>
-      </div>
-   `;
-
-   document.body.appendChild(invitationUI);
-
-   // Copy button functionality
-   document.getElementById('copy-invitation-btn').addEventListener('click', () => {
-      const input = document.getElementById('invitation-url-input');
-      input.select();
-      input.setSelectionRange(0, 99999); // For mobile devices
-
-      navigator.clipboard.writeText(invitationUrl).then(() => {
-         const btn = document.getElementById('copy-invitation-btn');
-         const originalText = btn.textContent;
-         btn.textContent = 'Copied!';
-         setTimeout(() => {
-            btn.textContent = originalText;
-         }, 2000);
-      }).catch(err => {
-         console.error('Failed to copy:', err);
-      });
-   });
-
-   // Close button functionality
-   document.getElementById('close-invitation-btn').addEventListener('click', () => {
-      invitationUI.remove();
-   });
-
-   // Update peer status when someone joins
-   if (webrtcClient) {
-      const originalOnRemoteStreamAdded = webrtcClient.onRemoteStreamAdded;
-      webrtcClient.onRemoteStreamAdded = (clientId, stream) => {
-         if (originalOnRemoteStreamAdded) {
-            originalOnRemoteStreamAdded(clientId, stream);
-         }
-         const peerStatus = document.getElementById('peer-status');
-         if (peerStatus) {
-            peerStatus.textContent = 'Peer connected';
-            peerStatus.style.color = '#4CAF50';
-         }
-      };
-
-      const originalOnRemoteStreamRemoved = webrtcClient.onRemoteStreamRemoved;
-      webrtcClient.onRemoteStreamRemoved = (clientId) => {
-         if (originalOnRemoteStreamRemoved) {
-            originalOnRemoteStreamRemoved(clientId);
-         }
-         const peerStatus = document.getElementById('peer-status');
-         if (peerStatus) {
-            peerStatus.textContent = 'Peer disconnected';
-            peerStatus.style.color = '#f44336';
-         }
-      };
-   }
-}
-
-function showRoomFullNotification(roomId) {
-   // Create notification
-   const notification = document.createElement('div');
-   notification.className = 'room-full-notification';
-   notification.innerHTML = `
-      <div class="notification-content">
-         <h3>Room Full</h3>
-         <p>The room <strong>${roomId || 'you tried to join'}</strong> is already full (2/2 participants).</p>
-         <p>Please ask the room creator for a new invitation link.</p>
-         <button id="close-notification-btn">Close</button>
-      </div>
-   `;
-
-   document.body.appendChild(notification);
-
-   document.getElementById('close-notification-btn').addEventListener('click', () => {
-      notification.remove();
-   });
 }
 

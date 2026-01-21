@@ -10,7 +10,7 @@ export function screenText(ctx, text) {
   ctx.restore();
 }
 
-export function drawVideoToCover(ctx, src, targetW, targetH) {
+export function drawVideoToCover(ctx, src, targetW, targetH, isFlipped) {
   const canvasAspect = targetW / targetH;
   const videoAspect = src.videoWidth / src.videoHeight;
 
@@ -26,6 +26,12 @@ export function drawVideoToCover(ctx, src, targetW, targetH) {
     x = 0;
     y = (targetH - h) / 2;
   }
-
+  
+  ctx.save();
+  if(isFlipped) {
+    ctx.translate(targetW, 0);
+    ctx.scale(-1, 1);
+  }
   ctx.drawImage(src, x, y, w, h);
+  ctx.restore();
 }
