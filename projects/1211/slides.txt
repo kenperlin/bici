@@ -3,3 +3,4 @@ Test of head tracking\nand shared state
 values.js
 sliders.js
 small_sliders.js
+widgets.js

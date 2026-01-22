@@ -36,7 +36,7 @@ let _ = {};
 let coreFiles = `M4, pca, loadImage, webgl, webcam, trackHead, help,
 	        midi, numberString, pen, aiScriptPanel, keyEvent, matchCurves,
 	        glyphs, chalktalk, codeArea, math, shape, shader,
-	        diagram, sliders, webrtc-client, video-ui, implicit,
+	        diagram, sliders, widgets, webrtc-client, video-ui, implicit,
 		mediapipe, gesture, shadowHand, tracking, main`.split(',');
 
 let project, slideData;
