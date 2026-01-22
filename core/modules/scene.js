@@ -1,11 +1,22 @@
-export class SceneCanvas {
-  constructor(canvasElement) {
-    this.canvas = canvasElement;
+import { fetchText } from "./utils.js";
+import { gl_start } from "./webgl.js";
+import { webrtcClient } from "./yjs/yjs.js";
+
+
+export class SceneManager {
+  constructor(canvas, codeArea) {
+    this.canvas = canvas;
+    this.code = codeArea;
+    this.scene = null;
+    this.sceneCounter = 0;
+
     this.onMove = () => {};
     this.onDown = () => {};
     this.onUp = () => {};
 
     this.isDown = {};
+
+    this.code.onReloadScene = this.hotReload.bind(this);
 
     window.addEventListener('mousemove', (e) => {
       const id = "mouse";
@@ -19,6 +30,56 @@ export class SceneCanvas {
       const id = "mouse";
       if(this.isDown[id]) this.onUp(e.clientX, e.clientY, 0, id)
     })
+  }
+
+  async load(projectName, num, context) {
+    const path = `/projects/${projectName}/scenes/scene${num}.js`;
+    let sceneModule;
+  
+    try {
+      sceneModule = await import(path + "?t=" + Date.now()); // cache busting
+      if (!sceneModule.Scene) {
+        throw new Error(`Scene ${num} does not export a Scene class.`);
+      }
+    } catch (e) {
+      console.error(`Failed to load scene ${num} of project ${projectName}:`, e);
+    }
+
+    this.context = {
+      module: sceneModule,
+      seed: this.getSeed(),
+      code: await fetchText(path),
+      codeArea: this.code,
+      vars: {},
+      ...context
+    }
+    this.scene = new sceneModule.Scene(this.context);
+    this.code.textarea.value = this.context.code
+    this.registerSceneEvents(this.scene);
+    gl_start(this.canvas, this.scene);
+  }
+
+  async hotReload(code) {
+    try {
+      const url = URL.createObjectURL(
+        new Blob([code], { type: "text/javascript" })
+      );
+      const module = await import(url);
+      
+      this.scene = new module.Scene(this.context);
+      this.registerSceneEvents(this.scene);
+      gl_start(this.canvas, this.scene);
+
+    } catch (e) {
+      console.error("Hot reload failed: ", e)
+      return
+    }
+  }
+
+  getSeed() {
+    return webrtcClient.roomId.charCodeAt(0)
+                      + webrtcClient.roomId.charCodeAt(1) / 128
+                      + 123.456 * (++this.sceneCounter);
   }
 
   getRect() {

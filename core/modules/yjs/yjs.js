@@ -107,7 +107,7 @@ export function yjsBindCodeArea(codeArea) {
         );
       }
 
-      codeArea.callback?.();
+      codeArea.isReloadScene = true;
       window.isReloading = false;
     }
 

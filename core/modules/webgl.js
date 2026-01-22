@@ -22,7 +22,8 @@ vec3 phong(vec3 N, vec3 L, vec3 W, vec3 diffuse, vec4 specular) {
 let animate = () => {};
 let gl;
 let intervalID, autodraw = true;
-let vertexSize = 8;
+export let vertexSize = 8;
+
 let mesh = {
   triangle_strip: true,
   data: new Float32Array([

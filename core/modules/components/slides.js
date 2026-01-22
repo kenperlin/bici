@@ -1,10 +1,8 @@
 import { addDiagramProperties, TextDiagram } from "./diagram.js";
-import { centeredText } from "../canvasUtils.js";
 
 export class SlideDeck {
-  constructor(projectName, slidesList) {
-    this.projectName = projectName;
-    this.slideNames = [];
+  constructor() {
+    this.projectName = null;
     this.slides = [];
     this.modules = {};
     this.urlMap = {};
@@ -12,11 +10,15 @@ export class SlideDeck {
 
     this.isOpaque = false;
     this.position = { x: WIDTH - 520, y: 20 };
-
-    this.init(slidesList);
   }
 
-  async init(slidesList) {
+  async init(name, slidesList) {
+    this.projectName = name;
+    this.slides = [];
+    this.modules = {};
+    this.urlMap = {};
+    this.currentSlide = 0;
+
     for (let line of slidesList) {
       line = line.split("//")[0].trim();
       if (!line) continue;
@@ -40,9 +42,8 @@ export class SlideDeck {
         if (srcName) {
           const filePath = `/projects/${this.projectName}/${srcName}`;
           const module = await import(filePath + "?t=" + Date.now());
-          if (module) Object.assign(window, module);
-
           // TODO: remove js from window scope.
+          if (module) Object.assign(window, module);
         }
         continue;
       }

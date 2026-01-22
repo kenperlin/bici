@@ -1,88 +1,38 @@
 import { drawVideoToCover } from "./modules/canvasUtils.js";
 import { CodeArea } from "./modules/components/codeArea.js";
-import { SceneCanvas } from "./modules/components/sceneCanvas.js";
 import { SlideDeck } from "./modules/components/slides.js";
-import { gl_start } from "./modules/webgl.js";
+import { SceneManager } from "./modules/scene.js";
+import { fetchText } from "./modules/utils.js";
 import {
+  webrtcClient,
   videoUI,
   setupYjsClient,
   yjsBindCodeArea,
   yjsBindPen
 } from "./modules/yjs/yjs.js";
 
-async function fetchText(file) {
-  try {
-    const response = await fetch(file);
-    return await response.text();
-  } catch (error) {
-    console.error(`Failed to get text from file ${file}:`, error);
-  }
-}
+const DOM = {
+    projectSelector: document.getElementById("project-selector"),
+    projectSwitcher: document.getElementById("project-switcher"),
+    projectSwitchBtn: document.getElementById("project-switch-btn"),
+    projectLabel: document.getElementById("current-project"),
+    projectGrid: document.getElementById("project-grid"),
+    canvas2D: document.getElementById("canvas-2d"),
+    canvas3D: document.getElementById("canvas-3d"),
+    ocanvas: document.getElementById("canvas-overlay"),
+    webcam: document.getElementById("webcam"),
+    textarea: document.getElementById("code-editor")
+};
 
-async function loadProject(name) {
-  currentProject.name = name;
-  let slidesList = (await fetchText(`projects/${name}/slides.txt`))?.split(
-    "\n"
-  );
-  if (slidesList) {
-    currentProject.slideDeck = new SlideDeck(name, slidesList);
-  }
+const ctx = DOM.canvas2D.getContext("2d");
+const octx = DOM.ocanvas.getContext("2d");
 
-  currentProjectLabel.textContent = currentProject.name;
-  projectSwitcher.style.display = "block";
-  projectSelector.style.display = "none";
+window.WIDTH = window.innerWidth;
+window.HEIGHT = window.innerHeight;
 
-  await loadScene(1);
-}
-
-async function loadScene(num) {
-  const scenePath = `../projects/${currentProject.name}/scenes/scene${num}.js`;
-  let sceneModule;
-
-  try {
-    sceneModule = await import(scenePath + "?t=" + Date.now()); // cache busting
-    if (!sceneModule.Scene) {
-      throw new Error(`Scene ${num} does not export a Scene class.`);
-    }
-  } catch (e) {
-    console.error(
-      `Failed to load scene ${num} of project ${currentProject.name}:`,
-      e
-    );
-  }
-
-  currentProject.sceneNum = num;
-  currentProject.sceneModule = sceneModule;
-  currentProject.scene = new sceneModule.Scene();
-
-  codeArea.textarea.value = await fetchText(scenePath);
-  sceneCanvas.registerSceneEvents(currentProject.scene);
-
-  gl_start(sceneCanvas.canvas, currentProject.scene);
-  console.log(currentProject);
-}
-
-const currentProject = {};
-
-const projectSelector = document.getElementById("project-selector");
-const projectSwitcher = document.getElementById("project-switcher");
-const projectSwitchBtn = document.getElementById("project-switch-btn");
-const currentProjectLabel = document.getElementById("current-project");
-const projectGrid = document.getElementById("project-grid");
-
-projectSwitchBtn.addEventListener("click", () => {
-  projectSelector.style.display = "flex";
-});
-
-projectGrid.addEventListener("click", (e) => {
-  const projectName = e.target.dataset.project;
-  if (projectName) loadProject(projectName);
-});
-
-const canvas = document.getElementById("canvas-2d");
-const ocanvas = document.getElementById("canvas-overlay");
-const ctx = canvas.getContext("2d");
-const octx = ocanvas.getContext("2d");
+const codeArea = new CodeArea(DOM.textarea);
+const sceneManager = new SceneManager(DOM.canvas3D, codeArea);
+const slideDeck = new SlideDeck();
 
 function resizeStage() {
   const dpr = window.devicePixelRatio;
@@ -90,41 +40,53 @@ function resizeStage() {
   window.WIDTH = window.innerWidth;
   window.HEIGHT = window.innerHeight;
 
-  canvas.width = ocanvas.width = WIDTH * dpr;
-  canvas.height = ocanvas.height = HEIGHT * dpr;
+  DOM.canvas2D.width = DOM.ocanvas.width = WIDTH * dpr;
+  DOM.canvas2D.height = DOM.ocanvas.height = HEIGHT * dpr;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   octx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
-resizeStage();
-window.addEventListener("resize", resizeStage);
 
+async function init() {
+  resizeStage();
 
-const webcam = document.getElementById("webcam");
-setupYjsClient(webcam);
+  // Collaboration
+  await setupYjsClient(DOM.webcam);
+  yjsBindCodeArea(codeArea);
 
-const sceneCanvas = new SceneCanvas(document.getElementById("canvas-3d"));
-const codeArea = new CodeArea(document.getElementById("code-editor"));
-codeArea.onReloadScene = async (code) => {
-  const url = URL.createObjectURL(
-    new Blob([code], { type: "text/javascript" })
-  );
-  currentProject.scene = new (await import(url)).Scene();
-  sceneCanvas.registerSceneEvents(currentProject.scene);
-  gl_start(sceneCanvas.canvas, currentProject.scene);
-};
+  // Event listeners
+  window.addEventListener("resize", resizeStage);
+  DOM.projectSwitchBtn.addEventListener("click", () => {
+    DOM.projectSelector.style.display = "flex";
+  });
+  
+  DOM.projectGrid.addEventListener("click", (e) => {
+    const projectName = e.target.dataset.project;
+    if (projectName) loadProject(projectName);
+  });
 
-// const pen = new Pen();
+  // App
+  requestAnimationFrame(animate);
+}
 
-// pen.setContext(ctx)
-// yjsBindPen(pen);
-yjsBindCodeArea(codeArea);
+async function loadProject(name) {
+  let slidesList = await fetchText(`projects/${name}/slides.txt`);
 
-let startTime = Date.now() / 1000;
-let timePrev = startTime;
+  if (slidesList) {
+    slidesList = slidesList.split('\n')
+    await slideDeck.init(name, slidesList)
+  }
+  
+  // pass necessary components for scene to access through context 
+  await sceneManager.load(name, 1, {octx})
+
+  DOM.projectLabel.textContent = name;
+  DOM.projectSwitcher.style.display = "block";
+  DOM.projectSelector.style.display = "none";
+}
+
+let timePrev = Date.now() / 1000;
 
 function animate() {
-  requestAnimationFrame(animate);
-
   const time = Date.now() / 1000;
   const deltaTime = time - timePrev;
   timePrev = time;
@@ -138,10 +100,11 @@ function animate() {
 
   drawVideoToCover(ctx, backgroundVideo, WIDTH, HEIGHT, !hasRemoteVideo);
 
-  const { slideDeck, scene } = currentProject;
   codeArea.update();
-  slideDeck?.draw(ctx);
-  scene?.update();
+  slideDeck.draw(ctx);
+  sceneManager.scene?.update?.();
+
+  requestAnimationFrame(animate);
 }
 
-animate();
+init();

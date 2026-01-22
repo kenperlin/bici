@@ -1,9 +1,13 @@
+import { drawObj } from "/core/modules/webgl.js";
+import { ease, noise, mxm, move, turnY, scale } from "/core/modules/math.js"
+
 export function MatchGame(scene,U,M) {
 
    let label = ['A','B','C','D','E','F','G','H',
                 'A','B','C','D','E','F','G','H'];
-
-   let seed = sceneSeed();
+   
+                console.log(scene.context)
+   let seed = scene.context.seed;
    for (let k = 1 ; k < 100 ; k++)
    for (let i = 0 ; i < 16 ; i++)
       if (k % 16 && noise(k + .5, i + .5, seed) > 0) {
@@ -13,13 +17,12 @@ export function MatchGame(scene,U,M) {
          label[j] = tmp;
       }
 
-   let A = sceneVar('A', [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]);
+   let A = scene.context.A = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 
    let contains = (n,x,y) => Math.abs(x - tx(n)) < .2 && Math.abs(y - ty(n)) < .2;
 
    let mx, my;
    scene.onMove = (x,y) => { mx = x; my = y; }
-
    scene.onUp = (x,y) => {
       for (let n = 0 ; n < 16 ; n++)
          if (contains(n,x,y) && ! M[n]) {
@@ -31,8 +34,8 @@ export function MatchGame(scene,U,M) {
 	       if (i != n && ! M[i] && label[i] != label[n])
 	          U[i] = 0;
          }
-      codeArea.setVar('U', U);
-      codeArea.setVar('M', M);
+      scene.context.codeArea.setVar('U', U);
+      scene.context.codeArea.setVar('M', M);
    }
    let tile = [];
    for (let n = 0 ; n < 16 ; n++)
@@ -43,19 +46,19 @@ export function MatchGame(scene,U,M) {
    let round = t => (100 * t + .5 >> 0) / 100;
 
    let message = text => {
-      let x = CANVAS3D_LEFT + CANVAS3D_WIDTH / 2;
-      let y = CANVAS3D_TOP - 20;
+      // let x = CANVAS3D_LEFT + CANVAS3D_WIDTH / 2;
+      // let y = CANVAS3D_TOP - 20;
 
-      octx.fillStyle = '#ffffff60';
-      octx.beginPath();
-      octx.roundRect(x - 200, y - 90, 400, 180, 40);
-      octx.fill();
+      // octx.fillStyle = '#ffffff60';
+      // octx.beginPath();
+      // octx.roundRect(x - 200, y - 90, 400, 180, 40);
+      // octx.fill();
 
-      octx.font = '35px Helvetica';
-      octx.fillStyle = '#000000';
-      let line = text.split('\n');
-      for (let n = 0 ; n < line.length ; n++)
-         centeredText(octx, line[n], x, y - 35 + 50 * n);
+      // octx.font = '35px Helvetica';
+      // octx.fillStyle = '#000000';
+      // let line = text.split('\n');
+      // for (let n = 0 ; n < line.length ; n++)
+      //    centeredText(octx, line[n], x, y - 35 + 50 * n);
    }
 
    let time;
@@ -85,23 +88,22 @@ export function MatchGame(scene,U,M) {
 
       // IF ENLARGED HEAD TRACKING, GIVE VISUAL FEEDBACK.
 
-      if (tracking_isLarge) {
-         tracking_isSteadyEnabled = true;
-         let w = screen.width, h = screen.height;
-         octx.strokeStyle = '#00000020';
-         octx.lineWidth = 8;
-         octx.fillStyle = '#00000020';
-         for (let j = 0 ; j < 4 ; j++)
-         for (let i = 0 ; i < 4 ; i++) {
-            let x = w/2 - .3 * h + .2 * h * i;
-            let y = .275 * h + .2 * h * j;
-            octx.strokeRect(x - .1 * h, y - .1 * h, .18 * h, .18 * h);
-         }
-         octx.fillStyle = 'black';
-         octx.fillRect(tracking_l2x(headX) - 8,
-	               tracking_l2y(headY) - 8, 16, 16);
+      // if (tracking_isLarge) {
+         // tracking_isSteadyEnabled = true;
+         // let w = screen.width, h = screen.height;
+         // octx.strokeStyle = '#00000020';
+         // octx.lineWidth = 8;
+         // octx.fillStyle = '#00000020';
+         // for (let j = 0 ; j < 4 ; j++)
+         // for (let i = 0 ; i < 4 ; i++) {
+         //    let x = w/2 - .3 * h + .2 * h * i;
+         //    let y = .275 * h + .2 * h * j;
+         //    octx.strokeRect(x - .1 * h, y - .1 * h, .18 * h, .18 * h);
+         // }
+         // octx.fillStyle = 'black';
+         // octx.fillRect(tracking_l2x(headX) - 8,
+	      //          tracking_l2y(headY) - 8, 16, 16);
 
-      }
+      // }
    }
 }
-

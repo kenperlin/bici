@@ -65,7 +65,6 @@ export class CodeArea {
     let lines = this.textarea.value.split("\n");
     this.textarea.rows = Math.min((790 / this.fontSize) >> 0, lines.length);
     this.textarea.cols = lines.reduce((acc, cur) => Math.max(acc, cur.length - 1), 0)
-
     if (this.isReloadScene && time - this.lastReloadTime > 0.1) {
       try {
         // Remove zero-width space markers (\u200B) added by Yjs sync before eval
@@ -230,7 +229,7 @@ export class CodeArea {
 
     // window.isReloading = true;
     this.textarea.dispatchEvent(new Event("input", { bubbles: true }));
-    this.isReloadScene = true;
+    // this.isReloadScene = true;
   };
 
   setVar(name, value) {

@@ -1,12 +1,12 @@
 export function Pen() {
-
-   this.strokes = [];
-   this.width = 7;
-
+   
    let isDown = false;
    let ctx;
    let color = '#000000';
    let onStrokesChanged = null;
+
+   this.strokes = [];
+   this.width = 7;
 
    this.setColor = c => color = c;
    this.setContext = _ctx => {
@@ -74,15 +74,8 @@ export function Pen() {
 let pen_isDown = false;
 let pen_isDownInScene = false;
 
-let pen_isInScene = (x,y) =>
-   scene && x >= CANVAS3D_LEFT && x < CANVAS3D_LEFT + CANVAS3D_WIDTH &&
-            y >= CANVAS3D_TOP  && x < CANVAS3D_TOP  + CANVAS3D_HEIGHT ;
-let pen_xToScene = x => 2 * (x - CANVAS3D_LEFT) / CANVAS3D_WIDTH  - 1;
-let pen_yToScene = y => 1 - 2 * (y - CANVAS3D_TOP) / CANVAS3D_HEIGHT;
-
 let penDown = () => {
-   if (pen_isDown)
-      return;
+   if (pen_isDown) return;
    pen_isDown = true;
 
    if (!(isInfo && D.isIn()) && pen_isInScene(pen.x,pen.y)) {
@@ -204,10 +197,6 @@ let penMove = (x,y) => {
       return;
 
    pen.move(x,y);
-   if (isMove)
-      chalktalk.move(x,y);
-   if (isDrag)
-      chalktalk.drag(x,y);
 }
 
 document.addEventListener('mousemove', e => penMove(e.x,e.y));
