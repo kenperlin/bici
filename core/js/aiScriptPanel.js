@@ -199,6 +199,21 @@ function ScriptPanel () {
         }
     }
 
+    this.simulateKeyPress = (key) => {
+        const event = new KeyboardEvent('keyup', {
+            key: key,
+            bubbles: true,
+            cancelable: true
+        });
+        document.dispatchEvent(event);
+    }
+
+    this.navigateToSliders = () => {
+        if (!isInfo) {
+            this.simulateKeyPress('i');
+        }
+    }
+
     // Activate the Gemini AI
     this.askGemini = async () => {
         const prompt = inputTextarea.value.trim();
@@ -213,7 +228,42 @@ function ScriptPanel () {
     
         try {
             // Add system context about available scene controls
-            const systemPrompt = `You are helping control a 3D scene. The scene has the following properties that can be modified:
+            const systemPrompt = `You are helping control a 3D scene with interactive sliders.
+            When the user asks to change or modify colors, respond with:
+                1. A natural language confirmation that you'll open the sliders
+                2. A JSON command block wrapped in \`\`\`json tags with the format:
+                \`\`\`json
+                {
+                "action": "openSliders",
+                "slideType": "color"
+                }
+                \`\`\`
+            
+                Examples:
+                - "change the color" → "I'll open the sliders for you to adjust the color." + {"action": "openSliders", "slideType": "color"}
+                - "I want to change the color" → "Sure! Opening the sliders now." + {"action": "openSliders", "slideType": "color"}
+
+                When the user asks to modify POSITION or MOVEMENT, respond with:
+                \`\`\`json
+                {
+                "action": "openSliders",
+                "slideType": "position"
+                }
+                \`\`\`
+
+                Examples:
+                - "change position/movement/xy axies" → {"action": "openSliders", "slideType": "position"}
+                - "change the movement → {"action": "openSliders", "slideType": "position"}
+                - "move the scene" → {"action": "openSliders", "slideType": "position"}
+                - "open the sliders" → {"action": "openSliders", "slideType": "position"}
+            `;
+            
+            
+            
+            
+            
+            /*
+            `You are helping control a 3D scene. The scene has the following properties that can be modified:
                 - scaleValue: controls the size of objects (default 0.3, range 0.1 to 1.0)
                 - color: RGB color array where each value is 0-1 (e.g., [1,0,0] for red, [0,1,0] for green, [0,0,1] for blue, [1,1,0] for yellow)
                 
@@ -235,7 +285,7 @@ function ScriptPanel () {
                 - "make it red" → {"color": [1, 0, 0]}
                 - "make it bigger" → {"scaleValue": 0.6}
                 - "make it small and red" → {"scaleValue": 0.2, "color": [1, 0, 0]}`;
-
+            */
 
             // Prepend system context to conversation history if it's the first message
             const historyWithSystem = conversationHistory.length === 0 
@@ -298,12 +348,77 @@ function ScriptPanel () {
             if (jsonMatch && jsonMatch[1]) {
                 const commands = JSON.parse(jsonMatch[1]);
                 
-                // Dispatch custom event with commands
-                window.dispatchEvent(new CustomEvent('sceneCommand', {
-                    detail: commands
-                }));
+                if (commands.action === 'openSliders') {
+                    const targetSlide = commands.slideType === 'position' ? 2 : 1;
+                    console.log(`Target slide: ${targetSlide}`);
                 
-                console.log('Dispatched scene command:', commands);
+                    // Get current slide position (even if slides are closed)
+                    let currentSlide = 0;
+                    try {
+                        if (typeof slideIndex !== 'undefined') {
+                            currentSlide = slideIndex;
+                        }
+                    } catch (e) {
+                        console.log('Cannot access slideIndex, assuming 0');
+                    }
+                    console.log(`Current slideIndex: ${currentSlide}`);
+                    
+                    // Check if slides are open
+                    let slidesOpen = false;
+                    try {
+                        slidesOpen = typeof isInfo !== 'undefined' && isInfo;
+                    } catch (e) {
+                        console.log('Cannot access isInfo');
+                    }
+                    console.log(`Slides open: ${slidesOpen}`);
+                    
+                    if (!slidesOpen) {
+                        // Open the slides
+                        const iEvent = new KeyboardEvent('keyup', {
+                            key: 'i',
+                            bubbles: true,
+                            cancelable: true
+                        });
+                        document.dispatchEvent(iEvent);
+                        console.log('Pressed "i" to open slides');
+                        // slideIndex doesn't change when opening - stays at currentSlide
+                    }
+                    
+                    // Calculate navigation from current position to target
+                    setTimeout(() => {
+                        const diff = targetSlide - currentSlide;
+                        
+                        if (diff === 0) {
+                            console.log('Already on target slide!');
+                            return;
+                        }
+                        
+                        const key = diff > 0 ? 'ArrowRight' : 'ArrowLeft';
+                        const presses = Math.abs(diff);
+                        
+                        console.log(`Navigating from slide ${currentSlide} to ${targetSlide}: pressing ${key} ${presses} time(s)`);
+                        
+                        for (let i = 0; i < presses; i++) {
+                            setTimeout(() => {
+                                const arrowEvent = new KeyboardEvent('keyup', {
+                                    key: key,
+                                    bubbles: true,
+                                    cancelable: true
+                                });
+                                document.dispatchEvent(arrowEvent);
+                                console.log(`Pressed ${key} (${i + 1}/${presses})`);
+                            }, i * 100);
+                        }
+                    }, 150);
+                } else {
+                    window.dispatchEvent(new CustomEvent('sceneCommand', {
+                        detail: commands
+                    }));
+                    
+                    console.log('Dispatched scene command:', commands);
+                    
+                }
+                
             }
         } catch (error) {
             console.error('Error parsing commands:', error);
