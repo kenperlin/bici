@@ -302,6 +302,9 @@ let trackingUpdate = () => {
          }
       else {
          if (isShadowAvatar()) {
+
+	    // Draw head and eyes of shadow avatar.
+
             octx.strokeStyle = '#00000060';
             octx.fillStyle = '#00000060';
             octx.lineWidth = 2;
@@ -328,15 +331,6 @@ let trackingUpdate = () => {
 	    octx.rotate(-tilt);
 	    octx.translate(-avatarX, -avatarY);
          }
-/*
-         // DISABLE EYE GAZE VISUAL FEEDBACK UNTIL WE GET IT RIGHT.
-
-         if (eyeOpen >= .4) {
-	    let x = head_x() + 3500 * eyeGazeX;
-	    let y = head_y() + 5000 * eyeGazeY + 300;
-            octx.fillRect(x - 20, y - h/4, 40, h);
-         }
-*/
       }
 
       // IF LARGE MODE IS ENABLED, DO HEAD TRACKING OVER A LARGER AREA.
@@ -438,7 +432,7 @@ let trackingUpdate = () => {
       let lp = [{},{}];
       for (let hand = 0 ; hand <= 1 ; hand++)
          if (mediapipe.handResults[hand]) {
-            let d = drawShadowHand(octx,
+            let d = drawShadowHand(octx, hand,
                                    mediapipe.handResults[hand].landmarks,
                                    avatarX - as * screen.width/2,
                                    avatarY - as * screen.height/2, as, isShadowAvatar());
@@ -451,8 +445,25 @@ let trackingUpdate = () => {
          }
       if (w) {
          avatarX = x / w;
-         avatarY = y / w - 200;
+         avatarY = y / w - 300;
       }
+
+      if (isShadowAvatar())
+         for (let hand = 0 ; hand <= 1 ; hand++) {
+	    let a = mediapipe.handResults[hand].landmarks[4];
+	    let b = mediapipe.handResults[hand].landmarks[8];
+	    if (norm([a.x-b.x,a.y-b.y,a.z-b.z]) / shadowHandSize[hand] < .015) {
+	       let p = toScreen(a);
+	       let q = toScreen(b);
+	       octx.beginPath();
+	       octx.fillStyle = 'white';
+	       octx.arc(p.x+q.x>>1, p.y+q.y>>1, 3*as*shadowHandSize[hand], 0, 2*Math.PI);
+	       octx.fill();
+            }
+         }
+
+      // Use change in distance between the two fists to rescale the shadow avatar.
+
       if (lp[0].x && lp[1].x) {
          let x = lp[1].x - lp[0].x, y = lp[1].y - lp[0].y;
 	 let new_hand_separation = Math.sqrt(x * x + y * y);
