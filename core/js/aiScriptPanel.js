@@ -256,12 +256,37 @@ function ScriptPanel () {
                 - "change the movement → {"action": "openSliders", "slideType": "position"}
                 - "move the scene" → {"action": "openSliders", "slideType": "position"}
                 - "open the sliders" → {"action": "openSliders", "slideType": "position"}
+            
+            **For adding objects to the scene:**
+            When the user asks to add objects (sphere, cube, etc.), respond with:
+                \`\`\`json
+                {
+                "action": "addObject",
+                "objectType": "sphere",
+                "code": "let sphere = Shape.sphereMesh(30,15); let y = 0.300;"
+                "drawCode": "drawObj(sphere, mxm(move(0,0.3+y,0),
+                  scale(y)),
+              [red,green,.5]);"
+                }
+                \`\`\`
+
+                Examples: 
+                - "add a sphere on the cube" → {"action": "addObject", "objectType": "sphere", 
+                                "code": 
+                                    "let sphere = Shape.sphereMesh(30,15); 
+                                    let y = 0.300;
+                                    let red = .500;
+                                    let green = .500;", 
+                                "drawCode": "drawObj(sphere,
+                                    mxm(move(0,0.3+y,0),
+                                    scale(y)),
+                                    [red,green,.5]);"}
             `;
             
             
             
             
-            
+            // older prompt
             /*
             `You are helping control a 3D scene. The scene has the following properties that can be modified:
                 - scaleValue: controls the size of objects (default 0.3, range 0.1 to 1.0)
@@ -410,6 +435,69 @@ function ScriptPanel () {
                             }, i * 100);
                         }
                     }, 150);
+                } else if (commands.action === 'addObject') {
+                        // Handle adding objects to the scene
+                        console.log('Adding object to scene:', commands);
+                        
+                        // Open code editor with 'c'
+                        const cEvent = new KeyboardEvent('keyup', {
+                            key: 'c',
+                            bubbles: true,
+                            cancelable: true
+                        });
+                        document.dispatchEvent(cEvent);
+                        console.log('Opened code editor with "c"');
+                        
+                        // Get current scene code and modify it
+                        setTimeout(() => {
+                            try {
+                                if (typeof codeArea !== 'undefined' && codeArea.getElement) {
+                                    const editor = codeArea.getElement();
+                                    let currentCode = editor.value;
+                                    
+                                    // Parse the current code to add the new object
+                                    // Find where to insert the object declaration (after other variable declarations)
+                                    const insertAfterLine = currentCode.match(/let \w+ = Shape\.\w+\(\);/g);
+                                    if (insertAfterLine) {
+                                        // Add after last Shape declaration
+                                        const lastShapeIndex = currentCode.lastIndexOf(insertAfterLine[insertAfterLine.length - 1]);
+                                        const insertPosition = currentCode.indexOf('\n', lastShapeIndex) + 1;
+                                        currentCode = currentCode.slice(0, insertPosition) + 
+                                                     '   ' + commands.code + '\n' + 
+                                                     currentCode.slice(insertPosition);
+                                    }
+                                    
+                                    // Find the update function and add the draw call
+                                    const updateMatch = currentCode.match(/this\.update = \(\) => \{([\s\S]*?)\n   \}/);
+                                    if (updateMatch) {
+                                        const updateBody = updateMatch[1];
+                                        const lastDrawObj = updateBody.lastIndexOf('drawObj');
+                                        if (lastDrawObj !== -1) {
+                                            const insertPos = currentCode.indexOf(updateBody) + updateBody.length;
+                                            currentCode = currentCode.slice(0, insertPos) + 
+                                                         '\n      ' + commands.drawCode + 
+                                                         currentCode.slice(insertPos);
+                                        }
+                                    }
+                                    
+                                    // Update the editor
+                                    editor.value = currentCode;
+                                    console.log('Updated scene code');
+                                    
+                                    // Close code editor and reload scene
+                                    setTimeout(() => {
+                                        document.dispatchEvent(new KeyboardEvent('keyup', {
+                                            key: 'c',
+                                            bubbles: true,
+                                            cancelable: true
+                                        }));
+                                        console.log('Closed code editor - scene updated');
+                                    }, 500);
+                                }
+                            } catch (error) {
+                                console.error('Error modifying scene code:', error);
+                            }
+                        }, 200);
                 } else {
                     window.dispatchEvent(new CustomEvent('sceneCommand', {
                         detail: commands
