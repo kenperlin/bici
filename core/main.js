@@ -44,6 +44,8 @@ function resizeStage() {
   DOM.canvas2D.height = DOM.ocanvas.height = HEIGHT * dpr;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   octx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  slideDeck.position.x = WIDTH - 520;
 }
 
 async function init() {
