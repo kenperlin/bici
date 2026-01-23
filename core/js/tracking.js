@@ -481,6 +481,8 @@ let hand_separation;
 let trackingIndex = 0, wasTracking = false, trackingInfo = 'let left=[],right=[],face=[];';
 let headX = 100, headY = 100;
 let avatarX = 0, avatarY = 0;
+let handAvatar = [{x:0,y:0,s:1},{x:0,y:0,s:1}];
+let isSeparateHandAvatars = false;
 let headMatrix = identity();
 let eyeOpen  = 1;
 let eyeGazeX = 0;

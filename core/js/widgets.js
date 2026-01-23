@@ -15,7 +15,7 @@ function Widgets(diagram,x,y,w,h,names) {
          let label = W.name.substring(2);
          diagram.fillColor('black').fillRect([W.x-W.w/2-e,W.y-W.h/2-e],[W.x+W.w/2+e,W.y+W.h/2+e],5*e)
                 .fillColor(bgColor).fillRect([W.x-W.w/2  ,W.y-W.h/2  ],[W.x+W.w/2  ,W.y+W.h/2  ],5*e)
-                .drawColor(fgColor).font(200 * W.h + 'px Helvetica').text(label), [W.x, W.y]    ,5*e);
+                .drawColor(fgColor).font(200 * W.h + 'px Helvetica').text(label,   [ W.x, W.y  ]);
       }
       else
          diagram.fillColor('black'  ).fillRect([W.x-W.w/2-e,W.y-W.h/2-e],[W.x+W.w/2+e,W.y+W.h/2+e])

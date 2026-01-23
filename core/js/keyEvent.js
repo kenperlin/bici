@@ -156,6 +156,7 @@ window.keyUp = key => {
    case 'F' : tracking_frameHands = ! tracking_frameHands; break;
    case 'g' : webcam.grabImage(); break;
    case 'h' : help.isHelp = ! help.isHelp; break;
+   case 'H' : isSeparateHandAvatars = ! isSeparateHandAvatars; break;
    case 'i' : isInfo = ! isInfo; break;
    case 'j' : isJumpingToSlide = true; break;
    case 'l' : isLightPen = ! isLightPen; break;
