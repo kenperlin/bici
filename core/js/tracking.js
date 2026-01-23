@@ -452,12 +452,12 @@ let trackingUpdate = () => {
          for (let hand = 0 ; hand <= 1 ; hand++) {
 	    let a = mediapipe.handResults[hand].landmarks[4];
 	    let b = mediapipe.handResults[hand].landmarks[8];
-	    if (norm([a.x-b.x,a.y-b.y,a.z-b.z]) / shadowHandSize[hand] < .015) {
+	    if (norm([a.x-b.x,a.y-b.y,a.z-b.z]) / shadowHandSize[hand] < .003) {
 	       let p = toScreen(a);
 	       let q = toScreen(b);
 	       octx.beginPath();
 	       octx.fillStyle = 'white';
-	       octx.arc(p.x+q.x>>1, p.y+q.y>>1, 3*as*shadowHandSize[hand], 0, 2*Math.PI);
+	       octx.arc(p.x+q.x>>1, p.y+q.y>>1, as*shadowHandSize[hand], 0, 2*Math.PI);
 	       octx.fill();
             }
          }
