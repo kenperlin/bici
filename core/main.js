@@ -1,6 +1,7 @@
 import { drawVideoToCover } from "./modules/canvasUtils.js";
 import { CodeArea } from "./modules/components/codeArea.js";
 import { SlideDeck } from "./modules/components/slides.js";
+import { Pen } from "./modules/pen.js";
 import { SceneManager } from "./modules/scene.js";
 import { fetchText } from "./modules/utils.js";
 import {
@@ -37,6 +38,7 @@ window.HEIGHT = window.innerHeight;
 const codeArea = new CodeArea(DOM.textarea);
 const sceneManager = new SceneManager(DOM.canvas3D, codeArea);
 const slideDeck = new SlideDeck();
+const pen = new Pen();
 
 function resizeStage() {
   const dpr = window.devicePixelRatio;
@@ -108,6 +110,7 @@ function animate() {
 
   codeArea.update();
   slideDeck.draw(ctx);
+  pen.draw(ctx);
   sceneManager.scene?.update?.();
 
   requestAnimationFrame(animate);

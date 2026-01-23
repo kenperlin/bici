@@ -48,11 +48,11 @@ export class CodeArea {
     );
   };
 
-  drawOverlayRect(col, row, nCols, nRows, octx, isFill) {
+  drawOverlayRect(col, row, nCols, nRows, isFill) {
     let charWidth = charWidthFactor * this.fontSize;
     let charHeight = charHeightFactor * this.fontSize;
     
-    let drawFn = isFill ? octx.fillRect : octx.strokeRect;
+    let drawFn = isFill ? OCTX.fillRect : OCTX.strokeRect;
     drawFn(
       offsetX + charWidth * (col + charWidthOffset),
       offsetY + charHeight * (row + charHeightOffset),
@@ -86,14 +86,7 @@ export class CodeArea {
       this.isReloadScene = false;
     }
 
-    // if (this.isVisible) {
-    //   let highlightCharAt = (x, y, color) => {
-    //     if (this.containsPoint(x, y)) {
-    //       octx.fillStyle = color;
-    //       fillOverlayRect(xToCol(x) >> 0, yToRow(y) >> 0, 1, 1);
-    //     }
-    //   };
-
+    if (this.isVisible) {
     //   highlightCharAt(pen.x, pen.y, "#00000060");
 
     //   for (const h in gestureTracker.activeGestures) {
@@ -105,12 +98,12 @@ export class CodeArea {
 
     //       let col = xToCol(x) - 1;
     //       let row = yToRow(y) - 0.5;
-    //       octx.lineWidth = 2;
-    //       octx.strokeStyle = "black";
+    //       OCTX.lineWidth = 2;
+    //       OCTX.strokeStyle = "black";
     //       drawOverlayRect(col >> 0, row >> 0, 1, 1);
     //     }
     //   }
-    // }
+    }
   };
 
   initInteractions() {
@@ -229,7 +222,7 @@ export class CodeArea {
 
     // window.isReloading = true;
     this.textarea.dispatchEvent(new Event("input", { bubbles: true }));
-    // this.isReloadScene = true;
+    this.isReloadScene = true;
   };
 
   setVar(name, value) {
@@ -252,4 +245,13 @@ export class CodeArea {
     }
     return null;
   };
+
+  highlightCharAt(x, y, color = "#00000060") {
+    if (!this.containsPoint(x, y)) return;
+      
+    OCTX.save();
+    OCTX.fillStyle = color;
+    this.drawOverlayRect(xToCol(x) >> 0, yToRow(y) >> 0, 1, 1, true);
+    OCTX.restore();
+  }
 }

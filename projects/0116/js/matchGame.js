@@ -7,7 +7,6 @@ export function MatchGame(scene,U,M) {
    let label = ['A','B','C','D','E','F','G','H',
                 'A','B','C','D','E','F','G','H'];
    
-                console.log(scene.context)
    let seed = scene.context.seed;
    for (let k = 1 ; k < 100 ; k++)
    for (let i = 0 ; i < 16 ; i++)
@@ -18,7 +17,7 @@ export function MatchGame(scene,U,M) {
          label[j] = tmp;
       }
 
-   let A = scene.context.A = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+   let A = scene.context.A ??= [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 
    let contains = (n,x,y) => Math.abs(x - tx(n)) < .2 && Math.abs(y - ty(n)) < .2;
 
