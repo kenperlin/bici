@@ -5,31 +5,12 @@ import { webrtcClient } from "./yjs/yjs.js";
 
 export class SceneManager {
   constructor(canvas, codeArea) {
-    this.canvas = canvas;
+    this.canvas = new SceneCanvas(canvas);
     this.code = codeArea;
     this.scene = null;
     this.sceneCounter = 0;
 
-    this.onMove = () => {};
-    this.onDown = () => {};
-    this.onUp = () => {};
-
-    this.isDown = {};
-
     this.code.onReloadScene = this.hotReload.bind(this);
-
-    window.addEventListener('mousemove', (e) => {
-      const id = "mouse";
-      if(this.isDown[id]) this.onMove(e.clientX, e.clientY, 0, id)
-    })
-    window.addEventListener('mousedown', (e) => {
-      const id = "mouse";
-      if(e.target === this.canvas) this.onDown(e.clientX, e.clientY, 0, id)
-    })
-    window.addEventListener('mouseup', (e) => {
-      const id = "mouse";
-      if(this.isDown[id]) this.onUp(e.clientX, e.clientY, 0, id)
-    })
   }
 
   async load(projectName, num, context) {
@@ -50,13 +31,14 @@ export class SceneManager {
       seed: this.getSeed(),
       code: await fetchText(path),
       codeArea: this.code,
+      canvas: this.canvas,
       vars: {},
       ...context
     }
     this.scene = new sceneModule.Scene(this.context);
     this.code.textarea.value = this.context.code
-    this.registerSceneEvents(this.scene);
-    gl_start(this.canvas, this.scene);
+    this.canvas.registerSceneEvents(this.scene);
+    gl_start(this.canvas.element, this.scene);
   }
 
   async hotReload(code) {
@@ -67,8 +49,8 @@ export class SceneManager {
       const module = await import(url);
       
       this.scene = new module.Scene(this.context);
-      this.registerSceneEvents(this.scene);
-      gl_start(this.canvas, this.scene);
+      this.canvas.registerSceneEvents(this.scene);
+      gl_start(this.canvas.element, this.scene);
 
     } catch (e) {
       console.error("Hot reload failed: ", e)
@@ -81,9 +63,33 @@ export class SceneManager {
                       + webrtcClient.roomId.charCodeAt(1) / 128
                       + 123.456 * (++this.sceneCounter);
   }
+}
+
+class SceneCanvas {
+  constructor(canvasElement) {
+    this.element = canvasElement;
+    this.onMove = () => {};
+    this.onDown = () => {};
+    this.onUp = () => {};
+
+    this.isDown = {};
+
+    window.addEventListener('mousemove', (e) => {
+      const id = "mouse";
+      if(this.isDown[id]) this.onMove(e.clientX, e.clientY, 0, id)
+    })
+    window.addEventListener('mousedown', (e) => {
+      const id = "mouse";
+      if(e.target === this.element) this.onDown(e.clientX, e.clientY, 0, id)
+    })
+    window.addEventListener('mouseup', (e) => {
+      const id = "mouse";
+      if(this.isDown[id]) this.onUp(e.clientX, e.clientY, 0, id)
+    })
+  }
 
   getRect() {
-    return this.canvas.getBoundingClientRect();
+    return this.element.getBoundingClientRect();
   }
 
   contains(x, y) {
@@ -111,6 +117,7 @@ export class SceneManager {
       z: (-2 * z) / width - 2.5
     };
   }
+
   registerSceneEvents(scene) {
     this.onMove = (x, y, z, id) => {
       ({ x, y, z } = this.coordsToScene(x, y, z));

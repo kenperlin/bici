@@ -27,6 +27,10 @@ const DOM = {
 const ctx = DOM.canvas2D.getContext("2d");
 const octx = DOM.ocanvas.getContext("2d");
 
+// Expose window drawing globally
+window.CTX = ctx;
+window.OCTX = octx;
+
 window.WIDTH = window.innerWidth;
 window.HEIGHT = window.innerHeight;
 
@@ -79,7 +83,7 @@ async function loadProject(name) {
   }
   
   // pass necessary components for scene to access through context 
-  await sceneManager.load(name, 1, {octx})
+  await sceneManager.load(name, 1, {})
 
   DOM.projectLabel.textContent = name;
   DOM.projectSwitcher.style.display = "block";

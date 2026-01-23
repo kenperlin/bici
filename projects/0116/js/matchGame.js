@@ -1,5 +1,6 @@
 import { drawObj } from "/core/modules/webgl.js";
 import { ease, noise, mxm, move, turnY, scale } from "/core/modules/math.js"
+import { centeredText } from "/core/modules/canvasUtils.js";
 
 export function MatchGame(scene,U,M) {
 
@@ -46,19 +47,22 @@ export function MatchGame(scene,U,M) {
    let round = t => (100 * t + .5 >> 0) / 100;
 
    let message = text => {
-      // let x = CANVAS3D_LEFT + CANVAS3D_WIDTH / 2;
-      // let y = CANVAS3D_TOP - 20;
+      const canvas = scene.context.canvas;
+      const rect = canvas.getRect();
+      
+      const x = rect.left + rect.width / 2;
+      const y = rect.top - 20;
 
-      // octx.fillStyle = '#ffffff60';
-      // octx.beginPath();
-      // octx.roundRect(x - 200, y - 90, 400, 180, 40);
-      // octx.fill();
+      OCTX.fillStyle = '#ffffff60';
+      OCTX.beginPath();
+      OCTX.roundRect(x - 200, y - 90, 400, 180, 40);
+      OCTX.fill();
 
-      // octx.font = '35px Helvetica';
-      // octx.fillStyle = '#000000';
-      // let line = text.split('\n');
-      // for (let n = 0 ; n < line.length ; n++)
-      //    centeredText(octx, line[n], x, y - 35 + 50 * n);
+      OCTX.font = '35px Helvetica';
+      OCTX.fillStyle = '#000000';
+      let line = text.split('\n');
+      for (let n = 0 ; n < line.length ; n++)
+         centeredText(OCTX, line[n], x, y - 35 + 50 * n);
    }
 
    let time;
@@ -91,17 +95,17 @@ export function MatchGame(scene,U,M) {
       // if (tracking_isLarge) {
          // tracking_isSteadyEnabled = true;
          // let w = screen.width, h = screen.height;
-         // octx.strokeStyle = '#00000020';
-         // octx.lineWidth = 8;
-         // octx.fillStyle = '#00000020';
+         // OCTX.strokeStyle = '#00000020';
+         // OCTX.lineWidth = 8;
+         // OCTX.fillStyle = '#00000020';
          // for (let j = 0 ; j < 4 ; j++)
          // for (let i = 0 ; i < 4 ; i++) {
          //    let x = w/2 - .3 * h + .2 * h * i;
          //    let y = .275 * h + .2 * h * j;
-         //    octx.strokeRect(x - .1 * h, y - .1 * h, .18 * h, .18 * h);
+         //    OCTX.strokeRect(x - .1 * h, y - .1 * h, .18 * h, .18 * h);
          // }
-         // octx.fillStyle = 'black';
-         // octx.fillRect(tracking_l2x(headX) - 8,
+         // OCTX.fillStyle = 'black';
+         // OCTX.fillRect(tracking_l2x(headX) - 8,
 	      //          tracking_l2y(headY) - 8, 16, 16);
 
       // }
