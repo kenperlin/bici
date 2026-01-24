@@ -490,12 +490,14 @@ let trackingUpdate = () => {
       else
          hand_separation = undefined;
    }
+/*
    if (isShadowAvatar())
       for (let hand = 0 ; hand <= 1 ; hand++) {
          let a = mediapipe.handResults[hand].landmarks[4];
          let b = mediapipe.handResults[hand].landmarks[8];
 	 let s = isSeparateHandAvatars ? handAvatar[hand].s : as;
-         if (norm([a.x-b.x,a.y-b.y,a.z-b.z]) / shadowHandInfo[hand].s < .003) {
+         if ( shadowHandInfo[hand].gesture != 'fist' &&
+	      norm([a.x-b.x,a.y-b.y,a.z-b.z]) / shadowHandInfo[hand].s < .003 ) {
             let p = toScreen(a, hand);
             let q = toScreen(b, hand);
             for (let i = 0 ; i < 2 ; i++) {
@@ -506,6 +508,7 @@ let trackingUpdate = () => {
             }
          }
       }
+*/
 }
 
 let hand_separation;
