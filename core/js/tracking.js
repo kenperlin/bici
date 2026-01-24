@@ -445,11 +445,10 @@ let trackingUpdate = () => {
    if (isSeparateHandAvatars) {
       for (let hand = 0 ; hand <= 1 ; hand++) {
          if (mediapipe.handResults[hand]) {
-            let d = drawShadowHand(octx, hand, mediapipe.handResults[hand].landmarks,
-                                               handAvatar[hand].x,
-                                               handAvatar[hand].y,
-                                               handAvatar[hand].s);
-            if (d < 1 || handAvatar[hand].x === undefined) {
+            drawShadowHand(octx, hand, mediapipe.handResults[hand].landmarks, handAvatar[hand].x,
+                                                                              handAvatar[hand].y,
+                                                                              handAvatar[hand].s);
+            if (shadowHandInfo[hand].gesture == 'fist' || handAvatar[hand].x === undefined) {
                handAvatar[hand].x = shadowHandInfo[hand].x * (1 - handAvatar[hand].s);
                handAvatar[hand].y = shadowHandInfo[hand].y * (1 - handAvatar[hand].s);
                handAvatar[hand].s = .5 * handAvatar[hand].s + 
@@ -463,15 +462,15 @@ let trackingUpdate = () => {
       let lp = [{},{}];
       for (let hand = 0 ; hand <= 1 ; hand++)
          if (mediapipe.handResults[hand]) {
-            let d = drawShadowHand(octx, hand,
-                                   mediapipe.handResults[hand].landmarks,
-                                   avatarX - as * screen.width/2,
-                                   avatarY - as * screen.height/2, as, isShadowAvatar());
-            if (d < 1) {
+            drawShadowHand(octx, hand, mediapipe.handResults[hand].landmarks,
+                                       avatarX - as * screen.width/2,
+                                       avatarY - as * screen.height/2, as, isShadowAvatar());
+            if (shadowHandInfo[hand].gesture == 'fist') {
                lp[hand] = mediapipe.handResults[hand].landmarks[0];
-               x += screen.width  * lp[hand].x / d;
-               y += screen.height * lp[hand].y / d;
-               w += 1 / d;
+	       let closed = 1 / shadowHandInfo[hand].open;
+               x += screen.width  * lp[hand].x * closed;
+               y += screen.height * lp[hand].y * closed;
+               w += closed;
             }
          }
       if (w) {
