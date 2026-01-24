@@ -20,24 +20,33 @@ let frameToElement = (x, y, element) => {
    return [x, y]
 }
 
-let isShadowAvatar = () => avatarX >= 100 && avatarX < screen.width - 100 &&
+let isShadowAvatar = () => isSeparateHandAvatars ||
+                           avatarX >= 100 && avatarX < screen.width - 100 &&
                            avatarY >= 100 && avatarY < screen.height - 100;
 
 let as = 0.3; // Avatar scale
 
-let toShadowAvatar = point => {
-   point.x = avatarX + as * (point.x - screen.width/2);
-   point.y = avatarY + as * (point.y - screen.height/2);
+let toShadowAvatar = (point, hand) => {
+   if (isSeparateHandAvatars) {
+      if (hand == 'left') hand = 1;
+      if (hand == 'right') hand = 0;
+      point.x = handAvatar[hand].x + handAvatar[hand].s * point.x;
+      point.y = handAvatar[hand].y + handAvatar[hand].s * point.y;
+   }
+   else {
+      point.x = avatarX + as * (point.x - screen.width/2);
+      point.y = avatarY + as * (point.y - screen.height/2);
+   }
 }
 
-let toScreen = (point) => {
+let toScreen = (point, hand) => {
    let newPoint = {...point}
    newPoint.x *= screen.width;
    newPoint.y *= screen.height;
    newPoint.z *= screen.width;
 
    if (isShadowAvatar())
-      toShadowAvatar(newPoint);
+      toShadowAvatar(newPoint, hand);
 
    if(tracking_frameHands && domDistances[0])
       [newPoint.x, newPoint.y] = frameToElement(newPoint.x, newPoint.y, domDistances[0].element);
@@ -162,9 +171,9 @@ let trackingUpdate = () => {
          tracking_headXYs.push([headX, headY]);
          if (tracking_headXYs.length > 16) {
             tracking_headXYs.shift();
-	    let headXY = steadyFixations(tracking_headXYs, headX, headY, 100, 2000);
-	    headX = headXY[0];
-	    headY = headXY[1];
+            let headXY = steadyFixations(tracking_headXYs, headX, headY, 100, 2000);
+            headX = headXY[0];
+            headY = headXY[1];
          }
       }
       headX = Math.max( 40, Math.min(screen.width  - 40, headX));
@@ -301,22 +310,22 @@ let trackingUpdate = () => {
             }
          }
       else {
-         if (isShadowAvatar()) {
+         if (isShadowAvatar() && ! isSeparateHandAvatars) {
 
-	    // Draw head and eyes of shadow avatar.
+            // Draw head and eyes of shadow avatar.
 
             octx.strokeStyle = '#00000060';
             octx.fillStyle = '#00000060';
             octx.lineWidth = 2;
-	    let h = eyeOpen > .5 ? 40 : 10;
+            let h = eyeOpen > .5 ? 40 : 10;
             octx.lineWidth = 4;
 
-	    let tilt = Math.atan2(headMatrix[4], headMatrix[5]);
-	    octx.translate(avatarX, avatarY);
-	    octx.rotate(tilt);
+            let tilt = Math.atan2(headMatrix[4], headMatrix[5]);
+            octx.translate(avatarX, avatarY);
+            octx.rotate(tilt);
 
             octx.beginPath();
-	    octx.ellipse(0, 0, as * 125, as * 175, 0, 0, 2*Math.PI);
+            octx.ellipse(0, 0, as * 125, as * 175, 0, 0, 2*Math.PI);
             octx.stroke();
 
             let theta = Math.PI   * (headX - screen.width/2) / screen.width;
@@ -324,12 +333,12 @@ let trackingUpdate = () => {
             let dx = 40 * Math.sin(theta) * as;
             let dy = 55 * Math.sin(phi) * as;
             octx.beginPath();
-	    octx.ellipse(dx - 55*as, dy - 10*as, 40*as, 35*as*eyeOpen, 0, 0, 2*Math.PI);
-	    octx.ellipse(dx + 55*as, dy - 10*as, 40*as, 35*as*eyeOpen, 0, 0, 2*Math.PI);
+            octx.ellipse(dx - 55*as, dy - 10*as, 40*as, 35*as*eyeOpen, 0, 0, 2*Math.PI);
+            octx.ellipse(dx + 55*as, dy - 10*as, 40*as, 35*as*eyeOpen, 0, 0, 2*Math.PI);
             octx.fill();
 
-	    octx.rotate(-tilt);
-	    octx.translate(-avatarX, -avatarY);
+            octx.rotate(-tilt);
+            octx.translate(-avatarX, -avatarY);
          }
       }
 
@@ -357,7 +366,7 @@ let trackingUpdate = () => {
       gestureTracker.update(mediapipe.handResults)
 
       let drawHands = () => {
-         let zScale = z => Math.max(0.1, Math.min(1, .1 / (.2 + z)));
+         let zScale = z => Math.max(.15, Math.min(1, .1 / (.2 + z)));
          octx.save();
          for(const hand of mediapipe.handResults) {
             const currentHand = hand.handedness;
@@ -368,7 +377,7 @@ let trackingUpdate = () => {
 
             const activeGesture = gestureTracker.activeGestures[currentHand];
             if (activeGesture) {
-               const activeGestureState = toScreen(activeGesture.state[currentHand]);
+               const activeGestureState = toScreen(activeGesture.state[currentHand], currentHand);
                activeGesture.fingers.forEach((it) => fingersToDraw.delete(it));
                fingersToDraw.delete(0);
 
@@ -387,7 +396,7 @@ let trackingUpdate = () => {
 
             for (const fingerNum of fingersToDraw) {
                const fingerPt = hand.landmarks[4 + 4 * fingerNum];
-               const screenFingerPt = toScreen(fingerPt);
+               const screenFingerPt = toScreen(fingerPt, currentHand);
                
                let radius = 25 * zScale(fingerPt.z / screen.width);
                if (tracking_isObvious) {
@@ -427,7 +436,29 @@ let trackingUpdate = () => {
       wasTracking = false;
    }
 
-   if (mediapipe.handResults[0] || mediapipe.handResults[1]) {
+/*
+   Still need to implement:
+      changing avatar position.
+      changing avatar scale.
+*/
+
+   if (isSeparateHandAvatars) {
+      for (let hand = 0 ; hand <= 1 ; hand++) {
+         if (mediapipe.handResults[hand]) {
+            let d = drawShadowHand(octx, hand, mediapipe.handResults[hand].landmarks,
+                                               handAvatar[hand].x,
+                                               handAvatar[hand].y,
+                                               handAvatar[hand].s);
+            if (d < 1 || handAvatar[hand].x === undefined) {
+               handAvatar[hand].x = shadowHandInfo[hand].x * (1 - handAvatar[hand].s);
+               handAvatar[hand].y = shadowHandInfo[hand].y * (1 - handAvatar[hand].s);
+               handAvatar[hand].s = .5 * handAvatar[hand].s + 
+	                            .5 * Math.max(.1, Math.min(1, (35 - shadowHandInfo[hand].s) / 15));
+            }
+         }
+      }
+   }
+   else if (mediapipe.handResults[0] || mediapipe.handResults[1]) {
       let x = 0, y = 0, w = 0;
       let lp = [{},{}];
       for (let hand = 0 ; hand <= 1 ; hand++)
@@ -437,7 +468,7 @@ let trackingUpdate = () => {
                                    avatarX - as * screen.width/2,
                                    avatarY - as * screen.height/2, as, isShadowAvatar());
             if (d < 1) {
-	       lp[hand] = mediapipe.handResults[hand].landmarks[0];
+               lp[hand] = mediapipe.handResults[hand].landmarks[0];
                x += screen.width  * lp[hand].x / d;
                y += screen.height * lp[hand].y / d;
                w += 1 / d;
@@ -448,32 +479,34 @@ let trackingUpdate = () => {
          avatarY = y / w - 300;
       }
 
-      if (isShadowAvatar())
-         for (let hand = 0 ; hand <= 1 ; hand++) {
-	    let a = mediapipe.handResults[hand].landmarks[4];
-	    let b = mediapipe.handResults[hand].landmarks[8];
-	    if (norm([a.x-b.x,a.y-b.y,a.z-b.z]) / shadowHandSize[hand] < .003) {
-	       let p = toScreen(a);
-	       let q = toScreen(b);
-	       octx.beginPath();
-	       octx.fillStyle = 'white';
-	       octx.arc(p.x+q.x>>1, p.y+q.y>>1, as*shadowHandSize[hand], 0, 2*Math.PI);
-	       octx.fill();
-            }
-         }
-
       // Use change in distance between the two fists to rescale the shadow avatar.
 
       if (lp[0].x && lp[1].x) {
          let x = lp[1].x - lp[0].x, y = lp[1].y - lp[0].y;
-	 let new_hand_separation = Math.sqrt(x * x + y * y);
-	 if (hand_separation)
-	    as *= new_hand_separation / hand_separation;
-	 hand_separation = new_hand_separation;
+         let new_hand_separation = Math.sqrt(x * x + y * y);
+         if (hand_separation)
+            as *= new_hand_separation / hand_separation;
+         hand_separation = new_hand_separation;
       }
       else
-	 hand_separation = undefined;
+         hand_separation = undefined;
    }
+   if (isShadowAvatar())
+      for (let hand = 0 ; hand <= 1 ; hand++) {
+         let a = mediapipe.handResults[hand].landmarks[4];
+         let b = mediapipe.handResults[hand].landmarks[8];
+	 let s = isSeparateHandAvatars ? handAvatar[hand].s : as;
+         if (norm([a.x-b.x,a.y-b.y,a.z-b.z]) / shadowHandInfo[hand].s < .003) {
+            let p = toScreen(a, hand);
+            let q = toScreen(b, hand);
+            for (let i = 0 ; i < 2 ; i++) {
+               octx.beginPath();
+               octx.fillStyle = i ? 'white' : 'black';
+               octx.arc(p.x+q.x>>1, p.y+q.y>>1, s * shadowHandInfo[hand].s*(1-i/2), 0, 2*Math.PI);
+               octx.fill();
+            }
+         }
+      }
 }
 
 let hand_separation;
@@ -481,7 +514,7 @@ let hand_separation;
 let trackingIndex = 0, wasTracking = false, trackingInfo = 'let left=[],right=[],face=[];';
 let headX = 100, headY = 100;
 let avatarX = 0, avatarY = 0;
-let handAvatar = [{x:0,y:0,s:1},{x:0,y:0,s:1}];
+let handAvatar = [{s:.2},{s:.2}];
 let isSeparateHandAvatars = false;
 let headMatrix = identity();
 let eyeOpen  = 1;
@@ -498,10 +531,10 @@ let initializeGestureTracking = () => {
    
    indexPinch.onStart = ({state, id}, hand) => {
       const h = hand.handedness;
-      const {x, y, z} = toScreen(state[h]);
+      const {x, y, z} = toScreen(state[h], h);
 
       if (isInfo && D.isIn(x - D.left, y - D.top)) {
-	 slide = slides[slideIndex];
+         slide = slides[slideIndex];
          if (slide.onDown)
             slide.onDown(slide._px(x - D.left), slide._py(y - D.top));
          D.isDown = true;
@@ -522,7 +555,7 @@ let initializeGestureTracking = () => {
    indexPinch.onActive = ({state, id}, hand) => {
 
       const h = hand.handedness;
-      const {x, y, z} = toScreen(state[h]);
+      const {x, y, z} = toScreen(state[h], h);
 
       if (isInfo && D.isDown) {
          slide = slides[slideIndex];
@@ -544,12 +577,12 @@ let initializeGestureTracking = () => {
    indexPinch.onEnd = ({state, id}, hand) => {
       const h = hand.handedness;
 
-      const {x, y, z} = toScreen(state[h]);
+      const {x, y, z} = toScreen(state[h], h);
 
       if (isInfo && D.isDown) {
          D.isDown = false;
          slide = slides[slideIndex];
-	 if (slide.onUp)
+         if (slide.onUp)
             slide.onUp(slide._px(x - D.left), slide._py(y - D.top));
          return;
       }

@@ -1,5 +1,5 @@
 
-let shadowHandSize = [0,0];
+let shadowHandInfo = [{},{}];
 
 let drawShadowHand = (ctx, hand, F, x=0, y=0, s=1, isDrawing=true) => {
 
@@ -35,7 +35,10 @@ let drawShadowHand = (ctx, hand, F, x=0, y=0, s=1, isDrawing=true) => {
    for (let i = 0 ; i < 3 ; i++)      // loop over 3 finger joints
       t += distance(n+i, n+i+1);
    t = t < 1 ? Math.sqrt(t) : t;
-   shadowHandSize[hand] = .017 * w * t;
+   shadowHandInfo[hand].s = .017 * w * t;
+
+   shadowHandInfo[hand].x = w * F[10].x;
+   shadowHandInfo[hand].y = h * F[10].y;
 
    let D = [];
    for (let j = 0 ; j < 5 ; j++)
@@ -47,7 +50,7 @@ let drawShadowHand = (ctx, hand, F, x=0, y=0, s=1, isDrawing=true) => {
    // Draw an opaque shadow of the hand to the shadow canvas.
 
    for (n = 1 ; n <= 20 ; n += 4) {
-      let r = s * shadowHandSize[hand] * (n < 6 ? 1.1 : n < 11 ? 1 : .85);
+      let r = s * shadowHandInfo[hand].s * (n < 6 ? 1.1 : n < 11 ? 1 : .85);
       sctx.fillStyle = ctx.strokeStyle = 'black';
       sctx.lineWidth = 2 * r;
       let i0 = n > 1 ? 0 : 1;         // skip first thumb joint

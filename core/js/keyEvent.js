@@ -39,9 +39,9 @@ document.addEventListener('keyup', e => {
    if (typeof broadcastState === 'function') broadcastState();
 });
 
-midiDown = key => keyDown("            / m  ;       ".substring(key,key+1));
-//                         '|'|''|'|'|''|'|''|'|'|''
-midiUp   = key => window.keyUp("b1u2wc3s4p5D/,m.'; f g tT".substring(key,key+1));
+midiDown = key => window.keyDown("            / m  ;       ".substring(key,key+1));
+//                                '|'|''|'|'|''|'|''|'|'|''
+midiUp   = key => window.keyUp  ("b1u2wc3s4p5D/,m.'; f g tT".substring(key,key+1));
 
 let URLs = {
    'v': 'http://cs.nyu.edu/~perlin/video_links.html',
