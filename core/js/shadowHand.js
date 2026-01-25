@@ -19,13 +19,19 @@ let drawShadowHand = (ctx, hand, F, x=0, y=0, s=1, isDrawing=true) => {
    let w = ctx.canvas.width, h = ctx.canvas.height;
    sctx.clearRect(0,0,w,h);
 
-   // Function to measure distance between two hand joints
+   // Functions to measure distance between two hand joints
 
    let distance = (i,j) => {
       let x = F[i].x - F[j].x;
       let y = F[i].y - F[j].y;
       let z = F[i].z - F[j].z;
       return Math.sqrt(x*x + y*y + z*z);
+   }
+
+   let distance2D = (i,j) => {
+      let x = F[i].x - F[j].x;
+      let y = F[i].y - F[j].y;
+      return Math.sqrt(x*x + y*y);
    }
 
    // Scale finger thickness depending on visible hand size.
@@ -45,9 +51,6 @@ let drawShadowHand = (ctx, hand, F, x=0, y=0, s=1, isDrawing=true) => {
    for (let j = 1 ; j < 5 ; j++)
       D[j] = distance(0, 4*j+3) / t;
 
-   if (hand == 0)
-      screenMessage(round(D[0]));
-
    shadowHandInfo[hand].open = D[1] + D[2] + D[3] + D[4];
 
    shadowHandInfo[hand].gesture = null;
@@ -61,7 +64,10 @@ let drawShadowHand = (ctx, hand, F, x=0, y=0, s=1, isDrawing=true) => {
    if (shadowHandInfo[hand].gesture == null && distance(4,8) / shadowHandInfo[hand].s < .002)
       shadowHandInfo[hand].gesture = 'pinch';
 
-   if (shadowHandInfo[hand].gesture == null && D[0] > .1 && distance(4,8) < 1.5 * distance(5,8))
+   if ( shadowHandInfo[hand].gesture == null &&
+        D[0] > .1 &&
+	distance2D(4,5) / t > .1 &&
+	distance(4,8) < 1.5 * distance(5,8))
       shadowHandInfo[hand].gesture = 'gripper';
 
    if (! isDrawing)

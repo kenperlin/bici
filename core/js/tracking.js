@@ -436,23 +436,17 @@ let trackingUpdate = () => {
       wasTracking = false;
    }
 
-/*
-   Still need to implement:
-      changing avatar position.
-      changing avatar scale.
-*/
-
    if (isSeparateHandAvatars) {
       for (let hand = 0 ; hand <= 1 ; hand++) {
          if (mediapipe.handResults[hand]) {
             drawShadowHand(octx, hand, mediapipe.handResults[hand].landmarks, handAvatar[hand].x,
                                                                               handAvatar[hand].y,
                                                                               handAvatar[hand].s);
-            if (shadowHandInfo[hand].gesture == 'fist' || handAvatar[hand].x === undefined) {
+            if (shadowHandInfo[hand].gesture == 'fist') {
                handAvatar[hand].x = shadowHandInfo[hand].x * (1 - handAvatar[hand].s);
                handAvatar[hand].y = shadowHandInfo[hand].y * (1 - handAvatar[hand].s);
                handAvatar[hand].s = .5 * handAvatar[hand].s + 
-	                            .5 * Math.max(.1, Math.min(1, (35 - shadowHandInfo[hand].s) / 15));
+	                            .5 * Math.max(.2, Math.min(1, (35 - shadowHandInfo[hand].s) / 15));
             }
          }
       }
@@ -497,7 +491,7 @@ let hand_separation;
 let trackingIndex = 0, wasTracking = false, trackingInfo = 'let left=[],right=[],face=[];';
 let headX = 100, headY = 100;
 let avatarX = 0, avatarY = 0;
-let handAvatar = [{s:.2},{s:.2}];
+let handAvatar = [{x:0,y:0,s:1},{x:0,y:0,s:1}];
 let isSeparateHandAvatars = false;
 let headMatrix = identity();
 let eyeOpen  = 1;
