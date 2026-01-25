@@ -452,17 +452,78 @@ let trackingUpdate = () => {
             }
          }
       }
-      if (shadowHandInfo[0].gesture == 'pinch' && shadowHandInfo[0].gesture == 'pinch') {
-         let p0 = toScreen(mediapipe.handResults[0].landmarks[4], 0);
-         let p1 = toScreen(mediapipe.handResults[0].landmarks[8], 0);
-         let q0 = toScreen(mediapipe.handResults[1].landmarks[4], 1);
-         let q1 = toScreen(mediapipe.handResults[1].landmarks[8], 1);
+
+      let fingerTip = (hand, i) => toScreen(mediapipe.handResults[hand].landmarks[4*i+4], hand);
+
+      // If both hands are pinching, draw a line between them.
+
+      if (shadowHandInfo[0].gesture == 'pinch' && shadowHandInfo[1].gesture == 'pinch') {
+         let p0 = fingerTip(0,0);
+         let p1 = fingerTip(0,1);
+         let q0 = fingerTip(1,0);
+         let q1 = fingerTip(1,1);
          octx.strokeStyle = '#ff00ff80';
          octx.lineWidth   = 10;
          octx.beginPath();
          octx.moveTo(p0.x + p1.x >> 1, p0.y + p1.y >> 1);
          octx.lineTo(q0.x + q1.x >> 1, q0.y + q1.y >> 1);
          octx.stroke();
+      }
+
+      // If one hand is pinching and the other is gripping, project a line from the pinch to the gripper.
+
+      for (let i = 0 ; i <= 1 ; i++)
+         if (shadowHandInfo[i].gesture == 'pinch' && shadowHandInfo[1-i].gesture == 'gripper') {
+
+            let p0 = fingerTip(i,0);
+            let p1 = fingerTip(i,1);
+	    let p = { x: p0.x + p1.x >> 1, y: p0.y + p1.y >> 1 };
+
+            let q0 = fingerTip(1-i,0);
+            let q1 = fingerTip(1-i,1);
+
+	    if (q0.y > p.y && p.y > q1.y) {
+	       let t = (p.y - q0.y) / (q1.y - q0.y);
+	       let x = q0.x + t * (q1.x - q0.x);
+
+               octx.strokeStyle = '#ff00ff80';
+               octx.lineWidth   = 10;
+
+               octx.beginPath();
+               octx.moveTo(q0.x, q0.y);
+               octx.lineTo(q1.x, q1.y);
+               octx.stroke();
+
+               octx.beginPath();
+               octx.moveTo(p.x, p.y);
+               octx.lineTo(x, p.y);
+               octx.stroke();
+	    }
+	 }
+
+      // If both hands are gripping, create a rectangle between them.
+
+      if (shadowHandInfo[0].gesture == 'gripper' && shadowHandInfo[1].gesture == 'gripper') {
+         let p0 = fingerTip(0,0);
+         let p1 = fingerTip(0,1);
+         let q0 = fingerTip(1,0);
+         let q1 = fingerTip(1,1);
+	 octx.fillStyle = octx.strokeStyle = '#ff00ff40';
+	 octx.lineWidth = 10;
+/*
+	 octx.beginPath();
+	 octx.moveTo(p0.x,p0.y);
+	 octx.lineTo(p1.x,p1.y);
+	 octx.lineTo(q1.x,q1.y);
+	 octx.lineTo(q0.x,q0.y);
+	 octx.lineTo(p0.x,p0.y);
+	 octx.fill();
+	 octx.stroke();
+*/
+	 let x0 = p0.x + p1.x >> 1, x1 = q0.x + q1.x >> 1;
+	 let y0 = p1.y + q1.y >> 1, y1 = p0.y + q0.y >> 1;
+	 octx.fillRect(x0,y0,x1-x0,y1-y0);
+	 octx.strokeRect(x0,y0,x1-x0,y1-y0);
       }
    }
    else if (mediapipe.handResults[0] || mediapipe.handResults[1]) {
