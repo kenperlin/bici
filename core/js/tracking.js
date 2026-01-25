@@ -447,8 +447,22 @@ let trackingUpdate = () => {
                handAvatar[hand].y = shadowHandInfo[hand].y * (1 - handAvatar[hand].s);
                handAvatar[hand].s = .5 * handAvatar[hand].s + 
 	                            .5 * Math.max(.2, Math.min(1, (35 - shadowHandInfo[hand].s) / 15));
+               if (handAvatar[hand].s == 1)
+                  handAvatar[hand].x = handAvatar[hand].y = 0;
             }
          }
+      }
+      if (shadowHandInfo[0].gesture == 'pinch' && shadowHandInfo[0].gesture == 'pinch') {
+         let p0 = toScreen(mediapipe.handResults[0].landmarks[4], 0);
+         let p1 = toScreen(mediapipe.handResults[0].landmarks[8], 0);
+         let q0 = toScreen(mediapipe.handResults[1].landmarks[4], 1);
+         let q1 = toScreen(mediapipe.handResults[1].landmarks[8], 1);
+         octx.strokeStyle = '#ff00ff80';
+         octx.lineWidth   = 10;
+         octx.beginPath();
+         octx.moveTo(p0.x + p1.x >> 1, p0.y + p1.y >> 1);
+         octx.lineTo(q0.x + q1.x >> 1, q0.y + q1.y >> 1);
+         octx.stroke();
       }
    }
    else if (mediapipe.handResults[0] || mediapipe.handResults[1]) {
