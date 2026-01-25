@@ -176,6 +176,7 @@ window.keyUp = key => {
       tracking_debugMode = !tracking_debugMode;
       break;
    case 'w' : webcam.isWorld = ! webcam.isWorld; break;
+   case 'W' : webcam.isWebcam = ! webcam.isWebcam; break;
    case 'x' : navigator.clipboard.readText()
                        .then(text => console.log('Clipboard content:', text))
 		       .catch(err => {}); break;

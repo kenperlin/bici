@@ -73,8 +73,8 @@ let drawShadowHand = (ctx, hand, F, x=0, y=0, s=1, isDrawing=true) => {
       let ax = s * w * F[5].x + x, ay = s * h * F[5].y + y;
       let bx = s * w * F[8].x + x, by = s * h * F[8].y + y;
       for (let i = 0 ; i <= 1 ; i++) {
-         sctx.strokeStyle = i ? 'white' : 'black';
-         sctx.lineWidth = s * (21 - 14*i);
+         sctx.strokeStyle = i ? '#a0a0a0' : 'black';
+         sctx.lineWidth = s * (20 - 10*i);
          sctx.beginPath();
          sctx.moveTo(bx,by);
          sctx.lineTo(bx+100*(bx-ax),by+100*(by-ay));
@@ -109,12 +109,14 @@ let drawShadowHand = (ctx, hand, F, x=0, y=0, s=1, isDrawing=true) => {
    if (shadowHandInfo[hand].gesture == 'gripper') {
       let p = toScreen(F[4], hand);
       let q = toScreen(F[8], hand);
-      sctx.strokeStyle = 'white';
-      sctx.lineWidth = s * 10;
-      sctx.beginPath();
-      sctx.moveTo(p.x, p.y);
-      sctx.lineTo(q.x, q.y);
-      sctx.stroke();
+      for (let i = 0 ; i <= 1 ; i++) {
+         sctx.strokeStyle = i ? '#a0a0a0' : 'black';
+         sctx.lineWidth = s * (20 - 10*i);
+         sctx.beginPath();
+         sctx.moveTo(p.x,p.y);
+         sctx.lineTo(q.x,q.y);
+         sctx.stroke();
+      }
    }
 
    // If pinching, show pinch point.
@@ -123,7 +125,7 @@ let drawShadowHand = (ctx, hand, F, x=0, y=0, s=1, isDrawing=true) => {
       let p = toScreen(F[4], hand);
       let q = toScreen(F[8], hand);
       sctx.beginPath();
-      sctx.fillStyle = 'white';
+      sctx.fillStyle = '#a0a0a0';
       sctx.arc(p.x+q.x>>1, p.y+q.y>>1, .7*s * shadowHandInfo[hand].s, 0, 2*Math.PI);
       sctx.fill();
    }
