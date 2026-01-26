@@ -14,8 +14,10 @@ export const state = {
   debugMode: false,
   frameHands: false,
 
+  domSources: [],
   domDistances: [],
-  focusedElement: null,
+  domFocusIndex: null,
+  spotlightElement: null,
 
   avatarX: 0,
   avatarY: 0,
@@ -27,8 +29,8 @@ export const state = {
   shadowHandInfo:[{},{}],
 
   isLarge: false,
-  isObvious: false,
-  isSteady: true,
+  isObvious: true,
+  isSteady: false,
   isSeparateHandAvatars: false,
 
   isShadowAvatar: () =>

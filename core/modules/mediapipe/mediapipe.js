@@ -6,6 +6,7 @@ import {
   DrawingUtils
 } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0";
 import { showErrorNotification } from "../yjs/ui.js";
+import { videoTransform } from "../canvasUtils.js";
 
 export class Mediapipe {
   constructor(video) {
@@ -91,57 +92,6 @@ export class Mediapipe {
     }
   }
 
-  toggleRunning() {
-    if (!this.isReady) {
-      showErrorNotification("Mediapipe is not ready yet.","Please try again in a few seconds.");
-      return;
-    }
-    this.isRunning = !this.isRunning;
-  }
-
-  toggleDebug() {
-    this.debugMode = !this.debugMode;
-  }
-
-  drawDebug() {
-    OCTX.save();
-    OCTX.scale(0.5, 0.5);
-    for (const hand of this.handResults) {
-      this.drawUtils.drawConnectors(
-        hand.landmarks,
-        HandLandmarker.HAND_CONNECTIONS,
-        {
-          color: "#00FF00",
-          lineWidth: 2
-        }
-      );
-      this.drawUtils.drawLandmarks(hand.landmarks, {
-        color: "#00FF00",
-        lineWidth: 2
-      });
-    }
-
-    if (this.faceResults) {
-      this.drawUtils.drawConnectors(
-        this.faceResults,
-        FaceLandmarker.FACE_LANDMARKS_TESSELATION,
-        { color: "#C0C0C070", lineWidth: 1 }
-      );
-      this.drawUtils.drawConnectors(
-        this.faceResults,
-        FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE,
-        { color: "#FF3030" }
-      );
-      this.drawUtils.drawConnectors(
-        this.faceResults,
-        FaceLandmarker.FACE_LANDMARKS_LEFT_EYE,
-        { color: "#FF3030" }
-      );
-    }
-
-    OCTX.restore();
-  }
-
   processResults(handResults, faceResults) {
     let transformLandmark = (lm) => ({
       x: 1 - lm.x,
@@ -200,5 +150,58 @@ export class Mediapipe {
 
     this.faceResults = newFace;
     this.handResults = newHands;
+  }
+
+  toggleRunning() {
+    if (!this.isReady) {
+      showErrorNotification("Mediapipe is not ready yet.","Please try again in a few seconds.");
+      return;
+    }
+    this.isRunning = !this.isRunning;
+  }
+
+  toggleDebug() {
+    this.debugMode = !this.debugMode;
+  }
+
+  drawDebug() {
+    OCTX.save();
+    OCTX.translate(videoTransform.x, videoTransform.y);
+    OCTX.scale(videoTransform.w / (WIDTH * DPR), videoTransform.h / (HEIGHT * DPR));
+
+    for (const hand of this.handResults) {
+      this.drawUtils.drawConnectors(
+        hand.landmarks,
+        HandLandmarker.HAND_CONNECTIONS,
+        {
+          color: "#00FF00",
+          lineWidth: 2
+        }
+      );
+      this.drawUtils.drawLandmarks(hand.landmarks, {
+        color: "#00FF00",
+        lineWidth: 2
+      });
+    }
+
+    if (this.faceResults) {
+      this.drawUtils.drawConnectors(
+        this.faceResults,
+        FaceLandmarker.FACE_LANDMARKS_TESSELATION,
+        { color: "#C0C0C070", lineWidth: 1 }
+      );
+      this.drawUtils.drawConnectors(
+        this.faceResults,
+        FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE,
+        { color: "#FF3030" }
+      );
+      this.drawUtils.drawConnectors(
+        this.faceResults,
+        FaceLandmarker.FACE_LANDMARKS_LEFT_EYE,
+        { color: "#FF3030" }
+      );
+    }
+
+    OCTX.restore();
   }
 }

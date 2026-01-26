@@ -1,6 +1,7 @@
 
+import { smoothstep } from "../math/math.js";
 import { toScreen } from "./mapping.js";
-import { state } from "./state.js";
+import { state } from "./trackingState.js";
 
 export function drawHands(handResults) {
    let zScale = z => Math.max(.15, Math.min(1, .1 / (.2 + z)));
@@ -66,55 +67,44 @@ export function drawHands(handResults) {
 }
 
 export function drawDomSelection() {
-   const closest = domDistances[0];
-   if(closest && !focusedElement) {
-      const confidence = 0.75 * closest.weight + 0.25 * smoothstep(closest.dist, 0, -50, )
+   const closest = state.domDistances[0];
+   if(closest && !state.spotlightElement) {
+      const confidence = 0.75 * closest.weight + 0.25 * smoothstep(closest.dist, 0, -50)
       OCTX.save();
 
       OCTX.beginPath();
       OCTX.rect(
          closest.bounds.left, 
          closest.bounds.top, 
-         closest.bounds.right - closest.bounds.left, 
-         closest.bounds.bottom - closest.bounds.top
+         closest.bounds.width, 
+         closest.bounds.height,
       );
 
       OCTX.shadowColor = `rgba(0, 128, 255, ${confidence})`;
       OCTX.shadowBlur = 24 * confidence;
 
       OCTX.strokeStyle = `rgba(0, 128, 255, ${confidence})`;
-      OCTX.lineWidth = 2 + confidence * 4;
+      OCTX.lineWidth = 1 + confidence * 2;
       OCTX.stroke();
 
       OCTX.restore();
    }
 
-   let focusThreshold = 600 * (Math.max(0.5, closest?.weight ?? 0) - 0.5); // Softness of selection proportional to confidence
-   let isCodeLookedAt =
-      closest?.element === textArea &&
-      closest?.dist < focusThreshold;
-
-   if (
-      isCode &&
-      (focusedElement == null || focusedElement.element == textArea) &&
-      (isCodeLookedAt ||
-         codeArea.containsPoint(pen.x, pen.y) ||
-         focusedElement?.element == textArea)
-   ) {
-      textArea.focus();
+   if (state.domFocusIndex != null) {
+      const focusedElement = state.domDistances[state.domFocusIndex];
+      OCTX.save();
       OCTX.fillStyle = "#0080ff40";
       OCTX.fillRect(
-         codeBounds.left,
-         codeBounds.top,
-         codeBounds.right - codeBounds.left,
-         codeBounds.bottom - codeBounds.top
+         focusedElement.bounds.left,
+         focusedElement.bounds.top,
+         focusedElement.bounds.width,
+         focusedElement.bounds.height,
       );
-   } else {
-      textArea.blur();
+      OCTX.restore();
    }
 
-   if(debugMode && domDistances.length > 1) {
-      let distances = domDistances.toSorted((a, b) => a.bounds.left - b.bounds.left)
+   if(state.debugMode && state.domDistances.length > 1) {
+      let distances = state.domDistances.toSorted((a, b) => a.bounds.left - b.bounds.left)
       OCTX.save();
       OCTX.font = '24px Helvetica';
       OCTX.fillStyle = "#0080FF"; 
@@ -136,25 +126,25 @@ export function drawEyes() {
     for (let eye = -1 ; eye <= 1 ; eye += 2) {
         OCTX.fillStyle = state.eyeOpen < .4 ? '#00000080' : '#ffffff40';
         OCTX.beginPath();
-        OCTX.ellipse(state.state.headX + 70 * eye, state.state.headY, 35, 35 * state.eyeOpen, 0, 0, 2 * Math.PI);
+        OCTX.ellipse(state.headX + 70 * eye, state.headY, 35, 35 * state.eyeOpen, 0, 0, 2 * Math.PI);
         OCTX.fill();
         OCTX.strokeStyle = '#00000040';
         OCTX.lineWidth = 2;
         OCTX.beginPath();
-        OCTX.ellipse(state.state.headX + 70 * eye, state.state.headY, 35, 35 * state.eyeOpen, 0, 0, 2 * Math.PI);
+        OCTX.ellipse(state.headX + 70 * eye, state.headY, 35, 35 * state.eyeOpen, 0, 0, 2 * Math.PI);
         OCTX.stroke();
 
         if (state.eyeOpen >= .4) {
           OCTX.fillStyle = '#00000040';
           OCTX.beginPath();
-          let ex = 50 * eyeGazeX;
-          let t = Math.abs(state.state.headX - WIDTH / 2) / (HEIGHT / 2);
-          let ey = 50 * eyeGazeY + 23
-                    -  (9-3*t) * state.state.headY / (HEIGHT / 2);
+          let ex = 50 * state.eyeGazeX;
+          let t = Math.abs(state.headX - WIDTH / 2) / (HEIGHT / 2);
+          let ey = 50 * state.eyeGazeY + 23
+                    -  (9-3*t) * state.headY / (HEIGHT / 2);
                     -  8 * t
                     - 30 * Math.pow(Math.max(0, state.eyeOpen - .7) / .3, 1.5) * .3
                     - 20 * Math.pow(Math.max(0, .7 - state.eyeOpen) / .3, 1.5) * .3;
-          OCTX.arc(state.state.headX + 70 * eye + ex, state.state.headY + ey, 20, 0, 2 * Math.PI);
+          OCTX.arc(state.headX + 70 * eye + ex, state.headY + ey, 20, 0, 2 * Math.PI);
           OCTX.fill();
         }
     }

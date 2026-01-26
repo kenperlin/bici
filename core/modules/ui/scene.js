@@ -2,7 +2,6 @@ import { fetchText } from "../utils.js";
 import { gl_start } from "../webgl/webgl.js";
 import { webrtcClient } from "../yjs/yjs.js";
 
-
 export class SceneManager {
   constructor(canvas, codeArea) {
     this.canvas = new SceneCanvas(canvas);

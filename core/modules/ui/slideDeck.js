@@ -10,7 +10,7 @@ export class SlideDeck {
 
     this.isVisible = false;
     this.isOpaque = false;
-    this.position = { x: WIDTH - 520, y: 20 };
+    this.rect = { left: WIDTH - 520, top: 20, width: 500, height: 500 };
   }
 
   async init(name, slidesList) {
@@ -76,10 +76,6 @@ export class SlideDeck {
     });
   }
 
-  setSize(left, top, width, height) {
-    this.rect = { left, top, width, height };
-  }
-
   getSlide(idx = this.currentSlide) {
     return this.slides[idx];
   }
@@ -107,18 +103,19 @@ export class SlideDeck {
     if (!slide) return;
 
     ctx.save();
-    ctx.translate(this.position.x, this.position.y);
+    ctx.translate(this.rect.left, this.rect.top);
     ctx.globalAlpha = this.isOpaque ? 1 : 0.5;
 
-    if (slide.type === "diagram") {
+    if (slide.type === "diagram" || slide.type === "text") {
+      this.rect.width = slide.content.width;
+      this.rect.height = slide.content.height;
       slide.content.ctx = ctx;
       slide.content._beforeUpdate();
       slide.content.update();
     } else if (slide.type === "image") {
+      this.rect.width = 500;
+      this.rect.height = 500;
       ctx.drawImage(slide.content, 0, 0, 500, 500);
-    } else if (slide.type === "text") {
-      slide.content.ctx = ctx;
-      slide.content.update();
     }
 
     ctx.font = '20px Courier';

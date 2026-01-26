@@ -1,84 +1,8 @@
 import { add, clamp, cross, dot, mix, norm, normalize, resize, subtract } from "../math/math.js";
 import { LowPassFilter, PCAFilter } from "./filter.js";
-import { state } from "./state.js";
+import { state } from "./trackingState.js";
 import { drawEyes, drawHands, drawShadowHand } from "./drawing.js";
-import { frameToElement, toScreen } from "./mapping.js";
-
-// GIVEN THREE POINTS ON THE FACE, COMPUTE THE USER'S HEAD MATRIX
-function computeHeadMatrix(a,b,c) {
-   a[1] = -a[1];
-   b[1] = -b[1];
-   c[1] = -c[1];
-   let X = normalize(subtract(a,c));
-   let y = subtract(b,mix(a,c,.5));
-   let Z = normalize(cross(X,y));
-   let Y = normalize(cross(Z,X));
-   Z = normalize(add(Z,resize(Y,.3)));
-   Y = normalize(cross(Z,X));
-   state.headMatrix = [ X[0],X[1],X[2],0,
-                  Y[0],Y[1],Y[2],0,
-                  Z[0],Z[1],Z[2],0,
-                  4*(b[0]-.5),4*(b[1]+.625),4*b[2],1 ];
-}
-// GIVEN EDGES OF EYES AND PUPIL, COMPUTE EYE GAZE AND EYE OPEN
-function computeEyeGaze(la,lb,lc,ld, le,lf,lg,
-                        ra,rb,rc,rd, re,rf,rg) {
-
-   let LX = normalize(subtract(lb,la));
-   let lx = dot(subtract(lf,mix(la,lb,.5)),LX)/norm(subtract(lb,la));
-   let ly = 2 * (lf[1] - mix(la,lb,.5)[1]) / norm(subtract(lb,la));
-
-   let RX = normalize(subtract(rb,ra));
-   let rx = dot(subtract(rf,mix(ra,rb,.5)),RX)/norm(subtract(rb,ra));
-   let ry = 2 * (rf[1] - mix(ra,rb,.5)[1]) / norm(subtract(rb,ra));
-
-   state.eyeGazeX = lx + rx;
-   state.eyeGazeY = ly + ry;
-
-   let lo = norm(subtract(lc,ld)) / norm(subtract(le,lg));
-   let ro = norm(subtract(rc,rd)) / norm(subtract(re,rg));
-
-   state.eyeOpen = (lo + ro) / 2;
-
-   if (state.eyeOpen < .4 && state.blinkTime < 0)
-      state.blinkTime = Date.now() / 1000;
-}
-
-function getSignedDistanceRect(x, y, rect) {
-   const dxOut = Math.max(rect.left - x, 0, x - rect.right);
-   const dyOut = Math.max(rect.top - y, 0, y - rect.bottom);
-   const distOut = Math.hypot(dxOut, dyOut);
-   
-   const dxIn = Math.min(x - rect.left, rect.right - x);
-   const dyIn = Math.min(y - rect.top, rect.bottom - y);
-   const distIn = Math.min(dxIn, dyIn);
-   
-   return distOut > 0 ? distOut : -distIn;
-}
-
-function evalDomDistances() {
-   let textArea = codeArea.getElement();
-   let codeBounds = textArea.getBoundingClientRect();
-   let codeDist = isCode ? getSignedDistanceRect(head_x(), head_y(), codeBounds) : Infinity;
-   let sceneBounds = canvas3D.getBoundingClientRect();
-   let sceneDist = isScene ? getSignedDistanceRect(head_x(), head_y(), sceneBounds) : Infinity;
-   let slideBounds = {left: D.left, right: D.left + D.w, top: D.top, bottom: D.top + D.h};
-   let slideDist = isInfo ? getSignedDistanceRect(head_x(), head_y(), slideBounds) : Infinity;
-
-   domDistances = [
-      { bounds: codeBounds, dist: codeDist, element: textArea },
-      { bounds: sceneBounds, dist: sceneDist, element: canvas3D },
-      { bounds: slideBounds, dist: slideDist, element: canvasDiagram }
-   ];
-   domDistances = domDistances.filter((it) => it.dist !== Infinity)
-   domDistances.sort((a, b) => a.dist - b.dist);
-
-   // Softmax weights
-   let expWeights = domDistances.map((it) => Math.exp((domDistances[0].dist - it.dist) / 100));
-   let sum = expWeights.reduce((acc, cur) => acc + cur, 0);
-
-   domDistances.forEach((e, i) => e.weight = expWeights[i] / sum);
-}
+import { frameToRect, toScreen } from "./mapping.js";
 
 const pcaFilter = new PCAFilter();
 const lowPassFilter = new LowPassFilter(2/3);
@@ -128,8 +52,8 @@ export function trackingUpdate(mediapipe) {
       [state.headX, state.headY] = pcaFilter.filter(state.headX, state.headY);
    }
    if (state.isLarge) {
-      state.headX = frameToElement(state.headX, canvas3D);
-      state.headY = frameToElement(state.headY, canvas3D);
+      state.headX = frameToRect(state.headX, canvas3D.getBoundingClientRect());
+      state.headY = frameToRect(state.headY, canvas3D.getBoundingClientRect());
    }
 
    // A LONG BLINK ACTS AS A CLICK AT THE HEAD GAZE POSITION.
@@ -144,9 +68,6 @@ export function trackingUpdate(mediapipe) {
    }
 
    // gestureTracker.update(handResults)
-   
-   // evalDomDistances();
-   // drawDomSelection();
    drawEyes();
 
    if (!state.isShadowAvatar())
@@ -364,13 +285,13 @@ function initializeGestureTracking() {
 
    let spreadGesture = new MotionGesture("spread", detectSpreadStart, detectSpreadEnd, 300);
    spreadGesture.onTriggerAB = (self, hand) => {
-      if(focusedElement || (focusedElement = domDistances[0]) == null) return;
+      if(state.spotlightElement || (state.spotlightElement = domDistances[0]) == null) return;
 
       domDistances.forEach((elem) => {
          elem.element.style.opacity = 0;
       })
 
-      let element = focusedElement.element;
+      let element = state.spotlightElement.element;
       element.style.transition = "all 0.1s ease-in-out";
       element.style.opacity = 1;
       element.style.top = '50%';
@@ -379,13 +300,13 @@ function initializeGestureTracking() {
 
    }
    spreadGesture.onTriggerBA = (self, hand) => {
-      if(!focusedElement) return;
+      if(!state.spotlightElement) return;
 
-      let element = focusedElement.element;
-      element.style.top = focusedElement.bounds.top;
-      element.style.left = focusedElement.bounds.left;
+      let element = state.spotlightElement.element;
+      element.style.top = state.spotlightElement.bounds.top;
+      element.style.left = state.spotlightElement.bounds.left;
       element.style.transform = 'none';
-      focusedElement = null
+      state.spotlightElement = null
 
       domDistances.forEach((elem) => {
          elem.element.style.opacity = 1;
@@ -401,3 +322,43 @@ function initializeGestureTracking() {
    window.gestureTracker = gestureTracker;   
 }
 // initializeGestureTracking();
+
+// GIVEN THREE POINTS ON THE FACE, COMPUTE THE USER'S HEAD MATRIX
+function computeHeadMatrix(a,b,c) {
+   a[1] = -a[1];
+   b[1] = -b[1];
+   c[1] = -c[1];
+   let X = normalize(subtract(a,c));
+   let y = subtract(b,mix(a,c,.5));
+   let Z = normalize(cross(X,y));
+   let Y = normalize(cross(Z,X));
+   Z = normalize(add(Z,resize(Y,.3)));
+   Y = normalize(cross(Z,X));
+   state.headMatrix = [ X[0],X[1],X[2],0,
+                  Y[0],Y[1],Y[2],0,
+                  Z[0],Z[1],Z[2],0,
+                  4*(b[0]-.5),4*(b[1]+.625),4*b[2],1 ];
+}
+// GIVEN EDGES OF EYES AND PUPIL, COMPUTE EYE GAZE AND EYE OPEN
+function computeEyeGaze(la,lb,lc,ld, le,lf,lg,
+                        ra,rb,rc,rd, re,rf,rg) {
+
+   let LX = normalize(subtract(lb,la));
+   let lx = dot(subtract(lf,mix(la,lb,.5)),LX)/norm(subtract(lb,la));
+   let ly = 2 * (lf[1] - mix(la,lb,.5)[1]) / norm(subtract(lb,la));
+
+   let RX = normalize(subtract(rb,ra));
+   let rx = dot(subtract(rf,mix(ra,rb,.5)),RX)/norm(subtract(rb,ra));
+   let ry = 2 * (rf[1] - mix(ra,rb,.5)[1]) / norm(subtract(rb,ra));
+
+   state.eyeGazeX = lx + rx;
+   state.eyeGazeY = ly + ry;
+
+   let lo = norm(subtract(lc,ld)) / norm(subtract(le,lg));
+   let ro = norm(subtract(rc,rd)) / norm(subtract(re,rg));
+
+   state.eyeOpen = (lo + ro) / 2;
+
+   if (state.eyeOpen < .4 && state.blinkTime < 0)
+      state.blinkTime = Date.now() / 1000;
+}

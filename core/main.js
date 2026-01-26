@@ -15,6 +15,7 @@ import {
   yjsBindPen
 } from "./modules/yjs/yjs.js";
 import { trackingUpdate } from "./modules/mediapipe/tracking.js";
+import { initializeDomTracking, updateDomFocus } from "./modules/mediapipe/domFocus.js";
 
 const DOM = {
     projectSelector: document.getElementById("project-selector"),
@@ -46,21 +47,22 @@ const pen = new Pen();
 const mediapipe = new Mediapipe(DOM.webcam)
 
 function resizeStage() {
-  const dpr = window.devicePixelRatio;
+  window.DPR = window.devicePixelRatio;
 
   window.WIDTH = window.innerWidth;
   window.HEIGHT = window.innerHeight;
 
-  DOM.canvas2D.width = DOM.ocanvas.width = WIDTH * dpr;
-  DOM.canvas2D.height = DOM.ocanvas.height = HEIGHT * dpr;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  octx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  DOM.canvas2D.width = DOM.ocanvas.width = WIDTH * DPR;
+  DOM.canvas2D.height = DOM.ocanvas.height = HEIGHT * DPR;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  octx.setTransform(DPR, 0, 0, DPR, 0, 0);
 
-  slideDeck.position.x = WIDTH - 520;
+  slideDeck.rect.left = WIDTH - 520;
 }
 
 async function init() {
   resizeStage();
+  initializeDomTracking({codeArea, sceneManager, slideDeck});
   
   // Collaboration
   initKeyHandler({codeArea, sceneManager, slideDeck, pen, mediapipe});
@@ -116,13 +118,15 @@ function animate() {
 
   drawVideoToCover(ctx, backgroundVideo, WIDTH, HEIGHT, !hasRemoteVideo);
 
-  mediapipe.predict();
-  trackingUpdate(mediapipe);
   codeArea.update();
   slideDeck.draw(ctx);
   pen.draw(ctx);
   sceneManager.update();
   displayHelp(ctx, codeArea.fontSize)
+
+  mediapipe.predict();
+  trackingUpdate(mediapipe);
+  updateDomFocus(codeArea, pen)
 
   requestAnimationFrame(animate);
 }
