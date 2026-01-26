@@ -53,6 +53,24 @@ export class CodeArea {
     );
   };
 
+  pointToIndex(x,y) {
+    let s = this.textarea.value;
+    let col = 0, row = 0;
+    let cw = charWidthFactor * this.fontSize;
+    let ch = charHeightFactor * this.fontSize;
+
+    for (let n = 0 ; n < s.length ; n++)
+        if (col*cw <= x-ox && row*ch <= y-oy && col*cw+cw > x-ox && row*ch+ch > y-oy)
+          return n;
+        else
+          switch (s.charAt(n)) {
+          case '\n': row++; col = 0; break;
+          case '\t': col += 8 - col % 8; break;
+          default  : col++; break;
+          }
+    return -1;
+   }
+
   drawOverlayRect(col, row, nCols, nRows, isFill) {
     let charWidth = charWidthFactor * this.fontSize;
     let charHeight = charHeightFactor * this.fontSize;
@@ -91,57 +109,40 @@ export class CodeArea {
       this.isReloadScene = false;
     }
 
-    if (this.isVisible) {
-    //   highlightCharAt(pen.x, pen.y, "#00000060");
+    if (!this.isVisible) return;
 
-    //   for (const h in gestureTracker.activeGestures) {
-    //     const gesture = gestureTracker.activeGestures[h];
-    //     if (gesture?.id === "indexPinch") {
-    //       let x = gesture.state[h].x * screen.width;
-    //       let y = gesture.state[h].y * screen.height;
-    //       if (!this.containsPoint(x, y)) continue;
+    // this.highlightCharAt(pen.x, pen.y, "#00000060");
 
-    //       let col = xToCol(x) - 1;
-    //       let row = yToRow(y) - 0.5;
-    //       OCTX.lineWidth = 2;
-    //       OCTX.strokeStyle = "black";
-    //       drawOverlayRect(col >> 0, row >> 0, 1, 1);
-    //     }
+    // for (const h in gestureTracker.activeGestures) {
+    //   const gesture = gestureTracker.activeGestures[h];
+    //   if (gesture?.id === "indexPinch") {
+    // isPinch = true;
+    //       let p = { x: gesture.state[h].x * screen.width,
+    //                 y: gesture.state[h].y * screen.height };
+
+    //       if (isShadowAvatar())
+    //         toShadowAvatar(p);
+
+    //       if(!this.containsPoint(p.x, p.y)) continue;
+
+    //       let col = xToCol(p.x) - 1;
+    //       let row = yToRow(p.y);
+    //       octx.lineWidth = 2;
+    //       octx.strokeStyle = 'black';
+    //       drawOverlayRect(col>>0, row>>0, 1, 1);
+    // if (! wasPinch) {
+    //         let index = this.pointToIndex(p.x, p.y);
+    //         if (index >= 0)
+    //             codeArea.selectionStart = codeArea.selectionEnd = index + 1;
+    //       }
+    // slideValue(p.x, p.y);
     //   }
-    }
   };
 
   initInteractions() {
     this.element.addEventListener("mousemove", (ev) => {
       if (!ev.shiftKey) return;
-      
-      if (this.ey && Math.abs((this.dial += ev.clientY - this.ey)) >= 3) {
-        let i1 = this.element.selectionStart;
-        let s0 = NumberString.findNumberString(this.element.value, i1);
-        if (s0) {
-          let i0 = i1 - s0.length;
-          let s1 = NumberString.increment(s0, -Math.sign(this.dial));
-
-          if (
-            this.element.value.charAt(i0 - 1) == " " &&
-            s0.charAt(0) != "-" &&
-            s1.charAt(0) == "-"
-          )
-            i0--;
-          if (s0.charAt(0) == "-" && s1.charAt(0) != "-") s1 = " " + s1;
-
-          this.element.value =
-            this.element.value.substring(0, i0) + s1 + this.element.value.substring(i1);
-          this.element.selectionStart = this.element.selectionEnd = i0 + s1.length;
-
-          // Trigger input event to sync with Yjs
-          this.element.dispatchEvent(new Event("input", { bubbles: true }));
-
-          this.isReloadScene = true;
-        }
-        this.dial = 0;
-      }
-      ey = ev.clientY;
+      this.slideValue(ev.clientY)
     });
 
     this.element.addEventListener("keyup", (event) => {
@@ -250,6 +251,36 @@ export class CodeArea {
     }
     return null;
   };
+
+  slideValue(y) {
+    if (this.ey && Math.abs((this.dial += y - this.ey)) >= 3) {
+      let i1 = this.element.selectionStart;
+      let s0 = NumberString.findNumberString(this.element.value, i1);
+      if (s0) {
+        let i0 = i1 - s0.length;
+        let s1 = NumberString.increment(s0, -Math.sign(this.dial));
+
+        if (
+          this.element.value.charAt(i0 - 1) == " " &&
+          s0.charAt(0) != "-" &&
+          s1.charAt(0) == "-"
+        )
+          i0--;
+        if (s0.charAt(0) == "-" && s1.charAt(0) != "-") s1 = " " + s1;
+
+        this.element.value =
+          this.element.value.substring(0, i0) + s1 + this.element.value.substring(i1);
+        this.element.selectionStart = this.element.selectionEnd = i0 + s1.length;
+
+        // Trigger input event to sync with Yjs
+        this.element.dispatchEvent(new Event("input", { bubbles: true }));
+
+        this.isReloadScene = true;
+      }
+      this.dial = 0;
+    }
+    this.ey = y;
+  }
 
   highlightCharAt(x, y, color = "#00000060") {
     if (!this.containsPoint(x, y)) return;
