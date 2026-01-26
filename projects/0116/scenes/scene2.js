@@ -1,5 +1,12 @@
-export function Scene() {
-   let cube = Shape.cubeMesh(30,15);
+import { cubeMesh } from '/core/modules/shape.js'
+import { scale } from '/core/modules/math.js'
+import { addTexture, drawObj, setUniform } from '/core/modules/webgl.js';
+import * as Shader from '/core/modules/shader.js'
+
+export function Scene(context) {
+   this.context = context;
+
+   let cube = cubeMesh(30,15);
    addTexture(0, 'fixed-width-font.png');
    this.vertexShader = Shader.defaultVertexShader;
    this.fragmentShader = Shader.shinyFragmentShader;

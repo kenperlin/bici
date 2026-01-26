@@ -1,6 +1,7 @@
 import { drawVideoToCover } from "./modules/canvasUtils.js";
 import { CodeArea } from "./modules/components/codeArea.js";
 import { SlideDeck } from "./modules/components/slides.js";
+import { initKeyHandler } from "./modules/keyEvent.js";
 import { Pen } from "./modules/pen.js";
 import { SceneManager } from "./modules/scene.js";
 import { fetchText } from "./modules/utils.js";
@@ -71,6 +72,7 @@ async function init() {
     const projectName = e.target.dataset.project;
     if (projectName) loadProject(projectName);
   });
+  initKeyHandler({codeArea, sceneManager, slideDeck, pen});
 
   // App
   requestAnimationFrame(animate);
@@ -85,7 +87,8 @@ async function loadProject(name) {
   }
   
   // pass necessary components for scene to access through context 
-  await sceneManager.load(name, 1, {})
+  sceneManager.setProject(name, {});
+  await sceneManager.load(1)
 
   DOM.projectLabel.textContent = name;
   DOM.projectSwitcher.style.display = "block";
@@ -111,7 +114,7 @@ function animate() {
   codeArea.update();
   slideDeck.draw(ctx);
   pen.draw(ctx);
-  sceneManager.scene?.update?.();
+  sceneManager.update();
 
   requestAnimationFrame(animate);
 }

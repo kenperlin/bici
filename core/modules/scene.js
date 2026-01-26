@@ -9,12 +9,21 @@ export class SceneManager {
     this.code = codeArea;
     this.scene = null;
     this.sceneCounter = 0;
+    this.isVisible = false;
+
+    this.projectName = null;
+    this.context = {};
 
     this.code.onReloadScene = this.hotReload.bind(this);
   }
 
-  async load(projectName, num, context) {
-    const path = `/projects/${projectName}/scenes/scene${num}.js`;
+  setProject(projectName, context) {
+    this.projectName = projectName;
+    this.context = context;
+  }
+  
+  async load(num) {
+    const path = `/projects/${this.projectName}/scenes/scene${num}.js`;
     let sceneModule;
   
     try {
@@ -23,7 +32,7 @@ export class SceneManager {
         throw new Error(`Scene ${num} does not export a Scene class.`);
       }
     } catch (e) {
-      console.error(`Failed to load scene ${num} of project ${projectName}:`, e);
+      console.error(`Failed to load scene ${num} of project ${this.projectName}:`, e);
     }
 
     this.context = {
@@ -33,10 +42,10 @@ export class SceneManager {
       codeArea: this.code,
       canvas: this.canvas,
       vars: {},
-      ...context
+      ...this.context
     }
     this.scene = new sceneModule.Scene(this.context);
-    this.code.textarea.value = this.context.code
+    this.code.element.value = this.context.code;
     this.canvas.registerSceneEvents(this.scene);
     gl_start(this.canvas.element, this.scene);
   }
@@ -62,6 +71,16 @@ export class SceneManager {
     return webrtcClient.roomId.charCodeAt(0)
                       + webrtcClient.roomId.charCodeAt(1) / 128
                       + 123.456 * (++this.sceneCounter);
+  }
+
+  toggleVisible() {
+    this.isVisible = !this.isVisible;
+    this.canvas.element.style.display = this.isVisible ? "block" : "none";
+  }
+
+  update() {
+    if(!this.isVisible) return;
+    this.scene?.update();
   }
 }
 

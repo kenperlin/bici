@@ -1,4 +1,8 @@
-function Scene() {
+import { Matrix } from '/core/modules/math.js'
+
+export function Scene(context) {
+   this.context = context;
+
    let gameCube = new GameCube(this, 'ABCDEF');
    let M = new Matrix();
    this.update = () => {

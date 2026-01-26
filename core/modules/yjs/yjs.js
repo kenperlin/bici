@@ -77,7 +77,7 @@ export function setupYjsClient(webcam) {
 
 export function yjsBindCodeArea(codeArea) {
   // Setup textarea binding
-  const textarea = codeArea.textarea;
+  const textarea = codeArea.element;
   const ytext = ydoc.getText("codemirror");
 
   let isLocalUpdate = false;

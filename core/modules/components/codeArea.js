@@ -10,12 +10,12 @@ const charHeightOffset = 0.15;
 
 export class CodeArea {
   constructor(textareaElement) {
-    this.textarea = textareaElement;
+    this.element = textareaElement;
     this.fontSize = 18;
-
-    this.textarea.style.fontSize = this.fontSize + "px";
-
+    this.element.style.fontSize = this.fontSize + "px";
+    this.element.style.left = "-2000px"
     this.isVisible = false;
+
     this.ey = 0;
     this.dial = 0;
     this.isReloadScene = false;
@@ -35,16 +35,21 @@ export class CodeArea {
     return (y - offsetY) / (charHeightFactor * this.fontSize) + charHeightOffset;
   }
 
-  setVisible(isVisible) {
-    this.isVisible = isVisible;
-    this.textarea.style.left = `${isVisible ? 20 : -2000}px`;
+  toggleVisible() {
+    this.isVisible = !this.isVisible;
+    this.element.style.left = `${this.isVisible ? 20 : -2000}px`;
   };
+
+  setFontSize(size) {
+    this.fontSize = size;
+    this.element.style.fontSize = this.fontSize + "px";
+  }
 
   containsPoint(x, y) {
     let col = this._xToCol(x);
     let row = this._yToRow(y);
     return (
-      col >= 0 && col < this.textarea.cols + 2 && row >= 0 && row < this.textarea.rows
+      col >= 0 && col < this.element.cols + 2 && row >= 0 && row < this.element.rows
     );
   };
 
@@ -62,16 +67,16 @@ export class CodeArea {
   };
 
   update(time = Date.now() / 1000) {
-    let lines = this.textarea.value.split("\n");
-    this.textarea.rows = Math.min((790 / this.fontSize) >> 0, lines.length);
-    this.textarea.cols = lines.reduce((acc, cur) => Math.max(acc, cur.length - 1), 0)
+    let lines = this.element.value.split("\n");
+    this.element.rows = Math.min((790 / this.fontSize) >> 0, lines.length);
+    this.element.cols = lines.reduce((acc, cur) => Math.max(acc, cur.length - 1), 0)
     if (this.isReloadScene && time - this.lastReloadTime > 0.1) {
       try {
         // Remove zero-width space markers (\u200B) added by Yjs sync before eval
-        this.textarea.value = this.textarea.value.replace(/\u200B/g, "");
+        this.element.value = this.element.value.replace(/\u200B/g, "");
 
         // Replace imports with absolute URLs for scene reloading
-        const code = this.textarea.value.replace(
+        const code = this.element.value.replace(
           /from\s+['"]([^'"]+)['"]/g,
           (_, spec) => {
             const url = new URL(spec, import.meta.url).href;
@@ -107,30 +112,30 @@ export class CodeArea {
   };
 
   initInteractions() {
-    this.textarea.addEventListener("mousemove", (ev) => {
+    this.element.addEventListener("mousemove", (ev) => {
       if (!ev.shiftKey) return;
       
       if (this.ey && Math.abs((this.dial += ev.clientY - this.ey)) >= 3) {
-        let i1 = this.textarea.selectionStart;
-        let s0 = NumberString.findNumberString(this.textarea.value, i1);
+        let i1 = this.element.selectionStart;
+        let s0 = NumberString.findNumberString(this.element.value, i1);
         if (s0) {
           let i0 = i1 - s0.length;
           let s1 = NumberString.increment(s0, -Math.sign(this.dial));
 
           if (
-            this.textarea.value.charAt(i0 - 1) == " " &&
+            this.element.value.charAt(i0 - 1) == " " &&
             s0.charAt(0) != "-" &&
             s1.charAt(0) == "-"
           )
             i0--;
           if (s0.charAt(0) == "-" && s1.charAt(0) != "-") s1 = " " + s1;
 
-          this.textarea.value =
-            this.textarea.value.substring(0, i0) + s1 + this.textarea.value.substring(i1);
-          this.textarea.selectionStart = this.textarea.selectionEnd = i0 + s1.length;
+          this.element.value =
+            this.element.value.substring(0, i0) + s1 + this.element.value.substring(i1);
+          this.element.selectionStart = this.element.selectionEnd = i0 + s1.length;
 
           // Trigger input event to sync with Yjs
-          this.textarea.dispatchEvent(new Event("input", { bubbles: true }));
+          this.element.dispatchEvent(new Event("input", { bubbles: true }));
 
           this.isReloadScene = true;
         }
@@ -139,30 +144,30 @@ export class CodeArea {
       ey = ev.clientY;
     });
 
-    this.textarea.addEventListener("keyup", (event) => {
+    this.element.addEventListener("keyup", (event) => {
       if (event.key == "Shift") {
         this.ey = 0;
       }
       if (event.key == "Meta") {
         // window.isReloading = true;
         // Trigger input event to sync reload to other users via Yjs
-        this.textarea.dispatchEvent(new Event("input", { bubbles: true }));
+        this.element.dispatchEvent(new Event("input", { bubbles: true }));
         this.isReloadScene = true;
       }
       if (event.key == "Control") {
-        let i0 = this.textarea.selectionStart;
-        let i1 = this.textarea.selectionEnd;
+        let i0 = this.element.selectionStart;
+        let i1 = this.element.selectionEnd;
         if (i0 < i1)
           try {
             let func = new Function(
-              "return " + this.textarea.value.substring(i0, i1)
+              "return " + this.element.value.substring(i0, i1)
             );
             let result = "" + func();
-            this.textarea.value =
-              this.textarea.value.substring(0, i0) +
+            this.element.value =
+              this.element.value.substring(0, i0) +
               result +
-              this.textarea.value.substring(i1);
-            this.textarea.selectionStart = this.textarea.selectionEnd =
+              this.element.value.substring(i1);
+            this.element.selectionStart = this.element.selectionEnd =
               i0 + result.length;
           } catch (e) {
             console.log("error:", e);
@@ -211,17 +216,17 @@ export class CodeArea {
     }
 
     // Master: apply all pending var changes atomically
-    let newText = this.textarea.value;
+    let newText = this.element.value;
     
     for (let name in vars) {
       newText = this._applyVarToText(newText, name, vars[name]);
     }
 
-    this.textarea.value = newText;
+    this.element.value = newText;
     this._varsToFlush = {};
 
     // window.isReloading = true;
-    this.textarea.dispatchEvent(new Event("input", { bubbles: true }));
+    this.element.dispatchEvent(new Event("input", { bubbles: true }));
     this.isReloadScene = true;
   };
 
@@ -236,7 +241,7 @@ export class CodeArea {
   };
 
   getVar(name) {
-    let text = this.textarea.value;
+    let text = this.element.value;
     let i = text.indexOf("let " + name);
     if (i >= 0) {
       let j = i + 4 + name.length + 3;

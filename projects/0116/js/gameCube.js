@@ -1,9 +1,12 @@
+import { cubeMesh, charMesh } from '/core/modules/shape.js'
+import { drawObj } from '/core/modules/webgl.js';
+
 export function GameCube(scene, labels) {
-   let cube = Shape.cubeMesh();
+   let cube = cubeMesh();
 
    let label = [];
    for (let n = 0 ; n < 6 ; n++)
-      label.push(Shape.charMesh(labels.substring(n,n+1)));
+      label.push(charMesh(labels.substring(n,n+1)));
 
    this.update = M => {
       M.scale(.25);

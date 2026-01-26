@@ -5,26 +5,9 @@ window.isShift = false;
 // Initialize Yjs for collaborative code editing
 let ypenStrokes, yjsProvider;
 
-let pen = new Pen();
-
 // Check whether this is the only client, and whether it is the master client.
 let isMultiPlayer = () => ! (webrtcClient.peerConnections.size == 0);
 let isFirstPlayer = () => webrtcClient.isMasterClient;
-
-let sceneCounter = 0;
-
-let sceneSeed = () => webrtcClient.roomId.charCodeAt(0)
-                    + webrtcClient.roomId.charCodeAt(1) / 128
-                    + 123.456 * sceneCounter;
-
-let sceneVar = (name, initialValue) => {
-   let varName = '_sceneVar_' + name + '_' + sceneCounter;
-   if (! window[varName])
-      window[varName] = initialValue;
-   return window[varName];
-}
-
-pen.setContext(ctx);
 
 // Setup state synchronization after all variables are initialized
 if (webrtcClient) {

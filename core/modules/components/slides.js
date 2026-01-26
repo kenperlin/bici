@@ -8,6 +8,7 @@ export class SlideDeck {
     this.urlMap = {};
     this.currentSlide = 0;
 
+    this.isVisible = false;
     this.isOpaque = false;
     this.position = { x: WIDTH - 520, y: 20 };
   }
@@ -83,7 +84,25 @@ export class SlideDeck {
     return this.slides[idx];
   }
 
+  next() {
+    this.currentSlide = Math.min(this.currentSlide + 1, this.slides.length - 1);
+  }
+
+  prev() {
+    this.currentSlide = Math.max(this.currentSlide - 1, 0);
+  }
+
+  toggleVisible() {
+    this.isVisible = !this.isVisible;
+  }
+
+  toggleOpaque() {
+    this.isOpaque = !this.isOpaque;
+  }
+
   draw(ctx, idx = this.currentSlide) {
+    if(!this.isVisible) return;
+
     const slide = this.getSlide(idx);
     if (!slide) return;
 
