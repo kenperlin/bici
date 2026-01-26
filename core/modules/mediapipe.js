@@ -1,31 +1,19 @@
+
 import {
   HandLandmarker,
+  FaceLandmarker,
   FilesetResolver,
   DrawingUtils
 } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0";
+import { showErrorNotification } from "./yjs/ui.js";
 
-class Mediapipe {
-  constructor(video, canvas) {
-    if (!canvas) {
-      canvas = document.createElement("canvas");
-      canvas.id = "mediapipe-canvas";
-      canvas.style.position = "absolute";
-      canvas.style.top = "0";
-      canvas.style.left = "0";
-      canvas.style.zIndex = 1;
-      canvas.style.pointerEvents = "none"; // Allow clicks to pass through to elements below
-      canvas.width = screen.width;
-      canvas.height = screen.height;
-      document.body.appendChild(canvas);
-    }
-
-    this.canvas = canvas;
-    this.canvasCtx = canvas.getContext("2d");
+export class Mediapipe {
+  constructor(video) {
     this.video = video;
 
     this.isReady = false;
     this.isRunning = false;
-    this.debugMode = false;
+    this.debugMode = true;
 
     this.handLandmarker = null;
     this.faceLandmarker = null;
@@ -43,7 +31,6 @@ class Mediapipe {
             this.video.readyState >= 2 // video has data
           ) {
             this.isReady = true;
-            if (this.isRunning) this.predictWebcam();
             clearInterval(startPredictionLoop);
           }
         }, 100);
@@ -54,32 +41,36 @@ class Mediapipe {
   }
 
   async init() {
-    this.drawUtils = new DrawingUtils(this.canvasCtx);
-
+    this.drawUtils = new DrawingUtils(OCTX);
+    console.log("init begins")
     const vision = await FilesetResolver.forVisionTasks(
       "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
     );
-
-    this.handLandmarker = await HandLandmarker.createFromOptions(vision, {
-      baseOptions: {
-        modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`,
-        delegate: "GPU"
-      },
-      runningMode: "VIDEO",
-      numHands: 2
-    });
-    this.faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
-      baseOptions: {
-        modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task`,
-        delegate: "GPU"
-      },
-      outputFaceBlendshapes: true,
-      runningMode: "VIDEO",
-      numFaces: 1
-    });
+    
+    [this.handLandmarker, this.faceLandmarker] = await Promise.all([
+      HandLandmarker.createFromOptions(vision, {
+        baseOptions: {
+          modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`,
+          delegate: "GPU"
+        },
+        runningMode: "VIDEO",
+        numHands: 2
+      }),
+      FaceLandmarker.createFromOptions(vision, {
+        baseOptions: {
+          modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task`,
+          delegate: "GPU"
+        },
+        outputFaceBlendshapes: true,
+        runningMode: "VIDEO",
+        numFaces: 1
+      })
+    ])
   }
 
   predict() {
+    if(!this.isReady || !this.isRunning) return;
+
     if (this.video.lastVideoTime !== this.video.currentTime) {
       this.video.lastVideoTime = this.video.currentTime;
 
@@ -98,35 +89,19 @@ class Mediapipe {
     if (this.debugMode) {
       this.drawDebug();
     }
-
-    if (this.isRunning) {
-      window.requestAnimationFrame(this.predict.bind(this));
-    }
   }
 
   toggleRunning() {
     if (!this.isReady) {
-      showErrorNotification(
-        "Mediapipe is not ready yet.",
-        "Please try again in a few seconds."
-      );
+      showErrorNotification("Mediapipe is not ready yet.","Please try again in a few seconds.");
       return;
     }
-
-    if (this.isRunning) {
-      this.canvas.hidden = true;
-      this.isRunning = false;
-    } else {
-      this.canvas.hidden = false;
-      this.isRunning = true;
-      this.predict();
-    }
+    this.isRunning = !this.isRunning;
   }
 
   drawDebug() {
-    this.canvasCtx.save();
-    this.canvasCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
+    OCTX.save();
+    OCTX.scale(0.5, 0.5);
     for (const hand of this.handResults) {
       this.drawUtils.drawConnectors(
         hand.landmarks,
@@ -160,13 +135,13 @@ class Mediapipe {
       );
     }
 
-    this.canvasCtx.restore();
+    OCTX.restore();
   }
 
   processResults(handResults, faceResults) {
     let transformLandmark = (lm) => ({
       x: 1 - lm.x,
-      y: lm.y + 0.04,
+      y: lm.y,
       z: lm.z
     });
 
@@ -223,7 +198,3 @@ class Mediapipe {
     this.handResults = newHands;
   }
 }
-
-window.mediapipe = new Mediapipe(webcam);
-
-export { Mediapipe }

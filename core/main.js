@@ -2,6 +2,7 @@ import { drawVideoToCover } from "./modules/canvasUtils.js";
 import { CodeArea } from "./modules/components/codeArea.js";
 import { SlideDeck } from "./modules/components/slides.js";
 import { initKeyHandler } from "./modules/keyEvent.js";
+import { Mediapipe } from "./modules/mediapipe.js";
 import { Pen } from "./modules/pen.js";
 import { SceneManager } from "./modules/scene.js";
 import { fetchText } from "./modules/utils.js";
@@ -40,6 +41,7 @@ const codeArea = new CodeArea(DOM.textarea);
 const sceneManager = new SceneManager(DOM.canvas3D, codeArea);
 const slideDeck = new SlideDeck();
 const pen = new Pen();
+const mediapipe = new Mediapipe(DOM.webcam)
 
 function resizeStage() {
   const dpr = window.devicePixelRatio;
@@ -59,7 +61,7 @@ async function init() {
   resizeStage();
   
   // Collaboration
-  initKeyHandler({codeArea, sceneManager, slideDeck, pen});
+  initKeyHandler({codeArea, sceneManager, slideDeck, pen, mediapipe});
   await setupYjsClient(DOM.webcam);
   yjsBindCodeArea(codeArea);
   yjsBindPen(pen)
@@ -74,6 +76,7 @@ async function init() {
     const projectName = e.target.dataset.project;
     if (projectName) loadProject(projectName);
   });
+  
   // App
   requestAnimationFrame(animate);
 }
@@ -111,6 +114,7 @@ function animate() {
 
   drawVideoToCover(ctx, backgroundVideo, WIDTH, HEIGHT, !hasRemoteVideo);
 
+  mediapipe.predict();
   codeArea.update();
   slideDeck.draw(ctx);
   pen.draw(ctx);

@@ -50,7 +50,7 @@ function handleKeyUp(e) {
 }
 
 function handleCommand(key) {
-  const { codeArea, slideDeck, sceneManager, pen } = appContext;
+  const { codeArea, slideDeck, sceneManager, pen, mediapipe } = appContext;
 
   if (key >= "0" && key <= "9") {
     sceneManager.load(key);
@@ -75,6 +75,9 @@ function handleCommand(key) {
 
     // Scene commands
     case "s": sceneManager.toggleVisible(); break;
+
+    // Mediapipe + tracking commands
+    case "M": mediapipe.toggleRunning(); break;
 
     // Pen commands
     case ",": pen.width *= 0.707; break;
