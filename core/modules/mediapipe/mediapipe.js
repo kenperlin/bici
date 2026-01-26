@@ -12,7 +12,7 @@ export class Mediapipe {
     this.video = video;
 
     this.isReady = false;
-    this.isRunning = false;
+    this.isRunning = true;
     this.debugMode = true;
 
     this.handLandmarker = null;

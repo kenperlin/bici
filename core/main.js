@@ -14,6 +14,7 @@ import {
   yjsBindCodeArea,
   yjsBindPen
 } from "./modules/yjs/yjs.js";
+import { trackingUpdate } from "./modules/mediapipe/tracking.js";
 
 const DOM = {
     projectSelector: document.getElementById("project-selector"),
@@ -116,6 +117,7 @@ function animate() {
   drawVideoToCover(ctx, backgroundVideo, WIDTH, HEIGHT, !hasRemoteVideo);
 
   mediapipe.predict();
+  trackingUpdate(mediapipe);
   codeArea.update();
   slideDeck.draw(ctx);
   pen.draw(ctx);

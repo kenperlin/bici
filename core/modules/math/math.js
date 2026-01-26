@@ -12,6 +12,8 @@ export let normalize = v => { let s = norm(v); return v.length==3 ? [ v[0]/s,v[1
 export let resize = (v,s) => v.length==2 ? [ s*v[0], s*v[1] ] : [s*v[0], s*v[1], s*v[2] ];
 export let round = t => (1000 * t >> 0) / 1000;
 export let subtract = (a,b) => { let v = []; for (let i=0 ; i<a.length ; i++) v.push(a[i] - b[i]); return v; }
+export let clamp = (t, min, max) => Math.max(min, Math.min(max, t));
+export let smoothstep = (x, low, high) => { x = clamp((x - low) / (high - low), 0, 1); return t * t * (3 - 2 * t); }
 
 // MATRIX PRIMITIVES
 
