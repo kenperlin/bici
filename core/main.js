@@ -126,7 +126,7 @@ function animate() {
 
   mediapipe.predict();
   trackingUpdate(mediapipe);
-  updateDomFocus(codeArea, pen)
+  updateDomFocus(codeArea, pen, sceneManager)
 
   requestAnimationFrame(animate);
 }

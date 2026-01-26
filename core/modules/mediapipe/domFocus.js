@@ -21,7 +21,7 @@ export function initializeDomTracking(context) {
   ];
 }
 
-export function updateDomFocus(codeArea, pen) {
+export function updateDomFocus(codeArea, pen, sceneManager) {
   evalDomDistances(state.headX, state.headY);
 
   const closest = state.domDistances[0];
@@ -29,6 +29,7 @@ export function updateDomFocus(codeArea, pen) {
 
   const focusThreshold = 600 * (Math.max(0.5, closest.weight) - 0.5); // Softness of selection proportional to confidence
 
+  // Focus on CodeArea if looked at, hovered over, or spotlighted
   const isCodeLookedAt =
     closest.element &&
     closest.element === codeArea.element &&
@@ -39,15 +40,27 @@ export function updateDomFocus(codeArea, pen) {
 
   const shouldFocusCode = isCodeLookedAt || isCodeSpotlighted || isCodeHovered;
 
-  if(shouldFocusCode && document.activeElement !== codeArea.element) {
-    const codeIndex = state.domDistances.findIndex(e => e.element === codeArea.element)
+  if (shouldFocusCode && document.activeElement !== codeArea.element) {
+    const codeIndex = state.domDistances.findIndex(
+      (e) => e.element === codeArea.element
+    );
     state.domFocusIndex = codeIndex;
     codeArea.element.focus();
-  } else if(!shouldFocusCode && document.activeElement === codeArea.element) {
+  } else if (!shouldFocusCode && document.activeElement === codeArea.element) {
     state.domFocusIndex = null;
     codeArea.element.blur();
   }
-  
+
+  // A LONG BLINK ACTS AS A CLICK AT THE HEAD GAZE POSITION.
+  if (state.eyeOpen >= 0.4 && state.blinkTime > 0) {
+    let blinkDuration = Date.now() / 1000 - state.blinkTime;
+    if (blinkDuration > 0.2) {
+      sceneManager.canvas.onDown(state.headX, state.headY, 0, "eye");
+      sceneManager.canvas.onUp(state.headX, state.headY, 0, "eye");
+    }
+    state.blinkTime = -1;
+  }
+
   drawDomSelection();
 }
 
@@ -76,7 +89,6 @@ function evalDomDistances(x, y) {
 }
 
 function getSignedDistanceRect(x, y, rect) {
-  console.log(rect)
   const right = rect.left + rect.width;
   const bottom = rect.top + rect.height;
 

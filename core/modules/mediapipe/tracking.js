@@ -51,21 +51,10 @@ export function trackingUpdate(mediapipe) {
    if (state.isSteady) {
       [state.headX, state.headY] = pcaFilter.filter(state.headX, state.headY);
    }
-   if (state.isLarge) {
-      state.headX = frameToRect(state.headX, canvas3D.getBoundingClientRect());
-      state.headY = frameToRect(state.headY, canvas3D.getBoundingClientRect());
-   }
-
-   // A LONG BLINK ACTS AS A CLICK AT THE HEAD GAZE POSITION.
-
-   if (state.eyeOpen >= .4 && state.blinkTime > 0) {
-      let blinkDuration = Date.now() / 1000 - state.blinkTime;
-      if (blinkDuration > .2) {
-         // canvas3D_down(state.headX, state.headY);
-         // canvas3D_up(state.headX, state.headY);
-      }
-      state.blinkTime = -1;
-   }
+   // if (state.isLarge) {
+   //    state.headX = frameToRect(state.headX, canvas3D.getBoundingClientRect());
+   //    state.headY = frameToRect(state.headY, canvas3D.getBoundingClientRect());
+   // }
 
    // gestureTracker.update(handResults)
    drawEyes();
