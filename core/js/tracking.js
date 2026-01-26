@@ -511,7 +511,8 @@ let trackingUpdate = () => {
             let b = fingerTip (i,1);
             let c = fingerTip (1-i,0);
             let d = fingerTip (1-i,1);
-	    let scale = 2 * norm([c.x-d.x,c.y-d.y,0]) / norm([a.x-b.x,a.y-b.y,0]);
+	    let scale = 3 * norm([c.x-d.x,c.y-d.y,0]) / norm([a.x-b.x,a.y-b.y,0]);
+            let e = { x: b.x+scale*(b.x-a.x), y: b.y+scale*(b.y-a.y) };
 
             octx.strokeStyle = '#ff00ff80';
             octx.lineCap = 'round';
@@ -519,8 +520,21 @@ let trackingUpdate = () => {
 
             octx.beginPath();
             octx.moveTo(b.x,b.y);
-            octx.lineTo(b.x+scale*(b.x-a.x),b.y+scale*(b.y-a.y));
+            octx.lineTo(e.x,e.y);
             octx.stroke();
+
+	    octx.fillStyle = 'white';
+	    octx.beginPath();
+	    octx.roundRect(e.x - 80, e.y - 60, 150, 120, 10, 10);
+	    octx.fill();
+	    octx.strokeStyle = 'black';
+	    octx.lineWidth = 3;
+	    octx.stroke();
+
+	    octx.fillStyle = 'black';
+	    octx.font = '40px Helvetica';
+	    octx.fillText('Some', e.x-57, e.y-10);
+	    octx.fillText('text', e.x-40, e.y+40);
 	 }
 
       // If both hands are gripping, create a rectangle between them.
