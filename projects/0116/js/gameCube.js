@@ -1,5 +1,5 @@
-import { cubeMesh, charMesh } from '/core/modules/shape.js'
-import { drawObj } from '/core/modules/webgl.js';
+import { cubeMesh, charMesh } from '/core/modules/webgl/shape.js'
+import { drawObj } from '/core/modules/webgl/webgl.js';
 
 export function GameCube(scene, labels) {
    let cube = cubeMesh();

@@ -1,7 +1,7 @@
-import { cubeMesh } from '/core/modules/shape.js'
-import { scale } from '/core/modules/math.js'
-import { addTexture, drawObj, setUniform } from '/core/modules/webgl.js';
-import * as Shader from '/core/modules/shader.js'
+import { cubeMesh } from '/core/modules/webgl/shape.js'
+import { scale } from '/core/modules/math/math.js'
+import { addTexture, drawObj, setUniform } from '/core/modules/webgl/webgl.js';
+import * as Shader from '/core/modules/webgl/shader.js'
 
 export function Scene(context) {
    this.context = context;

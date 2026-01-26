@@ -1,6 +1,6 @@
-import { fetchText } from "./utils.js";
-import { gl_start } from "./webgl.js";
-import { webrtcClient } from "./yjs/yjs.js";
+import { fetchText } from "../utils.js";
+import { gl_start } from "../webgl/webgl.js";
+import { webrtcClient } from "../yjs/yjs.js";
 
 
 export class SceneManager {

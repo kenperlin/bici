@@ -5,7 +5,7 @@ import {
   FilesetResolver,
   DrawingUtils
 } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0";
-import { showErrorNotification } from "./yjs/ui.js";
+import { showErrorNotification } from "../yjs/ui.js";
 
 export class Mediapipe {
   constructor(video) {

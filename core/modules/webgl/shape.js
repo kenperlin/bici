@@ -9,7 +9,7 @@ import {
   turnX,
   turnY,
   transform as xform
-} from "/core/modules/math.js";
+} from "/core/modules/math/math.js";
 
 export const squareData = [
   -1, -1, 0, 0, 0, 1, 0, 0, -1, 1, 0, 0, 0, 1, 0, 1, 1, -1, 0, 0, 0, 1, 1, 0, 1,

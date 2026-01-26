@@ -1,4 +1,4 @@
-import { Matrix } from '/core/modules/math.js'
+import { Matrix } from '/core/modules/math/math.js'
 
 export function Scene(context) {
    this.context = context;

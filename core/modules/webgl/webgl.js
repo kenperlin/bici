@@ -1,5 +1,5 @@
 import { defaultVertexShader, defaultFragmentShader } from './shader.js'
-import { mxm, identity, inverse, perspective } from '../../../core/modules/math.js'
+import { mxm, identity, inverse, perspective } from '../math/math.js'
 
 export const noiseCode = `
 vec3  _s(vec3 i) { return cos(5.*(i+5.*cos(5.*(i.yzx+5.*cos(5.*(i.zxy+5.*cos(5.*i))))))); }

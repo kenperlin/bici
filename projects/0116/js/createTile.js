@@ -1,5 +1,5 @@
-import { roundedBox, charMesh } from "/core/modules/shape.js";
-import { mxm, scale, move } from "/core/modules/math.js";
+import { roundedBox, charMesh } from "/core/modules/webgl/shape.js";
+import { mxm, scale, move } from "/core/modules/math/math.js";
 
 export let createTile = ch => {
    return [

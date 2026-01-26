@@ -1,4 +1,4 @@
-import { toggleHelp } from "./help.js";
+import { toggleHelp } from "./ui/help.js";
 import { webrtcClient } from "./yjs/yjs.js";
 
 let appContext = {};

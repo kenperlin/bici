@@ -1,5 +1,5 @@
-import { drawObj } from "/core/modules/webgl.js";
-import { ease, noise, mxm, move, turnY, scale } from "/core/modules/math.js"
+import { drawObj } from "/core/modules/webgl/webgl.js";
+import { ease, noise, mxm, move, turnY, scale } from "/core/modules/math/math.js"
 import { centeredText } from "/core/modules/canvasUtils.js";
 
 export function MatchGame(scene,U,M) {

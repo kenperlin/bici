@@ -1,5 +1,5 @@
 import { centeredText } from '../canvasUtils.js';
-import { M4 } from '../M4.js'
+import { M4 } from '../math/M4.js'
 
 export function addDiagramProperties (diagram) {
    let w  = diagram.width  = diagram.width  ?? 500;

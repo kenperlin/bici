@@ -1,4 +1,4 @@
-import * as NumberString from "../numberString.js";
+import * as NumberString from "../math/numberString.js";
 import { webrtcClient } from "../yjs/yjs.js";
 
 const offsetX = 20;

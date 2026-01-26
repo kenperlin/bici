@@ -1,11 +1,11 @@
 import { drawVideoToCover } from "./modules/canvasUtils.js";
-import { CodeArea } from "./modules/components/codeArea.js";
-import { SlideDeck } from "./modules/components/slides.js";
-import { displayHelp } from "./modules/help.js";
+import { CodeArea } from "./modules/ui/codeArea.js";
+import { SlideDeck } from "./modules/ui/slideDeck.js";
+import { displayHelp } from "./modules/ui/help.js";
 import { initKeyHandler } from "./modules/keyEvent.js";
-import { Mediapipe } from "./modules/mediapipe.js";
+import { Mediapipe } from "./modules/mediapipe/mediapipe.js";
 import { Pen } from "./modules/pen.js";
-import { SceneManager } from "./modules/scene.js";
+import { SceneManager } from "./modules/ui/scene.js";
 import { fetchText } from "./modules/utils.js";
 import {
   webrtcClient,
