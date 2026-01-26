@@ -218,6 +218,10 @@ webcam.update = () => {
          if (data[n+3] == 253)
 	    data[n] = data[n+1] = data[n+2] = 0;
 
+   if (! webcam.isWebcam)
+      for (let n = 0 ; n < data.length ; n++)
+         data[n] = 255;
+
    wctx.putImageData(imgData, 0,0);
 
    return ns > 20 ? {x: xs/ns, y: ys/ns} : null;
@@ -226,4 +230,5 @@ webcam.update = () => {
 webcam.A = 450;
 webcam.B = 157;
 webcam.T = Date.now();
+webcam.isWebcam = true;
 

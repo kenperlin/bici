@@ -2,6 +2,11 @@
 document.addEventListener('keydown', e => {
    if (document.activeElement == codeArea.getElement())
       return;
+
+   let scriptTextarea = document.getElementById('scriptInput');
+   if (scriptTextarea && document.activeElement === scriptTextarea)
+      return;
+
    if (e.key.indexOf('Arrow') == 0)
       e.preventDefault();
    keyDown(e.key);
@@ -11,6 +16,11 @@ document.addEventListener('keyup', e => {
    help.isSplash = false;
    if (document.activeElement == codeArea.getElement())
       return;
+
+   let scriptTextarea = document.getElementById('scriptInput');
+   if (scriptTextarea && document.activeElement === scriptTextarea)
+      return;
+
    if (e.key.indexOf('Arrow') == 0)
       e.preventDefault();
 
@@ -29,9 +39,9 @@ document.addEventListener('keyup', e => {
    if (typeof broadcastState === 'function') broadcastState();
 });
 
-midiDown = key => keyDown("            / m  ;       ".substring(key,key+1));
-//                         '|'|''|'|'|''|'|''|'|'|''
-midiUp   = key => window.keyUp("b1u2wc3s4p5D/,m.'; f g tT".substring(key,key+1));
+midiDown = key => window.keyDown("            / m  ;       ".substring(key,key+1));
+//                                '|'|''|'|'|''|'|''|'|'|''
+midiUp   = key => window.keyUp  ("b1u2wc3s4p5D/,m.'; f g tT".substring(key,key+1));
 
 let URLs = {
    'v': 'http://cs.nyu.edu/~perlin/video_links.html',
@@ -66,6 +76,13 @@ let keyDown = key => {
 
 window.keyUp = key => {
    let toggleCode = () => codeArea.setVisible(isCode = ! isCode);
+
+   let toggleScriptPanel = () => {
+      let textarea = document.getElementById('scriptInput');
+      if (!textarea || document.activeElement !== textarea) {
+         scriptPanel.toggle();
+      }
+   }
 
    if (isOpeningURL) {
       isOpeningURL = false;
@@ -139,6 +156,7 @@ window.keyUp = key => {
    case 'F' : tracking_frameHands = ! tracking_frameHands; break;
    case 'g' : webcam.grabImage(); break;
    case 'h' : help.isHelp = ! help.isHelp; break;
+   case 'H' : isSeparateHandAvatars = ! isSeparateHandAvatars; break;
    case 'i' : isInfo = ! isInfo; break;
    case 'j' : isJumpingToSlide = true; break;
    case 'l' : isLightPen = ! isLightPen; break;
@@ -158,9 +176,11 @@ window.keyUp = key => {
       tracking_debugMode = !tracking_debugMode;
       break;
    case 'w' : webcam.isWorld = ! webcam.isWorld; break;
+   case 'W' : webcam.isWebcam = ! webcam.isWebcam; break;
    case 'x' : navigator.clipboard.readText()
                        .then(text => console.log('Clipboard content:', text))
 		       .catch(err => {}); break;
+   case 'X' : toggleScriptPanel(); break;
    }
 }
 

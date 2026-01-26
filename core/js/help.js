@@ -3,7 +3,7 @@ let help = {
 
 display : ctx => {
 
-   let fs = fontSize * 1.38;
+   let fs = fontSize * 1.25;
 
    if (help.isSplash) {
       ctx.fillStyle = '#ffffff80';
@@ -45,6 +45,7 @@ e (+ key) Show src code in text editor.
 f Toggle floaters behind me.
 g Grab bg (enables transparency).
 h Toggle this help menu.
+H Toggle separate hand avatars.
 i Toggle show/hide slides.
 j (+ key) Jump to a particular slide.
 l Toggle lightpen (small blue object).
@@ -62,19 +63,21 @@ u Toggle UFO within blue-plate world.
 v Toggle if 3D view is tracking head.
 V Toggle head+hands tracking data.
 x Copy clipboard buffer to the console.
+X Toggle AI script panel.
 w Toggle world seen thru blue plate.
+W Toggle webcam video.
 \' Convert strokes to a sketch.
 , Make pen line thinner.
 . Make pen line thicker.
-[ Red pen.
-] Blue pen.
-\\ Black pen.
+[ Red pen
+] Blue pen
+\\ Black pen
 / Hold down to draw.
 ; Hold down to interact with a sketch.
-\u2193 Smaller text.
-\u2191 Larger text.
-\u2190 Previous slide.
-\u2192 Next slide.
+\u2193 Smaller text
+\u2191 Larger text
+\u2190 Previous slide
+\u2192 Next slide
 `.split('\n'),
 
 }

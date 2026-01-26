@@ -1,6 +1,8 @@
 function CodeArea(x,y) {
    let ey = 0, dial = 0;
 
+   let wasPinch = false;
+
    let codeArea = document.createElement('textArea');
    document.body.appendChild(codeArea);
    codeArea.spellcheck = false;
@@ -14,33 +16,33 @@ function CodeArea(x,y) {
 
    codeArea.style.overflowY = 'scroll';
    codeArea.addEventListener('mousemove', event => {
-      if (window.isShift) {
-         if (ey && Math.abs(dial += event.clientY-ey) >= 3) {
-	    let i1 = codeArea.selectionStart;
-	    let s0 = numberString.findNumberString(codeArea.value, i1);
-	    if (s0) {
-	       let i0 = i1 - s0.length;
-	       let s1 = numberString.increment(s0, -Math.sign(dial));
-
-	       if (codeArea.value.charAt(i0-1) == ' ' && s0.charAt(0) != '-' && s1.charAt(0) == '-')
-	          i0--;
-	       if (s0.charAt(0) == '-' && s1.charAt(0) != '-')
-	          s1 = ' ' + s1;
-
-	       codeArea.value = codeArea.value.substring(0,i0) + s1 + codeArea.value.substring(i1);
-               codeArea.selectionStart = codeArea.selectionEnd = i0 + s1.length;
-
-	       // Trigger input event to sync with Yjs
-	       codeArea.dispatchEvent(new Event('input', { bubbles: true }));
-
-	       if (this.callback)
-	          this.callback();
-            }
-	    dial = 0;
-	 }
-         ey = event.clientY;
-      }
+      if (window.isShift)
+         slideValue(event.clientX, event.clientY);
    });
+   let slideValue = (x,y) => {
+      if (ey && Math.abs(dial += y-ey) >= 3) {
+         let i1 = codeArea.selectionStart;
+         let s0 = numberString.findNumberString(codeArea.value, i1+1);
+         if (s0) {
+            let i0 = i1+1 - s0.length;
+            let s1 = numberString.increment(s0, -Math.sign(dial));
+
+            if (codeArea.value.charAt(i0-1) == ' ' && s0.charAt(0) != '-' && s1.charAt(0) == '-')
+               i0--;
+
+            codeArea.value = codeArea.value.substring(0,i0) + s1 + codeArea.value.substring(i1+1);
+            codeArea.selectionStart = codeArea.selectionEnd = i0 + s1.length - 1;
+
+            // Trigger input event to sync with Yjs
+            codeArea.dispatchEvent(new Event('input', { bubbles: true }));
+
+            if (this.callback)
+               this.callback();
+         }
+         dial = 0;
+      }
+      ey = y;
+   }
    codeArea.addEventListener('keydown', event => {
       if (event.key == 'Shift')
          window.isShift = true;
@@ -49,7 +51,7 @@ function CodeArea(x,y) {
       console.log(event.key);
       if (event.key == 'Shift') {
          window.isShift = false;
-	 ey = 0;
+         ey = 0;
       }
       if (this.callback && event.key == 'Meta') {
          window.isReloading = true;
@@ -60,13 +62,13 @@ function CodeArea(x,y) {
       if (event.key == 'Control') {
          let i0 = codeArea.selectionStart;
          let i1 = codeArea.selectionEnd;
-	 if (i0 < i1)
-	    try {
-	       let func = new Function('return ' + codeArea.value.substring(i0,i1));
-	       let result = '' + func();
-	       codeArea.value = codeArea.value.substring(0,i0)
-	                      + result
-			      + codeArea.value.substring(i1);
+         if (i0 < i1)
+            try {
+               let func = new Function('return ' + codeArea.value.substring(i0,i1));
+               let result = '' + func();
+               codeArea.value = codeArea.value.substring(0,i0)
+                              + result
+                              + codeArea.value.substring(i1);
                codeArea.selectionStart = codeArea.selectionEnd = i0 + result.length;
             } catch (e) { console.log('error:', e); }
       }
@@ -77,6 +79,20 @@ function CodeArea(x,y) {
    this.setVisible = isVisible => {
       this.isVisible = isVisible;
       codeArea.style.left = isVisible ? 20 : -2000;
+   }
+
+   this.pointToIndex = (x,y) => {
+      let s = codeArea.value, col = 0, row = 0, cw = 0.6*fontSize, ch = 1.15*fontSize;
+      for (let n = 0 ; n < s.length ; n++)
+         if (col*cw <= x-ox && row*ch <= y-oy && col*cw+cw > x-ox && row*ch+ch > y-oy)
+            return n;
+         else
+            switch (s.charAt(n)) {
+            case '\n': row++; col = 0; break;
+            case '\t': col += 8 - col % 8; break;
+            default  : col++; break;
+            }
+      return -1;
    }
 
    this.containsPoint = (x,y) => {
@@ -112,31 +128,40 @@ function CodeArea(x,y) {
       if (this.isVisible) {
          let highlightCharAt = (x,y,color) => {
             if (this.containsPoint(x,y)) {
-  	            octx.fillStyle = color;
+                      octx.fillStyle = color;
                fillOverlayRect(xToCol(x)>>0, yToRow(y)>>0, 1, 1);
             }
          }
 
          highlightCharAt(pen.x, pen.y, '#00000060');
 
+	 let isPinch = false;
          for (const h in gestureTracker.activeGestures) {
             const gesture = gestureTracker.activeGestures[h];
-            if(gesture?.id === "indexPinch") {
-	       let p = { x: gesture.state[h].x * screen.width,
+            if (gesture?.id === "indexPinch") {
+	       isPinch = true;
+               let p = { x: gesture.state[h].x * screen.width,
                          y: gesture.state[h].y * screen.height };
 
-	       if (isShadowAvatar())
-	          toShadowAvatar(p);
+               if (isShadowAvatar())
+                  toShadowAvatar(p);
 
                if(!this.containsPoint(p.x, p.y)) continue;
 
                let col = xToCol(p.x) - 1;
-               let row = yToRow(p.y) - .5;
+               let row = yToRow(p.y);
                octx.lineWidth = 2;
                octx.strokeStyle = 'black';
                drawOverlayRect(col>>0, row>>0, 1, 1);
+	       if (! wasPinch) {
+                  let index = this.pointToIndex(p.x, p.y);
+                  if (index >= 0)
+                     codeArea.selectionStart = codeArea.selectionEnd = index + 1;
+               }
+	       slideValue(p.x, p.y);
             }
          }
+	 wasPinch = isPinch;
       }
    }
 
@@ -220,8 +245,8 @@ function CodeArea(x,y) {
       let i = text.indexOf('let ' + name);
       if (i >= 0) {
          let j = i + 4 + name.length + 3;
-	 let k = text.indexOf(';', j);
-	 return text.substring(j, k);
+         let k = text.indexOf(';', j);
+         return text.substring(j, k);
       }
       return null;
    }
