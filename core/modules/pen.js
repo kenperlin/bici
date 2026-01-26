@@ -50,7 +50,6 @@ export function Pen() {
   this.clear = () => (this.strokes = []);
 
   this.draw = (ctx, lineWidth) => {
-
     ctx.save();
     ctx.lineCap = "round";
     if (highlightSketches && ss.xlo) {

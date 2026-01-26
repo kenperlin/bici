@@ -161,11 +161,24 @@ export function yjsBindPen(pen) {
   });
 
   // Set up callback to sync local pen changes to Yjs (only master will actually sync)
-  pen.setOnStrokesChanged(() => {
-    if (!isUpdatingFromYjs) {
-      syncPenStrokesToYjs();
-    }
-  });
+  let syncPenStrokesTimer = null;
+  pen.onStrokesChanged = () => {
+    if (isUpdatingFromYjs || !ypenStrokes || !webrtcClient.isMaster()) return;
+
+   // Throttle updates to avoid excessive syncing (sync immediately, then debounce)
+   if (syncPenStrokesTimer) clearTimeout(syncPenStrokesTimer);
+
+   const doSync = () => {
+      ydoc.transact(() => {
+         ypenStrokes.delete(0, ypenStrokes.length);
+         ypenStrokes.insert(0, pen.strokes);
+      });
+   };
+   doSync();
+
+   // Also schedule a final sync after 100ms to ensure we catch the last update
+   syncPenStrokesTimer = setTimeout(doSync, 100);
+  };
 }
 
 // Initialize Yjs for collaborative editing (called after room is joined)

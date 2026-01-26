@@ -57,10 +57,12 @@ function resizeStage() {
 
 async function init() {
   resizeStage();
-
+  
   // Collaboration
+  initKeyHandler({codeArea, sceneManager, slideDeck, pen});
   await setupYjsClient(DOM.webcam);
   yjsBindCodeArea(codeArea);
+  yjsBindPen(pen)
 
   // Event listeners
   window.addEventListener("resize", resizeStage);
@@ -72,8 +74,6 @@ async function init() {
     const projectName = e.target.dataset.project;
     if (projectName) loadProject(projectName);
   });
-  initKeyHandler({codeArea, sceneManager, slideDeck, pen});
-
   // App
   requestAnimationFrame(animate);
 }

@@ -64,31 +64,6 @@ if (webrtcClient) {
 let dragOwner = null;
 let moveOwner = null;
 
-// Helper to sync pen.strokes to Yjs (master only)
-let syncPenStrokesTimer = null;
-let syncPenStrokesToYjs = () => {
-   if (!ypenStrokes || !webrtcClient || !webrtcClient.isMaster()) return;
-
-   // Throttle updates to avoid excessive syncing (sync immediately, then debounce)
-   if (syncPenStrokesTimer) {
-      clearTimeout(syncPenStrokesTimer);
-   }
-
-   const doSync = () => {
-      ydoc.transact(() => {
-         // Clear and repopulate Yjs array with current pen.strokes
-         ypenStrokes.delete(0, ypenStrokes.length);
-         ypenStrokes.insert(0, pen.strokes);
-      });
-   };
-
-   // Sync immediately for responsiveness
-   doSync();
-
-   // Also schedule a final sync after 100ms to ensure we catch the last update
-   syncPenStrokesTimer = setTimeout(doSync, 100);
-};
-
 // Process actions (called by master when receiving actions from secondary clients)
 let processAction = (action, fromClientId) => {
    switch (action.type) {

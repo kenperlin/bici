@@ -37,14 +37,14 @@ function handleKeyUp(e) {
   if (e.key.startsWith("Arrow")) e.preventDefault();
 
   const key = e.key;
-  if (!webrtcClient.isMaster()) {
+  if (!webrtcClient?.isMaster()) {
     webrtcClient.sendAction({ type: "keyUp", key });
   }
 
   if (state.isAlt) handleAltCommand(key);
   else handleCommand(key);
 
-  if (webrtcClient.isMaster()) {
+  if (webrtcClient?.isMaster()) {
     // broadcast state
   }
 }
