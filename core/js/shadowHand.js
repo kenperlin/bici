@@ -72,7 +72,7 @@ let drawShadowHand = (ctx, hand, F, x=0, y=0, s=1, isDrawing=true) => {
 
    if (! isDrawing)
       return;
-
+/*
    // If pointing, draw a ray out of the index finger.
 
    if (shadowHandInfo[hand].gesture == 'point') {
@@ -87,7 +87,7 @@ let drawShadowHand = (ctx, hand, F, x=0, y=0, s=1, isDrawing=true) => {
          sctx.stroke();
       }
    }
-
+*/
    // Draw an opaque shadow of the hand to the shadow canvas.
 
    for (n = 1 ; n <= 20 ; n += 4) {

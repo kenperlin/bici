@@ -453,7 +453,8 @@ let trackingUpdate = () => {
          }
       }
 
-      let fingerTip = (hand, i) => toScreen(mediapipe.handResults[hand].landmarks[4*i+4], hand);
+      let fingerTip  = (hand, i) => toScreen(mediapipe.handResults[hand].landmarks[4*i+4], hand);
+      let fingerBase = (hand, i) => toScreen(mediapipe.handResults[hand].landmarks[4*i+1], hand);
 
       // If both hands are pinching, draw a line between them.
 
@@ -501,6 +502,27 @@ let trackingUpdate = () => {
 	    }
 	 }
 
+      // If one hand is pointing and the other is gripping, draw a variable length pointing ray.
+
+      for (let i = 0 ; i <= 1 ; i++)
+         if (shadowHandInfo[i].gesture == 'point' && shadowHandInfo[1-i].gesture == 'gripper') {
+
+            let a = fingerBase(i,1);
+            let b = fingerTip (i,1);
+            let c = fingerTip (1-i,0);
+            let d = fingerTip (1-i,1);
+	    let scale = 2 * norm([c.x-d.x,c.y-d.y,0]) / norm([a.x-b.x,a.y-b.y,0]);
+
+            octx.strokeStyle = '#ff00ff80';
+            octx.lineCap = 'round';
+            octx.lineWidth = 20;
+
+            octx.beginPath();
+            octx.moveTo(b.x,b.y);
+            octx.lineTo(b.x+scale*(b.x-a.x),b.y+scale*(b.y-a.y));
+            octx.stroke();
+	 }
+
       // If both hands are gripping, create a rectangle between them.
 
       if (shadowHandInfo[0].gesture == 'gripper' && shadowHandInfo[1].gesture == 'gripper') {
@@ -508,21 +530,12 @@ let trackingUpdate = () => {
          let p1 = fingerTip(0,1);
          let q0 = fingerTip(1,0);
          let q1 = fingerTip(1,1);
-	 octx.fillStyle = octx.strokeStyle = '#ff00ff40';
-	 octx.lineWidth = 10;
-/*
-	 octx.beginPath();
-	 octx.moveTo(p0.x,p0.y);
-	 octx.lineTo(p1.x,p1.y);
-	 octx.lineTo(q1.x,q1.y);
-	 octx.lineTo(q0.x,q0.y);
-	 octx.lineTo(p0.x,p0.y);
-	 octx.fill();
-	 octx.stroke();
-*/
 	 let x0 = p0.x + p1.x >> 1, x1 = q0.x + q1.x >> 1;
 	 let y0 = p1.y + q1.y >> 1, y1 = p0.y + q0.y >> 1;
-	 octx.fillRect(x0,y0,x1-x0,y1-y0);
+
+	 octx.fillStyle = octx.strokeStyle = '#ff00ff40';
+	 octx.lineWidth = 10;
+	 octx.fillRect  (x0,y0,x1-x0,y1-y0);
 	 octx.strokeRect(x0,y0,x1-x0,y1-y0);
       }
    }
