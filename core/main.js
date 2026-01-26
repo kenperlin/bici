@@ -1,6 +1,7 @@
 import { drawVideoToCover } from "./modules/canvasUtils.js";
 import { CodeArea } from "./modules/components/codeArea.js";
 import { SlideDeck } from "./modules/components/slides.js";
+import { displayHelp } from "./modules/help.js";
 import { initKeyHandler } from "./modules/keyEvent.js";
 import { Mediapipe } from "./modules/mediapipe.js";
 import { Pen } from "./modules/pen.js";
@@ -119,6 +120,7 @@ function animate() {
   slideDeck.draw(ctx);
   pen.draw(ctx);
   sceneManager.update();
+  displayHelp(ctx, codeArea.fontSize)
 
   requestAnimationFrame(animate);
 }

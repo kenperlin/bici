@@ -99,6 +99,10 @@ export class Mediapipe {
     this.isRunning = !this.isRunning;
   }
 
+  toggleDebug() {
+    this.debugMode = !this.debugMode;
+  }
+
   drawDebug() {
     OCTX.save();
     OCTX.scale(0.5, 0.5);
