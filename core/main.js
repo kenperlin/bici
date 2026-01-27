@@ -33,8 +33,7 @@ const DOM = {
 const ctx = DOM.canvas2D.getContext("2d");
 const octx = DOM.ocanvas.getContext("2d");
 
-// Expose window drawing globally
-window.CTX = ctx;
+// Expose window overlay drawing globally
 window.OCTX = octx;
 
 window.WIDTH = window.innerWidth;
@@ -63,9 +62,9 @@ async function init() {
   resizeStage();
   initMediapipe();
   initDomTracking({codeArea, sceneManager, slideDeck});
+  initKeyHandler({codeArea, sceneManager, slideDeck, pen});
   
   // Collaboration
-  initKeyHandler({codeArea, sceneManager, slideDeck, pen});
   await setupYjsClient(DOM.webcam);
   yjsBindCodeArea(codeArea);
   yjsBindPen(pen)
@@ -125,7 +124,7 @@ function animate() {
   displayHelp(ctx, codeArea.fontSize)
 
   mediapipePredict(DOM.webcam);
-  if(mediapipeState.isRunning) {
+  if(mediapipeState.isReady && mediapipeState.isRunning) {
     trackingUpdate();
     updateDomFocus(codeArea, pen, sceneManager)
   }

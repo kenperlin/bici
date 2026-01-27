@@ -19,9 +19,7 @@ export const state = {
   domFocusIndex: null,
   spotlightElement: null,
 
-  avatarX: 0,
-  avatarY: 0,
-  avatarScale: 0.3,
+  globalAvatar: {x: 0, y: 0, s: 1},
   handAvatar: [
     { x: 0, y: 0, s: 1 },
     { x: 0, y: 0, s: 1 }
@@ -35,10 +33,10 @@ export const state = {
 
   isShadowAvatar: () =>
     state.isSeparateHandAvatars ||
-    (state.avatarX >= 100 &&
-      state.avatarX < WIDTH - 100 &&
-      state.avatarY >= 100 &&
-      state.avatarY < HEIGHT - 100),
+    (state.globalAvatar.x >= 100 &&
+      state.globalAvatar.x < WIDTH - 100 &&
+      state.globalAvatar.y >= 100 &&
+      state.globalAvatar.y < HEIGHT - 100),
 
   handSeparation: null,
 

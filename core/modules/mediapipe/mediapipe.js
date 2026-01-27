@@ -11,7 +11,8 @@ let handLandmarker;
 let faceLandmarker;
 
 export const state = {
-  isRunning: false,
+  isReady: false,
+  isRunning: true,
   debugMode: false,
 
   handResults: [],
@@ -46,10 +47,12 @@ export async function initMediapipe() {
       numFaces: 1
     })
   ]);
+
+  state.isReady = true;
 }
 
 export async function mediapipePredict(video) {
-  if (!state.isRunning || video.readyState < 2) return;
+  if (!state.isReady || !state.isRunning || video.readyState < 2) return;
 
   if (video.lastVideoTime !== video.currentTime) {
     video.lastVideoTime = video.currentTime;

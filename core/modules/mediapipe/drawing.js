@@ -36,7 +36,7 @@ export function drawHands(handResults) {
          const fingerPt = hand.landmarks[4 + 4 * fingerNum];
          const screenFingerPt = toScreen(fingerPt, currentHand);
          
-         let radius = 25 * zScale(fingerPt.z / WIDTH);
+         let radius = 15 * zScale(fingerPt.z);
          if (state.isObvious) {
             switch (fingerNum) {
                case 0: OCTX.fillStyle = '#ff000080'; break;
@@ -122,6 +122,7 @@ export function drawDomSelection() {
 }
 
 export function drawEyes() {
+   OCTX.save();
   if (state.isObvious)
     for (let eye = -1 ; eye <= 1 ; eye += 2) {
         OCTX.fillStyle = state.eyeOpen < .4 ? '#00000080' : '#ffffff40';
@@ -157,38 +158,40 @@ export function drawEyes() {
         OCTX.fillStyle = '#00000060';
         OCTX.lineWidth = 2;
         let h = state.eyeOpen > .5 ? 40 : 10;
+        const s = state.globalAvatar.s;
         OCTX.lineWidth = 4;
 
         let tilt = Math.atan2(state.headMatrix[4], state.headMatrix[5]);
-        OCTX.translate(state.avatarX, state.avatarY);
+        OCTX.translate(state.globalAvatar.x, state.globalAvatar.y);
         OCTX.rotate(tilt);
 
         OCTX.beginPath();
-        OCTX.ellipse(0, 0, state.avatarScale * 125, state.avatarScale * 175, 0, 0, 2*Math.PI);
+        OCTX.ellipse(0, 0, s * 125, s * 175, 0, 0, 2*Math.PI);
         OCTX.stroke();
 
         let theta = Math.PI   * (state.headX - WIDTH/2) / WIDTH;
         let phi   = Math.PI/2 * (state.headY - HEIGHT/2) / HEIGHT;
-        let dx = 40 * Math.sin(theta) * state.avatarScale;
-        let dy = 55 * Math.sin(phi) * state.avatarScale;
+        let dx = 40 * Math.sin(theta) * s;
+        let dy = 55 * Math.sin(phi) * s;
         OCTX.beginPath();
-        OCTX.ellipse(dx - 55*state.avatarScale, dy - 10*state.avatarScale, 40*state.avatarScale, 35*state.avatarScale*state.eyeOpen, 0, 0, 2*Math.PI);
-        OCTX.ellipse(dx + 55*state.avatarScale, dy - 10*state.avatarScale, 40*state.avatarScale, 35*state.avatarScale*state.eyeOpen, 0, 0, 2*Math.PI);
+        OCTX.ellipse(dx - 55*s, dy - 10*s, 40*s, 35*s*state.eyeOpen, 0, 0, 2*Math.PI);
+        OCTX.ellipse(dx + 55*s, dy - 10*s, 40*s, 35*s*state.eyeOpen, 0, 0, 2*Math.PI);
         OCTX.fill();
 
         OCTX.rotate(-tilt);
-        OCTX.translate(-state.avatarX, -state.avatarY);
+        OCTX.translate(-state.globalAvatar.x, -state.globalAvatar.y);
     }
   }
+   OCTX.restore();
 }
 
-export function drawShadowHand(ctx, hand, F, x=0, y=0, s=1, isDrawing=true) {
-
+export function drawShadowHand(ctx, hand, F, avatarInfo, isDrawing=true) {
+   const { x, y, s } = avatarInfo
    // Behind the scenes, create a separate shadow canvas.
 
    if (! ctx.shadowCanvas) {
       ctx.shadowCanvas = document.createElement('canvas');
-      document.body.appendChild(ctx.shadowCanvas);
+      // document.body.appendChild(ctx.shadowCanvas);
       // ctx.shadowCanvas.style = '{position:absolute;left:-2000px}';
       ctx.shadowCanvas.width = ctx.canvas.width;
       ctx.shadowCanvas.height = ctx.canvas.height;

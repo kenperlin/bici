@@ -56,26 +56,29 @@ export function trackingUpdate() {
    // }
 
    // gestureTracker.update(handResults)
+
    drawEyes();
 
    if (!state.isShadowAvatar())
       drawHands(handResults);
 
    if (state.isSeparateHandAvatars) {
-      for (let hand = 0 ; hand <= 1 ; hand++) {
-         if (handResults[hand]) {
-            drawShadowHand(OCTX, hand, handResults[hand].landmarks, state.handAvatar[hand].x,
-                                                                              state.handAvatar[hand].y,
-                                                                              state.handAvatar[hand].s);
-            if (state.shadowHandInfo[hand].gesture == 'fist') {
-               state.handAvatar[hand].x = state.shadowHandInfo[hand].x * (1 - state.handAvatar[hand].s);
-               state.handAvatar[hand].y = state.shadowHandInfo[hand].y * (1 - state.handAvatar[hand].s);
-               state.handAvatar[hand].s = .5 * state.handAvatar[hand].s + 
-	                            .5 * Math.max(.2, Math.min(1, (35 - state.shadowHandInfo[hand].s) / 15));
-               if (state.handAvatar[hand].s == 1)
-                  state.handAvatar[hand].x = state.handAvatar[hand].y = 0;
-            }
-         }
+      for (const hand of handResults) {
+        const h = hand.handedness;
+        drawShadowHand(OCTX, h, hand.landmarks, state.handAvatar[h]);
+        
+        if (state.shadowHandInfo[h].gesture == "fist") {
+          state.handAvatar[h].x =
+            state.shadowHandInfo[h].x * (1 - state.handAvatar[h].s);
+          state.handAvatar[h].y =
+            state.shadowHandInfo[h].y * (1 - state.handAvatar[h].s);
+          state.handAvatar[h].s =
+            0.5 * state.handAvatar[h].s +
+            0.5 *
+              Math.max(0.2, Math.min(1, (35 - state.shadowHandInfo[h].s) / 15));
+          if (state.handAvatar[h].s == 1)
+            state.handAvatar[h].x = state.handAvatar[h].y = 0;
+        }
       }
 
       let fingerTip = (hand, i) => toScreen(handResults[hand].landmarks[4*i+4], hand);
@@ -157,8 +160,8 @@ export function trackingUpdate() {
       for (let hand = 0 ; hand <= 1 ; hand++)
          if (handResults[hand]) {
             drawShadowHand(OCTX, hand, handResults[hand].landmarks,
-                                       state.avatarX - state.avatarScale * WIDTH/2,
-                                       state.avatarY - state.avatarScale * HEIGHT/2, state.avatarScale, state.isShadowAvatar());
+                                       {x: state.globalAvatar.x - state.globalAvatar.s * WIDTH/2,
+                                       y: state.globalAvatar.y - state.globalAvatar.s * HEIGHT/2, s: state.globalAvatar.s}, state.isShadowAvatar());
             if (state.shadowHandInfo[hand].gesture == 'fist') {
                lp[hand] = handResults[hand].landmarks[0];
 	       let closed = 1 / state.shadowHandInfo[hand].open;
@@ -168,8 +171,8 @@ export function trackingUpdate() {
             }
          }
       if (w) {
-         state.avatarX = x / w;
-         state.avatarY = y / w - 300;
+         state.globalAvatar.x = x / w;
+         state.globalAvatar.y = y / w - 300;
       }
 
       // Use change in distance between the two fists to rescale the shadow avatar.
@@ -178,12 +181,13 @@ export function trackingUpdate() {
          let x = lp[1].x - lp[0].x, y = lp[1].y - lp[0].y;
          let new_hand_separation = Math.sqrt(x * x + y * y);
          if (state.hand_separation)
-            state.avatarScale *= new_hand_separation / state.hand_separation;
+            state.globalAvatar.s *= new_hand_separation / state.hand_separation;
          state.hand_separation = new_hand_separation;
       }
       else
          state.hand_separation = undefined;
    }
+  OCTX.restore();
 }
 
 function initializeGestureTracking() {
