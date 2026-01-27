@@ -2,6 +2,7 @@ import { add, clamp, cross, dot, mix, norm, normalize, resize, subtract } from "
 import { LowPassFilter, PCAFilter } from "./filter.js";
 import { state } from "./trackingState.js";
 import { drawEyes, drawHands, drawShadowHand } from "./drawing.js";
+import { state as mediapipeState } from "./mediapipe.js";
 import { frameToRect, toScreen } from "./mapping.js";
 
 const pcaFilter = new PCAFilter();
@@ -9,10 +10,8 @@ const lowPassFilter = new LowPassFilter(2/3);
 
 let pointToArray = p => [ p.x, p.y, p.z ];
 
-export function trackingUpdate(mediapipe) {
-   if (!mediapipe.isRunning) return;
-   
-   const { handResults, faceResults } = mediapipe;
+export function trackingUpdate() {
+   const { handResults, faceResults } = mediapipeState;
 
    if(faceResults.length) {
       computeHeadMatrix(pointToArray(faceResults[352]),

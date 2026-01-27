@@ -1,4 +1,6 @@
 import { toggleHelp } from "./ui/help.js";
+import { state as trackingState } from "./mediapipe/trackingState.js";
+import { state as mediapipeState } from "./mediapipe/mediapipe.js";
 import { webrtcClient } from "./yjs/yjs.js";
 
 let appContext = {};
@@ -51,7 +53,7 @@ function handleKeyUp(e) {
 }
 
 function handleCommand(key) {
-  const { codeArea, slideDeck, sceneManager, pen, mediapipe } = appContext;
+  const { codeArea, slideDeck, sceneManager, pen } = appContext;
 
   if (key >= "0" && key <= "9") {
     sceneManager.load(key);
@@ -78,8 +80,14 @@ function handleCommand(key) {
     case "s": sceneManager.toggleVisible(); break;
 
     // Mediapipe + tracking commands
-    case "M": mediapipe.toggleRunning(); break;
-    case "V": mediapipe.toggleDebug(); break;
+    case "M": mediapipeState.toggleRunning(); break;
+    case "V": 
+      mediapipeState.toggleDebug();
+      trackingState.toggleDebug();
+      break;
+    case "F": trackingState.frameHands = !trackingState.frameHands; break;
+    case "L": trackingState.isLarge = !trackingState.isLarge; break;
+    case "N": trackingState.isObvious = !trackingState.isObvious; break;
 
     // Pen commands
     case ",": pen.width *= 0.707; break;
@@ -92,20 +100,3 @@ function handleCommand(key) {
     case "h": toggleHelp(); break;
   }
 }
-window.keyUp = (key) => {
-  switch (key) {
-    case "F":
-      tracking_frameHands = !tracking_frameHands;
-      break;
-    case "L":
-      tracking_isLarge = !tracking_isLarge;
-      break;
-    case "N":
-      tracking_isObvious = !tracking_isObvious;
-      break;
-    case "V":
-      mediapipe.debugMode = !mediapipe.debugMode;
-      tracking_debugMode = !tracking_debugMode;
-      break;
-  }
-};

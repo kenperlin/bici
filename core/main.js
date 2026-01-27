@@ -3,7 +3,7 @@ import { CodeArea } from "./modules/ui/codeArea.js";
 import { SlideDeck } from "./modules/ui/slideDeck.js";
 import { displayHelp } from "./modules/ui/help.js";
 import { initKeyHandler } from "./modules/keyEvent.js";
-import { Mediapipe } from "./modules/mediapipe/mediapipe.js";
+import { initMediapipe, mediapipePredict, state as mediapipeState } from "./modules/mediapipe/mediapipe.js";
 import { Pen } from "./modules/pen.js";
 import { SceneManager } from "./modules/ui/scene.js";
 import { fetchText } from "./modules/utils.js";
@@ -15,7 +15,7 @@ import {
   yjsBindPen
 } from "./modules/yjs/yjs.js";
 import { trackingUpdate } from "./modules/mediapipe/tracking.js";
-import { initializeDomTracking, updateDomFocus } from "./modules/mediapipe/domFocus.js";
+import { initDomTracking, updateDomFocus } from "./modules/mediapipe/domFocus.js";
 
 const DOM = {
     projectSelector: document.getElementById("project-selector"),
@@ -44,7 +44,6 @@ const codeArea = new CodeArea(DOM.textarea);
 const sceneManager = new SceneManager(DOM.canvas3D, codeArea);
 const slideDeck = new SlideDeck();
 const pen = new Pen();
-const mediapipe = new Mediapipe(DOM.webcam)
 
 function resizeStage() {
   window.DPR = window.devicePixelRatio;
@@ -62,10 +61,11 @@ function resizeStage() {
 
 async function init() {
   resizeStage();
-  initializeDomTracking({codeArea, sceneManager, slideDeck});
+  initMediapipe();
+  initDomTracking({codeArea, sceneManager, slideDeck});
   
   // Collaboration
-  initKeyHandler({codeArea, sceneManager, slideDeck, pen, mediapipe});
+  initKeyHandler({codeArea, sceneManager, slideDeck, pen});
   await setupYjsClient(DOM.webcam);
   yjsBindCodeArea(codeArea);
   yjsBindPen(pen)
@@ -114,7 +114,7 @@ function animate() {
 
   // Video source is remote video if available, otherwise webcam
   let hasRemoteVideo = videoUI?.hasRemoteVideo();
-  let backgroundVideo = hasRemoteVideo ? videoUI.remoteVideo : webcam;
+  let backgroundVideo = hasRemoteVideo ? videoUI.remoteVideo : DOM.webcam;
 
   drawVideoToCover(ctx, backgroundVideo, WIDTH, HEIGHT, !hasRemoteVideo);
 
@@ -124,9 +124,11 @@ function animate() {
   sceneManager.update();
   displayHelp(ctx, codeArea.fontSize)
 
-  mediapipe.predict();
-  trackingUpdate(mediapipe);
-  updateDomFocus(codeArea, pen, sceneManager)
+  mediapipePredict(DOM.webcam);
+  if(mediapipeState.isRunning) {
+    trackingUpdate();
+    updateDomFocus(codeArea, pen, sceneManager)
+  }
 
   requestAnimationFrame(animate);
 }

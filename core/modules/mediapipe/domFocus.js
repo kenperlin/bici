@@ -1,7 +1,7 @@
 import { drawDomSelection } from "./drawing.js";
 import { state } from "./trackingState.js";
 
-export function initializeDomTracking(context) {
+export function initDomTracking(context) {
   const { codeArea, sceneManager, slideDeck } = context;
   state.domSources = [
     {

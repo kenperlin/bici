@@ -40,5 +40,9 @@ export const state = {
       state.avatarY >= 100 &&
       state.avatarY < HEIGHT - 100),
 
-  handSeparation: null
+  handSeparation: null,
+
+  toggleDebug: () => {
+    state.debugMode = !state.debugMode;
+  },
 };
