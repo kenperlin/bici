@@ -281,6 +281,19 @@ function ScriptPanel () {
                                     mxm(move(0,0.3+y,0),
                                     scale(y)),
                                     [red,green,.5]);"}
+
+            **For adding scale slider to the existing sliders:**
+            When the user asks to add/create slider {scale} or change radius or control the scale, respond with:
+                \`\`\`json
+                {
+                "action": "addScaleSlider
+                }
+
+                Example:
+                - "add a scale slider" → {"addScaleSlider": true}
+                - "create a scale slider" → {"addScaleSlider": true}
+                - "I want to control the scale" → {"addScaleSlider": true}
+                - "add slider for scale" → {"addScaleSlider": true}
             `;
             
             
