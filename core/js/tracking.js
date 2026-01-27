@@ -533,8 +533,8 @@ let trackingUpdate = () => {
 
 	    octx.fillStyle = 'black';
 	    octx.font = '40px Helvetica';
-	    octx.fillText('Some', e.x-57, e.y-10);
-	    octx.fillText('text', e.x-40, e.y+40);
+	    octx.fillText('text', e.x-40, e.y-10);
+	    octx.fillText('box' , e.x-40, e.y+40);
 	 }
 
       // If both hands are gripping, create a rectangle between them.
