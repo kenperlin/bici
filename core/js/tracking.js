@@ -442,7 +442,20 @@ let trackingUpdate = () => {
             drawShadowHand(octx, hand, mediapipe.handResults[hand].landmarks, handAvatar[hand].x,
                                                                               handAvatar[hand].y,
                                                                               handAvatar[hand].s);
-            if (shadowHandInfo[hand].gesture == 'fist') {
+            if (! isScalingHandAvatars) {
+	       if (shadowHandInfo[hand].gesture == 'frame') {
+	          let f = shadowHandInfo[hand].frame;
+                  handAvatar[1-hand].x = f.x;
+                  handAvatar[1-hand].y = f.y;
+                  handAvatar[1-hand].s = f.w / screen.width;
+	       }
+	       else {
+                  handAvatar[1-hand].x = 0;
+                  handAvatar[1-hand].y = 0;
+                  handAvatar[1-hand].s = 1;
+	       }
+            }
+            else if (shadowHandInfo[hand].gesture == 'fist') {
                handAvatar[hand].x = shadowHandInfo[hand].x * (1 - handAvatar[hand].s);
                handAvatar[hand].y = shadowHandInfo[hand].y * (1 - handAvatar[hand].s);
                handAvatar[hand].s = .5 * handAvatar[hand].s + 
@@ -594,7 +607,8 @@ let trackingIndex = 0, wasTracking = false, trackingInfo = 'let left=[],right=[]
 let headX = 100, headY = 100;
 let avatarX = 0, avatarY = 0;
 let handAvatar = [{x:0,y:0,s:1},{x:0,y:0,s:1}];
-let isSeparateHandAvatars = false;
+let isSeparateHandAvatars = true;
+let isScalingHandAvatars = false;
 let headMatrix = identity();
 let eyeOpen  = 1;
 let eyeGazeX = 0;

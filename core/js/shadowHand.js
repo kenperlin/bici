@@ -61,8 +61,22 @@ let drawShadowHand = (ctx, hand, F, x=0, y=0, s=1, isDrawing=true) => {
    if (D[0] < .1 && D[1] > .3 && Math.max(D[2],D[3],D[4]) < .3)
       shadowHandInfo[hand].gesture = 'point';
 
-   if (shadowHandInfo[hand].gesture == null && distance(4,8) / shadowHandInfo[hand].s < .002)
+   if ( shadowHandInfo[hand].gesture == null &&
+        distance(4,8) / shadowHandInfo[hand].s < .002 )
       shadowHandInfo[hand].gesture = 'pinch';
+
+   if ( shadowHandInfo[hand].gesture == null &&
+        Math.abs(F[4].y-F[2].y) > 3 * Math.abs(F[4].x-F[2].x) &&
+        Math.abs(F[8].x-F[5].x) > 3 * Math.abs(F[8].y-F[5].y) ) {
+      shadowHandInfo[hand].gesture = 'frame';
+      let a = toScreen(F[4], hand);
+      let b = toScreen(F[8], hand);
+      let w = Math.abs(b.x - a.x);
+      let h = w * screen.height / screen.width;
+      let x = Math.min(a.x,b.x);
+      let y = b.y - h;
+      shadowHandInfo[hand].frame = { x:x, y:y, w:w, h:h };
+   }
 
    if ( shadowHandInfo[hand].gesture == null &&
         D[0] > .1 &&
@@ -123,6 +137,14 @@ let drawShadowHand = (ctx, hand, F, x=0, y=0, s=1, isDrawing=true) => {
          sctx.lineTo(q.x,q.y);
          sctx.stroke();
       }
+   }
+
+   // If making a frame, show the frame.
+
+   if (shadowHandInfo[hand].gesture == 'frame') {
+      let f = shadowHandInfo[hand].frame;
+      sctx.fillStyle = '#ff00ff80';
+      sctx.fillRect(f.x, f.y, f.w, f.h);
    }
 
    // If pinching, show pinch point.
