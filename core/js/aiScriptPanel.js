@@ -263,10 +263,11 @@ function ScriptPanel () {
                 {
                 "action": "addObject",
                 "objectType": "sphere",
-                "code": "let sphere = Shape.sphereMesh(30,15); let y = 0.300;"
-                "drawCode": "drawObj(sphere, mxm(move(0,0.3+y,0),
-                  scale(y)),
-              [red,green,.5]);"
+                "code": "let sphere = Shape.sphereMesh(30,15);let y = 0.300;"
+                "drawCode": "drawObj(sphere, 
+                                    mxm(move(0,0.3+y,0),
+                                    scale(y)),
+                                    [red,green,.5]);"
                 }
                 \`\`\`
 
@@ -274,22 +275,22 @@ function ScriptPanel () {
                 - "add a sphere on the cube" → {"action": "addObject", "objectType": "sphere", 
                                 "code": 
                                     "let sphere = Shape.sphereMesh(30,15); 
-                                    let y = 0.300;
+                                    let scal = 0.500;
                                     let red = .500;
                                     let green = .500;", 
-                                "drawCode": "drawObj(sphere,
-                                    mxm(move(0,0.3+y,0),
-                                    scale(y)),
-                                    [red,green,.5]);"}
+                                    "drawCode": "drawObj(sphere, 
+                                                        mxm(move(0,0.3+scal,0),
+                                                        scale(scal)),
+                                                        [red,green,.5])"}
 
             **For adding scale slider to the existing sliders:**
-            When the user asks to add/create slider {scale} or change radius or control the scale, respond with:
-                \`\`\`json
-                {
-                "action": "addScaleSlider
-                }
+            \`\`\`json
+            {
+                "action": "addScaleSlider"
+            }
+            \`\`\`
 
-                Example:
+            Examples:
                 - "add a scale slider" → {"addScaleSlider": true}
                 - "create a scale slider" → {"addScaleSlider": true}
                 - "I want to control the scale" → {"addScaleSlider": true}
@@ -512,6 +513,7 @@ function ScriptPanel () {
                             }
                         }, 200);
                 } else {
+                    
                     window.dispatchEvent(new CustomEvent('sceneCommand', {
                         detail: commands
                     }));
