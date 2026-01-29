@@ -263,10 +263,10 @@ function ScriptPanel () {
                 {
                 "action": "addObject",
                 "objectType": "sphere",
-                "code": "let sphere = Shape.sphereMesh(30,15);let y = 0.300;"
+                "code": "let sphere = Shape.sphereMesh(30,15);let scal = 0.500; let red = 0.500; let green = 0.500;"
                 "drawCode": "drawObj(sphere, 
-                                    mxm(move(0,0.3+y,0),
-                                    scale(y)),
+                                    mxm(move(0,0.3+scal,0),
+                                    scale(scal)),
                                     [red,green,.5]);"
                 }
                 \`\`\`
