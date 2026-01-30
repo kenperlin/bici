@@ -144,7 +144,7 @@ function CodeArea(x,y) {
                          y: gesture.state[h].y * screen.height };
 
                if (isShadowAvatar())
-                  toShadowAvatar(p);
+                  toShadowAvatar(p, h);
 
                if(!this.containsPoint(p.x, p.y)) continue;
 
