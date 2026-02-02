@@ -3,7 +3,6 @@ import { ease, noise, mxm, move, turnY, scale } from "/core/modules/math/math.js
 import { centeredText } from "/core/modules/utils/canvasUtils.js";
 
 export function MatchGame(scene,U,M) {
-
    let label = ['A','B','C','D','E','F','G','H',
                 'A','B','C','D','E','F','G','H'];
    

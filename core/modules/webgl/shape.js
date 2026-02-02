@@ -33,6 +33,18 @@ export const cubeData = [
   1, 1, 1, 1, 1, 0, 0, 1, 1, 1, -1, 1, 1, 0, 0, 0, 1, 1, -1, -1, 1, 0, 0, 0, 0
 ];
 
+export const cubeVertices = [ 
+  [-1,-1,-1,1], [1,-1,-1,1], [-1,1,-1,1], [1,1,-1,1],
+  [-1,-1, 1,1], [1,-1, 1,1], [-1,1, 1,1], [1,1, 1,1] 
+];
+
+export const cubeEdges = [
+  [0,1], [2,3], [4,5], [6,7],
+  [0,2], [1,3], [4,6], [5,7],
+  [0,4], [1,5], [2,6], [3,7]
+];
+
+
 export function parametric(f, nu, nv, other) {
   let V = [];
   let g = (i, j) => V.push(f(i / nu, j / nv, other), i / nu, j / nv);
