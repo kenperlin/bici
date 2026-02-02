@@ -2,7 +2,6 @@ import { add, clamp, cross, dot, mix, norm, normalize, resize, subtract } from "
 import { LowPassFilter, PCAFilter } from "../utils/filter.js";
 import { trackingState as state, mediapipeState } from "../state.js";
 import { drawEyes, drawHands, drawShadowGesture, drawShadowHand } from "./drawing.js";
-import { toScreen } from "../utils/mapping.js";
 
 const pcaFilter = new PCAFilter();
 const lowPassFilter = new LowPassFilter(2 / 3);

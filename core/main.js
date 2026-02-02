@@ -14,9 +14,10 @@ import {
   yjsBindCodeArea,
   yjsBindPen
 } from "./modules/yjs/yjs.js";
-import { updateTracking } from "./modules/mediapipe/tracking/runtime.js";
+import { updateTracking } from "./modules/mediapipe/tracking/tracking.js";
 import { updateDomFocus } from "./modules/mediapipe/tracking/dom.js";
 import { mediapipeState } from "./modules/mediapipe/state.js";
+import { initGestureTracker, updateGesture } from "./modules/mediapipe/tracking/gesture.js";
 
 const DOM = {
   projectSelector: document.getElementById("project-selector"),
@@ -41,8 +42,8 @@ window.WIDTH = window.innerWidth;
 window.HEIGHT = window.innerHeight;
 
 const codeArea = new CodeArea(DOM.textarea);
-const sceneManager = new SceneManager(DOM.canvas3D, codeArea);
 const slideDeck = new SlideDeck();
+const sceneManager = new SceneManager(DOM.canvas3D, codeArea, slideDeck);
 const pen = new Pen();
 
 function resizeStage() {
@@ -62,6 +63,7 @@ function resizeStage() {
 async function init() {
   resizeStage();
   initMediapipe();
+  initGestureTracker(sceneManager);
   initKeyHandler({ codeArea, sceneManager, slideDeck, pen });
 
   // Collaboration
@@ -92,8 +94,7 @@ async function loadProject(name) {
     await slideDeck.init(name, slidesList);
   }
 
-  // pass necessary components for scene to access through context
-  sceneManager.setProject(name, {});
+  sceneManager.projectName = name;
   await sceneManager.load(1);
 
   DOM.projectLabel.textContent = name;
@@ -126,7 +127,8 @@ function animate() {
   mediapipePredict(DOM.webcam);
   if (mediapipeState.isReady && mediapipeState.isRunning) {
     updateTracking();
-    updateDomFocus({ codeArea, sceneManager, slideDeck, pen });
+    updateGesture();
+    updateDomFocus(sceneManager, pen);
   }
 
   requestAnimationFrame(animate);

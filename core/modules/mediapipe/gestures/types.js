@@ -1,3 +1,5 @@
+import { norm, subtract } from "../../math/math.js";
+
 export class HandGesture {
   constructor(id, activationThreshold = 1, activeCooldown = 33, conditionFn) {
     this.id = id;

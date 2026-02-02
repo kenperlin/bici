@@ -25,7 +25,6 @@ export const trackingState = {
 
   debugMode: false,
 
-  domSources: [],
   domDistances: [],
   domFocusIndex: null,
   spotlightElement: null,

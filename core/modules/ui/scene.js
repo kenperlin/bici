@@ -3,9 +3,10 @@ import { gl_start } from "../webgl/webgl.js";
 import { webrtcClient } from "../yjs/yjs.js";
 
 export class SceneManager {
-  constructor(canvas, codeArea) {
+  constructor(canvas, codeArea, slideDeck) {
     this.canvas = new SceneCanvas(canvas);
-    this.code = codeArea;
+    this.codeArea = codeArea;
+    this.slideDeck = slideDeck
     this.scene = null;
     this.sceneCounter = 0;
     this.isVisible = false;
@@ -13,12 +14,7 @@ export class SceneManager {
     this.projectName = null;
     this.context = {};
 
-    this.code.onReloadScene = this.hotReload.bind(this);
-  }
-
-  setProject(projectName, context) {
-    this.projectName = projectName;
-    this.context = context;
+    this.codeArea.onReloadScene = this.hotReload.bind(this);
   }
   
   async load(num) {
@@ -38,13 +34,13 @@ export class SceneManager {
       module: sceneModule,
       seed: this.getSeed(),
       code: await fetchText(path),
-      codeArea: this.code,
+      codeArea: this.codeArea,
       canvas: this.canvas,
       vars: {},
       ...this.context
     }
     this.scene = new sceneModule.Scene(this.context);
-    this.code.element.value = this.context.code;
+    this.codeArea.element.value = this.context.code;
     this.canvas.registerSceneEvents(this.scene);
     gl_start(this.canvas.element, this.scene);
   }
