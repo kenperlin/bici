@@ -19,12 +19,12 @@ export const state = {
   domFocusIndex: null,
   spotlightElement: null,
 
-  globalAvatar: {x: 0, y: 0, s: 1},
-  handAvatar: [
-    { x: 0, y: 0, s: 1 },
-    { x: 0, y: 0, s: 1 }
-  ],
-  shadowHandInfo:[{},{}],
+  globalAvatar: { x: 0, y: 0, s: 1, separation: null },
+  handAvatar: {
+    left: { x: 0, y: 0, s: 1 },
+    right: { x: 0, y: 0, s: 1 }
+  },
+  shadowHandInfo: {left: {}, right: {}},
 
   isLarge: false,
   isObvious: true,
@@ -38,7 +38,6 @@ export const state = {
       state.globalAvatar.y >= 100 &&
       state.globalAvatar.y < HEIGHT - 100),
 
-  handSeparation: null,
 
   toggleDebug: () => {
     state.debugMode = !state.debugMode;

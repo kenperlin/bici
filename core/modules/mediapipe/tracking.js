@@ -1,356 +1,337 @@
 import { add, clamp, cross, dot, mix, norm, normalize, resize, subtract } from "../math/math.js";
 import { LowPassFilter, PCAFilter } from "./filter.js";
 import { state } from "./trackingState.js";
-import { drawEyes, drawHands, drawShadowHand } from "./drawing.js";
+import { drawEyes, drawHands, drawShadowGesture, drawShadowHand } from "./drawing.js";
 import { state as mediapipeState } from "./mediapipe.js";
 import { frameToRect, toScreen } from "./mapping.js";
 
 const pcaFilter = new PCAFilter();
-const lowPassFilter = new LowPassFilter(2/3);
+const lowPassFilter = new LowPassFilter(2 / 3);
 
-let pointToArray = p => [ p.x, p.y, p.z ];
+let pointToArray = (p) => [p.x, p.y, p.z];
 
 export function trackingUpdate() {
-   const { handResults, faceResults } = mediapipeState;
+  const { handResults, faceResults } = mediapipeState;
 
-   if(faceResults.length) {
-      computeHeadMatrix(pointToArray(faceResults[352]),
-                        pointToArray(faceResults[ 10]),
-                        pointToArray(faceResults[123]));
-   
-      computeEyeGaze(
-         pointToArray(faceResults[263]), // outer lid       // LEFT EYE
-         pointToArray(faceResults[398]), // inner lid
-   
-         pointToArray(faceResults[374]), // lower lid
-         pointToArray(faceResults[386]), // upper lid
-   
-         pointToArray(faceResults[477]), // bottom of pupil
-         pointToArray(faceResults[473]), // center of pupil
-         pointToArray(faceResults[475]), // top of pupil
-   
-         pointToArray(faceResults[173]), // outer lid       // RIGHT EYE
-         pointToArray(faceResults[ 33]), // inner lid
-   
-         pointToArray(faceResults[144]), // lower lid
-         pointToArray(faceResults[159]), // upper lid
-   
-         pointToArray(faceResults[472]), // bottom of pupil
-         pointToArray(faceResults[468]), // center of pupil
-         pointToArray(faceResults[470]), // top of pupil
-      );
-   }
+  if (faceResults.length) {
+    computeHeadMatrix(
+      pointToArray(faceResults[352]),
+      pointToArray(faceResults[10]),
+      pointToArray(faceResults[123])
+    );
 
+    computeEyeGaze(
+      pointToArray(faceResults[263]), // outer lid       // LEFT EYE
+      pointToArray(faceResults[398]), // inner lid
 
-   state.headX = clamp(WIDTH / 2 + 4.5 * WIDTH / 2 * state.headMatrix[8], 0, WIDTH);
-   state.headY = clamp(HEIGHT / 2 - 4.5 * WIDTH / 2 * state.headMatrix[9], 0, HEIGHT);
-   
-   [state.headX, state.headY] = lowPassFilter.filter(state.headX, state.headY);
+      pointToArray(faceResults[374]), // lower lid
+      pointToArray(faceResults[386]), // upper lid
 
-   if (state.isSteady) {
-      [state.headX, state.headY] = pcaFilter.filter(state.headX, state.headY);
-   }
-   // if (state.isLarge) {
-   //    state.headX = frameToRect(state.headX, canvas3D.getBoundingClientRect());
-   //    state.headY = frameToRect(state.headY, canvas3D.getBoundingClientRect());
-   // }
+      pointToArray(faceResults[477]), // bottom of pupil
+      pointToArray(faceResults[473]), // center of pupil
+      pointToArray(faceResults[475]), // top of pupil
 
-   // gestureTracker.update(handResults)
+      pointToArray(faceResults[173]), // outer lid       // RIGHT EYE
+      pointToArray(faceResults[33]), // inner lid
 
-   drawEyes();
+      pointToArray(faceResults[144]), // lower lid
+      pointToArray(faceResults[159]), // upper lid
 
-   if (!state.isShadowAvatar())
-      drawHands(handResults);
+      pointToArray(faceResults[472]), // bottom of pupil
+      pointToArray(faceResults[468]), // center of pupil
+      pointToArray(faceResults[470]) // top of pupil
+    );
+  }
 
-   if (state.isSeparateHandAvatars) {
-      for (const hand of handResults) {
-        const h = hand.handedness;
-        drawShadowHand(OCTX, h, hand.landmarks, state.handAvatar[h]);
-        
-        if (state.shadowHandInfo[h].gesture == "fist") {
-          state.handAvatar[h].x =
-            state.shadowHandInfo[h].x * (1 - state.handAvatar[h].s);
-          state.handAvatar[h].y =
-            state.shadowHandInfo[h].y * (1 - state.handAvatar[h].s);
-          state.handAvatar[h].s =
-            0.5 * state.handAvatar[h].s +
-            0.5 *
-              Math.max(0.2, Math.min(1, (35 - state.shadowHandInfo[h].s) / 15));
-          if (state.handAvatar[h].s == 1)
-            state.handAvatar[h].x = state.handAvatar[h].y = 0;
+  state.headX = clamp(WIDTH / 2 + ((4.5 * WIDTH) / 2) * state.headMatrix[8], 0, WIDTH);
+  state.headY = clamp(HEIGHT / 2 - ((4.5 * WIDTH) / 2) * state.headMatrix[9], 0, HEIGHT);
+
+  [state.headX, state.headY] = lowPassFilter.filter(state.headX, state.headY);
+
+  if (state.isSteady) {
+    [state.headX, state.headY] = pcaFilter.filter(state.headX, state.headY);
+  }
+  // if (state.isLarge) {
+  //    state.headX = frameToRect(state.headX, canvas3D.getBoundingClientRect());
+  //    state.headY = frameToRect(state.headY, canvas3D.getBoundingClientRect());
+  // }
+
+  // gestureTracker.update(handResults)
+
+  drawEyes();
+
+  if (!state.isShadowAvatar()) drawHands(handResults);
+
+  if (state.isSeparateHandAvatars) {
+    for (const hand of handResults) {
+      computeShadowHand(hand)
+      drawShadowHand(hand, state.handAvatar[hand.handedness]);
+    }
+    drawShadowGesture(handResults)
+
+  } else {
+    computeGlobalShadowAvatar(handResults)
+    for (const hand of handResults) {
+      computeShadowHand(hand)
+      drawShadowHand(hand,
+        {
+          x: state.globalAvatar.x - (state.globalAvatar.s * WIDTH) / 2,
+          y: state.globalAvatar.y - (state.globalAvatar.s * HEIGHT) / 2,
+          s: state.globalAvatar.s
         }
-      }
-
-      let fingerTip = (hand, i) => toScreen(handResults[hand].landmarks[4*i+4], hand);
-
-      // If both hands are pinching, draw a line between them.
-
-      if (state.shadowHandInfo[0].gesture == 'pinch' && state.shadowHandInfo[1].gesture == 'pinch') {
-         let p0 = fingerTip(0,0);
-         let p1 = fingerTip(0,1);
-         let q0 = fingerTip(1,0);
-         let q1 = fingerTip(1,1);
-         OCTX.strokeStyle = '#ff00ff80';
-         OCTX.lineWidth   = 10;
-         OCTX.beginPath();
-         OCTX.moveTo(p0.x + p1.x >> 1, p0.y + p1.y >> 1);
-         OCTX.lineTo(q0.x + q1.x >> 1, q0.y + q1.y >> 1);
-         OCTX.stroke();
-      }
-
-      // If one hand is pinching and the other is gripping, project a line from the pinch to the gripper.
-
-      for (let i = 0 ; i <= 1 ; i++)
-         if (state.shadowHandInfo[i].gesture == 'pinch' && state.shadowHandInfo[1-i].gesture == 'gripper') {
-
-            let p0 = fingerTip(i,0);
-            let p1 = fingerTip(i,1);
-	    let p = { x: p0.x + p1.x >> 1, y: p0.y + p1.y >> 1 };
-
-            let q0 = fingerTip(1-i,0);
-            let q1 = fingerTip(1-i,1);
-
-	    if (q0.y > p.y && p.y > q1.y) {
-	       let t = (p.y - q0.y) / (q1.y - q0.y);
-	       let x = q0.x + t * (q1.x - q0.x);
-
-               OCTX.strokeStyle = '#ff00ff80';
-               OCTX.lineWidth   = 10;
-
-               OCTX.beginPath();
-               OCTX.moveTo(q0.x, q0.y);
-               OCTX.lineTo(q1.x, q1.y);
-               OCTX.stroke();
-
-               OCTX.beginPath();
-               OCTX.moveTo(p.x, p.y);
-               OCTX.lineTo(x, p.y);
-               OCTX.stroke();
-	    }
-	 }
-
-      // If both hands are gripping, create a rectangle between them.
-
-      if (state.shadowHandInfo[0].gesture == 'gripper' && state.shadowHandInfo[1].gesture == 'gripper') {
-         let p0 = fingerTip(0,0);
-         let p1 = fingerTip(0,1);
-         let q0 = fingerTip(1,0);
-         let q1 = fingerTip(1,1);
-	 OCTX.fillStyle = OCTX.strokeStyle = '#ff00ff40';
-	 OCTX.lineWidth = 10;
-/*
-	 OCTX.beginPath();
-	 OCTX.moveTo(p0.x,p0.y);
-	 OCTX.lineTo(p1.x,p1.y);
-	 OCTX.lineTo(q1.x,q1.y);
-	 OCTX.lineTo(q0.x,q0.y);
-	 OCTX.lineTo(p0.x,p0.y);
-	 OCTX.fill();
-	 OCTX.stroke();
-*/
-	 let x0 = p0.x + p1.x >> 1, x1 = q0.x + q1.x >> 1;
-	 let y0 = p1.y + q1.y >> 1, y1 = p0.y + q0.y >> 1;
-	 OCTX.fillRect(x0,y0,x1-x0,y1-y0);
-	 OCTX.strokeRect(x0,y0,x1-x0,y1-y0);
-      }
-   }
-   else if (handResults[0] || handResults[1]) {
-      let x = 0, y = 0, w = 0;
-      let lp = [{},{}];
-      for (let hand = 0 ; hand <= 1 ; hand++)
-         if (handResults[hand]) {
-            drawShadowHand(OCTX, hand, handResults[hand].landmarks,
-                                       {x: state.globalAvatar.x - state.globalAvatar.s * WIDTH/2,
-                                       y: state.globalAvatar.y - state.globalAvatar.s * HEIGHT/2, s: state.globalAvatar.s}, state.isShadowAvatar());
-            if (state.shadowHandInfo[hand].gesture == 'fist') {
-               lp[hand] = handResults[hand].landmarks[0];
-	       let closed = 1 / state.shadowHandInfo[hand].open;
-               x += WIDTH  * lp[hand].x * closed;
-               y += HEIGHT * lp[hand].y * closed;
-               w += closed;
-            }
-         }
-      if (w) {
-         state.globalAvatar.x = x / w;
-         state.globalAvatar.y = y / w - 300;
-      }
-
-      // Use change in distance between the two fists to rescale the shadow avatar.
-
-      if (lp[0].x && lp[1].x) {
-         let x = lp[1].x - lp[0].x, y = lp[1].y - lp[0].y;
-         let new_hand_separation = Math.sqrt(x * x + y * y);
-         if (state.hand_separation)
-            state.globalAvatar.s *= new_hand_separation / state.hand_separation;
-         state.hand_separation = new_hand_separation;
-      }
-      else
-         state.hand_separation = undefined;
-   }
-  OCTX.restore();
+      );
+    }
+  }
 }
 
 function initializeGestureTracking() {
-   let indexPinch = new PinchGesture("indexPinch", [1], 0.1);
-   
-   indexPinch.onStart = ({state, id}, hand) => {
-      const h = hand.handedness;
-      const {x, y, z} = toScreen(state[h], h);
+  let indexPinch = new PinchGesture("indexPinch", [1], 0.1);
 
-      if (isInfo && D.isIn(x - D.left, y - D.top)) {
-         slide = slides[slideIndex];
-         if (slide.onDown)
-            slide.onDown(slide._px(x - D.left), slide._py(y - D.top));
-         D.isDown = true;
-         return;
-      }
+  indexPinch.onStart = ({ state, id }, hand) => {
+    const h = hand.handedness;
+    const { x, y, z } = toScreen(state[h], h);
 
-      if(canvas3D_containsPoint(x, y)) {
-         state[h].pointer = hand.handedness;
-         const eventId = `${id}.${state[h].pointer}`;
-         canvas3D_down(x, y, z, eventId)
-      } else if(canvas3D_containsPoint(state.headX, state.headY)) {
-         state[h].pointer = 'head';
-         const eventId = `${id}.${state[h].pointer}`;
-         canvas3D_down(state.headX, state.headY, 0, eventId)
-      }
-   };
-   
-   indexPinch.onActive = ({state, id}, hand) => {
+    if (isInfo && D.isIn(x - D.left, y - D.top)) {
+      slide = slides[slideIndex];
+      if (slide.onDown) slide.onDown(slide._px(x - D.left), slide._py(y - D.top));
+      D.isDown = true;
+      return;
+    }
 
-      const h = hand.handedness;
-      const {x, y, z} = toScreen(state[h], h);
-
-      if (isInfo && D.isDown) {
-         slide = slides[slideIndex];
-         if (slide.onDrag)
-            slide.onDrag(slide._px(x - D.left), slide._py(y - D.top));
-         return;
-      }
-
-      if(!state[h].pointer) return;
-
+    if (canvas3D_containsPoint(x, y)) {
+      state[h].pointer = hand.handedness;
       const eventId = `${id}.${state[h].pointer}`;
-      if(state[h].pointer === 'head') {
-         canvas3D_move(state.headX, state.headY, 0, eventId)
-      } else {
-         canvas3D_move(x, y, z, eventId)
-      }
-   };
-   
-   indexPinch.onEnd = ({state, id}, hand) => {
-      const h = hand.handedness;
-
-      const {x, y, z} = toScreen(state[h], h);
-
-      if (isInfo && D.isDown) {
-         D.isDown = false;
-         slide = slides[slideIndex];
-         if (slide.onUp)
-            slide.onUp(slide._px(x - D.left), slide._py(y - D.top));
-         return;
-      }
-
-      if(!state[h].pointer) return;
-
+      canvas3D_down(x, y, z, eventId);
+    } else if (canvas3D_containsPoint(state.headX, state.headY)) {
+      state[h].pointer = "head";
       const eventId = `${id}.${state[h].pointer}`;
-      if(state[h].pointer === 'head') {
-         canvas3D_up(state.headX, state.headY, 0, eventId)
-      } else {
-         canvas3D_up(x, y, z, eventId)
-      }
-   };
-   
-   let middlePinch = new PinchGesture("middlePinch", [2], 0.1);
-   
-   let detectSpreadStart = (hand) => {
-      const scaleFac = Math.min(1, .1 / (.2 + hand.landmarks[4].z));
-      let distances = getFingerThumbDistances([1, 2, 3, 4], hand);
-      return distances.every((d) => d < 0.15 * scaleFac)
-   };
+      canvas3D_down(state.headX, state.headY, 0, eventId);
+    }
+  };
 
-   let detectSpreadEnd = (hand) => {
-      const scaleFac = Math.min(1, .1 / (.2 + hand.landmarks[4].z));
-      let distances = getFingerThumbDistances([1, 2, 3, 4], hand);
-      return distances.every((d) => d > 0.3 * scaleFac)
-   };
+  indexPinch.onActive = ({ state, id }, hand) => {
+    const h = hand.handedness;
+    const { x, y, z } = toScreen(state[h], h);
 
-   let spreadGesture = new MotionGesture("spread", detectSpreadStart, detectSpreadEnd, 300);
-   spreadGesture.onTriggerAB = (self, hand) => {
-      if(state.spotlightElement || (state.spotlightElement = domDistances[0]) == null) return;
+    if (isInfo && D.isDown) {
+      slide = slides[slideIndex];
+      if (slide.onDrag) slide.onDrag(slide._px(x - D.left), slide._py(y - D.top));
+      return;
+    }
 
-      domDistances.forEach((elem) => {
-         elem.element.style.opacity = 0;
-      })
+    if (!state[h].pointer) return;
 
-      let element = state.spotlightElement.element;
-      element.style.transition = "all 0.1s ease-in-out";
-      element.style.opacity = 1;
-      element.style.top = '50%';
-      element.style.left = '50%';
-      element.style.transform = 'translate(-50%, -50%) scale(1.25)';
+    const eventId = `${id}.${state[h].pointer}`;
+    if (state[h].pointer === "head") {
+      canvas3D_move(state.headX, state.headY, 0, eventId);
+    } else {
+      canvas3D_move(x, y, z, eventId);
+    }
+  };
 
-   }
-   spreadGesture.onTriggerBA = (self, hand) => {
-      if(!state.spotlightElement) return;
+  indexPinch.onEnd = ({ state, id }, hand) => {
+    const h = hand.handedness;
 
-      let element = state.spotlightElement.element;
-      element.style.top = state.spotlightElement.bounds.top;
-      element.style.left = state.spotlightElement.bounds.left;
-      element.style.transform = 'none';
-      state.spotlightElement = null
+    const { x, y, z } = toScreen(state[h], h);
 
-      domDistances.forEach((elem) => {
-         elem.element.style.opacity = 1;
-      })
+    if (isInfo && D.isDown) {
+      D.isDown = false;
+      slide = slides[slideIndex];
+      if (slide.onUp) slide.onUp(slide._px(x - D.left), slide._py(y - D.top));
+      return;
+    }
 
-   }
+    if (!state[h].pointer) return;
 
-   const gestureTracker = new GestureTracker();
-   gestureTracker.add(indexPinch);
-   gestureTracker.add(middlePinch);
-   gestureTracker.add(spreadGesture);
+    const eventId = `${id}.${state[h].pointer}`;
+    if (state[h].pointer === "head") {
+      canvas3D_up(state.headX, state.headY, 0, eventId);
+    } else {
+      canvas3D_up(x, y, z, eventId);
+    }
+  };
 
-   window.gestureTracker = gestureTracker;   
+  let middlePinch = new PinchGesture("middlePinch", [2], 0.1);
+
+  let detectSpreadStart = (hand) => {
+    const scaleFac = Math.min(1, 0.1 / (0.2 + hand.landmarks[4].z));
+    let distances = getFingerThumbDistances([1, 2, 3, 4], hand);
+    return distances.every((d) => d < 0.15 * scaleFac);
+  };
+
+  let detectSpreadEnd = (hand) => {
+    const scaleFac = Math.min(1, 0.1 / (0.2 + hand.landmarks[4].z));
+    let distances = getFingerThumbDistances([1, 2, 3, 4], hand);
+    return distances.every((d) => d > 0.3 * scaleFac);
+  };
+
+  let spreadGesture = new MotionGesture("spread", detectSpreadStart, detectSpreadEnd, 300);
+  spreadGesture.onTriggerAB = (self, hand) => {
+    if (state.spotlightElement || (state.spotlightElement = domDistances[0]) == null) return;
+
+    domDistances.forEach((elem) => {
+      elem.element.style.opacity = 0;
+    });
+
+    let element = state.spotlightElement.element;
+    element.style.transition = "all 0.1s ease-in-out";
+    element.style.opacity = 1;
+    element.style.top = "50%";
+    element.style.left = "50%";
+    element.style.transform = "translate(-50%, -50%) scale(1.25)";
+  };
+  spreadGesture.onTriggerBA = (self, hand) => {
+    if (!state.spotlightElement) return;
+
+    let element = state.spotlightElement.element;
+    element.style.top = state.spotlightElement.bounds.top;
+    element.style.left = state.spotlightElement.bounds.left;
+    element.style.transform = "none";
+    state.spotlightElement = null;
+
+    domDistances.forEach((elem) => {
+      elem.element.style.opacity = 1;
+    });
+  };
+
+  const gestureTracker = new GestureTracker();
+  gestureTracker.add(indexPinch);
+  gestureTracker.add(middlePinch);
+  gestureTracker.add(spreadGesture);
+
+  window.gestureTracker = gestureTracker;
 }
-// initializeGestureTracking();
 
 // GIVEN THREE POINTS ON THE FACE, COMPUTE THE USER'S HEAD MATRIX
 function computeHeadMatrix(a,b,c) {
-   a[1] = -a[1];
-   b[1] = -b[1];
-   c[1] = -c[1];
-   let X = normalize(subtract(a,c));
-   let y = subtract(b,mix(a,c,.5));
-   let Z = normalize(cross(X,y));
-   let Y = normalize(cross(Z,X));
-   Z = normalize(add(Z,resize(Y,.3)));
-   Y = normalize(cross(Z,X));
-   state.headMatrix = [ X[0],X[1],X[2],0,
-                  Y[0],Y[1],Y[2],0,
-                  Z[0],Z[1],Z[2],0,
-                  4*(b[0]-.5),4*(b[1]+.625),4*b[2],1 ];
+  a[1] = -a[1];
+  b[1] = -b[1];
+  c[1] = -c[1];
+  let X = normalize(subtract(a,c));
+  let y = subtract(b,mix(a,c,.5));
+  let Z = normalize(cross(X,y));
+  let Y = normalize(cross(Z,X));
+  Z = normalize(add(Z,resize(Y,.3)));
+  Y = normalize(cross(Z,X));
+  state.headMatrix = [ X[0],X[1],X[2],0,
+                       Y[0],Y[1],Y[2],0,
+                       Z[0],Z[1],Z[2],0,
+                       4*(b[0]-.5),4*(b[1]+.625),4*b[2],1 ];
 }
+
 // GIVEN EDGES OF EYES AND PUPIL, COMPUTE EYE GAZE AND EYE OPEN
-function computeEyeGaze(la,lb,lc,ld, le,lf,lg,
-                        ra,rb,rc,rd, re,rf,rg) {
+function computeEyeGaze(la, lb, lc, ld, le, lf, lg, ra, rb, rc, rd, re, rf, rg) {
+  let LX = normalize(subtract(lb, la));
+  let lx = dot(subtract(lf, mix(la, lb, 0.5)), LX) / norm(subtract(lb, la));
+  let ly = (2 * (lf[1] - mix(la, lb, 0.5)[1])) / norm(subtract(lb, la));
 
-   let LX = normalize(subtract(lb,la));
-   let lx = dot(subtract(lf,mix(la,lb,.5)),LX)/norm(subtract(lb,la));
-   let ly = 2 * (lf[1] - mix(la,lb,.5)[1]) / norm(subtract(lb,la));
+  let RX = normalize(subtract(rb, ra));
+  let rx = dot(subtract(rf, mix(ra, rb, 0.5)), RX) / norm(subtract(rb, ra));
+  let ry = (2 * (rf[1] - mix(ra, rb, 0.5)[1])) / norm(subtract(rb, ra));
 
-   let RX = normalize(subtract(rb,ra));
-   let rx = dot(subtract(rf,mix(ra,rb,.5)),RX)/norm(subtract(rb,ra));
-   let ry = 2 * (rf[1] - mix(ra,rb,.5)[1]) / norm(subtract(rb,ra));
+  state.eyeGazeX = lx + rx;
+  state.eyeGazeY = ly + ry;
 
-   state.eyeGazeX = lx + rx;
-   state.eyeGazeY = ly + ry;
+  let lo = norm(subtract(lc, ld)) / norm(subtract(le, lg));
+  let ro = norm(subtract(rc, rd)) / norm(subtract(re, rg));
 
-   let lo = norm(subtract(lc,ld)) / norm(subtract(le,lg));
-   let ro = norm(subtract(rc,rd)) / norm(subtract(re,rg));
+  state.eyeOpen = (lo + ro) / 2;
 
-   state.eyeOpen = (lo + ro) / 2;
+  if (state.eyeOpen < 0.4 && state.blinkTime < 0) state.blinkTime = Date.now() / 1000;
+}
 
-   if (state.eyeOpen < .4 && state.blinkTime < 0)
-      state.blinkTime = Date.now() / 1000;
+function computeShadowHand(hand) {
+  const { handedness: h, landmarks } = hand;
+
+  // Functions to measure distance between two hand joints
+  let distance = (i,j) => {
+    let x = landmarks[i].x - landmarks[j].x;
+    let y = landmarks[i].y - landmarks[j].y;
+    let z = landmarks[i].z - landmarks[j].z;
+    return Math.sqrt(x*x + y*y + z*z);
+  }
+
+  let distance2D = (i,j) => {
+    let x = landmarks[i].x - landmarks[j].x;
+    let y = landmarks[i].y - landmarks[j].y;
+    return Math.sqrt(x*x + y*y);
+  }
+
+  // Scale finger thickness depending on visible hand size.
+  let t = 0;
+  for (let n = 1 ; n <= 20 ; n += 4) // loop over 5 fingers
+  for (let i = 0 ; i < 3 ; i++)      // loop over 3 finger joints
+    t += distance(n+i, n+i+1);
+  t = t < 1 ? Math.sqrt(t) : t;
+
+  state.shadowHandInfo[h].s = .017 * WIDTH * t;
+  state.shadowHandInfo[h].x = WIDTH * landmarks[10].x;
+  state.shadowHandInfo[h].y = HEIGHT * landmarks[10].y;
+
+  let D = [];
+  D[0] = distance(4, 5) / t;
+  for (let j = 1 ; j < 5 ; j++)
+    D[j] = distance(0, 4*j+3) / t;
+
+  state.shadowHandInfo[h].open = D[1] + D[2] + D[3] + D[4];
+
+  state.shadowHandInfo[h].gesture = null;
+
+  if (Math.max(D[1],D[2],D[3],D[4]) < .3)
+    state.shadowHandInfo[h].gesture = 'fist';
+
+  if (D[0] < .1 && D[1] > .3 && Math.max(D[2],D[3],D[4]) < .3)
+    state.shadowHandInfo[h].gesture = 'point';
+
+  if (state.shadowHandInfo[h].gesture == null && distance(4,8) / state.shadowHandInfo[h].s < .002)
+    state.shadowHandInfo[h].gesture = 'pinch';
+
+  if ( state.shadowHandInfo[h].gesture == null &&
+      D[0] > .1 &&
+distance2D(4,5) / t > .1 &&
+distance(4,8) < 1.5 * distance(5,8))
+    state.shadowHandInfo[h].gesture = 'gripper';
+
+    
+  if (state.shadowHandInfo[h].gesture == "fist") {
+    state.handAvatar[h].x = state.shadowHandInfo[h].x * (1 - state.handAvatar[h].s);
+    state.handAvatar[h].y = state.shadowHandInfo[h].y * (1 - state.handAvatar[h].s);
+    state.handAvatar[h].s =
+      0.5 * state.handAvatar[h].s + 0.5 * clamp((35 - state.shadowHandInfo[h].s) / 15, 0.2, 1);
+    if (state.handAvatar[h].s == 1) state.handAvatar[h].x = state.handAvatar[h].y = 0;
+  }
+}
+
+function computeGlobalShadowAvatar(handResults) {
+  let x = 0,
+      y = 0,
+      w = 0;
+  let lp = {};
+  for (const hand of handResults) {
+    const h = hand.handedness;
+    if (state.shadowHandInfo[h].gesture == "fist") {
+      lp[h] = hand.landmarks[0];
+      let closed = 1 / state.shadowHandInfo[h].open;
+      x += WIDTH * lp[h].x * closed;
+      y += HEIGHT * lp[h].y * closed;
+      w += closed;
+    }
+  }
+  if (w) {
+    state.globalAvatar.x = x / w;
+    state.globalAvatar.y = y / w - 300;
+  }
+
+  // Use change in distance between the two fists to rescale the shadow avatar.
+  if (lp.left && lp.right) {
+    const dx = lp.left.x - lp.right.x,
+          dy = lp.left.y - lp.right.y;
+
+    const newSeparation = Math.sqrt(dx * dx + dy * dy);
+    if (state.globalAvatar.separation)
+      state.globalAvatar.s *= newSeparation / state.globalAvatar.separation;
+    state.globalAvatar.separation = newSeparation;
+  } else {
+    state.hand_separation = null;
+  }
 }

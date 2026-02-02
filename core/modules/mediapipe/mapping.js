@@ -10,8 +10,6 @@ export function frameToRect(x, y, rect) {
 
 export function toShadowAvatar(point, hand) {
   if (state.isSeparateHandAvatars) {
-    if (hand == "left") hand = 1;
-    if (hand == "right") hand = 0;
     point.x = state.handAvatar[hand].x + state.handAvatar[hand].s * point.x;
     point.y = state.handAvatar[hand].y + state.handAvatar[hand].s * point.y;
   } else {

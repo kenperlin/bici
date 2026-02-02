@@ -157,7 +157,6 @@ export function drawEyes() {
         OCTX.strokeStyle = '#00000060';
         OCTX.fillStyle = '#00000060';
         OCTX.lineWidth = 2;
-        let h = state.eyeOpen > .5 ? 40 : 10;
         const s = state.globalAvatar.s;
         OCTX.lineWidth = 4;
 
@@ -185,83 +184,26 @@ export function drawEyes() {
    OCTX.restore();
 }
 
-export function drawShadowHand(ctx, hand, F, avatarInfo, isDrawing=true) {
-   const { x, y, s } = avatarInfo
-   // Behind the scenes, create a separate shadow canvas.
+const shadowCanvas = document.createElement('canvas');
+const sctx = shadowCanvas.getContext('2d');
 
-   if (! ctx.shadowCanvas) {
-      ctx.shadowCanvas = document.createElement('canvas');
-      // document.body.appendChild(ctx.shadowCanvas);
-      // ctx.shadowCanvas.style = '{position:absolute;left:-2000px}';
-      ctx.shadowCanvas.width = ctx.canvas.width;
-      ctx.shadowCanvas.height = ctx.canvas.height;
-   }
+export function drawShadowHand(hand, avatarInfo) {
+   if(!state.isShadowAvatar()) return;
+   
+   const { x, y, s } = avatarInfo
+   const { handedness: h, landmarks} = hand
+
+   // Behind the scenes, create a separate shadow canvas.
+   const width = shadowCanvas.width = OCTX.canvas.width;
+   const height = shadowCanvas.height = OCTX.canvas.height;
 
    // Clear the shadow canvas before drawing the hand.
-
-   let sctx = ctx.shadowCanvas.getContext('2d');
-   let w = ctx.canvas.width, h = ctx.canvas.height;
-   sctx.clearRect(0,0,w,h);
-
-   // Functions to measure distance between two hand joints
-
-   let distance = (i,j) => {
-      let x = F[i].x - F[j].x;
-      let y = F[i].y - F[j].y;
-      let z = F[i].z - F[j].z;
-      return Math.sqrt(x*x + y*y + z*z);
-   }
-
-   let distance2D = (i,j) => {
-      let x = F[i].x - F[j].x;
-      let y = F[i].y - F[j].y;
-      return Math.sqrt(x*x + y*y);
-   }
-
-   // Scale finger thickness depending on visible hand size.
-
-   let t = 0;
-   for (let n = 1 ; n <= 20 ; n += 4) // loop over 5 fingers
-   for (let i = 0 ; i < 3 ; i++)      // loop over 3 finger joints
-      t += distance(n+i, n+i+1);
-   t = t < 1 ? Math.sqrt(t) : t;
-   state.shadowHandInfo[hand].s = .017 * w * t;
-
-   state.shadowHandInfo[hand].x = w * F[10].x;
-   state.shadowHandInfo[hand].y = h * F[10].y;
-
-   let D = [];
-   D[0] = distance(4, 5) / t;
-   for (let j = 1 ; j < 5 ; j++)
-      D[j] = distance(0, 4*j+3) / t;
-
-   state.shadowHandInfo[hand].open = D[1] + D[2] + D[3] + D[4];
-
-   state.shadowHandInfo[hand].gesture = null;
-
-   if (Math.max(D[1],D[2],D[3],D[4]) < .3)
-      state.shadowHandInfo[hand].gesture = 'fist';
-
-   if (D[0] < .1 && D[1] > .3 && Math.max(D[2],D[3],D[4]) < .3)
-      state.shadowHandInfo[hand].gesture = 'point';
-
-   if (state.shadowHandInfo[hand].gesture == null && distance(4,8) / state.shadowHandInfo[hand].s < .002)
-      state.shadowHandInfo[hand].gesture = 'pinch';
-
-   if ( state.shadowHandInfo[hand].gesture == null &&
-        D[0] > .1 &&
-	distance2D(4,5) / t > .1 &&
-	distance(4,8) < 1.5 * distance(5,8))
-      state.shadowHandInfo[hand].gesture = 'gripper';
-
-   if (! isDrawing)
-      return;
+   sctx.clearRect(0, 0, width, height);
 
    // If pointing, draw a ray out of the index finger.
-
-   if (state.shadowHandInfo[hand].gesture == 'point') {
-      let ax = s * w * F[5].x + x, ay = s * h * F[5].y + y;
-      let bx = s * w * F[8].x + x, by = s * h * F[8].y + y;
+   if (state.shadowHandInfo[h].gesture == 'point') {
+      let ax = s * width * landmarks[5].x + x, ay = s * height * landmarks[5].y + y;
+      let bx = s * width * landmarks[8].x + x, by = s * height * landmarks[8].y + y;
       for (let i = 0 ; i <= 1 ; i++) {
          sctx.strokeStyle = i ? '#a0a0a0' : 'black';
          sctx.lineWidth = s * (20 - 10*i);
@@ -275,20 +217,20 @@ export function drawShadowHand(ctx, hand, F, avatarInfo, isDrawing=true) {
    // Draw an opaque shadow of the hand to the shadow canvas.
 
    for (let n = 1 ; n <= 20 ; n += 4) {
-      let r = s * state.shadowHandInfo[hand].s * (n < 6 ? 1.1 : n < 11 ? 1 : .85);
+      let r = s * state.shadowHandInfo[h].s * (n < 6 ? 1.1 : n < 11 ? 1 : .85);
       sctx.fillStyle = sctx.strokeStyle = 'black';
       sctx.lineWidth = 2 * r;
       let i0 = n > 1 ? 0 : 1;         // skip first thumb joint
       for (let i = i0 ; i < 4 ; i++) {
          if (i > i0) {
             sctx.beginPath();
-            sctx.arc(w*F[n+i].x*s+x,h*F[n+i].y*s+y,r,0,2*Math.PI);
+            sctx.arc(width * landmarks[n+i].x * s + x, height * landmarks[n+i].y * s + y,r,0,2*Math.PI);
             sctx.fill();
          }
          if (i < 3) {
             sctx.beginPath();
-            sctx.moveTo(w*F[n+i  ].x*s+x,h*F[n+i  ].y*s+y);
-            sctx.lineTo(w*F[n+i+1].x*s+x,h*F[n+i+1].y*s+y);
+            sctx.moveTo(width * landmarks[n+i  ].x * s + x, height * landmarks[n+i  ].y * s + y);
+            sctx.lineTo(width * landmarks[n+i+1].x * s + x, height * landmarks[n+i+1].y * s + y);
             sctx.stroke();
          }
       }
@@ -296,9 +238,9 @@ export function drawShadowHand(ctx, hand, F, avatarInfo, isDrawing=true) {
 
    // If making a gripper gesture, show the line between thumb and index fingers.
 
-   if (state.shadowHandInfo[hand].gesture == 'gripper') {
-      let p = toScreen(F[4], hand);
-      let q = toScreen(F[8], hand);
+   if (state.shadowHandInfo[h].gesture == 'gripper') {
+      let p = toScreen(landmarks[4], h);
+      let q = toScreen(landmarks[8], h);
       for (let i = 0 ; i <= 1 ; i++) {
          sctx.strokeStyle = i ? '#a0a0a0' : 'black';
          sctx.lineWidth = s * (20 - 10*i);
@@ -311,18 +253,111 @@ export function drawShadowHand(ctx, hand, F, avatarInfo, isDrawing=true) {
 
    // If pinching, show pinch point.
 
-   if (state.shadowHandInfo[hand].gesture == 'pinch') {
-      let p = toScreen(F[4], hand);
-      let q = toScreen(F[8], hand);
+   if (state.shadowHandInfo[h].gesture == 'pinch') {
+      let p = toScreen(landmarks[4], h);
+      let q = toScreen(landmarks[8], h);
       sctx.beginPath();
       sctx.fillStyle = '#a0a0a0';
-      sctx.arc(p.x+q.x>>1, p.y+q.y>>1, .7*s * state.shadowHandInfo[hand].s, 0, 2*Math.PI);
+      sctx.arc(p.x+q.x>>1, p.y+q.y>>1, .7*s * state.shadowHandInfo[h].s, 0, 2*Math.PI);
       sctx.fill();
    }
 
    // Copy the shadow transparently onto the target canvas.
+   OCTX.globalAlpha = 0.3;
+   OCTX.drawImage(shadowCanvas, 0,0);
+   OCTX.globalAlpha = 1.0;
+}
 
-   ctx.globalAlpha = 0.3;
-   ctx.drawImage(ctx.shadowCanvas, 0,0);
-   ctx.globalAlpha = 1.0;
+export function drawShadowGesture(handResults) {
+    OCTX.save();
+
+    const leftHand = handResults.find(e => e.handedness === "left")
+    const rightHand = handResults.find(e => e.handedness === "right")
+
+    if(!leftHand || !rightHand) return;
+
+    let fingerTip = (hand, i) => {
+      return toScreen(hand.landmarks[4 * i + 4], hand.handedness)
+    };
+
+    // If both hands are pinching, draw a line between them.
+    if (
+      state.shadowHandInfo.left.gesture == "pinch" &&
+      state.shadowHandInfo.right.gesture == "pinch"
+    ) {
+      let p0 = fingerTip(leftHand, 0);
+      let p1 = fingerTip(leftHand, 1);
+      let q0 = fingerTip(rightHand, 0);
+      let q1 = fingerTip(rightHand, 1);
+      OCTX.strokeStyle = "#ff00ff80";
+      OCTX.lineWidth = 10;
+      OCTX.beginPath();
+      OCTX.moveTo((p0.x + p1.x) >> 1, (p0.y + p1.y) >> 1);
+      OCTX.lineTo((q0.x + q1.x) >> 1, (q0.y + q1.y) >> 1);
+      OCTX.stroke();
+    }
+
+    // If one hand is pinching and the other is gripping, project a line from the pinch to the gripper.
+   if (
+      (state.shadowHandInfo.left.gesture == "pinch" &&
+         state.shadowHandInfo.right.gesture == "gripper") ||
+      (state.shadowHandInfo.left.gesture == "gripper" &&
+         state.shadowHandInfo.right.gesture == "pinch")
+   ) {
+      let p0 = fingerTip(leftHand, 0);
+      let p1 = fingerTip(leftHand, 1);
+      let p = { x: (p0.x + p1.x) >> 1, y: (p0.y + p1.y) >> 1 };
+
+      let q0 = fingerTip(rightHand, 0);
+      let q1 = fingerTip(rightHand, 1);
+
+      if (q0.y > p.y && p.y > q1.y) {
+         let t = (p.y - q0.y) / (q1.y - q0.y);
+         let x = q0.x + t * (q1.x - q0.x);
+
+         OCTX.strokeStyle = "#ff00ff80";
+         OCTX.lineWidth = 10;
+
+         OCTX.beginPath();
+         OCTX.moveTo(q0.x, q0.y);
+         OCTX.lineTo(q1.x, q1.y);
+         OCTX.stroke();
+
+         OCTX.beginPath();
+         OCTX.moveTo(p.x, p.y);
+         OCTX.lineTo(x, p.y);
+         OCTX.stroke();
+      }
+   }
+
+    // If both hands are gripping, create a rectangle between them.
+
+    if (
+      state.shadowHandInfo.left.gesture == "gripper" &&
+      state.shadowHandInfo.right.gesture == "gripper"
+    ) {
+      let p0 = fingerTip(leftHand, 0);
+      let p1 = fingerTip(leftHand, 1);
+      let q0 = fingerTip(rightHand, 0);
+      let q1 = fingerTip(rightHand, 1);
+      OCTX.fillStyle = OCTX.strokeStyle = "#ff00ff40";
+      OCTX.lineWidth = 10;
+      /*
+	 OCTX.beginPath();
+	 OCTX.moveTo(p0.x,p0.y);
+	 OCTX.lineTo(p1.x,p1.y);
+	 OCTX.lineTo(q1.x,q1.y);
+	 OCTX.lineTo(q0.x,q0.y);
+	 OCTX.lineTo(p0.x,p0.y);
+	 OCTX.fill();
+	 OCTX.stroke();
+*/
+      let x0 = (p0.x + p1.x) >> 1,
+        x1 = (q0.x + q1.x) >> 1;
+      let y0 = (p1.y + q1.y) >> 1,
+        y1 = (p0.y + q0.y) >> 1;
+      OCTX.fillRect(x0, y0, x1 - x0, y1 - y0);
+      OCTX.strokeRect(x0, y0, x1 - x0, y1 - y0);
+    }
+    OCTX.restore()
 }
