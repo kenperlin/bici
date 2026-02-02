@@ -12,7 +12,6 @@ export const state = {
   blinkTime: -1,
 
   debugMode: false,
-  frameHands: false,
 
   domSources: [],
   domDistances: [],
@@ -27,9 +26,10 @@ export const state = {
   shadowHandInfo: {left: {}, right: {}},
 
   isLarge: false,
-  isObvious: true,
+  isObvious: false,
+  isFramingHands: false,
   isSteady: false,
-  isSeparateHandAvatars: false,
+  isSeparateHandAvatars: true,
 
   isShadowAvatar: () =>
     state.isSeparateHandAvatars ||

@@ -7,15 +7,15 @@ export function drawHands(handResults) {
    let zScale = z => Math.max(.15, Math.min(1, .1 / (.2 + z)));
    OCTX.save();
    for(const hand of handResults) {
-      const currentHand = hand.handedness;
+      const h = hand.handedness;
       const fingersToDraw = new Set([0, 1, 2])
       
       OCTX.fillStyle = "#00000060";
       OCTX.strokeStyle = "#00000060";
 
-      // const activeGesture = gestureTracker.activeGestures[currentHand];
+      // const activeGesture = gestureTracker.activeGestures[h];
       // if (activeGesture) {
-      //    const activeGestureState = toScreen(activeGesture.state[currentHand], currentHand);
+      //    const activeGestureState = toScreen(activeGesture.state[h], h);
       //    activeGesture.fingers.forEach((it) => fingersToDraw.delete(it));
       //    fingersToDraw.delete(0);
 
@@ -34,7 +34,7 @@ export function drawHands(handResults) {
 
       for (const fingerNum of fingersToDraw) {
          const fingerPt = hand.landmarks[4 + 4 * fingerNum];
-         const screenFingerPt = toScreen(fingerPt, currentHand);
+         const screenFingerPt = toScreen(fingerPt, h);
          
          let radius = 15 * zScale(fingerPt.z);
          if (state.isObvious) {
@@ -181,7 +181,7 @@ export function drawEyes() {
         OCTX.translate(-state.globalAvatar.x, -state.globalAvatar.y);
     }
   }
-   OCTX.restore();
+  OCTX.restore();
 }
 
 const shadowCanvas = document.createElement('canvas');
@@ -194,50 +194,50 @@ export function drawShadowHand(hand, avatarInfo) {
    const { handedness: h, landmarks} = hand
 
    // Behind the scenes, create a separate shadow canvas.
-   const width = shadowCanvas.width = OCTX.canvas.width;
-   const height = shadowCanvas.height = OCTX.canvas.height;
+   shadowCanvas.width = OCTX.canvas.width;
+   shadowCanvas.height = OCTX.canvas.height;
 
    // Clear the shadow canvas before drawing the hand.
-   sctx.clearRect(0, 0, width, height);
-
-   // If pointing, draw a ray out of the index finger.
-   if (state.shadowHandInfo[h].gesture == 'point') {
-      let ax = s * width * landmarks[5].x + x, ay = s * height * landmarks[5].y + y;
-      let bx = s * width * landmarks[8].x + x, by = s * height * landmarks[8].y + y;
-      for (let i = 0 ; i <= 1 ; i++) {
-         sctx.strokeStyle = i ? '#a0a0a0' : 'black';
-         sctx.lineWidth = s * (20 - 10*i);
-         sctx.beginPath();
-         sctx.moveTo(bx,by);
-         sctx.lineTo(bx+100*(bx-ax),by+100*(by-ay));
-         sctx.stroke();
-      }
-   }
+   sctx.clearRect(0, 0, shadowCanvas.width, shadowCanvas.height);
 
    // Draw an opaque shadow of the hand to the shadow canvas.
-
    for (let n = 1 ; n <= 20 ; n += 4) {
       let r = s * state.shadowHandInfo[h].s * (n < 6 ? 1.1 : n < 11 ? 1 : .85);
       sctx.fillStyle = sctx.strokeStyle = 'black';
       sctx.lineWidth = 2 * r;
       let i0 = n > 1 ? 0 : 1;         // skip first thumb joint
       for (let i = i0 ; i < 4 ; i++) {
+         const jointPos = toScreen(landmarks[n+i], h)
          if (i > i0) {
             sctx.beginPath();
-            sctx.arc(width * landmarks[n+i].x * s + x, height * landmarks[n+i].y * s + y,r,0,2*Math.PI);
+            sctx.arc(jointPos.x, jointPos.y, r, 0, 2 * Math.PI);
             sctx.fill();
          }
          if (i < 3) {
+            const nextJointPos = toScreen(landmarks[n+i+1], h)
             sctx.beginPath();
-            sctx.moveTo(width * landmarks[n+i  ].x * s + x, height * landmarks[n+i  ].y * s + y);
-            sctx.lineTo(width * landmarks[n+i+1].x * s + x, height * landmarks[n+i+1].y * s + y);
+            sctx.moveTo(jointPos.x, jointPos.y,);
+            sctx.lineTo(nextJointPos.x, nextJointPos.y,);
             sctx.stroke();
          }
       }
    }
 
-   // If making a gripper gesture, show the line between thumb and index fingers.
+   // If pointing, draw a ray out of the index finger.
+   if (state.shadowHandInfo[h].gesture == 'point') {
+      let a = toScreen(landmarks[5], h);
+      let b = toScreen(landmarks[8], h);
+      for (let i = 0 ; i <= 1 ; i++) {
+         sctx.strokeStyle = i ? "#a0a0a0" : "black";
+         sctx.lineWidth = s * (20 - 10 * i);
+         sctx.beginPath();
+         sctx.moveTo(b.x, b.y);
+         sctx.lineTo(b.x + 100 * (b.x - a.x), b.y + 100 * (b.y - a.y));
+         sctx.stroke();
+      }
+   }
 
+   // If making a gripper gesture, show the line between thumb and index fingers.
    if (state.shadowHandInfo[h].gesture == 'gripper') {
       let p = toScreen(landmarks[4], h);
       let q = toScreen(landmarks[8], h);
@@ -252,7 +252,6 @@ export function drawShadowHand(hand, avatarInfo) {
    }
 
    // If pinching, show pinch point.
-
    if (state.shadowHandInfo[h].gesture == 'pinch') {
       let p = toScreen(landmarks[4], h);
       let q = toScreen(landmarks[8], h);
@@ -304,12 +303,16 @@ export function drawShadowGesture(handResults) {
       (state.shadowHandInfo.left.gesture == "gripper" &&
          state.shadowHandInfo.right.gesture == "pinch")
    ) {
-      let p0 = fingerTip(leftHand, 0);
-      let p1 = fingerTip(leftHand, 1);
+      const isLeftPinch = state.shadowHandInfo.left.gesture === "pinch"
+      const pincher = isLeftPinch ? leftHand : rightHand;
+      const gripper = isLeftPinch ? rightHand : leftHand;
+
+      let p0 = fingerTip(pincher, 0);
+      let p1 = fingerTip(pincher, 1);
       let p = { x: (p0.x + p1.x) >> 1, y: (p0.y + p1.y) >> 1 };
 
-      let q0 = fingerTip(rightHand, 0);
-      let q1 = fingerTip(rightHand, 1);
+      let q0 = fingerTip(gripper, 0);
+      let q1 = fingerTip(gripper, 1);
 
       if (q0.y > p.y && p.y > q1.y) {
          let t = (p.y - q0.y) / (q1.y - q0.y);

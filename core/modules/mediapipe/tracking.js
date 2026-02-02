@@ -73,13 +73,7 @@ export function trackingUpdate() {
     computeGlobalShadowAvatar(handResults)
     for (const hand of handResults) {
       computeShadowHand(hand)
-      drawShadowHand(hand,
-        {
-          x: state.globalAvatar.x - (state.globalAvatar.s * WIDTH) / 2,
-          y: state.globalAvatar.y - (state.globalAvatar.s * HEIGHT) / 2,
-          s: state.globalAvatar.s
-        }
-      );
+      drawShadowHand(hand, state.globalAvatar);
     }
   }
 }

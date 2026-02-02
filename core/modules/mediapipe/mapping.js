@@ -8,25 +8,25 @@ export function frameToRect(x, y, rect) {
   return [x, y];
 }
 
-export function toShadowAvatar(point, hand) {
+export function toShadowAvatar(point, h) {
   if (state.isSeparateHandAvatars) {
-    point.x = state.handAvatar[hand].x + state.handAvatar[hand].s * point.x;
-    point.y = state.handAvatar[hand].y + state.handAvatar[hand].s * point.y;
+    point.x = state.handAvatar[h].x + state.handAvatar[h].s * point.x;
+    point.y = state.handAvatar[h].y + state.handAvatar[h].s * point.y;
   } else {
-    point.x = state.globalAvatar.x + state.globalAvatar.s * point.x;
-    point.y = state.globalAvatar.y + state.globalAvatar.s * point.y;
+    point.x = state.globalAvatar.x + state.globalAvatar.s * (point.x - videoTransform.w / 2);
+    point.y = state.globalAvatar.y + state.globalAvatar.s * (point.y - videoTransform.h / 2);
   }
 }
 
-export function toScreen(point, hand) {
+export function toScreen(point, h) {
   let newPoint = { ...point };
   newPoint.x = newPoint.x * videoTransform.w + videoTransform.x;
   newPoint.y = newPoint.y * videoTransform.h + videoTransform.y;
   newPoint.z *= videoTransform.w;
 
-  if (state.isShadowAvatar()) toShadowAvatar(newPoint, hand);
+  if (state.isShadowAvatar()) toShadowAvatar(newPoint, h);
 
-  if (state.frameHands && state.domDistances[0])
+  if (state.isFramingHands && state.domDistances[0])
     [newPoint.x, newPoint.y] = frameToRect(
       newPoint.x,
       newPoint.y,

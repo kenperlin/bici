@@ -85,7 +85,7 @@ function handleCommand(key) {
       mediapipeState.toggleDebug();
       trackingState.toggleDebug();
       break;
-    case "F": trackingState.frameHands = !trackingState.frameHands; break;
+    case "F": trackingState.isFramingHands = !trackingState.isFramingHands; break;
     case "L": trackingState.isLarge = !trackingState.isLarge; break;
     case "N": trackingState.isObvious = !trackingState.isObvious; break;
     case "H": trackingState.isSeparateHandAvatars = !trackingState.isSeparateHandAvatars; break;
