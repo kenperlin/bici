@@ -1,6 +1,5 @@
 import { toggleHelp } from "./ui/help.js";
-import { state as trackingState } from "./mediapipe/trackingState.js";
-import { state as mediapipeState } from "./mediapipe/mediapipe.js";
+import { trackingState, mediapipeState } from "./mediapipe/state.js";
 import { webrtcClient } from "./yjs/yjs.js";
 
 let appContext = {};

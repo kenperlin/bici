@@ -1,4 +1,4 @@
-import { pca } from "../math/pca.js";
+import { pca } from "../../math/pca.js";
 
 export class PCAFilter {
   constructor() {

@@ -1,4 +1,4 @@
-import { centeredText } from '../canvasUtils.js';
+import { centeredText } from '../utils/canvasUtils.js';
 import { M4 } from '../math/M4.js'
 
 export function addDiagramProperties (diagram) {

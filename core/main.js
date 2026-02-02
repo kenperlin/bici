@@ -1,12 +1,12 @@
-import { drawVideoToCover } from "./modules/canvasUtils.js";
+import { drawVideoToCover } from "./modules/utils/canvasUtils.js";
 import { CodeArea } from "./modules/ui/codeArea.js";
 import { SlideDeck } from "./modules/ui/slideDeck.js";
 import { displayHelp } from "./modules/ui/help.js";
 import { initKeyHandler } from "./modules/keyEvent.js";
-import { initMediapipe, mediapipePredict, state as mediapipeState } from "./modules/mediapipe/mediapipe.js";
+import { initMediapipe, mediapipePredict } from "./modules/mediapipe/mediapipe.js";
 import { Pen } from "./modules/pen.js";
 import { SceneManager } from "./modules/ui/scene.js";
-import { fetchText } from "./modules/utils.js";
+import { fetchText } from "./modules/utils/utils.js";
 import {
   webrtcClient,
   videoUI,
@@ -14,20 +14,21 @@ import {
   yjsBindCodeArea,
   yjsBindPen
 } from "./modules/yjs/yjs.js";
-import { trackingUpdate } from "./modules/mediapipe/tracking.js";
-import { initDomTracking, updateDomFocus } from "./modules/mediapipe/domFocus.js";
+import { updateTracking } from "./modules/mediapipe/tracking/runtime.js";
+import { updateDomFocus } from "./modules/mediapipe/tracking/dom.js";
+import { mediapipeState } from "./modules/mediapipe/state.js";
 
 const DOM = {
-    projectSelector: document.getElementById("project-selector"),
-    projectSwitcher: document.getElementById("project-switcher"),
-    projectSwitchBtn: document.getElementById("project-switch-btn"),
-    projectLabel: document.getElementById("current-project"),
-    projectGrid: document.getElementById("project-grid"),
-    canvas2D: document.getElementById("canvas-2d"),
-    canvas3D: document.getElementById("canvas-3d"),
-    ocanvas: document.getElementById("canvas-overlay"),
-    webcam: document.getElementById("webcam"),
-    textarea: document.getElementById("code-editor")
+  projectSelector: document.getElementById("project-selector"),
+  projectSwitcher: document.getElementById("project-switcher"),
+  projectSwitchBtn: document.getElementById("project-switch-btn"),
+  projectLabel: document.getElementById("current-project"),
+  projectGrid: document.getElementById("project-grid"),
+  canvas2D: document.getElementById("canvas-2d"),
+  canvas3D: document.getElementById("canvas-3d"),
+  ocanvas: document.getElementById("canvas-overlay"),
+  webcam: document.getElementById("webcam"),
+  textarea: document.getElementById("code-editor")
 };
 
 const ctx = DOM.canvas2D.getContext("2d");
@@ -61,25 +62,24 @@ function resizeStage() {
 async function init() {
   resizeStage();
   initMediapipe();
-  initDomTracking({codeArea, sceneManager, slideDeck});
-  initKeyHandler({codeArea, sceneManager, slideDeck, pen});
-  
+  initKeyHandler({ codeArea, sceneManager, slideDeck, pen });
+
   // Collaboration
   await setupYjsClient(DOM.webcam);
   yjsBindCodeArea(codeArea);
-  yjsBindPen(pen)
+  yjsBindPen(pen);
 
   // Event listeners
   window.addEventListener("resize", resizeStage);
   DOM.projectSwitchBtn.addEventListener("click", () => {
     DOM.projectSelector.style.display = "flex";
   });
-  
+
   DOM.projectGrid.addEventListener("click", (e) => {
     const projectName = e.target.dataset.project;
     if (projectName) loadProject(projectName);
   });
-  
+
   // App
   requestAnimationFrame(animate);
 }
@@ -88,13 +88,13 @@ async function loadProject(name) {
   let slidesList = await fetchText(`projects/${name}/slides.txt`);
 
   if (slidesList) {
-    slidesList = slidesList.split('\n')
-    await slideDeck.init(name, slidesList)
+    slidesList = slidesList.split("\n");
+    await slideDeck.init(name, slidesList);
   }
-  
-  // pass necessary components for scene to access through context 
+
+  // pass necessary components for scene to access through context
   sceneManager.setProject(name, {});
-  await sceneManager.load(1)
+  await sceneManager.load(1);
 
   DOM.projectLabel.textContent = name;
   DOM.projectSwitcher.style.display = "block";
@@ -121,12 +121,12 @@ function animate() {
   slideDeck.draw(ctx);
   pen.draw(ctx);
   sceneManager.update();
-  displayHelp(ctx, codeArea.fontSize)
+  displayHelp(ctx, codeArea.fontSize);
 
   mediapipePredict(DOM.webcam);
-  if(mediapipeState.isReady && mediapipeState.isRunning) {
-    trackingUpdate();
-    updateDomFocus(codeArea, pen, sceneManager)
+  if (mediapipeState.isReady && mediapipeState.isRunning) {
+    updateTracking();
+    updateDomFocus({ codeArea, sceneManager, slideDeck, pen });
   }
 
   requestAnimationFrame(animate);

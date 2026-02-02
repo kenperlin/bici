@@ -1,7 +1,7 @@
 
-import { smoothstep } from "../math/math.js";
-import { toScreen } from "./mapping.js";
-import { state } from "./trackingState.js";
+import { smoothstep } from "../../math/math.js";
+import { toScreen } from "../utils/mapping.js";
+import { trackingState as state } from "../state.js";
 
 export function drawHands(handResults) {
    let zScale = z => Math.max(.15, Math.min(1, .1 / (.2 + z)));

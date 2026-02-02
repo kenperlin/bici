@@ -1,6 +1,18 @@
 import { identity } from "../math/math.js";
 
-export const state = {
+export const mediapipeState = {
+  isReady: false,
+  isRunning: true,
+  debugMode: false,
+
+  handResults: [],
+  faceResults: [],
+
+  toggleRunning: () => mediapipeState.isRunning = !mediapipeState.isRunning,
+  toggleDebug: () => mediapipeState.debugMode = !mediapipeState.debugMode
+};
+
+export const trackingState = {
   headPosHistory: [],
   headMatrix: identity(),
   headX: 0,
@@ -32,14 +44,14 @@ export const state = {
   isSeparateHandAvatars: true,
 
   isShadowAvatar: () =>
-    state.isSeparateHandAvatars ||
-    (state.globalAvatar.x >= 100 &&
-      state.globalAvatar.x < WIDTH - 100 &&
-      state.globalAvatar.y >= 100 &&
-      state.globalAvatar.y < HEIGHT - 100),
+    trackingState.isSeparateHandAvatars ||
+    (trackingState.globalAvatar.x >= 100 &&
+      trackingState.globalAvatar.x < WIDTH - 100 &&
+      trackingState.globalAvatar.y >= 100 &&
+      trackingState.globalAvatar.y < HEIGHT - 100),
 
 
   toggleDebug: () => {
-    state.debugMode = !state.debugMode;
+    trackingState.debugMode = !trackingState.debugMode;
   },
 };

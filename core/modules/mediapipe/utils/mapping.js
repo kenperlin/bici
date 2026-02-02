@@ -1,5 +1,5 @@
-import { videoTransform } from "../canvasUtils.js";
-import { state } from "./trackingState.js";
+import { videoTransform } from "../../utils/canvasUtils.js";
+import { trackingState as state } from "../state.js";
 
 export function frameToRect(x, y, rect) {
   x -= (WIDTH - HEIGHT) / 2;

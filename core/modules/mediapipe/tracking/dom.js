@@ -1,28 +1,26 @@
 import { drawDomSelection } from "./drawing.js";
-import { state } from "./trackingState.js";
+import { trackingState as state } from "../state.js";
 
-export function initDomTracking(context) {
-  const { codeArea, sceneManager, slideDeck } = context;
-  state.domSources = [
+export function updateDomFocus(context) {
+  const { codeArea, sceneManager, slideDeck, pen } = context;
+  const sources = [
     {
-      getBounds: () => codeArea.element.getBoundingClientRect(),
-      isVisible: () => codeArea.isVisible,
-      getElement: () => codeArea.element
+      bounds: codeArea.element.getBoundingClientRect(),
+      isVisible: codeArea.isVisible,
+      element: codeArea.element
     },
     {
-      getBounds: () => sceneManager.canvas.element.getBoundingClientRect(),
-      isVisible: () => sceneManager.isVisible,
-      getElement: () => sceneManager.canvas.element
+      bounds: sceneManager.canvas.element.getBoundingClientRect(),
+      isVisible: sceneManager.isVisible,
+      element: sceneManager.canvas.element
     },
     {
-      getBounds: () => slideDeck.rect,
-      isVisible: () => slideDeck.isVisible
+      bounds: slideDeck.rect,
+      isVisible: slideDeck.isVisible
     }
   ];
-}
 
-export function updateDomFocus(codeArea, pen, sceneManager) {
-  evalDomDistances(state.headX, state.headY);
+  evalDomDistances(sources, state.headX, state.headY);
 
   const closest = state.domDistances[0];
   if (!closest) return;
@@ -64,14 +62,12 @@ export function updateDomFocus(codeArea, pen, sceneManager) {
   drawDomSelection();
 }
 
-function evalDomDistances(x, y) {
-  let newDomDistances = state.domSources.map((source) => {
-    const bounds = source.getBounds();
-    const dist = source.isVisible()
-      ? getSignedDistanceRect(x, y, bounds)
+function evalDomDistances(sources, x, y) {
+  let newDomDistances = sources.map((source) => {
+    const dist = source.isVisible
+      ? getSignedDistanceRect(x, y, source.bounds)
       : Infinity;
-    const element = source.getElement?.();
-    return { bounds, dist, element };
+    return { ...source, dist };
   });
 
   newDomDistances = newDomDistances.filter((it) => it.dist !== Infinity);

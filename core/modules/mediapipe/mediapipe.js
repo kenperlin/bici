@@ -4,23 +4,12 @@ import {
   FilesetResolver,
   DrawingUtils
 } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0";
-import { videoTransform } from "../canvasUtils.js";
+import { videoTransform } from "../utils/canvasUtils.js";
+import { mediapipeState } from "./state.js";
 
 let drawUtils;
 let handLandmarker;
 let faceLandmarker;
-
-export const state = {
-  isReady: false,
-  isRunning: true,
-  debugMode: false,
-
-  handResults: [],
-  faceResults: [],
-
-  toggleRunning: () => state.isRunning = !state.isRunning,
-  toggleDebug: () => state.debugMode = !state.debugMode
-};
 
 export async function initMediapipe() {
   drawUtils = new DrawingUtils(OCTX);
@@ -48,11 +37,11 @@ export async function initMediapipe() {
     })
   ]);
 
-  state.isReady = true;
+  mediapipeState.isReady = true;
 }
 
-export async function mediapipePredict(video) {
-  if (!state.isReady || !state.isRunning || video.readyState < 2) return;
+export function mediapipePredict(video) {
+  if (!mediapipeState.isReady || !mediapipeState.isRunning || video.readyState < 2) return;
 
   if (video.lastVideoTime !== video.currentTime) {
     video.lastVideoTime = video.currentTime;
@@ -63,7 +52,7 @@ export async function mediapipePredict(video) {
     processResults(handResults, faceResults);
   }
 
-  if (state.debugMode) {
+  if (mediapipeState.debugMode) {
     drawDebug();
   }
 }
@@ -93,8 +82,8 @@ function processResults(handResults, faceResults) {
     newFace = faceResults.faceLandmarks[0].map(transformLandmark);
   }
 
-  state.faceResults = newFace;
-  state.handResults = newHands;
+  mediapipeState.faceResults = newFace;
+  mediapipeState.handResults = newHands;
 }
 
 function drawDebug() {
@@ -105,7 +94,7 @@ function drawDebug() {
     videoTransform.h / (HEIGHT * DPR)
   );
 
-  for (const hand of state.handResults) {
+  for (const hand of mediapipeState.handResults) {
     drawUtils.drawConnectors(
       hand.landmarks,
       HandLandmarker.HAND_CONNECTIONS,
@@ -120,19 +109,19 @@ function drawDebug() {
     });
   }
 
-  if (state.faceResults) {
+  if (mediapipeState.faceResults) {
     drawUtils.drawConnectors(
-      state.faceResults,
+      mediapipeState.faceResults,
       FaceLandmarker.FACE_LANDMARKS_TESSELATION,
       { color: "#C0C0C070", lineWidth: 1 }
     );
     drawUtils.drawConnectors(
-      state.faceResults,
+      mediapipeState.faceResults,
       FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE,
       { color: "#FF3030" }
     );
     drawUtils.drawConnectors(
-      state.faceResults,
+      mediapipeState.faceResults,
       FaceLandmarker.FACE_LANDMARKS_LEFT_EYE,
       { color: "#FF3030" }
     );
