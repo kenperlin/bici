@@ -1,9 +1,9 @@
-import { MotionGesture } from "./types.js";
+import { MotionGesture } from "./detect.js";
 
 export class GestureTracker {
   constructor() {
     this.gestures = [];
-    this.activeGestures = {
+    this.active = {
       left: null,
       right: null
     };
@@ -22,18 +22,19 @@ export class GestureTracker {
   update(hands) {
     const now = Date.now();
 
+    this.active["left"] = null;
+    this.active["right"] = null;
+
     for (const hand of hands) {
       const h = hand.handedness;
-      let activeGesture = null;
       for (const { gesture, handedness } of this.gestures) {
         if (handedness && handedness !== h) continue;
         if (gesture.update(hand, now)) {
-          activeGesture = gesture;
+          this.active[h] = gesture;
           break;
         }
       }
 
-      this.activeGestures[h] = activeGesture;
     }
   }
 }

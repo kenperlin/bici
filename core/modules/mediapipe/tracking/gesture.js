@@ -1,5 +1,5 @@
 import { GestureTracker } from "../gestures/tracker.js";
-import { getFingerThumbDistances, MotionGesture, PinchGesture } from "../gestures/types.js";
+import { HandGesture, handScale, LM, lmDistance, MotionGesture, pinchDistances, PinchGesture } from "../gestures/detect.js";
 import { mediapipeState, trackingState } from "../state.js";
 import { toScreen } from "../utils/mapping.js";
 
@@ -8,7 +8,7 @@ let gestureTracker;
 export function initGestureTracker(sceneManager) {
   const { canvas: sceneCanvas, codeArea, slideDeck } = sceneManager;
 
-  const indexPinch = new PinchGesture("indexPinch", [1], 0.1);
+  const indexPinch = new PinchGesture("indexPinch", [1], 0.25);
 
   indexPinch.onStart = ({ state, id }, hand) => {
     const h = hand.handedness;
@@ -73,18 +73,23 @@ export function initGestureTracker(sceneManager) {
     }
   };
 
-  const middlePinch = new PinchGesture("middlePinch", [2], 0.1);
+  const middlePinch = new PinchGesture("middlePinch", [2], 0.25);
+
+  let detectFist = (hand) => {
+    const scale = handScale(hand.landmarks)
+    const distances = LM.FINGERTIPS.map(i => lmDistance(hand.landmarks, LM.WRIST, i));
+    return Math.max(...distances) / scale < 1;
+  }
+  const fist = new HandGesture("fist", detectFist);
 
   let detectSpreadStart = (hand) => {
-    const scaleFac = Math.min(1, 0.1 / (0.2 + hand.landmarks[4].z));
-    let distances = getFingerThumbDistances([1, 2, 3, 4], hand);
-    return distances.every((d) => d < 0.15 * scaleFac);
+    let distances = pinchDistances([1, 2, 3, 4], hand.landmarks);
+    return Math.max(...distances) < 0.35;
   };
 
   let detectSpreadEnd = (hand) => {
-    const scaleFac = Math.min(1, 0.1 / (0.2 + hand.landmarks[4].z));
-    let distances = getFingerThumbDistances([1, 2, 3, 4], hand);
-    return distances.every((d) => d > 0.3 * scaleFac);
+    let distances = pinchDistances([1, 2, 3, 4], hand.landmarks);
+    return Math.max(...distances) > 1.2;
   };
 
   const spreadGesture = new MotionGesture("spread", detectSpreadStart, detectSpreadEnd, 300);
@@ -94,7 +99,7 @@ export function initGestureTracker(sceneManager) {
       (trackingState.spotlightElement = trackingState.domDistances[0]) == null
     )
       return;
-
+    
     trackingState.domDistances.forEach((elem) => {
       if(elem.element) elem.element.style.opacity = 0;
     });
@@ -121,8 +126,11 @@ export function initGestureTracker(sceneManager) {
   };
 
   gestureTracker = new GestureTracker();
+  trackingState.gestures = gestureTracker.active;
+  
   gestureTracker.add(indexPinch);
   gestureTracker.add(middlePinch);
+  gestureTracker.add(fist, null, 1);
   gestureTracker.add(spreadGesture);
 }
 

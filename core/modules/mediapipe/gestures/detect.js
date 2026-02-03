@@ -1,7 +1,34 @@
-import { norm, subtract } from "../../math/math.js";
+import { clamp, norm, subtract } from "../../math/math.js";
+
+export const LM = Object.freeze({
+  WRIST: 0,
+  THUMB_CMC: 1,
+  THUMB_MCP: 2,
+  THUMB_IP: 3,
+  THUMB_TIP: 4,
+  INDEX_MCP: 5,
+  INDEX_PIP: 6,
+  INDEX_DIP: 7,
+  INDEX_TIP: 8,
+  MIDDLE_MCP: 9,
+  MIDDLE_PIP: 10,
+  MIDDLE_DIP: 11,
+  MIDDLE_TIP: 12,
+  RING_MCP: 13,
+  RING_PIP: 14,
+  RING_DIP: 15,
+  RING_TIP: 16,
+  PINKY_MCP: 17,
+  PINKY_PIP: 18,
+  PINKY_DIP: 19,
+  PINKY_TIP: 20,
+  MCPS: [5, 9, 13, 17],
+  TIPS: [4, 8, 12, 16, 20],
+  FINGERTIPS: [8, 12, 16, 20]
+});
 
 export class HandGesture {
-  constructor(id, activationThreshold = 1, activeCooldown = 33, conditionFn) {
+  constructor(id, conditionFn, activationThreshold = 3, activeCooldown = 33) {
     this.id = id;
     this.conditionFn = conditionFn;
     this.activationThreshold = activationThreshold;
@@ -23,7 +50,7 @@ export class HandGesture {
     const conditionMet = this.conditionFn(hand);
 
     this.confidence[h] += conditionMet ? 1 : -1;
-    this.confidence[h] = Math.min(Math.max(0, this.confidence[h]), this.activationThreshold);
+    this.confidence[h] = clamp(this.confidence[h], 0, this.activationThreshold);
     
     if (!this.isActive[h] && this.confidence[h] >= this.activationThreshold) {
       this.isActive[h] = true;
@@ -109,23 +136,22 @@ export class MotionGesture {
 }
 
 export class PinchGesture extends HandGesture {
-  constructor(id, fingers, maxDistance, activationThreshold = 1, activeCooldown = 33) {
+  constructor(id, fingers, maxDistance, activationThreshold = 3, activeCooldown = 33) {
     let detectPinch = (hand) => {
-      const scaleFac = Math.min(1, .1 / (.2 + hand.landmarks[4].z));
-      let distances = getFingerThumbDistances(fingers, hand);
-      return distances.every((d) => d < maxDistance * scaleFac)
+      const distances = pinchDistances(fingers, hand.landmarks);
+      return Math.max(...distances) < maxDistance
     };
 
-    super(id, activationThreshold, activeCooldown, detectPinch);
+    super(id, detectPinch, activationThreshold, activeCooldown);
     this.fingers = fingers;
   }
 
   updateState(hand) {
     const h = hand.handedness;
-    let newState = {...this.state[h], ...hand.landmarks[4]};
+    let newState = {...this.state[h], ...hand.landmarks[LM.THUMB_TIP]};
 
     for(let i = 0; i < this.fingers.length; i++) {
-      const fingerPt = hand.landmarks[4 + 4 * this.fingers[i]]
+      const fingerPt = hand.landmarks[LM.TIPS[this.fingers[i]]]
       newState.x += fingerPt.x;
       newState.y += fingerPt.y;
       newState.z += fingerPt.z;
@@ -156,14 +182,30 @@ export class PinchGesture extends HandGesture {
   }
 }
 
-export function getFingerThumbDistances(fingers, hand) {
-  let pointToArray = p => [ p.x, p.y, p.z ];
-  let distances = [];
-  const thumbPt = pointToArray(hand.landmarks[4]);
+export function pinchDistances(fingers, landmarks) {
+  const scale = handScale(landmarks)
+  return fingers.map(f => lmDistance(landmarks, LM.THUMB_TIP, LM.TIPS[f]) / scale);
+}
 
-  for (let i = 0; i < fingers.length; i++) {
-    const fingerPt = pointToArray(hand.landmarks[4 + 4 * fingers[i]]);
-    distances[i] = norm(subtract(fingerPt, thumbPt))
-  }
-  return distances;
+export function handScale(landmarks) {
+  // Get hand scale in 3D space based on palm size from landmarks
+  const palmWidth = lmDistance(landmarks, LM.INDEX_MCP, LM.PINKY_MCP)
+  const palmLength = lmDistance(landmarks, LM.WRIST, LM.MIDDLE_MCP)
+  return Math.max(palmWidth, palmLength, 0.01);
+}
+
+export function lmDistance(landmarks, a, b) {
+  const dx = landmarks[a].x - landmarks[b].x;
+  const dy = landmarks[a].y - landmarks[b].y;
+  const dz = landmarks[a].z - landmarks[b].z;
+  return Math.sqrt(dx*dx + dy*dy + dz*dz);
+}
+
+function lmAverage(points) {
+  const sum = points.reduce(
+    (acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y, z: acc.z + p.z }),
+    { x: 0, y: 0, z: 0 }
+  );
+  const n = points.length;
+  return { x: sum.x / n, y: sum.y / n, z: sum.z / n };
 }
