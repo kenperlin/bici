@@ -29,8 +29,8 @@ export class GestureTracker {
       const h = hand.handedness;
       for (const { gesture, handedness } of this.gestures) {
         if (handedness && handedness !== h) continue;
-        if (this.active[h]) gesture.update(hand, false, now);
-        else this.active[h] = gesture.update(hand, true, now) ? gesture : null;
+        if (this.active[h]) gesture.update(hand, true, now);
+        else this.active[h] = gesture.update(hand, false, now) ? gesture : null;
       }
     }
   }

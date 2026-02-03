@@ -38,20 +38,22 @@ export class HandGesture {
     this.onEnd = () => {};
     this.onActive = () => {};
 
-    this.state = {left: {}, right: {}};
+    this.state = { left: {}, right: {} };
 
-    this.lastActiveTime = {left: 0, right: 0};
-    this.confidence = {left: 0, right: 0};
-    this.isActive = {left: false, right: false};
+    this.lastActiveTime = { left: 0, right: 0 };
+    this.confidence = { left: 0, right: 0 };
+    this.isActive = { left: false, right: false };
   }
 
-  update(hand, detecting = true, timestamp = Date.now()) {
+  update(hand, silent = false, timestamp = Date.now()) {
     const h = hand.handedness;
-    const conditionMet = detecting ? this.conditionFn(hand) : false;
+    const conditionMet = this.conditionFn(hand);
 
     this.confidence[h] += conditionMet ? 1 : -1.5;
     this.confidence[h] = clamp(this.confidence[h], 0, this.activationThreshold);
-    
+
+    if (silent) return false;
+
     if (!this.isActive[h] && this.confidence[h] >= this.activationThreshold) {
       this.isActive[h] = true;
       this._onStart?.(hand);
@@ -60,10 +62,7 @@ export class HandGesture {
       this._onEnd?.(hand);
     }
 
-    if (
-      this.isActive[h] &&
-      timestamp - this.lastActiveTime[h] > this.activeCooldown
-    ) {
+    if (this.isActive[h] && timestamp - this.lastActiveTime[h] > this.activeCooldown) {
       this.lastActiveTime[h] = timestamp;
       this._onActive?.(hand);
     }
@@ -95,33 +94,33 @@ export class MotionGesture {
 
     this.lastA = {
       left: 0,
-      right: 0,
-    }
+      right: 0
+    };
     this.lastB = {
       left: 0,
-      right: 0,
-    }
+      right: 0
+    };
     this.lastTrigger = {
       left: 0,
-      right: 0,
-    }
+      right: 0
+    };
   }
 
-  update(hand, detecting = true, timestamp = Date.now()) {
+  update(hand, silent = false, timestamp = Date.now()) {
     const h = hand.handedness;
-    if(!detecting || timestamp - this.lastTrigger[h] < this.triggerCooldown) return;
+    if (silent || timestamp - this.lastTrigger[h] < this.triggerCooldown) return;
 
     if (this.conditionFnB(hand)) {
       if (timestamp - this.lastA[h] < this.maxTimeInterval) {
         this._onTriggerAB(this, hand);
-        this.lastTrigger[h] = timestamp
+        this.lastTrigger[h] = timestamp;
       }
       this.lastB[h] = timestamp;
     }
     if (this.conditionFnA(hand)) {
       if (timestamp - this.lastB[h] < this.maxTimeInterval) {
         this._onTriggerBA(this, hand);
-        this.lastTrigger[h] = timestamp
+        this.lastTrigger[h] = timestamp;
       }
       this.lastA[h] = timestamp;
     }
@@ -139,7 +138,7 @@ export class PinchGesture extends HandGesture {
   constructor(id, fingers, maxDistance, activationThreshold = 3, activeCooldown = 33) {
     let detectPinch = (hand) => {
       const distances = fingerDistances(hand.landmarks, LM.THUMB_TIP, fingers);
-      return Math.max(...distances) < maxDistance
+      return Math.max(...distances) < maxDistance;
     };
 
     super(id, detectPinch, activationThreshold, activeCooldown);
@@ -148,23 +147,11 @@ export class PinchGesture extends HandGesture {
 
   updateState(hand) {
     const h = hand.handedness;
-    let newState = {...this.state[h], ...hand.landmarks[LM.THUMB_TIP]};
-
-    for(let i = 0; i < this.fingers.length; i++) {
-      const fingerPt = hand.landmarks[LM.TIPS[this.fingers[i]]]
-      newState.x += fingerPt.x;
-      newState.y += fingerPt.y;
-      newState.z += fingerPt.z;
-    }
-    
-    newState.x /= (this.fingers.length + 1);
-    newState.y /= (this.fingers.length + 1);
-    newState.z /= (this.fingers.length + 1);
-    newState.duration = (this.state[h]?.duration ?? 0) + 1;
-
-    this.state[h] = newState;
+    const indices = this.fingers.map(f => LM.TIPS[f]);
+    const newState = lmAverage(hand.landmarks, [LM.THUMB_TIP, ...indices])
+    this.state[h] = {...this.state[h], newState};
+    this.state[h].duration = (this.state[h]?.duration ?? 0) + 1
   }
-
 
   _onStart(hand) {
     this.updateState(hand);
@@ -172,25 +159,25 @@ export class PinchGesture extends HandGesture {
   }
 
   _onEnd(hand) {
-    super._onEnd(hand)
+    super._onEnd(hand);
     this.state[hand.handedness] = {};
   }
 
   _onActive(hand) {
     this.updateState(hand);
-    super._onActive(hand)
+    super._onActive(hand);
   }
 }
 
 export function fingerDistances(landmarks, reference, fingers = [1, 2, 3, 4]) {
-  const scale = handScale(landmarks)
-  return fingers.map(f => lmDistance(landmarks, reference, LM.TIPS[f]) / scale);
+  const scale = handScale(landmarks);
+  return fingers.map((f) => lmDistance(landmarks, reference, LM.TIPS[f]) / scale);
 }
 
 export function handScale(landmarks) {
   // Get hand scale in 3D space based on palm size from landmarks
-  const palmWidth = lmDistance(landmarks, LM.INDEX_MCP, LM.PINKY_MCP)
-  const palmLength = lmDistance(landmarks, LM.WRIST, LM.MIDDLE_MCP)
+  const palmWidth = lmDistance(landmarks, LM.INDEX_MCP, LM.PINKY_MCP);
+  const palmLength = lmDistance(landmarks, LM.WRIST, LM.MIDDLE_MCP);
   return Math.max(palmWidth, palmLength, 0.01);
 }
 
@@ -198,14 +185,18 @@ export function lmDistance(landmarks, a, b) {
   const dx = landmarks[a].x - landmarks[b].x;
   const dy = landmarks[a].y - landmarks[b].y;
   const dz = landmarks[a].z - landmarks[b].z;
-  return Math.sqrt(dx*dx + dy*dy + dz*dz);
+  return Math.sqrt(dx * dx + dy * dy + dz * dz);
 }
 
-function lmAverage(landmarks) {
-  const sum = points.reduce(
-    (acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y, z: acc.z + p.z }),
+export function lmAverage(landmarks, indices) {
+  const sum = indices.reduce(
+    (acc, i) => ({
+      x: acc.x + landmarks[i].x,
+      y: acc.y + landmarks[i].y,
+      z: acc.z + landmarks[i].z
+    }),
     { x: 0, y: 0, z: 0 }
   );
-  const n = points.length;
+  const n = indices.length;
   return { x: sum.x / n, y: sum.y / n, z: sum.z / n };
 }
