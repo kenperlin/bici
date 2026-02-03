@@ -1,4 +1,4 @@
-import { clamp, norm, subtract } from "../../math/math.js";
+import { clamp } from "../../math/math.js";
 
 export const LM = Object.freeze({
   WRIST: 0,
@@ -28,7 +28,7 @@ export const LM = Object.freeze({
 });
 
 export class HandGesture {
-  constructor(id, conditionFn, activationThreshold = 3, activeCooldown = 33) {
+  constructor(id, conditionFn, activationThreshold = 5, activeCooldown = 33) {
     this.id = id;
     this.conditionFn = conditionFn;
     this.activationThreshold = activationThreshold;
@@ -45,9 +45,9 @@ export class HandGesture {
     this.isActive = {left: false, right: false};
   }
 
-  update(hand, timestamp = Date.now()) {
+  update(hand, detecting = true, timestamp = Date.now()) {
     const h = hand.handedness;
-    const conditionMet = this.conditionFn(hand);
+    const conditionMet = detecting ? this.conditionFn(hand) : false;
 
     this.confidence[h] += conditionMet ? 1 : -1;
     this.confidence[h] = clamp(this.confidence[h], 0, this.activationThreshold);
@@ -107,9 +107,9 @@ export class MotionGesture {
     }
   }
 
-  update(hand, timestamp = Date.now()) {
+  update(hand, detecting = true, timestamp = Date.now()) {
     const h = hand.handedness;
-    if(timestamp - this.lastTrigger[h] < this.triggerCooldown) return;
+    if(!detecting || timestamp - this.lastTrigger[h] < this.triggerCooldown) return;
 
     if (this.conditionFnB(hand)) {
       if (timestamp - this.lastA[h] < this.maxTimeInterval) {
@@ -201,7 +201,7 @@ export function lmDistance(landmarks, a, b) {
   return Math.sqrt(dx*dx + dy*dy + dz*dz);
 }
 
-function lmAverage(points) {
+function lmAverage(landmarks) {
   const sum = points.reduce(
     (acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y, z: acc.z + p.z }),
     { x: 0, y: 0, z: 0 }

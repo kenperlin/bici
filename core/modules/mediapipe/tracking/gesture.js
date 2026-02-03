@@ -1,5 +1,13 @@
 import { GestureTracker } from "../gestures/tracker.js";
-import { HandGesture, handScale, LM, lmDistance, MotionGesture, pinchDistances, PinchGesture } from "../gestures/detect.js";
+import {
+  HandGesture,
+  handScale,
+  LM,
+  lmDistance,
+  MotionGesture,
+  pinchDistances,
+  PinchGesture
+} from "../gestures/detect.js";
 import { mediapipeState, trackingState } from "../state.js";
 import { toScreen } from "../utils/mapping.js";
 
@@ -76,11 +84,33 @@ export function initGestureTracker(sceneManager) {
   const middlePinch = new PinchGesture("middlePinch", [2], 0.25);
 
   let detectFist = (hand) => {
-    const scale = handScale(hand.landmarks)
-    const distances = LM.FINGERTIPS.map(i => lmDistance(hand.landmarks, LM.WRIST, i));
+    const scale = handScale(hand.landmarks);
+    const distances = LM.FINGERTIPS.map((i) => lmDistance(hand.landmarks, LM.WRIST, i));
     return Math.max(...distances) / scale < 1;
-  }
-  const fist = new HandGesture("fist", detectFist);
+  };
+  const fistGesture = new HandGesture("fist", detectFist);
+
+  let detectPoint = (hand) => {
+    const scale = handScale(hand.landmarks);
+    const indexDistance = lmDistance(hand.landmarks, LM.WRIST, LM.INDEX_TIP) / scale
+    const thumbDistance = lmDistance(hand.landmarks, LM.MIDDLE_PIP, LM.THUMB_TIP) / scale
+    const otherDistances = [
+      lmDistance(hand.landmarks, LM.WRIST, LM.MIDDLE_TIP) / scale,
+      lmDistance(hand.landmarks, LM.WRIST, LM.RING_TIP) / scale,
+      lmDistance(hand.landmarks, LM.WRIST, LM.PINKY_TIP) / scale
+    ]
+    return Math.max(...otherDistances) < 1 && indexDistance > 1.6 && thumbDistance < 0.25;
+  };
+  const pointGesture = new HandGesture("point", detectPoint);
+
+  let detectGripper = (hand) => {
+    const scale = handScale(hand.landmarks);
+    const indexDistance = lmDistance(hand.landmarks, LM.WRIST, LM.INDEX_TIP) / scale
+    const thumbDistance = lmDistance(hand.landmarks, LM.MIDDLE_PIP, LM.THUMB_TIP) / scale
+    return indexDistance > 1.3 && thumbDistance > 0.3;
+  };
+  const gripperGesture = new HandGesture("gripper", detectGripper);
+
 
   let detectSpreadStart = (hand) => {
     let distances = pinchDistances([1, 2, 3, 4], hand.landmarks);
@@ -99,9 +129,9 @@ export function initGestureTracker(sceneManager) {
       (trackingState.spotlightElement = trackingState.domDistances[0]) == null
     )
       return;
-    
+
     trackingState.domDistances.forEach((elem) => {
-      if(elem.element) elem.element.style.opacity = 0;
+      if (elem.element) elem.element.style.opacity = 0;
     });
 
     let element = trackingState.spotlightElement.element;
@@ -121,16 +151,18 @@ export function initGestureTracker(sceneManager) {
     trackingState.spotlightElement = null;
 
     trackingState.domDistances.forEach((elem) => {
-      if(elem.element) elem.element.style.opacity = 1;
+      if (elem.element) elem.element.style.opacity = 1;
     });
   };
 
   gestureTracker = new GestureTracker();
   trackingState.gestures = gestureTracker.active;
-  
+
   gestureTracker.add(indexPinch);
   gestureTracker.add(middlePinch);
-  gestureTracker.add(fist, null, 1);
+  gestureTracker.add(gripperGesture)
+  gestureTracker.add(fistGesture, null, 1);
+  gestureTracker.add(pointGesture, null, 1);
   gestureTracker.add(spreadGesture);
 }
 
