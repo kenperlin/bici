@@ -18,11 +18,16 @@ export function toShadowAvatar(point, h) {
   }
 }
 
+export function toVideo(point) {
+  return {
+    x: point.x * videoTransform.w + videoTransform.x,
+    y: point.y * videoTransform.h + videoTransform.y,
+    z: point.z * videoTransform.w
+  }
+}
+
 export function toScreen(point, h) {
-  let newPoint = { ...point };
-  newPoint.x = newPoint.x * videoTransform.w + videoTransform.x;
-  newPoint.y = newPoint.y * videoTransform.h + videoTransform.y;
-  newPoint.z *= videoTransform.w;
+  let newPoint = toVideo(point);
 
   if (state.isShadowAvatar()) toShadowAvatar(newPoint, h);
 

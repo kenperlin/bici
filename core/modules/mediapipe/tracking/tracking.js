@@ -3,9 +3,11 @@ import { LowPassFilter, PCAFilter } from "../utils/filter.js";
 import { trackingState as state, mediapipeState } from "../state.js";
 import { drawEyes, drawHands, drawShadowGesture, drawShadowHand } from "./drawing.js";
 import { fingerDistances, handScale, LM } from "../gestures/detect.js";
+import { toVideo } from "../utils/mapping.js";
 
-const pcaFilter = new PCAFilter();
-const lowPassFilter = new LowPassFilter(2 / 3);
+const headPcaFilter = new PCAFilter();
+const headLowPassFilter = new LowPassFilter(2 / 3);
+const globalAvatarFilter = new LowPassFilter(2 / 3);
 
 let pointToArray = (p) => [p.x, p.y, p.z];
 
@@ -45,10 +47,10 @@ export function updateTracking() {
   state.headX = clamp(WIDTH / 2 + ((4.5 * WIDTH) / 2) * state.headMatrix[8], 0, WIDTH);
   state.headY = clamp(HEIGHT / 2 - ((4.5 * WIDTH) / 2) * state.headMatrix[9], 0, HEIGHT);
 
-  [state.headX, state.headY] = lowPassFilter.filter(state.headX, state.headY);
+  [state.headX, state.headY] = headLowPassFilter.filter(state.headX, state.headY);
 
   if (state.isSteady) {
-    [state.headX, state.headY] = pcaFilter.filter(state.headX, state.headY);
+    [state.headX, state.headY] = headPcaFilter.filter(state.headX, state.headY);
   }
   // if (state.isLarge) {
   //    state.headX = frameToRect(state.headX, canvas3D.getBoundingClientRect());
@@ -61,35 +63,48 @@ export function updateTracking() {
 
   if (state.isSeparateHandAvatars) {
     for (const hand of handResults) {
-      computeShadowHand(hand)
+      computeShadowHand(hand);
       drawShadowHand(hand, state.handAvatar[hand.handedness]);
     }
-    drawShadowGesture(handResults)
-
+    drawShadowGesture(handResults);
   } else {
-    computeGlobalShadowAvatar(handResults)
+    computeGlobalShadowAvatar(handResults);
     for (const hand of handResults) {
-      computeShadowHand(hand)
+      computeShadowHand(hand);
       drawShadowHand(hand, state.globalAvatar);
     }
   }
 }
 
 // GIVEN THREE POINTS ON THE FACE, COMPUTE THE USER'S HEAD MATRIX
-function computeHeadMatrix(a,b,c) {
+function computeHeadMatrix(a, b, c) {
   a[1] = -a[1];
   b[1] = -b[1];
   c[1] = -c[1];
-  let X = normalize(subtract(a,c));
-  let y = subtract(b,mix(a,c,.5));
-  let Z = normalize(cross(X,y));
-  let Y = normalize(cross(Z,X));
-  Z = normalize(add(Z,resize(Y,.3)));
-  Y = normalize(cross(Z,X));
-  state.headMatrix = [ X[0],X[1],X[2],0,
-                       Y[0],Y[1],Y[2],0,
-                       Z[0],Z[1],Z[2],0,
-                       4*(b[0]-.5),4*(b[1]+.625),4*b[2],1 ];
+  let X = normalize(subtract(a, c));
+  let y = subtract(b, mix(a, c, 0.5));
+  let Z = normalize(cross(X, y));
+  let Y = normalize(cross(Z, X));
+  Z = normalize(add(Z, resize(Y, 0.3)));
+  Y = normalize(cross(Z, X));
+  state.headMatrix = [
+    X[0],
+    X[1],
+    X[2],
+    0,
+    Y[0],
+    Y[1],
+    Y[2],
+    0,
+    Z[0],
+    Z[1],
+    Z[2],
+    0,
+    4 * (b[0] - 0.5),
+    4 * (b[1] + 0.625),
+    4 * b[2],
+    1
+  ];
 }
 
 // GIVEN EDGES OF EYES AND PUPIL, COMPUTE EYE GAZE AND EYE OPEN
@@ -115,52 +130,51 @@ function computeEyeGaze(la, lb, lc, ld, le, lf, lg, ra, rb, rc, rd, re, rf, rg) 
 
 function computeShadowHand(hand) {
   const { handedness: h, landmarks } = hand;
+  if (state.gestures[h]?.id !== "fist") return;
 
   // Scale finger thickness depending on visible hand size.
-  state.shadowHandInfo[h].s = WIDTH * handScale(landmarks) * 0.075;
-  state.shadowHandInfo[h].x = WIDTH * landmarks[10].x;
-  state.shadowHandInfo[h].y = HEIGHT * landmarks[10].y;
-  state.shadowHandInfo[h].open = fingerDistances(landmarks, LM.WRIST);
-    
-  if (state.gestures[h]?.id === "fist") {
-    state.handAvatar[h].x = state.shadowHandInfo[h].x * (1 - state.handAvatar[h].s);
-    state.handAvatar[h].y = state.shadowHandInfo[h].y * (1 - state.handAvatar[h].s);
-    state.handAvatar[h].s =
-      0.5 * state.handAvatar[h].s + 0.5 * clamp((35 - state.shadowHandInfo[h].s) / 15, 0.2, 1);
-    if (state.handAvatar[h].s == 1) state.handAvatar[h].x = state.handAvatar[h].y = 0;
-  }
+  const { x, y } = toVideo({
+    x: landmarks[LM.MIDDLE_MCP].x,
+    y: landmarks[LM.MIDDLE_MCP].y
+  });
+  const avatar = state.handAvatar[h];
+  const targetScale = clamp(2.3 - 7 * handScale(landmarks), 0.2, 1);
+
+  avatar.x = x * (1 - avatar.s);
+  avatar.y = y * (1 - avatar.s);
+  avatar.s = 0.5 * avatar.s + 0.5 * targetScale;
 }
 
 function computeGlobalShadowAvatar(handResults) {
   let x = 0,
-      y = 0,
-      w = 0;
-  let lp = {};
+    y = 0,
+    w = 0;
+
+  const fists = { left: null, right: null };
+
   for (const hand of handResults) {
     const h = hand.handedness;
     if (state.gestures[h]?.id === "fist") {
-      lp[h] = hand.landmarks[0];
-      let closed = 1 / state.shadowHandInfo[h].open;
-      x += WIDTH * lp[h].x * closed;
-      y += HEIGHT * lp[h].y * closed;
-      w += closed;
+      const weight =
+        1 / fingerDistances(hand.landmarks, LM.WRIST).reduce((acc, val) => acc + val, 0);
+      fists[h] = hand.landmarks[LM.WRIST];
+
+      x += WIDTH * fists[h].x * weight;
+      y += HEIGHT * fists[h].y * weight;
+      w += weight;
     }
   }
-  if (w) {
-    state.globalAvatar.x = x / w;
-    state.globalAvatar.y = y / w - 300;
-  }
+  if (w) [state.globalAvatar.x, state.globalAvatar.y] = globalAvatarFilter.filter(x / w, y / w - 300);
 
   // Use change in distance between the two fists to rescale the shadow avatar.
-  if (lp.left && lp.right) {
-    const dx = lp.left.x - lp.right.x,
-          dy = lp.left.y - lp.right.y;
+  if (fists.left && fists.right) {
+    const dx = fists.left.x - fists.right.x,
+      dy = fists.left.y - fists.right.y;
 
     const newSeparation = Math.sqrt(dx * dx + dy * dy);
-    if (state.globalAvatar.separation)
-      state.globalAvatar.s *= newSeparation / state.globalAvatar.separation;
+    state.globalAvatar.s *= newSeparation / (state.globalAvatar.separation ?? newSeparation);
     state.globalAvatar.separation = newSeparation;
   } else {
-    state.hand_separation = null;
+    state.globalAvatar.separation = null;
   }
 }

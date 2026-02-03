@@ -34,7 +34,6 @@ export const trackingState = {
     left: { x: 0, y: 0, s: 1 },
     right: { x: 0, y: 0, s: 1 }
   },
-  shadowHandInfo: {left: {}, right: {}},
   gestures: {left: null, right: null},
 
   isLarge: false,
