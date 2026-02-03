@@ -5,50 +5,44 @@ import { handScale, LM } from "../gestures/detect.js";
 import { videoTransform } from "../../utils/canvasUtils.js";
 
 export function drawHands(handResults) {
-  let zScale = (z) => Math.max(0.15, Math.min(1, 0.1 / (0.2 + z)));
   OCTX.save();
   for (const hand of handResults) {
     const h = hand.handedness;
+    const scale = videoTransform.w * handScale(hand.landmarks);
     const fingersToDraw = new Set([0, 1, 2]);
 
     OCTX.fillStyle = "#00000060";
     OCTX.strokeStyle = "#00000060";
 
-    // const activeGesture = gestureTracker.activeGestures[h];
-    // if (activeGesture) {
-    //    const activeGestureState = toScreen(activeGesture.state[h], h);
-    //    activeGesture.fingers.forEach((it) => fingersToDraw.delete(it));
-    //    fingersToDraw.delete(0);
+    const gesture = state.gestures[h];
+    if (gesture?.id.includes("pinch")) {
+      const gestureState = toScreen(gesture.state[h], h);
+      gesture.fingers.forEach((it) => fingersToDraw.delete(it));
+      fingersToDraw.delete(0);
 
-    //    let radius = 25 * zScale(activeGestureState.z / WIDTH);
-    //    if(state.isObvious) {
-    //       switch(activeGesture.id) {
-    //          case "indexPinch": OCTX.fillStyle = '#ffff0080'; break;
-    //          case "middlePinch": OCTX.fillStyle = '#ff00ff80'; break;
-    //       }
-    //       radius *= 2;
-    //    }
-    //    OCTX.beginPath();
-    //    OCTX.arc(activeGestureState.x, activeGestureState.y, radius, 0, 2 * Math.PI);
-    //    OCTX.fill();
-    // }
+      let radius = 0.025 * scale;
+      if (state.isObvious) {
+        switch (gesture.id) {
+          case "index pinch": OCTX.fillStyle = "#ffff0080"; break;
+          case "middle pinch": OCTX.fillStyle = "#ff00ff80"; break;
+        }
+        radius *= 2;
+      }
+      OCTX.beginPath();
+      OCTX.arc(gestureState.x, gestureState.y, radius, 0, 2 * Math.PI);
+      OCTX.fill();
+    }
 
     for (const idx of fingersToDraw) {
       const fingerPt = hand.landmarks[LM.TIPS[idx]];
       const screenFingerPt = toScreen(fingerPt, h);
 
-      let radius = 15 * zScale(fingerPt.z);
+      let radius = 0.03 * scale;
       if (state.isObvious) {
         switch (idx) {
-          case 0:
-            OCTX.fillStyle = "#ff000080";
-            break;
-          case 1:
-            OCTX.fillStyle = "#00ff0080";
-            break;
-          case 2:
-            OCTX.fillStyle = "#0000ff80";
-            break;
+          case 0: OCTX.fillStyle = "#ff000080"; break;
+          case 1: OCTX.fillStyle = "#00ff0080"; break;
+          case 2: OCTX.fillStyle = "#0000ff80"; break;
         }
         radius *= 2;
 
@@ -198,8 +192,8 @@ export function drawShadowHand(hand, avatarInfo) {
   // Draw an opaque shadow of the hand to the shadow canvas.
   for (let n = 1; n <= 20; n += 4) {
     let r = s * hScale * 0.065;
-    if(n < 11) r *= 1.1;
-    if(n < 6) r *= 1.1;
+    if (n < 11) r *= 1.1;
+    if (n < 6) r *= 1.1;
 
     sctx.fillStyle = sctx.strokeStyle = "black";
     sctx.lineWidth = 2 * r;
@@ -251,7 +245,7 @@ export function drawShadowHand(hand, avatarInfo) {
   }
 
   // If pinching, show pinch point.
-  if (state.gestures[h]?.id === "indexPinch") {
+  if (state.gestures[h]?.id === "index pinch") {
     let p = toScreen(landmarks[LM.THUMB_TIP], h);
     let q = toScreen(landmarks[LM.INDEX_TIP], h);
     sctx.beginPath();
@@ -279,7 +273,7 @@ export function drawShadowGesture(handResults) {
   };
 
   // If both hands are pinching, draw a line between them.
-  if (state.gestures.left.id == "indexPinch" && state.gestures.right.id == "indexPinch") {
+  if (state.gestures.left.id == "index pinch" && state.gestures.right.id == "index pinch") {
     let p0 = fingerTip(leftHand, 0);
     let p1 = fingerTip(leftHand, 1);
     let q0 = fingerTip(rightHand, 0);
@@ -294,10 +288,10 @@ export function drawShadowGesture(handResults) {
 
   // If one hand is pinching and the other is gripping, project a line from the pinch to the gripper.
   if (
-    (state.gestures.left.id === "indexPinch" && state.gestures.right.id === "gripper") ||
-    (state.gestures.left.id === "gripper" && state.gestures.right.id === "indexPinch")
+    (state.gestures.left.id === "index pinch" && state.gestures.right.id === "gripper") ||
+    (state.gestures.left.id === "gripper" && state.gestures.right.id === "index pinch")
   ) {
-    const isLeftPinch = state.gestures.left.id === "indexPinch";
+    const isLeftPinch = state.gestures.left.id === "index pinch";
     const pincher = isLeftPinch ? leftHand : rightHand;
     const gripper = isLeftPinch ? rightHand : leftHand;
 

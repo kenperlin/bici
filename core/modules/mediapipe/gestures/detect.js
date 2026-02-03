@@ -149,7 +149,7 @@ export class PinchGesture extends HandGesture {
     const h = hand.handedness;
     const indices = this.fingers.map(f => LM.TIPS[f]);
     const newState = lmAverage(hand.landmarks, [LM.THUMB_TIP, ...indices])
-    this.state[h] = {...this.state[h], newState};
+    this.state[h] = {...this.state[h], ...newState};
     this.state[h].duration = (this.state[h]?.duration ?? 0) + 1
   }
 

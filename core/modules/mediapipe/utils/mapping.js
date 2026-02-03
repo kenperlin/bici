@@ -20,6 +20,7 @@ export function toShadowAvatar(point, h) {
 
 export function toVideo(point) {
   return {
+    ...point,
     x: point.x * videoTransform.w + videoTransform.x,
     y: point.y * videoTransform.h + videoTransform.y,
     z: point.z * videoTransform.w

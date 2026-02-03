@@ -16,7 +16,7 @@ let gestureTracker;
 export function initGestureTracker(sceneManager) {
   const { canvas: sceneCanvas, codeArea, slideDeck } = sceneManager;
 
-  const indexPinch = new PinchGesture("indexPinch", [1], 0.25);
+  const indexPinch = new PinchGesture("index pinch", [1], 0.25);
 
   indexPinch.onStart = ({ state, id }, hand) => {
     const h = hand.handedness;
@@ -81,7 +81,7 @@ export function initGestureTracker(sceneManager) {
     }
   };
 
-  const middlePinch = new PinchGesture("middlePinch", [2], 0.25);
+  const middlePinch = new PinchGesture("middle pinch", [2], 0.25);
 
   let detectFist = (hand) => {
     const scale = handScale(hand.landmarks);
