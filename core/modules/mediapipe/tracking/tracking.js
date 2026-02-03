@@ -2,6 +2,7 @@ import { add, clamp, cross, dot, mix, norm, normalize, resize, subtract } from "
 import { LowPassFilter, PCAFilter } from "../utils/filter.js";
 import { trackingState as state, mediapipeState } from "../state.js";
 import { drawEyes, drawHands, drawShadowGesture, drawShadowHand } from "./drawing.js";
+import { fingerDistances, handScale, LM } from "../gestures/detect.js";
 
 const pcaFilter = new PCAFilter();
 const lowPassFilter = new LowPassFilter(2 / 3);
@@ -115,57 +116,13 @@ function computeEyeGaze(la, lb, lc, ld, le, lf, lg, ra, rb, rc, rd, re, rf, rg) 
 function computeShadowHand(hand) {
   const { handedness: h, landmarks } = hand;
 
-  // Functions to measure distance between two hand joints
-  let distance = (i,j) => {
-    let x = landmarks[i].x - landmarks[j].x;
-    let y = landmarks[i].y - landmarks[j].y;
-    let z = landmarks[i].z - landmarks[j].z;
-    return Math.sqrt(x*x + y*y + z*z);
-  }
-
-  let distance2D = (i,j) => {
-    let x = landmarks[i].x - landmarks[j].x;
-    let y = landmarks[i].y - landmarks[j].y;
-    return Math.sqrt(x*x + y*y);
-  }
-
   // Scale finger thickness depending on visible hand size.
-  let t = 0;
-  for (let n = 1 ; n <= 20 ; n += 4) // loop over 5 fingers
-  for (let i = 0 ; i < 3 ; i++)      // loop over 3 finger joints
-    t += distance(n+i, n+i+1);
-  t = t < 1 ? Math.sqrt(t) : t;
-
-  state.shadowHandInfo[h].s = .017 * WIDTH * t;
+  state.shadowHandInfo[h].s = WIDTH * handScale(landmarks) * 0.075;
   state.shadowHandInfo[h].x = WIDTH * landmarks[10].x;
   state.shadowHandInfo[h].y = HEIGHT * landmarks[10].y;
-
-  let D = [];
-  D[0] = distance(4, 5) / t;
-  for (let j = 1 ; j < 5 ; j++)
-    D[j] = distance(0, 4*j+3) / t;
-
-  state.shadowHandInfo[h].open = D[1] + D[2] + D[3] + D[4];
-
-  state.shadowHandInfo[h].gesture = null;
-
-  if (Math.max(D[1],D[2],D[3],D[4]) < .3)
-    state.shadowHandInfo[h].gesture = 'fist';
-
-  if (D[0] < .1 && D[1] > .3 && Math.max(D[2],D[3],D[4]) < .3)
-    state.shadowHandInfo[h].gesture = 'point';
-
-  if (state.shadowHandInfo[h].gesture == null && distance(4,8) / state.shadowHandInfo[h].s < .002)
-    state.shadowHandInfo[h].gesture = 'pinch';
-
-  if ( state.shadowHandInfo[h].gesture == null &&
-      D[0] > .1 &&
-distance2D(4,5) / t > .1 &&
-distance(4,8) < 1.5 * distance(5,8))
-    state.shadowHandInfo[h].gesture = 'gripper';
-
+  state.shadowHandInfo[h].open = fingerDistances(landmarks, LM.WRIST);
     
-  if (state.shadowHandInfo[h].gesture == "fist") {
+  if (state.gestures[h]?.id === "fist") {
     state.handAvatar[h].x = state.shadowHandInfo[h].x * (1 - state.handAvatar[h].s);
     state.handAvatar[h].y = state.shadowHandInfo[h].y * (1 - state.handAvatar[h].s);
     state.handAvatar[h].s =
@@ -181,7 +138,7 @@ function computeGlobalShadowAvatar(handResults) {
   let lp = {};
   for (const hand of handResults) {
     const h = hand.handedness;
-    if (state.shadowHandInfo[h].gesture == "fist") {
+    if (state.gestures[h]?.id === "fist") {
       lp[h] = hand.landmarks[0];
       let closed = 1 / state.shadowHandInfo[h].open;
       x += WIDTH * lp[h].x * closed;

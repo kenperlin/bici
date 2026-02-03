@@ -5,7 +5,7 @@ import {
   LM,
   lmDistance,
   MotionGesture,
-  pinchDistances,
+  fingerDistances,
   PinchGesture
 } from "../gestures/detect.js";
 import { mediapipeState, trackingState } from "../state.js";
@@ -94,11 +94,7 @@ export function initGestureTracker(sceneManager) {
     const scale = handScale(hand.landmarks);
     const indexDistance = lmDistance(hand.landmarks, LM.WRIST, LM.INDEX_TIP) / scale
     const thumbDistance = lmDistance(hand.landmarks, LM.MIDDLE_PIP, LM.THUMB_TIP) / scale
-    const otherDistances = [
-      lmDistance(hand.landmarks, LM.WRIST, LM.MIDDLE_TIP) / scale,
-      lmDistance(hand.landmarks, LM.WRIST, LM.RING_TIP) / scale,
-      lmDistance(hand.landmarks, LM.WRIST, LM.PINKY_TIP) / scale
-    ]
+    const otherDistances = fingerDistances(hand.landmarks, LM.WRIST, [2, 3, 4])
     return Math.max(...otherDistances) < 1 && indexDistance > 1.6 && thumbDistance < 0.25;
   };
   const pointGesture = new HandGesture("point", detectPoint);
@@ -113,12 +109,12 @@ export function initGestureTracker(sceneManager) {
 
 
   let detectSpreadStart = (hand) => {
-    let distances = pinchDistances([1, 2, 3, 4], hand.landmarks);
+    let distances = fingerDistances(hand.landmarks, LM.THUMB_TIP);
     return Math.max(...distances) < 0.35;
   };
 
   let detectSpreadEnd = (hand) => {
-    let distances = pinchDistances([1, 2, 3, 4], hand.landmarks);
+    let distances = fingerDistances(hand.landmarks, LM.THUMB_TIP);
     return Math.max(...distances) > 1.2;
   };
 

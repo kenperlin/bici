@@ -49,7 +49,7 @@ export class HandGesture {
     const h = hand.handedness;
     const conditionMet = detecting ? this.conditionFn(hand) : false;
 
-    this.confidence[h] += conditionMet ? 1 : -1;
+    this.confidence[h] += conditionMet ? 1 : -1.5;
     this.confidence[h] = clamp(this.confidence[h], 0, this.activationThreshold);
     
     if (!this.isActive[h] && this.confidence[h] >= this.activationThreshold) {
@@ -138,7 +138,7 @@ export class MotionGesture {
 export class PinchGesture extends HandGesture {
   constructor(id, fingers, maxDistance, activationThreshold = 3, activeCooldown = 33) {
     let detectPinch = (hand) => {
-      const distances = pinchDistances(fingers, hand.landmarks);
+      const distances = fingerDistances(hand.landmarks, LM.THUMB_TIP, fingers);
       return Math.max(...distances) < maxDistance
     };
 
@@ -182,9 +182,9 @@ export class PinchGesture extends HandGesture {
   }
 }
 
-export function pinchDistances(fingers, landmarks) {
+export function fingerDistances(landmarks, reference, fingers = [1, 2, 3, 4]) {
   const scale = handScale(landmarks)
-  return fingers.map(f => lmDistance(landmarks, LM.THUMB_TIP, LM.TIPS[f]) / scale);
+  return fingers.map(f => lmDistance(landmarks, reference, LM.TIPS[f]) / scale);
 }
 
 export function handScale(landmarks) {

@@ -224,7 +224,7 @@ export function drawShadowHand(hand, avatarInfo) {
    }
 
    // If pointing, draw a ray out of the index finger.
-   if (state.shadowHandInfo[h].gesture == 'point') {
+   if (state.gestures[h]?.id === 'point') {
       let a = toScreen(landmarks[5], h);
       let b = toScreen(landmarks[8], h);
       for (let i = 0 ; i <= 1 ; i++) {
@@ -238,7 +238,7 @@ export function drawShadowHand(hand, avatarInfo) {
    }
 
    // If making a gripper gesture, show the line between thumb and index fingers.
-   if (state.shadowHandInfo[h].gesture == 'gripper') {
+   if (state.gestures[h]?.id === 'gripper') {
       let p = toScreen(landmarks[4], h);
       let q = toScreen(landmarks[8], h);
       for (let i = 0 ; i <= 1 ; i++) {
@@ -252,7 +252,7 @@ export function drawShadowHand(hand, avatarInfo) {
    }
 
    // If pinching, show pinch point.
-   if (state.shadowHandInfo[h].gesture == 'pinch') {
+   if (state.gestures[h]?.id === 'indexPinch') {
       let p = toScreen(landmarks[4], h);
       let q = toScreen(landmarks[8], h);
       sctx.beginPath();
@@ -273,7 +273,7 @@ export function drawShadowGesture(handResults) {
     const leftHand = handResults.find(e => e.handedness === "left")
     const rightHand = handResults.find(e => e.handedness === "right")
 
-    if(!leftHand || !rightHand) return;
+    if (!leftHand || !rightHand || !state.gestures.left || !state.gestures.right) return;
 
     let fingerTip = (hand, i) => {
       return toScreen(hand.landmarks[4 * i + 4], hand.handedness)
@@ -281,8 +281,8 @@ export function drawShadowGesture(handResults) {
 
     // If both hands are pinching, draw a line between them.
     if (
-      state.shadowHandInfo.left.gesture == "pinch" &&
-      state.shadowHandInfo.right.gesture == "pinch"
+      state.gestures.left.id == "indexPinch" &&
+      state.gestures.right.id == "indexPinch"
     ) {
       let p0 = fingerTip(leftHand, 0);
       let p1 = fingerTip(leftHand, 1);
@@ -298,46 +298,44 @@ export function drawShadowGesture(handResults) {
 
     // If one hand is pinching and the other is gripping, project a line from the pinch to the gripper.
    if (
-      (state.shadowHandInfo.left.gesture == "pinch" &&
-         state.shadowHandInfo.right.gesture == "gripper") ||
-      (state.shadowHandInfo.left.gesture == "gripper" &&
-         state.shadowHandInfo.right.gesture == "pinch")
+     (state.gestures.left.id === "indexPinch" && state.gestures.right.id === "gripper") ||
+     (state.gestures.left.id === "gripper" && state.gestures.right.id === "indexPinch")
    ) {
-      const isLeftPinch = state.shadowHandInfo.left.gesture === "pinch"
-      const pincher = isLeftPinch ? leftHand : rightHand;
-      const gripper = isLeftPinch ? rightHand : leftHand;
+     const isLeftPinch = state.gestures.left.id === "indexPinch";
+     const pincher = isLeftPinch ? leftHand : rightHand;
+     const gripper = isLeftPinch ? rightHand : leftHand;
 
-      let p0 = fingerTip(pincher, 0);
-      let p1 = fingerTip(pincher, 1);
-      let p = { x: (p0.x + p1.x) >> 1, y: (p0.y + p1.y) >> 1 };
+     let p0 = fingerTip(pincher, 0);
+     let p1 = fingerTip(pincher, 1);
+     let p = { x: (p0.x + p1.x) >> 1, y: (p0.y + p1.y) >> 1 };
 
-      let q0 = fingerTip(gripper, 0);
-      let q1 = fingerTip(gripper, 1);
+     let q0 = fingerTip(gripper, 0);
+     let q1 = fingerTip(gripper, 1);
 
-      if (q0.y > p.y && p.y > q1.y) {
-         let t = (p.y - q0.y) / (q1.y - q0.y);
-         let x = q0.x + t * (q1.x - q0.x);
+     if (q0.y > p.y && p.y > q1.y) {
+       let t = (p.y - q0.y) / (q1.y - q0.y);
+       let x = q0.x + t * (q1.x - q0.x);
 
-         OCTX.strokeStyle = "#ff00ff80";
-         OCTX.lineWidth = 10;
+       OCTX.strokeStyle = "#ff00ff80";
+       OCTX.lineWidth = 10;
 
-         OCTX.beginPath();
-         OCTX.moveTo(q0.x, q0.y);
-         OCTX.lineTo(q1.x, q1.y);
-         OCTX.stroke();
+       OCTX.beginPath();
+       OCTX.moveTo(q0.x, q0.y);
+       OCTX.lineTo(q1.x, q1.y);
+       OCTX.stroke();
 
-         OCTX.beginPath();
-         OCTX.moveTo(p.x, p.y);
-         OCTX.lineTo(x, p.y);
-         OCTX.stroke();
-      }
+       OCTX.beginPath();
+       OCTX.moveTo(p.x, p.y);
+       OCTX.lineTo(x, p.y);
+       OCTX.stroke();
+     }
    }
 
     // If both hands are gripping, create a rectangle between them.
 
     if (
-      state.shadowHandInfo.left.gesture == "gripper" &&
-      state.shadowHandInfo.right.gesture == "gripper"
+      state.gestures.left.id == "gripper" &&
+      state.gestures.right.id == "gripper"
     ) {
       let p0 = fingerTip(leftHand, 0);
       let p1 = fingerTip(leftHand, 1);
