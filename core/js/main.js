@@ -69,6 +69,29 @@ let canvas3D_up = (x,y,z,id='id') => {
       scene.onUp(xToScene(x), yToScene(y), zToScene(z), id);
 }
 
+let canvas3D_rescale = (state, otherHand, id) => {
+   if (! canvas3D.isDown)
+      canvas3D.isDown = {};
+
+   if (scene && scene.rescale && canvas3D.isDown[id]) {
+      scene.rescale(
+         [state.left.x, state.left.y, state.left.z], 
+         [state.right.x, state.right.y, state.right.z],
+         otherHand
+      );
+   }
+}
+
+let canvas3D_rotate = (rMatrix, handedness, id='id') => {
+   if (!canvas3D.isDown)
+      canvas3D.isDown = {};
+
+   if (scene && scene.onRotate && canvas3D.isDown[id]) {
+      console.log("rotating");
+      scene.onRotate(rMatrix, handedness, id);
+   }
+}
+
 canvas3D.addEventListener('mousemove', event => canvas3D_move(event.clientX, event.clientY, 0, "mouse"));
 canvas3D.addEventListener('mousedown', event => canvas3D_down(event.clientX, event.clientY, 0, "mouse"));
 canvas3D.addEventListener('mouseup'  , event => canvas3D_up  (event.clientX, event.clientY, 0, "mouse"));
