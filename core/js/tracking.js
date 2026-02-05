@@ -645,7 +645,7 @@ let initializeGestureTracking = () => {
       }
    };
    
-   indexPinch.onActive = ({state, id}, hand) => {
+   indexPinch.onActive = ({state, isActive, id}, hand) => {
 
       const h = hand.handedness;
       const {x, y, z} = toScreen(state[h], h);
@@ -662,8 +662,11 @@ let initializeGestureTracking = () => {
       const eventId = `${id}.${state[h].pointer}`;
       if(state[h].pointer === 'head') {
          canvas3D_move(headX, headY, 0, eventId)
+      } else if ((isActive.left??false) && (isActive.right??false)) { 
+         // ToDo: Find an appropriate place to check for two handed gestures
+         canvas3D_rescale(state, h, eventId);
       } else {
-         canvas3D_move(x, y, z, eventId)
+         canvas3D_move(x, y, z, eventId);
       }
    };
    
@@ -735,10 +738,35 @@ let initializeGestureTracking = () => {
 
    }
 
+   // --- Palm rotation gesture to manipulate objects on the 3D canvas ---
+   let palmRotate = new RotationGesture("palmRotate");
+
+   palmRotate.onStart = ({state, id}, hand) => {
+      const h = hand.handedness;
+      const eventId = `${id}.${h}`;
+      let {x, y, z} = toScreen(state[h].refFinger, h);
+      canvas3D_down(x, y, z, eventId);
+   };
+
+   palmRotate.onActive = ({state, id}, hand) => {
+      const h = hand.handedness;
+      const eventId = `${id}.${h}`;
+      canvas3D_rotate(state[h].rotationMatrix, h, eventId);
+   };
+
+   palmRotate.onEnd = ({state, id}, hand) => {
+      const h = hand.handedness;
+      const eventId = `${id}.${h}`;
+      let {x, y, z} = toScreen(state[h].refFinger, h);
+      canvas3D_up(x, y, z, eventId);
+   };
+
+   // Add all active gestures to the current tracker
    const gestureTracker = new GestureTracker();
    gestureTracker.add(indexPinch);
    gestureTracker.add(middlePinch);
    gestureTracker.add(spreadGesture);
+   gestureTracker.add(palmRotate);
 
    window.gestureTracker = gestureTracker;   
 }

@@ -176,7 +176,6 @@ class PinchGesture extends HandGesture {
     this.state[h] = newState;
   }
 
-
   _onStart(hand) {
     this.updateState(hand);
     super._onStart(hand);
@@ -193,8 +192,67 @@ class PinchGesture extends HandGesture {
   }
 }
 
+class RotationGesture extends HandGesture {
+  constructor(id, maxDistance = 0.15, activationThreshold = 1, activeCooldown = 33) {
+    let detectSpread = (hand) => {
+      const scaleFac = Math.min(1, .1 / (.2 + hand.landmarks[4].z));
+      let distances = getFingerThumbDistances([1, 2, 3, 4], hand);
+      return distances.every((d) => d > maxDistance * scaleFac);
+    }
+    super(id, activationThreshold, activeCooldown, detectSpread);
+  }
+
+  /**
+   * Orientation of the object being decided by the orientation of the palm in space
+   * @param {*} hand Hand data returned from mediapipe
+   */
+  updateState(hand) {
+    const h = hand.handedness;
+    
+    // Figuring out plane of hand. Used to figure out axis of rotation
+    const pWrist = hand.landmarks[0];
+    const pThumbTip = hand.landmarks[4];
+    const pPinkyTip = hand.landmarks[20];
+
+    const vecThumbToLast = normalize(subtract(pointToArray(pPinkyTip), pointToArray(pThumbTip)));
+    const palmNormal = normalize(
+      cross(
+        subtract(pointToArray(pPinkyTip), pointToArray(pWrist)),
+        subtract(pointToArray(pThumbTip), pointToArray(pWrist))
+      )
+    );
+    // Vector perpendicular to the above two vectors. Forms a basis.
+    const vecPerp = normalize(cross(palmNormal, vecThumbToLast));
+
+    this.state[h].rotationMatrix = [
+      vecThumbToLast[0], vecPerp[0], palmNormal[0], 0,
+      vecThumbToLast[1], vecPerp[1], palmNormal[1], 0,
+      vecThumbToLast[2], vecPerp[2], palmNormal[2], 0,
+      0, 0, 0, 1
+    ];
+
+    this.state[h].refFinger = pThumbTip;
+  }
+
+  _onStart(hand) {
+    this.updateState(hand);
+    super._onStart(hand);
+  }
+
+  _onEnd(hand) {
+    super._onEnd(hand);
+    this.state[hand.handedness] = {};
+  }
+
+  _onActive(hand) {
+    this.updateState(hand);
+    super._onActive(hand);
+  }
+}
+
+let pointToArray = p => [ p.x, p.y, p.z ];
+
 function getFingerThumbDistances(fingers, hand) {
-  let pointToArray = p => [ p.x, p.y, p.z ];
   let distances = [];
   const thumbPt = pointToArray(hand.landmarks[4]);
 
