@@ -55,7 +55,7 @@ function handleCommand(key) {
   const { codeArea, slideDeck, sceneManager, pen } = appContext;
 
   if (key >= "0" && key <= "9") {
-    sceneManager.load(key);
+    sceneManager.load(key, { codeArea });
     return;
   }
 

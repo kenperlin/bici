@@ -16,7 +16,7 @@ export function MatchGame(scene,U,M) {
          label[j] = tmp;
       }
 
-   let A = scene.context.A ??= [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+   let A = scene.context.vars.A ??= [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 
    let contains = (n,x,y) => Math.abs(x - tx(n)) < .2 && Math.abs(y - ty(n)) < .2;
 

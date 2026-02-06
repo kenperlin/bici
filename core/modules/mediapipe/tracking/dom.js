@@ -1,8 +1,8 @@
 import { drawDomSelection } from "./drawing.js";
 import { trackingState as state } from "../state.js";
 
-export function updateDomFocus(sceneManager, pen) {
-  const { codeArea, canvas, slideDeck } = sceneManager;
+export function updateDomFocus(context) {
+  const { sceneManager, codeArea, slideDeck, pen } = context;
   const sources = [
     {
       bounds: codeArea.element.getBoundingClientRect(),
@@ -10,9 +10,9 @@ export function updateDomFocus(sceneManager, pen) {
       element: codeArea.element
     },
     {
-      bounds: canvas.element.getBoundingClientRect(),
+      bounds: sceneManager.canvas.element.getBoundingClientRect(),
       isVisible: sceneManager.isVisible,
-      element: canvas.element
+      element: sceneManagercanvas.element
     },
     {
       bounds: slideDeck.rect,

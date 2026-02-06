@@ -41,9 +41,9 @@ window.OCTX = octx;
 window.WIDTH = window.innerWidth;
 window.HEIGHT = window.innerHeight;
 
+const sceneManager = new SceneManager(DOM.canvas3D);
 const codeArea = new CodeArea(DOM.textarea);
 const slideDeck = new SlideDeck();
-const sceneManager = new SceneManager(DOM.canvas3D, codeArea, slideDeck);
 const pen = new Pen();
 
 function resizeStage() {
@@ -63,8 +63,9 @@ function resizeStage() {
 async function init() {
   resizeStage();
   initMediapipe();
-  initGestureTracker(sceneManager);
-  initKeyHandler({ codeArea, sceneManager, slideDeck, pen });
+  initGestureTracker({ sceneManager, codeArea, slideDeck });
+  initKeyHandler({ sceneManager, codeArea, slideDeck, pen });
+  codeArea.onReloadScene = sceneManager.hotReload.bind(sceneManager);
 
   // Collaboration
   await setupYjsClient(DOM.webcam);
@@ -95,7 +96,7 @@ async function loadProject(name) {
   }
 
   sceneManager.projectName = name;
-  await sceneManager.load(1);
+  await sceneManager.load(1, { codeArea });
 
   DOM.projectLabel.textContent = name;
   DOM.projectSwitcher.style.display = "block";
@@ -128,7 +129,7 @@ function animate() {
   if (mediapipeState.isReady && mediapipeState.isRunning) {
     updateTracking();
     updateGesture();
-    updateDomFocus(sceneManager, pen);
+    updateDomFocus({sceneManager, codeArea, slideDeck, pen});
   }
 
   requestAnimationFrame(animate);

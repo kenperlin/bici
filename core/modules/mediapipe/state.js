@@ -8,8 +8,8 @@ export const mediapipeState = {
   handResults: [],
   faceResults: [],
 
-  toggleRunning: () => mediapipeState.isRunning = !mediapipeState.isRunning,
-  toggleDebug: () => mediapipeState.debugMode = !mediapipeState.debugMode
+  toggleRunning: () => (mediapipeState.isRunning = !mediapipeState.isRunning),
+  toggleDebug: () => (mediapipeState.debugMode = !mediapipeState.debugMode)
 };
 
 export const trackingState = {
@@ -34,7 +34,7 @@ export const trackingState = {
     left: { x: 0, y: 0, s: 1 },
     right: { x: 0, y: 0, s: 1 }
   },
-  gestures: {left: null, right: null},
+  gestures: { left: null, right: null },
 
   isLarge: false,
   isObvious: false,
@@ -49,8 +49,7 @@ export const trackingState = {
       trackingState.globalAvatar.y >= 100 &&
       trackingState.globalAvatar.y < HEIGHT - 100),
 
-
   toggleDebug: () => {
     trackingState.debugMode = !trackingState.debugMode;
-  },
+  }
 };
