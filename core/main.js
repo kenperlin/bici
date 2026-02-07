@@ -5,7 +5,7 @@ import { displayHelp } from "./modules/ui/help.js";
 import { initKeyHandler } from "./modules/keyEvent.js";
 import { initMediapipe, mediapipePredict } from "./modules/mediapipe/mediapipe.js";
 import { Pen } from "./modules/pen.js";
-import { SceneManager } from "./modules/ui/scene.js";
+import { SceneManager } from "./modules/ui/sceneManager.js";
 import { fetchText } from "./modules/utils/utils.js";
 import {
   webrtcClient,
