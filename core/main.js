@@ -1,6 +1,6 @@
 import { drawVideoToCover } from "./modules/utils/canvasUtils.js";
 import { CodeArea } from "./modules/ui/codeArea.js";
-import { SlideDeck } from "./modules/ui/slideDeck.js";
+import { SlideManager } from "./modules/ui/SlideManager.js";
 import { displayHelp } from "./modules/ui/help.js";
 import { initKeyHandler } from "./modules/keyEvent.js";
 import { initMediapipe, mediapipePredict } from "./modules/mediapipe/mediapipe.js";
@@ -26,14 +26,15 @@ const DOM = {
   projectLabel: document.getElementById("current-project"),
   projectGrid: document.getElementById("project-grid"),
   canvas2D: document.getElementById("canvas-2d"),
-  canvas3D: document.getElementById("canvas-3d"),
-  ocanvas: document.getElementById("canvas-overlay"),
+  canvasSlide: document.getElementById("canvas-slide"),
+  canvasScene: document.getElementById("canvas-scene"),
+  canvasOverlay: document.getElementById("canvas-overlay"),
   webcam: document.getElementById("webcam"),
   textarea: document.getElementById("code-editor")
 };
 
 const ctx = DOM.canvas2D.getContext("2d");
-const octx = DOM.ocanvas.getContext("2d");
+const octx = DOM.canvasOverlay.getContext("2d");
 
 // Expose window overlay drawing globally
 window.OCTX = octx;
@@ -41,9 +42,9 @@ window.OCTX = octx;
 window.WIDTH = window.innerWidth;
 window.HEIGHT = window.innerHeight;
 
-const sceneManager = new SceneManager(DOM.canvas3D);
+const sceneManager = new SceneManager(DOM.canvasScene);
 const codeArea = new CodeArea(DOM.textarea);
-const slideDeck = new SlideDeck();
+const slideManager = new SlideManager(DOM.canvasSlide);
 const pen = new Pen();
 
 function resizeStage() {
@@ -52,19 +53,17 @@ function resizeStage() {
   window.WIDTH = window.innerWidth;
   window.HEIGHT = window.innerHeight;
 
-  DOM.canvas2D.width = DOM.ocanvas.width = WIDTH * DPR;
-  DOM.canvas2D.height = DOM.ocanvas.height = HEIGHT * DPR;
+  DOM.canvas2D.width = DOM.canvasOverlay.width = WIDTH * DPR;
+  DOM.canvas2D.height = DOM.canvasOverlay.height = HEIGHT * DPR;
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   octx.setTransform(DPR, 0, 0, DPR, 0, 0);
-
-  slideDeck.rect.left = WIDTH - 520;
 }
 
 async function init() {
   resizeStage();
   initMediapipe();
-  initGestureTracker({ sceneManager, codeArea, slideDeck });
-  initKeyHandler({ sceneManager, codeArea, slideDeck, pen });
+  initGestureTracker({ sceneManager, codeArea, slideManager });
+  initKeyHandler({ sceneManager, codeArea, slideManager, pen });
   codeArea.onReloadScene = sceneManager.hotReload.bind(sceneManager);
 
   // Collaboration
@@ -92,7 +91,7 @@ async function loadProject(name) {
 
   if (slidesList) {
     slidesList = slidesList.split("\n");
-    await slideDeck.init(name, slidesList);
+    await slideManager.init(name, slidesList, { codeArea });
   }
 
   sceneManager.projectName = name;
@@ -120,7 +119,7 @@ function animate() {
   drawVideoToCover(ctx, backgroundVideo, WIDTH, HEIGHT, !hasRemoteVideo);
 
   codeArea.update();
-  slideDeck.draw(ctx);
+  slideManager.draw();
   pen.draw(ctx);
   sceneManager.update();
   displayHelp(ctx, codeArea.fontSize);
@@ -129,7 +128,7 @@ function animate() {
   if (mediapipeState.isReady && mediapipeState.isRunning) {
     updateTracking();
     updateGesture();
-    updateDomFocus({sceneManager, codeArea, slideDeck, pen});
+    updateDomFocus({sceneManager, codeArea, slideManager, pen});
   }
 
   requestAnimationFrame(animate);

@@ -52,7 +52,7 @@ function handleKeyUp(e) {
 }
 
 function handleCommand(key) {
-  const { codeArea, slideDeck, sceneManager, pen } = appContext;
+  const { codeArea, slideManager, sceneManager, pen } = appContext;
 
   if (key >= "0" && key <= "9") {
     sceneManager.load(key, { codeArea });
@@ -70,10 +70,10 @@ function handleCommand(key) {
     case "c": codeArea.toggleVisible(); break;
 
     // Slides commands
-    case "ArrowLeft": slideDeck.prev(); break;
-    case "ArrowRight": slideDeck.next(); break;
-    case "i": slideDeck.toggleVisible(); break;
-    case "o": slideDeck.toggleOpaque(); break;
+    case "ArrowLeft": slideManager.prev(); break;
+    case "ArrowRight": slideManager.next(); break;
+    case "i": slideManager.toggleVisible(); break;
+    case "o": slideManager.toggleOpaque(); break;
 
     // Scene commands
     case "s": sceneManager.toggleVisible(); break;

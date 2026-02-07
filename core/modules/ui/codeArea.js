@@ -210,9 +210,9 @@ export class CodeArea {
     if (!webrtcClient.isMaster()) {
       webrtcClient.sendAction({
         type: "setVars",
-        vars: pendingVars
+        vars
       });
-      pendingVars = {};
+      this._varsToFlush = {};
       return;
     }
 
@@ -274,7 +274,6 @@ export class CodeArea {
 
         // Trigger input event to sync with Yjs
         this.element.dispatchEvent(new Event("input", { bubbles: true }));
-
         this.isReloadScene = true;
       }
       this.dial = 0;

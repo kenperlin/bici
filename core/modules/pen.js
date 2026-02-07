@@ -74,7 +74,5 @@ export function Pen() {
     ctx.restore();
   };
 
-  window.addEventListener('mousedown', () => this.down())
   window.addEventListener('mousemove', (e) => this.move(e.x, e.y))
-  window.addEventListener('mouseup', () => this.up())
 }

@@ -1,8 +1,10 @@
-export function Diagram() {
+export function Diagram(context) {
+   this.context = context;
+
    let px = 0, py = 0;
    this.onDrag = (x,y) => {
-      codeArea.setVar('red'  , .5 + .5 * x);
-      codeArea.setVar('green', .5 + .5 * y);
+      this.context.codeArea.setVar('red'  , .5 + .5 * x);
+      this.context.codeArea.setVar('green', .5 + .5 * y);
       px = x;
       py = y;
    }

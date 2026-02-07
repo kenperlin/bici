@@ -574,10 +574,16 @@ body {
   height: 100%;
 }
 
-#canvas-3d {
+#canvas-scene {
   bottom: 40px;
   left: 50%;
   transform: translateX(-50%);
+}
+
+#canvas-slide {
+  top: 20px;
+  right: 20px;
+  opacity: 0.5;
 }
 
 #canvas-overlay {

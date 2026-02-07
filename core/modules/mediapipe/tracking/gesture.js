@@ -14,7 +14,7 @@ import { toScreen } from "../utils/mapping.js";
 let gestureTracker;
 
 export function initGestureTracker(context) {
-  const { sceneManager, codeArea, slideDeck } = context;
+  const { sceneManager, codeArea, slideManager } = context;
   const sceneCanvas = sceneManager.canvas;
 
   const indexPinch = new PinchGesture("index pinch", [1], 0.25);

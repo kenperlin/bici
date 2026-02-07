@@ -1,24 +1,27 @@
+import { InteractiveCanvas } from "./canvas.js";
 import { addDiagramProperties, TextDiagram } from "./diagram.js";
 
-export class SlideDeck {
-  constructor() {
-    this.projectName = null;
+export class SlideManager {
+  constructor(canvas) {
+    this.canvas = new InteractiveCanvas(canvas, "2d")
     this.slides = [];
     this.modules = {};
     this.urlMap = {};
     this.currentSlide = 0;
-
     this.isVisible = false;
     this.isOpaque = false;
-    this.rect = { left: WIDTH - 520, top: 20, width: 500, height: 500 };
+    
+    this.projectName = null;
+    this.context = {};
   }
 
-  async init(name, slidesList) {
+  async init(name, slidesList, context) {
     this.projectName = name;
     this.slides = [];
     this.modules = {};
     this.urlMap = {};
     this.currentSlide = 0;
+    this.context = context;
 
     for (let line of slidesList) {
       line = line.split("//")[0].trim();
@@ -35,7 +38,7 @@ export class SlideDeck {
 
       if (file.startsWith("URL ")) {
         const [_, key, value] = line.split(" ");
-        if (key && value) this.urls[key] = value;
+        if (key && value) this.urlMap[key] = value;
         continue;
       }
       if (file.startsWith("SRC ")) {
@@ -57,15 +60,19 @@ export class SlideDeck {
         let slideModule = await import(filePath + "?t=" + Date.now());
         if (!slideModule.Diagram) continue;
 
-        const diagram = new slideModule.Diagram();
+        const diagram = new slideModule.Diagram(this.context);
+        diagram.ctx = this.canvas.ctx;
         addDiagramProperties(diagram);
         this.slides.push({ type: "diagram", content: diagram });
       } else {
         let lines = file.split("\\n");
         const textDiagram = new TextDiagram(lines);
+        textDiagram.ctx = this.canvas.ctx;
         this.slides.push({ type: "text", content: textDiagram });
       }
     }
+
+    this.registerSlide()
   }
 
   async _loadImage(src) {
@@ -80,41 +87,53 @@ export class SlideDeck {
     return this.slides[idx];
   }
 
+  registerSlide() {
+    const currentSlide = this.getSlide()
+
+    if (currentSlide.type === "diagram" || currentSlide.type === "text") {
+      this.canvas.element.width = currentSlide.content.width;
+      this.canvas.element.height = currentSlide.content.height;
+      this.canvas.registerEvents(currentSlide.content)
+    } else if (currentSlide.type === "image") {
+      this.canvas.element.width = 500;
+      this.canvas.element.height = 500;
+    }
+  }
+
   next() {
     this.currentSlide = Math.min(this.currentSlide + 1, this.slides.length - 1);
+    this.registerSlide()
   }
 
   prev() {
     this.currentSlide = Math.max(this.currentSlide - 1, 0);
+    this.registerSlide()
   }
 
   toggleVisible() {
     this.isVisible = !this.isVisible;
+    this.canvas.element.style.display = this.isVisible ? "block" : "none";
   }
 
   toggleOpaque() {
     this.isOpaque = !this.isOpaque;
+    this.canvas.element.style.opacity = this.isOpaque ? 1 : 0.5;
   }
 
-  draw(ctx, idx = this.currentSlide) {
+  draw(idx = this.currentSlide) {
     if(!this.isVisible) return;
 
+    const ctx = this.canvas.ctx;
     const slide = this.getSlide(idx);
     if (!slide) return;
 
     ctx.save();
-    ctx.translate(this.rect.left, this.rect.top);
-    ctx.globalAlpha = this.isOpaque ? 1 : 0.5;
+    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     if (slide.type === "diagram" || slide.type === "text") {
-      this.rect.width = slide.content.width;
-      this.rect.height = slide.content.height;
-      slide.content.ctx = ctx;
       slide.content._beforeUpdate();
       slide.content.update();
     } else if (slide.type === "image") {
-      this.rect.width = 500;
-      this.rect.height = 500;
       ctx.drawImage(slide.content, 0, 0, 500, 500);
     }
 
@@ -123,3 +142,4 @@ export class SlideDeck {
     ctx.restore();
   }
 }
+

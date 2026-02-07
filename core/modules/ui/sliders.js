@@ -1,5 +1,6 @@
-export function Sliders(diagram,x,y,w,h,names) {
+export function Sliders(diagram,x,y,w,h,names) {''
    let sliders = [], S = null;
+   const codeArea = diagram.context.codeArea
    for (let n = 0 ; n < names.length ; n++) {
       codeArea.setVar(names[n], .5);
       sliders.push({ x: x, y: y, w: w, h: h, name: names[n], value: .5 });
