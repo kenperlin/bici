@@ -126,27 +126,27 @@ export function initGestureTracker(context) {
       return;
 
     trackingState.domDistances.forEach((elem) => {
-      if (elem.element) elem.element.style.opacity = 0;
+      elem.element.style.display = "none";
     });
 
     let element = trackingState.spotlightElement.element;
     element.style.transition = "all 0.1s ease-in-out";
-    element.style.opacity = 1;
     element.style.top = "50%";
     element.style.left = "50%";
     element.style.transform = "translate(-50%, -50%) scale(1.25)";
+    element.style.display = "block";
   };
   spreadGesture.onTriggerBA = (self, hand) => {
     if (!trackingState.spotlightElement) return;
 
     let element = trackingState.spotlightElement.element;
-    element.style.top = trackingState.spotlightElement.bounds.top;
-    element.style.left = trackingState.spotlightElement.bounds.left;
-    element.style.transform = "none";
+    element.style.top = "";
+    element.style.left = "";
+    element.style.transform = "";
     trackingState.spotlightElement = null;
 
     trackingState.domDistances.forEach((elem) => {
-      if (elem.element) elem.element.style.opacity = 1;
+      elem.element.style.display = "block";
     });
   };
 

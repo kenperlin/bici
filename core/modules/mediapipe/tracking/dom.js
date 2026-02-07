@@ -16,7 +16,8 @@ export function updateDomFocus(context) {
     },
     {
       bounds: slideManager.canvas.getRect(),
-      isVisible: slideManager.isVisible
+      isVisible: slideManager.isVisible,
+      element: slideManager.canvas.element
     }
   ];
 
