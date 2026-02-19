@@ -9,16 +9,18 @@ canvas2D.style.left = 0;
 let canvas3D = document.createElement('canvas');
 document.body.appendChild(canvas3D);
 
-const CANVAS3D_WIDTH  = 500;
-const CANVAS3D_HEIGHT = 500;
-const CANVAS3D_TOP    = screen.height - CANVAS3D_HEIGHT - 40;
-const CANVAS3D_LEFT   = (screen.width - CANVAS3D_WIDTH) / 2 - 10;
+let CANVAS3D_WIDTH  = 500;
+let CANVAS3D_HEIGHT = 500;
+let CANVAS3D_TOP    = screen.height - CANVAS3D_HEIGHT - 40;
+let CANVAS3D_LEFT   = (screen.width - CANVAS3D_WIDTH) / 2 - 10;
 
+/*
 canvas3D.style.position = 'absolute';
 canvas3D.style.top = CANVAS3D_TOP;
 canvas3D.style.left = -2000;
 canvas3D.width = CANVAS3D_WIDTH;
 canvas3D.height = CANVAS3D_HEIGHT;
+*/
 
 let canvas3D_x = () => parseInt(canvas3D.style.left);
 let canvas3D_y = () => parseInt(canvas3D.style.top );
@@ -425,6 +427,19 @@ let initSlides = () => {
 }
 
 let startNewScene = () => {
+
+   if (isLarge3D) {
+      CANVAS3D_WIDTH = screen.width;
+      CANVAS3D_HEIGHT = screen.width;
+      CANVAS3D_TOP = 0;
+      CANVAS3D_LEFT = 0;
+   }
+   canvas3D.style.position = 'absolute';
+   canvas3D.style.top = CANVAS3D_TOP;
+   canvas3D.style.left = -2000;
+   canvas3D.width = CANVAS3D_WIDTH;
+   canvas3D.height = CANVAS3D_HEIGHT;
+
    scene = new Scene();
    if (scene.vertexShader == undefined)
       scene.vertexShader = Shader.defaultVertexShader;
@@ -514,7 +529,7 @@ codeArea.callback = () => {
 let w = canvas2D.width = screen.width;
 let h = canvas2D.height = screen.height;
 let ctx = canvas2D.getContext('2d');
-let isMove = false, isScene = false, isCode = false, isDrag = false;
+let isMove = false, isScene = false, isCode = false, isDrag = false, isLarge3D = false;
 pen.setContext(ctx);
 
 // Setup state synchronization after all variables are initialized

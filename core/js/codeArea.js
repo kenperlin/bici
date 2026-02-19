@@ -82,13 +82,13 @@ function CodeArea(x,y) {
    }
 
    this.pointToIndex = (x,y) => {
-      let s = codeArea.value, col = 0, row = 0, cw = 0.6*fontSize, ch = 1.15*fontSize;
+      let s = codeArea.value, col = -.4, row = 0, cw = 0.6*fontSize, ch = 1.15*fontSize;
       for (let n = 0 ; n < s.length ; n++)
          if (col*cw <= x-ox && row*ch <= y-oy && col*cw+cw > x-ox && row*ch+ch > y-oy)
             return n;
          else
             switch (s.charAt(n)) {
-            case '\n': row++; col = 0; break;
+            case '\n': row++; col = -.4; break;
             case '\t': col += 8 - col % 8; break;
             default  : col++; break;
             }
@@ -118,9 +118,9 @@ function CodeArea(x,y) {
 
    this.update = () => {
       codeArea.style.backgroundColor = isOpaque ? 'white' : 'rgba(255,255,255,.6)';
-      codeArea.style.fontSize = (fontSize >> 0) + 'px';
+      codeArea.style.fontSize = fontSize + 'px';
       let lines = codeArea.value.split('\n');
-      codeArea.rows = Math.min(790 / fontSize >> 0, lines.length);
+      codeArea.rows = Math.min(790 / fontSize, lines.length) >> 0;
       codeArea.cols = 0;
       for (let n = 0 ; n < lines.length ; n++)
          codeArea.cols = Math.max(codeArea.cols, lines[n].length-1);
@@ -144,7 +144,7 @@ function CodeArea(x,y) {
                          y: gesture.state[h].y * screen.height };
 
                if (isShadowAvatar())
-                  toShadowAvatar(p);
+                  toShadowAvatar(p, h);
 
                if(!this.containsPoint(p.x, p.y)) continue;
 

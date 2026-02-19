@@ -39,10 +39,6 @@ document.addEventListener('keyup', e => {
    if (typeof broadcastState === 'function') broadcastState();
 });
 
-midiDown = key => window.keyDown("            / m  ;       ".substring(key,key+1));
-//                                '|'|''|'|'|''|'|''|'|'|''
-midiUp   = key => window.keyUp  ("b1u2wc3s4p5D/,m.'; f g tT".substring(key,key+1));
-
 let URLs = {
    'v': 'http://cs.nyu.edu/~perlin/video_links.html',
    'w': 'https://kenperlin.com/web.html',
@@ -168,6 +164,7 @@ window.keyUp = key => {
    case 'p' : webcam.isPen = ! webcam.isPen; break;
    case 'r' : shift3D = 1 - shift3D; break;
    case 's' : isScene = ! isScene; break;
+   case 'S' : isScalingHandAvatars = ! isScalingHandAvatars; break;
    case 't' : webcam.opacity = 1.5 - webcam.opacity; break;
    case 'T' : webcam.opacity = 1.01 - webcam.opacity; break;
    case 'u' : webcam.ufoTime = webcam.ufoTime ? 0 : Date.now() / 1000; break;

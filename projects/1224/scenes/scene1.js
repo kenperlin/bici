@@ -1,5 +1,6 @@
 function Scene() {
    let cube = Shape.cubeMesh();
+
    this.vertexShader = Shader.defaultVertexShader;
    this.fragmentShader = Shader.defaultFragmentShader;
    this.update = () => {

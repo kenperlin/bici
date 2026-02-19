@@ -3,7 +3,7 @@ let help = {
 
 display : ctx => {
 
-   let fs = fontSize * 1.25;
+   let fs = fontSize * 1.2;
 
    if (help.isSplash) {
       ctx.fillStyle = '#ffffff80';
@@ -43,6 +43,7 @@ c Toggle editable code for 3D scene.
 d Toggle drawing pad.
 e (+ key) Show src code in text editor.
 f Toggle floaters behind me.
+F Toggle frame hands.
 g Grab bg (enables transparency).
 h Toggle this help menu.
 H Toggle separate hand avatars.
@@ -57,6 +58,7 @@ o Toggle whether slides are opaque.
 p Toggle show/hide tracked blue pixels.
 r Toggle if 3D scene is shifted right.
 s Toggle show/hide 3D scene.
+S Toggle scale hand avatars.
 t Toggle my semi-transparency.
 T Toggle my total transparency.
 u Toggle UFO within blue-plate world.

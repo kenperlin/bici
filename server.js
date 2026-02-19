@@ -32,7 +32,7 @@ app.post('/api/gemini', async (req, res) => {
     // Use your own API key
     const genAI = new GoogleGenerativeAI("your-API-key");
     // adjust the model as you wish
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
 
     // Start chat with history
     const chat = model.startChat({
