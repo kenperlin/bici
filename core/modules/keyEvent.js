@@ -81,6 +81,7 @@ function handleCommand(key) {
     case "L": trackingState.isLarge = !trackingState.isLarge; break;
     case "N": trackingState.isObvious = !trackingState.isObvious; break;
     case "H": trackingState.isSeparateHandAvatars = !trackingState.isSeparateHandAvatars; break;
+    case "S": trackingState.isScalingHandAvatars = !trackingState.isScalingHandAvatars; break;
 
     // Pen commands
     case ",": controller.pen.width *= 0.707; break;

@@ -130,19 +130,33 @@ function computeEyeGaze(la, lb, lc, ld, le, lf, lg, ra, rb, rc, rd, re, rf, rg) 
 
 function computeShadowHand(hand) {
   const { handedness: h, landmarks } = hand;
-  if (state.gestures[h]?.id !== "fist") return;
 
-  // Scale finger thickness depending on visible hand size.
-  const { x, y } = toVideo({
-    x: landmarks[LM.MIDDLE_MCP].x,
-    y: landmarks[LM.MIDDLE_MCP].y
-  });
-  const avatar = state.handAvatar[h];
-  const targetScale = clamp(2.3 - 7 * handScale(landmarks), 0.2, 1);
-
-  avatar.x = x * (1 - avatar.s);
-  avatar.y = y * (1 - avatar.s);
-  avatar.s = 0.5 * avatar.s + 0.5 * targetScale;
+  if(!state.isScalingHandAvatars) {
+    const oppositeH = h === "left" ? "right" : "left";
+    if (state.gestures[h]?.id === 'frame') {
+      const { width, x, y } = state.gestures[h].state[h];
+      state.handAvatar[oppositeH].x = x;
+      state.handAvatar[oppositeH].y = y;
+      state.handAvatar[oppositeH].s = width / WIDTH;
+    } else {
+      state.handAvatar[oppositeH].x = 0;
+      state.handAvatar[oppositeH].y = 0;
+      state.handAvatar[oppositeH].s = 1;
+    }
+  } else if (state.gestures[h]?.id === "fist") {
+    // Scale finger thickness depending on visible hand size.
+    const { x, y } = toVideo({
+      x: landmarks[LM.MIDDLE_MCP].x,
+      y: landmarks[LM.MIDDLE_MCP].y
+    });
+    const avatar = state.handAvatar[h];
+    const targetScale = clamp(2.3 - 7 * handScale(landmarks), 0.2, 1);
+    
+    avatar.x = x * (1 - avatar.s);
+    avatar.y = y * (1 - avatar.s);
+    avatar.s = 0.5 * avatar.s + 0.5 * targetScale;
+    console.log(avatar)
+  }
 }
 
 function computeGlobalShadowAvatar(handResults) {

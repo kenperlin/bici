@@ -21,6 +21,7 @@ F Toggle gaze-mapped hand tracking
 L Toggle large area head tracking.
 N Toggle no visible tracking feedback.
 H Toggle separate hand avatars.
+H Toggle scaling hand avatars.
 X Toggle AI script panel.
 W Toggle webcam video.
 , Make pen line thinner.

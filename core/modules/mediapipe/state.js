@@ -41,6 +41,7 @@ export const trackingState = {
   isFramingHands: false,
   isSteady: false,
   isSeparateHandAvatars: true,
+  isScalingHandAvatars: false,
 
   isShadowAvatar: () =>
     trackingState.isSeparateHandAvatars ||

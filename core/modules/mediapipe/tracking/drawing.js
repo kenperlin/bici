@@ -245,12 +245,18 @@ export function drawShadowHand(hand, avatarInfo) {
 
   // If pinching, show pinch point.
   if (state.gestures[h]?.id === "index pinch") {
-    let p = toScreen(landmarks[LM.THUMB_TIP], h);
-    let q = toScreen(landmarks[LM.INDEX_TIP], h);
+    const { x, y } = toScreen(state.gestures[h].state[h], h)
     sctx.beginPath();
     sctx.fillStyle = "#a0a0a0";
-    sctx.arc((p.x + q.x) >> 1, (p.y + q.y) >> 1, 0.05 * s * hScale, 0, 2 * Math.PI);
+    sctx.arc(x, y, 0.05 * s * hScale, 0, 2 * Math.PI);
     sctx.fill();
+  }
+
+  // If making a frame, show the frame.
+  if (state.gestures[h]?.id === "frame") {
+    const { width, height, x, y } = state.gestures[h].state[h]
+    sctx.fillStyle = '#ff00ffff';
+    sctx.fillRect(x, y, width, height);
   }
 
   // Copy the shadow transparently onto the target canvas.

@@ -83,6 +83,26 @@ export function initGestureTracker(controller) {
   };
   const gripperGesture = new HandGesture("gripper", detectGripper);
 
+  let detectFrame = (hand) => {
+    const thumbVertical = Math.abs(hand.landmarks[LM.THUMB_MCP].y - hand.landmarks[LM.THUMB_TIP].y);
+    const thumbHorizontal = Math.abs(hand.landmarks[LM.THUMB_MCP].x - hand.landmarks[LM.THUMB_TIP].x);
+    const indexVertical = Math.abs(hand.landmarks[LM.INDEX_MCP].y - hand.landmarks[LM.INDEX_TIP].y);
+    const indexHorizontal = Math.abs(hand.landmarks[LM.INDEX_MCP].x - hand.landmarks[LM.INDEX_TIP].x);
+    return thumbVertical > 3 * thumbHorizontal && indexHorizontal > 3 * indexVertical;
+  };
+  const frameGesture = new HandGesture("frame", detectFrame);
+  frameGesture.onActive = ({state, id}, hand) => {
+    const h = hand.handedness;
+    const thumbTip = toScreen(hand.landmarks[LM.THUMB_TIP], h);
+    const indexTip = toScreen(hand.landmarks[LM.INDEX_TIP], h);
+    
+    const width = Math.abs(indexTip.x - thumbTip.x);
+    const height = width * HEIGHT / WIDTH;
+    const x = Math.min(indexTip.x, thumbTip.x)
+    const y = indexTip.y - height;
+    state[h] = { width, height, x, y }
+  }
+
   let detectSpreadStart = (hand) => {
     let distances = fingerDistances(hand.landmarks, LM.THUMB_TIP);
     return Math.max(...distances) < 0.35;
@@ -131,10 +151,11 @@ export function initGestureTracker(controller) {
 
   gestureTracker.add(indexPinch);
   gestureTracker.add(middlePinch);
-  gestureTracker.add(gripperGesture);
+  gestureTracker.add(gripperGesture, null, -1);
   gestureTracker.add(fistGesture, null, 1);
   gestureTracker.add(pointGesture, null, 1);
   gestureTracker.add(spreadGesture);
+  gestureTracker.add(frameGesture);
 }
 
 export function updateGesture() {
