@@ -18,6 +18,7 @@ import { updateTracking } from "./modules/mediapipe/tracking/tracking.js";
 import { updateDomFocus } from "./modules/mediapipe/tracking/dom.js";
 import { mediapipeState } from "./modules/mediapipe/state.js";
 import { initGestureTracker, updateGesture } from "./modules/mediapipe/tracking/gesture.js";
+import { InteractionController } from "./modules/controller.js";
 
 const DOM = {
   projectSelector: document.getElementById("project-selector"),
@@ -47,6 +48,8 @@ const codeArea = new CodeArea(DOM.textarea);
 const slideManager = new SlideManager(DOM.canvasSlide);
 const pen = new Pen();
 
+const controller = new InteractionController({ codeArea, slideManager, sceneManager, pen });
+
 function resizeStage() {
   window.DPR = window.devicePixelRatio;
 
@@ -62,7 +65,7 @@ function resizeStage() {
 async function init() {
   resizeStage();
   initMediapipe();
-  initGestureTracker({ sceneManager, codeArea, slideManager });
+  initGestureTracker(controller);
   initKeyHandler({ sceneManager, codeArea, slideManager, pen });
   codeArea.onReloadScene = sceneManager.hotReload.bind(sceneManager);
 
@@ -128,7 +131,7 @@ function animate() {
   if (mediapipeState.isReady && mediapipeState.isRunning) {
     updateTracking();
     updateGesture();
-    updateDomFocus({sceneManager, codeArea, slideManager, pen});
+    updateDomFocus({ sceneManager, codeArea, slideManager, pen });
   }
 
   requestAnimationFrame(animate);

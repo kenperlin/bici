@@ -59,7 +59,6 @@ export class InteractiveCanvas {
     this.onDown = (x, y, z, id) => {
       ({ x, y, z } = this.toCanvas(x, y, z));
       if (x * x > 1 || y * y > 1) return;
-
       this.isDown[id] = true;
       target.onDown?.(x, y, z, id);
     };

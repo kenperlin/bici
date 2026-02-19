@@ -35,7 +35,7 @@ export function updateDomFocus(context) {
     closest.dist < focusThreshold;
   const isCodeSpotlighted =
     state.spotlightElement && state.spotlightElement === codeArea.element;
-  const isCodeHovered = codeArea.containsPoint(pen.x, pen.y);
+  const isCodeHovered = codeArea.contains(pen.x, pen.y);
 
   const shouldFocusCode = isCodeLookedAt || isCodeSpotlighted || isCodeHovered;
 

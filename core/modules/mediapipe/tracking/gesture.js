@@ -13,73 +13,49 @@ import { toScreen } from "../utils/mapping.js";
 
 let gestureTracker;
 
-export function initGestureTracker(context) {
-  const { sceneManager, codeArea, slideManager } = context;
-  const sceneCanvas = sceneManager.canvas;
-
+export function initGestureTracker(controller) {
   const indexPinch = new PinchGesture("index pinch", [1], 0.25);
-
-  indexPinch.onStart = ({ state, id }, hand) => {
+  indexPinch.onStart = ({state, id}, hand) => {
     const h = hand.handedness;
     const { x, y, z } = toScreen(state[h], h);
     const { headX, headY } = trackingState;
 
-    // if (isInfo && D.isIn(x - D.left, y - D.top)) {
-    //   slide = slides[slideIndex];
-    //   if (slide.onDown) slide.onDown(slide._px(x - D.left), slide._py(y - D.top));
-    //   D.isDown = true;
-    //   return;
-    // }
-
-    if (sceneCanvas.contains(x, y)) {
+    if(controller.triggerDown(`${id}.${h}`, x, y, z)) {
       state[h].pointer = h;
-      sceneCanvas.onDown(x, y, z, `${id}.${state[h].pointer}`);
-    } else if (sceneCanvas.contains(headX, headY)) {
-      state[h].pointer = "head";
-      sceneCanvas.onDown(headX, headY, 0, `${id}.${state[h].pointer}`);
+    } else if(controller.triggerDown(`${id}.${"head"}`, headX, headY, 0)) {
+      state[h].pointer = "head"
     }
-  };
+  }
 
   indexPinch.onActive = ({ state, id }, hand) => {
     const h = hand.handedness;
+    if(!state[h].pointer) return;
+
     const { x, y, z } = toScreen(state[h], h);
-
-    // if (isInfo && D.isDown) {
-    //   slide = slides[slideIndex];
-    //   if (slide.onDrag) slide.onDrag(slide._px(x - D.left), slide._py(y - D.top));
-    //   return;
-    // }
-
-    if (!state[h].pointer) return;
+    const { headX, headY } = trackingState;
 
     const eventId = `${id}.${state[h].pointer}`;
     if (state[h].pointer !== "head") {
-      sceneCanvas.onMove(x, y, z, eventId);
+      controller.triggerMove(eventId, x, y, z);
     } else {
-      sceneCanvas.onMove(trackingState.headX, trackingState.headY, 0, eventId);
+      controller.triggerMove(eventId, headX, headY, 0);
     }
-  };
+  }
 
   indexPinch.onEnd = ({ state, id }, hand) => {
     const h = hand.handedness;
+    if(!state[h].pointer) return;
+
     const { x, y, z } = toScreen(state[h], h);
-
-    // if (isInfo && D.isDown) {
-    //   D.isDown = false;
-    //   slide = slides[slideIndex];
-    //   if (slide.onUp) slide.onUp(slide._px(x - D.left), slide._py(y - D.top));
-    //   return;
-    // }
-
-    if (!state[h].pointer) return;
+    const { headX, headY } = trackingState;
 
     const eventId = `${id}.${state[h].pointer}`;
     if (state[h].pointer !== "head") {
-      sceneCanvas.onUp(x, y, z, eventId);
+      controller.triggerUp(eventId, x, y, z);
     } else {
-      sceneCanvas.onUp(trackingState.headX, trackingState.headY, 0, eventId);
+      controller.triggerUp(eventId, headX, headY, 0);
     }
-  };
+  }
 
   const middlePinch = new PinchGesture("middle pinch", [2], 0.25);
 

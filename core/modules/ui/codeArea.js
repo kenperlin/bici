@@ -45,7 +45,7 @@ export class CodeArea {
     this.element.style.fontSize = this.fontSize + "px";
   }
 
-  containsPoint(x, y) {
+  contains(x, y) {
     let col = this._xToCol(x);
     let row = this._yToRow(y);
     return (
@@ -123,7 +123,7 @@ export class CodeArea {
     //       if (isShadowAvatar())
     //         toShadowAvatar(p);
 
-    //       if(!this.containsPoint(p.x, p.y)) continue;
+    //       if(!this.contains(p.x, p.y)) continue;
 
     //       let col = xToCol(p.x) - 1;
     //       let row = yToRow(p.y);
@@ -282,7 +282,7 @@ export class CodeArea {
   }
 
   highlightCharAt(x, y, color = "#00000060") {
-    if (!this.containsPoint(x, y)) return;
+    if (!this.contains(x, y)) return;
       
     OCTX.save();
     OCTX.fillStyle = color;
