@@ -22,7 +22,7 @@ export const LM = Object.freeze({
   PINKY_PIP: 18,
   PINKY_DIP: 19,
   PINKY_TIP: 20,
-  MCPS: [5, 9, 13, 17],
+  MCPS: [1, 5, 9, 13, 17],
   TIPS: [4, 8, 12, 16, 20],
   FINGERTIPS: [8, 12, 16, 20]
 });

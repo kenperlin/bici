@@ -1,4 +1,4 @@
-import { smoothstep } from "../../math/math.js";
+import { norm, smoothstep } from "../../math/math.js";
 import { toScreen } from "../utils/mapping.js";
 import { trackingState as state } from "../state.js";
 import { handScale, LM } from "../gestures/detect.js";
@@ -276,6 +276,9 @@ export function drawShadowGesture(handResults) {
   let fingerTip = (hand, i) => {
     return toScreen(hand.landmarks[LM.TIPS[i]], hand.handedness);
   };
+  let fingerMcp = (hand, i) => {
+    return toScreen(hand.landmarks[LM.MCPS[i]], hand.handedness);
+  };
 
   // If both hands are pinching, draw a line between them.
   if (state.gestures.left.id == "index pinch" && state.gestures.right.id == "index pinch") {
@@ -325,6 +328,46 @@ export function drawShadowGesture(handResults) {
       OCTX.stroke();
     }
   }
+
+  // If one hand is pointing and the other is gripping, draw a variable length pointing ray.
+  if (
+    (state.gestures.left.id === "point" && state.gestures.right.id === "gripper") ||
+    (state.gestures.left.id === "gripper" && state.gestures.right.id === "point")
+  ) {
+    const isLeftPoint = state.gestures.left.id === "point";
+    const pointer = isLeftPoint ? leftHand : rightHand;
+    const gripper = isLeftPoint ? rightHand : leftHand;
+    
+    let a = fingerMcp(pointer, 1);
+    let b = fingerTip(pointer, 1);
+    let c = fingerTip(gripper, 0);
+    let d = fingerTip(gripper, 1);
+
+    let scale = 3 * norm([c.x-d.x,c.y-d.y,0]) / norm([a.x-b.x,a.y-b.y,0]);
+    let e = { x: b.x+scale*(b.x-a.x), y: b.y+scale*(b.y-a.y) };
+
+    OCTX.strokeStyle = '#ff00ff80';
+    OCTX.lineCap = 'round';
+    OCTX.lineWidth = 20;
+
+    OCTX.beginPath();
+    OCTX.moveTo(b.x,b.y);
+    OCTX.lineTo(e.x,e.y);
+    OCTX.stroke();
+
+    OCTX.fillStyle = 'white';
+    OCTX.beginPath();
+    OCTX.roundRect(e.x - 80, e.y - 60, 150, 120, 10, 10);
+    OCTX.fill();
+    OCTX.strokeStyle = 'black';
+    OCTX.lineWidth = 3;
+    OCTX.stroke();
+
+    OCTX.fillStyle = 'black';
+    OCTX.font = '40px Helvetica';
+    OCTX.fillText('text', e.x-40, e.y-10);
+    OCTX.fillText('box' , e.x-40, e.y+40);
+	 }
 
   // If both hands are gripping, create a rectangle between them.
 
