@@ -85,15 +85,14 @@ export function drawDomSelection() {
     OCTX.restore();
   }
 
-  if (state.domFocusIndex != null) {
-    const focusedElement = state.domDistances[state.domFocusIndex];
+  if (state.domFocusBounds != null) {
     OCTX.save();
     OCTX.fillStyle = "#0080ff40";
     OCTX.fillRect(
-      focusedElement.bounds.left,
-      focusedElement.bounds.top,
-      focusedElement.bounds.width,
-      focusedElement.bounds.height
+      state.domFocusBounds.left,
+      state.domFocusBounds.top,
+      state.domFocusBounds.width,
+      state.domFocusBounds.height
     );
     OCTX.restore();
   }

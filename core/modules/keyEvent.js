@@ -66,7 +66,7 @@ function handleCommand(key) {
     case "ArrowLeft": controller.slideManager.prev(); break;
     case "ArrowRight": controller.slideManager.next(); break;
     case "i": controller.toggleVisible("slide"); break;
-    case "o": controller.slideManager.toggleOpaque(); break;
+    case "o": controller.toggleOpaque("slide"); break;
 
     // Scene commands
     case "s": controller.toggleVisible("scene"); break;

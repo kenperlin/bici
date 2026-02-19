@@ -40,7 +40,7 @@ export class InteractionController {
     y ??= this.mouseY;
     targetId ??= this.activeTargets.get(id);
     const pointerTarget = this.getTarget(targetId);
-    if(pointerTarget?.onMove) {
+    if (pointerTarget?.onMove) {
       pointerTarget.onMove(x, y, z, id);
       return true;
     }
@@ -52,8 +52,8 @@ export class InteractionController {
     y ??= this.mouseY;
     targetId ??= this.activeTargets.get(id);
     const pointerTarget = this.getTarget(targetId);
-    
-    if (pointerTarget?.onUp) { 
+
+    if (pointerTarget?.onUp) {
       pointerTarget.onUp(x, y, z, id);
       this.activeTargets.delete(id);
       return true;
@@ -61,22 +61,44 @@ export class InteractionController {
     return false;
   }
 
+  triggerAutofocus(targetId, autofocusFn) {
+    const target = this.getTarget(targetId);
+    const shouldFocus = target.contains(this.mouseX, this.mouseY) || autofocusFn(target)
+
+    if (shouldFocus) {
+      if (document.activeElement !== target.element) target.element.focus();
+      return target;
+    } else {
+      if (document.activeElement === target.element) target.element.blur();
+      return null;
+    }
+  }
+
   toggleVisible(targetId) {
-    this.getTarget(targetId)?.toggleVisible();
+    this.getTarget(targetId).toggleVisible?.();
+  }
+  
+  toggleOpaque(targetId) {
+    this.getTarget(targetId).toggleOpaque?.();
   }
 
   getTargetIdFromPosition(x, y) {
     if (this.codeArea.isVisible && this.codeArea.contains(x, y)) return "code";
-    if (this.sceneManager.canvas.isVisible && this.sceneManager.canvas.contains(x, y)) return "scene";
-    if (this.slideManager.canvas.isVisible && this.slideManager.canvas.contains(x, y)) return "slide";
+    if (this.sceneManager.canvas.isVisible && this.sceneManager.canvas.contains(x, y))
+      return "scene";
+    if (this.slideManager.canvas.isVisible && this.slideManager.canvas.contains(x, y))
+      return "slide";
     return "pen";
   }
 
   getActiveTargetId() {
-    switch(document.activeElement) {
-      case this.codeArea.element: return "code";
-      case this.sceneManager.canvas.element: return "scene";
-      case this.slideManager.canvas.element: return "slide";
+    switch (document.activeElement) {
+      case this.codeArea.element:
+        return "code";
+      case this.sceneManager.canvas.element:
+        return "scene";
+      case this.slideManager.canvas.element:
+        return "slide";
     }
   }
 

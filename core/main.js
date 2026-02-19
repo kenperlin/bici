@@ -131,7 +131,7 @@ function animate() {
   if (mediapipeState.isReady && mediapipeState.isRunning) {
     updateTracking();
     updateGesture();
-    updateDomFocus({ sceneManager, codeArea, slideManager, pen });
+    updateDomFocus(controller);
   }
 
   requestAnimationFrame(animate);

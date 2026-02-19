@@ -26,7 +26,7 @@ export const trackingState = {
   debugMode: false,
 
   domDistances: [],
-  domFocusIndex: null,
+  domFocusBounds: null,
   spotlightElement: null,
 
   globalAvatar: { x: 0, y: 0, s: 1, separation: null },

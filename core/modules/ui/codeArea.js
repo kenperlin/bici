@@ -51,6 +51,10 @@ export class CodeArea {
     this.setFontSize(this.fontSize / 1.1)
   }
 
+  getRect() {
+    return this.element.getBoundingClientRect();
+  }
+
   contains(x, y) {
     let col = this._xToCol(x);
     let row = this._yToRow(y);
