@@ -44,6 +44,12 @@ export class CodeArea {
     this.fontSize = size;
     this.element.style.fontSize = this.fontSize + "px";
   }
+  increaseFontSize() {
+    this.setFontSize(this.fontSize * 1.1)
+  }
+  decreaseFontSize(size) {
+    this.setFontSize(this.fontSize / 1.1)
+  }
 
   contains(x, y) {
     let col = this._xToCol(x);

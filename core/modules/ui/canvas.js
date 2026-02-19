@@ -7,19 +7,6 @@ export class InteractiveCanvas {
     this.onUp = () => {};
 
     this.isDown = {};
-
-    window.addEventListener("mousemove", (e) => {
-      const id = "mouse";
-      if (this.isDown[id]) this.onMove(e.clientX, e.clientY, 0, id);
-    });
-    window.addEventListener("mousedown", (e) => {
-      const id = "mouse";
-      if (e.target === this.element) this.onDown(e.clientX, e.clientY, 0, id);
-    });
-    window.addEventListener("mouseup", (e) => {
-      const id = "mouse";
-      if (this.isDown[id]) this.onUp(e.clientX, e.clientY, 0, id);
-    });
   }
 
   getRect() {

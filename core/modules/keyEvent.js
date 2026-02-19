@@ -2,15 +2,15 @@ import { toggleHelp } from "./ui/help.js";
 import { trackingState, mediapipeState } from "./mediapipe/state.js";
 import { webrtcClient } from "./yjs/yjs.js";
 
-let appContext = {};
+let controller;
 
 export let state = {
   isShift: false,
   isAlt: false
 };
 
-export function initKeyHandler(context) {
-  appContext = context;
+export function initKeyHandler(appController) {
+  controller = appController;
   document.addEventListener("keydown", handleKeyDown);
   document.addEventListener("keyup", handleKeyUp);
 }
@@ -24,7 +24,7 @@ function triggerMouseEvent(type) {
 }
 
 function handleKeyDown(e) {
-  if (document.activeElement === appContext.codeArea?.element) return;
+  if (controller.getActiveTargetId() === "code") return;
   if (e.key.startsWith("Arrow")) e.preventDefault();
 
   switch (e.key) {
@@ -35,7 +35,7 @@ function handleKeyDown(e) {
 }
 
 function handleKeyUp(e) {
-  if (document.activeElement === appContext.codeArea?.element) return;
+  if (controller.getActiveTargetId() === "code") return;
   if (e.key.startsWith("Arrow")) e.preventDefault();
 
   const key = e.key;
@@ -52,10 +52,8 @@ function handleKeyUp(e) {
 }
 
 function handleCommand(key) {
-  const { codeArea, slideManager, sceneManager, pen } = appContext;
-
   if (key >= "0" && key <= "9") {
-    sceneManager.load(key, { codeArea });
+    controller.sceneManager.load(key, { codeArea: controller.codeArea });
     return;
   }
 
@@ -65,18 +63,18 @@ function handleCommand(key) {
     case "/": triggerMouseEvent("mouseup"); break;
 
     // CodeArea commands
-    case "ArrowUp": codeArea.setFontSize(codeArea.fontSize * 1.1); break;
-    case "ArrowDown": codeArea.setFontSize(codeArea.fontSize / 1.1); break;
-    case "c": codeArea.toggleVisible(); break;
+    case "ArrowUp": controller.codeArea.increaseFontSize(); break;
+    case "ArrowDown": controller.codeArea.decreaseFontSize(); break;
+    case "c": controller.toggleVisible("code"); break;
 
     // Slides commands
-    case "ArrowLeft": slideManager.prev(); break;
-    case "ArrowRight": slideManager.next(); break;
-    case "i": slideManager.toggleVisible(); break;
-    case "o": slideManager.toggleOpaque(); break;
+    case "ArrowLeft": controller.slideManager.prev(); break;
+    case "ArrowRight": controller.slideManager.next(); break;
+    case "i": controller.toggleVisible("slide"); break;
+    case "o": controller.slideManager.toggleOpaque(); break;
 
     // Scene commands
-    case "s": sceneManager.toggleVisible(); break;
+    case "s": controller.toggleVisible("scene"); break;
 
     // Mediapipe + tracking commands
     case "M": mediapipeState.toggleRunning(); break;
@@ -90,12 +88,12 @@ function handleCommand(key) {
     case "H": trackingState.isSeparateHandAvatars = !trackingState.isSeparateHandAvatars; break;
 
     // Pen commands
-    case ",": pen.width *= 0.707; break;
-    case ".": pen.width /= 0.707; break;
-    case "[": pen.setColor("#ff0000"); break;
-    case "]": pen.setColor("#0080ff"); break;
-    case "\\": pen.setColor("#000000"); break;
-    case "Backspace": state.isShift ? pen.clear() : pen.delete(); break;
+    case ",": controller.pen.width *= 0.707; break;
+    case ".": controller.pen.width /= 0.707; break;
+    case "[": controller.pen.setColor("#ff0000"); break;
+    case "]": controller.pen.setColor("#0080ff"); break;
+    case "\\": controller.pen.setColor("#000000"); break;
+    case "Backspace": state.isShift ? controller.pen.clear() : controller.pen.delete(); break;
 
     case "h": toggleHelp(); break;
   }

@@ -1,15 +1,25 @@
 export class InteractionController {
   constructor({ codeArea, slideManager, sceneManager, pen }) {
-    this._codeArea = codeArea;
-    this._slideManager = slideManager;
-    this._sceneManager = sceneManager;
-    this._pen = pen;
+    this.codeArea = codeArea;
+    this.slideManager = slideManager;
+    this.sceneManager = sceneManager;
+    this.pen = pen;
 
     this.activeTargets = new Map();
+
+    window.addEventListener("mousemove", (e) => {
+     this.triggerMove("mouse", e.clientX, e.clientY, 0);
+    });
+    window.addEventListener("mousedown", (e) => {
+      this.triggerDown("mouse", e.clientX, e.clientY, 0);
+    });
+    window.addEventListener("mouseup", (e) => {
+      this.triggerUp("mouse", e.clientX, e.clientY, 0);
+    });
   }
 
   triggerDown(id, x, y, z, targetId) {
-    targetId ??= this.targetIdFromPosition(x, y);
+    targetId ??= this.getTargetIdFromPosition(x, y);
     const pointerTarget = this.getPointerTarget(targetId);
     
     if (pointerTarget?.onDown) {
@@ -51,21 +61,29 @@ export class InteractionController {
     }
   }
 
-  targetIdFromPosition(x, y) {
-    if (this._codeArea.isVisible && this._codeArea.contains(x, y)) return "code";
-    if (this._sceneManager.isVisible && this._sceneManager.canvas.contains(x, y)) return "scene";
-    if (this._slideManager.isVisible && this._slideManager.canvas.contains(x, y)) return "slide";
+  getTargetIdFromPosition(x, y) {
+    if (this.codeArea.isVisible && this.codeArea.contains(x, y)) return "code";
+    if (this.sceneManager.isVisible && this.sceneManager.canvas.contains(x, y)) return "scene";
+    if (this.slideManager.isVisible && this.slideManager.canvas.contains(x, y)) return "slide";
     return null;
+  }
+
+  getActiveTargetId() {
+    switch(document.activeElement) {
+      case this.codeArea.element: return "code";
+      case this.sceneManager.canvas.element: return "scene";
+      case this.slideManager.canvas.element: return "slide";
+    }
   }
 
   getTarget(targetId) {
     switch (targetId) {
       case "code":
-        return this._codeArea;
+        return this.codeArea;
       case "scene":
-        return this._sceneManager;
+        return this.sceneManager;
       case "slide":
-        return this._slideManager;
+        return this.slideManager;
     }
     return null;
   }
@@ -73,11 +91,11 @@ export class InteractionController {
   getPointerTarget(targetId) {
     switch (targetId) {
       case "code":
-        return this._codeArea;
+        return this.codeArea;
       case "scene":
-        return this._sceneManager.canvas;
+        return this.sceneManager.canvas;
       case "slide":
-        return this._slideManager.canvas;
+        return this.slideManager.canvas;
     }
     return null;
   }

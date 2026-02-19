@@ -66,7 +66,7 @@ async function init() {
   resizeStage();
   initMediapipe();
   initGestureTracker(controller);
-  initKeyHandler({ sceneManager, codeArea, slideManager, pen });
+  initKeyHandler(controller);
   codeArea.onReloadScene = sceneManager.hotReload.bind(sceneManager);
 
   // Collaboration
