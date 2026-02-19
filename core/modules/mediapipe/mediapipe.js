@@ -4,8 +4,8 @@ import {
   FilesetResolver,
   DrawingUtils
 } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0";
-import { videoTransform } from "../utils/canvasUtils.js";
 import { mediapipeState } from "./state.js";
+import { videoState } from "../ui/video.js";
 
 let drawUtils;
 let handLandmarker;
@@ -88,10 +88,10 @@ function processResults(handResults, faceResults) {
 
 function drawDebug() {
   OCTX.save();
-  OCTX.translate(videoTransform.x, videoTransform.y);
+  OCTX.translate(videoState.x, videoState.y);
   OCTX.scale(
-    videoTransform.w / (WIDTH * DPR),
-    videoTransform.h / (HEIGHT * DPR)
+    videoState.w / (WIDTH * DPR),
+    videoState.h / (HEIGHT * DPR)
   );
 
   for (const hand of mediapipeState.handResults) {

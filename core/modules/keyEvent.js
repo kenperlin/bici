@@ -1,6 +1,7 @@
 import { toggleHelp } from "./ui/help.js";
 import { trackingState, mediapipeState } from "./mediapipe/state.js";
 import { webrtcClient } from "./yjs/yjs.js";
+import { videoState } from "./ui/video.js";
 
 let controller;
 
@@ -82,6 +83,7 @@ function handleCommand(key) {
     case "N": trackingState.isObvious = !trackingState.isObvious; break;
     case "H": trackingState.isSeparateHandAvatars = !trackingState.isSeparateHandAvatars; break;
     case "S": trackingState.isScalingHandAvatars = !trackingState.isScalingHandAvatars; break;
+    case "W": videoState.isVisible = !videoState.isVisible; break;
 
     // Pen commands
     case ",": controller.pen.width *= 0.707; break;

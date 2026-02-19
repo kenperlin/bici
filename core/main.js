@@ -1,4 +1,3 @@
-import { drawVideoToCover } from "./modules/utils/canvasUtils.js";
 import { CodeArea } from "./modules/ui/codeArea.js";
 import { SlideManager } from "./modules/ui/SlideManager.js";
 import { displayHelp } from "./modules/ui/help.js";
@@ -19,6 +18,7 @@ import { updateDomFocus } from "./modules/mediapipe/tracking/dom.js";
 import { mediapipeState } from "./modules/mediapipe/state.js";
 import { initGestureTracker, updateGesture } from "./modules/mediapipe/tracking/gesture.js";
 import { InteractionController } from "./modules/controller.js";
+import { drawVideoToCover } from "./modules/ui/video.js";
 
 const DOM = {
   projectSelector: document.getElementById("project-selector"),
@@ -119,7 +119,7 @@ function animate() {
   let hasRemoteVideo = videoUI?.hasRemoteVideo();
   let backgroundVideo = hasRemoteVideo ? videoUI.remoteVideo : DOM.webcam;
 
-  drawVideoToCover(ctx, backgroundVideo, WIDTH, HEIGHT, !hasRemoteVideo);
+  drawVideoToCover(ctx, backgroundVideo, !hasRemoteVideo);
 
   codeArea.update();
   slideManager.draw();

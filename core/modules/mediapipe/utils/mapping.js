@@ -1,4 +1,4 @@
-import { videoTransform } from "../../utils/canvasUtils.js";
+import { videoState } from "../../ui/video.js";
 import { trackingState as state } from "../state.js";
 
 export function frameToRect(x, y, rect) {
@@ -13,17 +13,17 @@ export function toShadowAvatar(point, h) {
     point.x = state.handAvatar[h].x + state.handAvatar[h].s * point.x;
     point.y = state.handAvatar[h].y + state.handAvatar[h].s * point.y;
   } else {
-    point.x = state.globalAvatar.x + state.globalAvatar.s * (point.x - videoTransform.w / 2);
-    point.y = state.globalAvatar.y + state.globalAvatar.s * (point.y - videoTransform.h / 2);
+    point.x = state.globalAvatar.x + state.globalAvatar.s * (point.x - videoState.w / 2);
+    point.y = state.globalAvatar.y + state.globalAvatar.s * (point.y - videoState.h / 2);
   }
 }
 
 export function toVideo(point) {
   return {
     ...point,
-    x: point.x * videoTransform.w + videoTransform.x,
-    y: point.y * videoTransform.h + videoTransform.y,
-    z: point.z * videoTransform.w
+    x: point.x * videoState.w + videoState.x,
+    y: point.y * videoState.h + videoState.y,
+    z: point.z * videoState.w
   }
 }
 

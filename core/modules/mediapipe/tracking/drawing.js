@@ -2,13 +2,13 @@ import { norm, smoothstep } from "../../math/math.js";
 import { toScreen } from "../utils/mapping.js";
 import { trackingState as state } from "../state.js";
 import { handScale, LM } from "../gestures/detect.js";
-import { videoTransform } from "../../utils/canvasUtils.js";
+import { videoState } from "../../ui/video.js";
 
 export function drawHands(handResults) {
   OCTX.save();
   for (const hand of handResults) {
     const h = hand.handedness;
-    const scale = videoTransform.w * handScale(hand.landmarks);
+    const scale = videoState.w * handScale(hand.landmarks);
     const fingersToDraw = new Set([0, 1, 2]);
 
     OCTX.fillStyle = "#00000060";
@@ -179,7 +179,7 @@ export function drawShadowHand(hand, avatarInfo) {
 
   const { x, y, s } = avatarInfo;
   const { handedness: h, landmarks } = hand;
-  const hScale = videoTransform.w * handScale(landmarks);
+  const hScale = videoState.w * handScale(landmarks);
 
   // Behind the scenes, create a separate shadow canvas.
   shadowCanvas.width = OCTX.canvas.width;
