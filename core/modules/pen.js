@@ -13,7 +13,6 @@ export function Pen() {
   this.isDown = {};
 
   this.onDown = (x, y, z, id) => {
-    if (id === "mouse") return;
     if (this.isDown[id]) return;
 
     let stroke = [];

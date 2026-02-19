@@ -27,12 +27,13 @@ export class InteractionController {
     y ??= this.mouseY;
     targetId ??= this.getTargetIdFromPosition(x, y);
     const pointerTarget = this.getTarget(targetId);
-    if (pointerTarget?.onDown) {
-      this.activeTargets.set(id, targetId);
-      pointerTarget.onDown(x, y, z, id);
-      return true;
-    }
-    return false;
+
+    if(targetId === "pen" && id !== "/") return false;
+    if(!pointerTarget?.onDown) return false;
+
+    this.activeTargets.set(id, targetId);
+    pointerTarget.onDown(x, y, z, id);
+    return true;
   }
 
   triggerMove(id, x, y, z, targetId) {
@@ -40,11 +41,11 @@ export class InteractionController {
     y ??= this.mouseY;
     targetId ??= this.activeTargets.get(id);
     const pointerTarget = this.getTarget(targetId);
-    if (pointerTarget?.onMove) {
-      pointerTarget.onMove(x, y, z, id);
-      return true;
-    }
-    return false;
+
+    if(!pointerTarget?.onMove) return false;
+
+    pointerTarget.onMove(x, y, z, id);
+    return true;
   }
 
   triggerUp(id, x, y, z, targetId) {
@@ -53,12 +54,11 @@ export class InteractionController {
     targetId ??= this.activeTargets.get(id);
     const pointerTarget = this.getTarget(targetId);
 
-    if (pointerTarget?.onUp) {
-      pointerTarget.onUp(x, y, z, id);
-      this.activeTargets.delete(id);
-      return true;
-    }
-    return false;
+    if(!pointerTarget?.onUp) return false;
+
+    pointerTarget.onUp(x, y, z, id);
+    this.activeTargets.delete(id);
+    return true;
   }
 
   triggerAutofocus(targetId, autofocusFn) {
