@@ -8,7 +8,6 @@ export class SceneManager {
     this.canvas = new InteractiveCanvas(canvas, 'webgl2');
     this.scene = null;
     this.sceneCounter = 0;
-    this.isVisible = false;
 
     this.projectName = null;
     this.context = {};
@@ -62,13 +61,8 @@ export class SceneManager {
     );
   }
 
-  toggleVisible() {
-    this.isVisible = !this.isVisible;
-    this.canvas.element.style.display = this.isVisible ? "block" : "none";
-  }
-
   update() {
-    if (!this.isVisible) return;
+    if (!this.canvas.isVisible) return;
     this.scene?.update();
   }
 }

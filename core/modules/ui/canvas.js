@@ -5,6 +5,8 @@ export class InteractiveCanvas {
     this.onMove = () => {};
     this.onDown = () => {};
     this.onUp = () => {};
+    this.isVisible = false;
+    this.isOpaque = true;
 
     this.isDown = {};
   }
@@ -16,6 +18,16 @@ export class InteractiveCanvas {
   contains(x, y) {
     const { left, right, top, bottom } = this.getRect();
     return x >= left && x <= right && y >= top && y <= bottom;
+  }
+
+  toggleVisible() {
+    this.isVisible = !this.isVisible;
+    this.element.style.display = this.isVisible ? "block" : "none";
+  }
+
+  toggleOpaque() {
+    this.isOpaque = !this.isOpaque;
+    this.element.style.opacity = this.isOpaque ? 1 : 0.5;
   }
 
   toCanvas(x, y, z) {

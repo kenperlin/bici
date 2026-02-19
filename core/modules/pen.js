@@ -1,7 +1,6 @@
 export function Pen() {
   this.strokes = [];
   this.width = 7;
-  this.isDown = false;
 
   let color = "#000000";
   let highlightSketches = false;
@@ -11,25 +10,31 @@ export function Pen() {
   this.setColor = (c) => (color = c);
   this.onStrokesChanged = () => {};
 
-  this.down = () => {
-    if (this.isDown) return;
+  this.isDown = {};
+
+  this.onDown = (x, y, z, id) => {
+    if (id === "mouse") return;
+    if (this.isDown[id]) return;
+
     let stroke = [];
     stroke.color = color;
     stroke.lineWidth = this.width;
     stroke.xlo = stroke.ylo = 10000;
     stroke.xhi = stroke.yhi = -10000;
-
+    
     this.strokes.push(stroke);
-    this.isDown = true;
+    this.isDown[id] = this.strokes.length - 1;
     this.onStrokesChanged();
   };
 
-  this.move = (x, y) => {
+  this.onMove = (x, y, z, id) => {
     this.position.x = x;
     this.position.y = y;
-    if (!this.isDown) return;
 
-    let stroke = this.strokes[this.strokes.length - 1];
+    const strokeIdx = this.isDown[id]
+    if (strokeIdx == null) return;
+    
+    let stroke = this.strokes[strokeIdx];
     stroke.push([x, y]);
 
     let r = stroke.lineWidth / 2;
@@ -40,9 +45,8 @@ export function Pen() {
     this.onStrokesChanged?.();
   };
 
-  this.up = () => {
-    if (!this.isDown) return;
-    this.isDown = false;
+  this.onUp = (x, y, z, id) => {
+    this.isDown[id] = null;
     this.onStrokesChanged?.();
   };
 
@@ -73,6 +77,4 @@ export function Pen() {
     }
     ctx.restore();
   };
-
-  window.addEventListener('mousemove', (e) => this.move(e.x, e.y))
 }

@@ -8,8 +8,6 @@ export class SlideManager {
     this.modules = {};
     this.urlMap = {};
     this.currentSlide = 0;
-    this.isVisible = false;
-    this.isOpaque = false;
     
     this.projectName = null;
     this.context = {};
@@ -72,6 +70,7 @@ export class SlideManager {
       }
     }
 
+    this.canvas.toggleOpaque()
     this.registerSlide()
   }
 
@@ -110,18 +109,8 @@ export class SlideManager {
     this.registerSlide()
   }
 
-  toggleVisible() {
-    this.isVisible = !this.isVisible;
-    this.canvas.element.style.display = this.isVisible ? "block" : "none";
-  }
-
-  toggleOpaque() {
-    this.isOpaque = !this.isOpaque;
-    this.canvas.element.style.opacity = this.isOpaque ? 1 : 0.5;
-  }
-
   draw(idx = this.currentSlide) {
-    if(!this.isVisible) return;
+    if(!this.canvas.isVisible) return;
 
     const ctx = this.canvas.ctx;
     const slide = this.getSlide(idx);

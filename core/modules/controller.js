@@ -5,10 +5,14 @@ export class InteractionController {
     this.sceneManager = sceneManager;
     this.pen = pen;
 
+    this.mouseX = 0;
+    this.mouseY = 0;
     this.activeTargets = new Map();
 
     window.addEventListener("mousemove", (e) => {
-     this.triggerMove("mouse", e.clientX, e.clientY, 0);
+      this.mouseX = e.clientX;
+      this.mouseY = e.clientY;
+      this.triggerMove("mouse", e.clientX, e.clientY, 0);
     });
     window.addEventListener("mousedown", (e) => {
       this.triggerDown("mouse", e.clientX, e.clientY, 0);
@@ -19,9 +23,10 @@ export class InteractionController {
   }
 
   triggerDown(id, x, y, z, targetId) {
+    x ??= this.mouseX;
+    y ??= this.mouseY;
     targetId ??= this.getTargetIdFromPosition(x, y);
-    const pointerTarget = this.getPointerTarget(targetId);
-    
+    const pointerTarget = this.getTarget(targetId);
     if (pointerTarget?.onDown) {
       this.activeTargets.set(id, targetId);
       pointerTarget.onDown(x, y, z, id);
@@ -31,9 +36,10 @@ export class InteractionController {
   }
 
   triggerMove(id, x, y, z, targetId) {
+    x ??= this.mouseX;
+    y ??= this.mouseY;
     targetId ??= this.activeTargets.get(id);
-    const pointerTarget = this.getPointerTarget(targetId);
-
+    const pointerTarget = this.getTarget(targetId);
     if(pointerTarget?.onMove) {
       pointerTarget.onMove(x, y, z, id);
       return true;
@@ -42,8 +48,10 @@ export class InteractionController {
   }
 
   triggerUp(id, x, y, z, targetId) {
+    x ??= this.mouseX;
+    y ??= this.mouseY;
     targetId ??= this.activeTargets.get(id);
-    const pointerTarget = this.getPointerTarget(targetId);
+    const pointerTarget = this.getTarget(targetId);
     
     if (pointerTarget?.onUp) { 
       pointerTarget.onUp(x, y, z, id);
@@ -54,18 +62,14 @@ export class InteractionController {
   }
 
   toggleVisible(targetId) {
-    const target = this.getTarget(targetId)
-    if(target) {
-      console.log(`Toggling visible for target ${targetId}`)
-      target.toggleVisible()
-    }
+    this.getTarget(targetId)?.toggleVisible();
   }
 
   getTargetIdFromPosition(x, y) {
     if (this.codeArea.isVisible && this.codeArea.contains(x, y)) return "code";
-    if (this.sceneManager.isVisible && this.sceneManager.canvas.contains(x, y)) return "scene";
-    if (this.slideManager.isVisible && this.slideManager.canvas.contains(x, y)) return "slide";
-    return null;
+    if (this.sceneManager.canvas.isVisible && this.sceneManager.canvas.contains(x, y)) return "scene";
+    if (this.slideManager.canvas.isVisible && this.slideManager.canvas.contains(x, y)) return "slide";
+    return "pen";
   }
 
   getActiveTargetId() {
@@ -81,21 +85,11 @@ export class InteractionController {
       case "code":
         return this.codeArea;
       case "scene":
-        return this.sceneManager;
-      case "slide":
-        return this.slideManager;
-    }
-    return null;
-  }
-
-  getPointerTarget(targetId) {
-    switch (targetId) {
-      case "code":
-        return this.codeArea;
-      case "scene":
         return this.sceneManager.canvas;
       case "slide":
         return this.slideManager.canvas;
+      case "pen":
+        return this.pen;
     }
     return null;
   }

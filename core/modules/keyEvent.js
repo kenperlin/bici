@@ -11,16 +11,11 @@ export let state = {
 
 export function initKeyHandler(appController) {
   controller = appController;
-  document.addEventListener("keydown", handleKeyDown);
-  document.addEventListener("keyup", handleKeyUp);
-}
-
-function triggerMouseEvent(type) {
-  const event = new MouseEvent(type, {
-    bubbles: true,
-    cancelable: true
+  window.addEventListener("keydown", handleKeyDown);
+  window.addEventListener("keyup", handleKeyUp);
+  window.addEventListener("mousemove", (e) => {
+    controller.triggerMove("/", e.clientX, e.clientY, 0);
   });
-  window.dispatchEvent(event);
 }
 
 function handleKeyDown(e) {
@@ -30,7 +25,7 @@ function handleKeyDown(e) {
   switch (e.key) {
     case "Alt": state.isAlt = true; break;
     case "Shift": state.isShift = true; break;
-    case "/": triggerMouseEvent("mousedown"); break;
+    case "/": controller.triggerDown("/"); break;
   }
 }
 
@@ -60,7 +55,7 @@ function handleCommand(key) {
   switch (key) {
     case "Alt": state.isAlt = false; break;
     case "Shift": state.isShift = false; break;
-    case "/": triggerMouseEvent("mouseup"); break;
+    case "/": controller.triggerUp("/"); break;
 
     // CodeArea commands
     case "ArrowUp": controller.codeArea.increaseFontSize(); break;
