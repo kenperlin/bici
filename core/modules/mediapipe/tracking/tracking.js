@@ -1,13 +1,13 @@
 import { add, clamp, cross, dot, mix, norm, normalize, resize, subtract } from "../../math/math.js";
-import { LowPassFilter, PCAFilter } from "../utils/filter.js";
+import { LowPassFilter2D, PCAFilter2D } from "../utils/filter.js";
 import { trackingState as state, mediapipeState } from "../state.js";
 import { drawEyes, drawHands, drawShadowGesture, drawShadowHand } from "./drawing.js";
 import { fingerDistances, handScale, LM } from "../gestures/detect.js";
 import { toVideo } from "../utils/mapping.js";
 
-const headPcaFilter = new PCAFilter();
-const headLowPassFilter = new LowPassFilter(2 / 3);
-const globalAvatarFilter = new LowPassFilter(2 / 3);
+const headPcaFilter = new PCAFilter2D();
+const headLowPassFilter = new LowPassFilter2D(2 / 3);
+const globalAvatarFilter = new LowPassFilter2D(2 / 3);
 
 let pointToArray = (p) => [p.x, p.y, p.z];
 

@@ -6,10 +6,23 @@ import {
 } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0";
 import { mediapipeState } from "./state.js";
 import { videoState } from "../ui/video.js";
+import { KalmanFilter, LowPassFilter1D } from "./utils/filter.js";
 
 let drawUtils;
 let handLandmarker;
 let faceLandmarker;
+
+const handFilters = {
+  left: {},
+  right: {}
+};
+
+const kalmanParams = {
+  dt: 1 / 30,
+  Q: 0.005,
+  R: 0.01,
+}
+const lowpassParam = 0.2;
 
 export async function initMediapipe() {
   drawUtils = new DrawingUtils(OCTX);
@@ -36,6 +49,29 @@ export async function initMediapipe() {
       numFaces: 1
     })
   ]);
+
+  for (const h in handFilters) {
+    handFilters[h].kalman = [];
+    handFilters[h].lowpass = [];
+    for (let i = 0; i < 21; i++) {
+      handFilters[h].kalman[i] = {
+        x: new KalmanFilter(kalmanParams.dt, kalmanParams.Q, kalmanParams.R),
+        y: new KalmanFilter(kalmanParams.dt, kalmanParams.Q, kalmanParams.R),
+        z: new KalmanFilter(kalmanParams.dt, kalmanParams.Q, kalmanParams.R),
+        worldX: new KalmanFilter(kalmanParams.dt, kalmanParams.Q, kalmanParams.R),
+        worldY: new KalmanFilter(kalmanParams.dt, kalmanParams.Q, kalmanParams.R),
+        worldZ: new KalmanFilter(kalmanParams.dt, kalmanParams.Q, kalmanParams.R)
+      };
+      handFilters[h].lowpass[i] = {
+        x: new LowPassFilter1D(lowpassParam),
+        y: new LowPassFilter1D(lowpassParam),
+        z: new LowPassFilter1D(lowpassParam),
+        worldX: new LowPassFilter1D(lowpassParam),
+        worldY: new LowPassFilter1D(lowpassParam),
+        worldZ: new LowPassFilter1D(lowpassParam)
+      };
+    }
+  }
 
   mediapipeState.isReady = true;
 }
@@ -68,12 +104,24 @@ function processResults(handResults, faceResults) {
 
   // Transform results to mirror
   for (let i = 0; i < handResults.landmarks?.length ?? 0; i++) {
-    const handedness =
-      handResults.handednesses[i][0].displayName.toLowerCase();
+    const handedness = handResults.handednesses[i][0].displayName.toLowerCase();
     const landmarks = handResults.landmarks[i].map(transformLandmark);
-    const worldLandmarks =
-      handResults.worldLandmarks[i].map(transformLandmark);
+    const worldLandmarks = handResults.worldLandmarks[i].map(transformLandmark);
     newHands.push({ landmarks, worldLandmarks, handedness });
+  }
+
+  for (const hand of newHands) {
+    const h = hand.handedness;
+    hand.landmarks = hand.landmarks.map((lm, i) => ({
+      x: handFilters[h].kalman[i].x.filter(lm.x),
+      y: handFilters[h].kalman[i].y.filter(lm.y),
+      z: handFilters[h].kalman[i].z.filter(lm.z)
+    }));
+    hand.worldLandmarks = hand.worldLandmarks.map((lm, i) => ({
+      x: handFilters[h].kalman[i].worldX.filter(lm.x),
+      y: handFilters[h].kalman[i].worldY.filter(lm.y),
+      z: handFilters[h].kalman[i].worldZ.filter(lm.z)
+    }));
   }
 
   let newFace = [];
@@ -89,20 +137,13 @@ function processResults(handResults, faceResults) {
 function drawDebug() {
   OCTX.save();
   OCTX.translate(videoState.x, videoState.y);
-  OCTX.scale(
-    videoState.w / (WIDTH * DPR),
-    videoState.h / (HEIGHT * DPR)
-  );
+  OCTX.scale(videoState.w / (WIDTH * DPR), videoState.h / (HEIGHT * DPR));
 
   for (const hand of mediapipeState.handResults) {
-    drawUtils.drawConnectors(
-      hand.landmarks,
-      HandLandmarker.HAND_CONNECTIONS,
-      {
-        color: "#00FF00",
-        lineWidth: 2
-      }
-    );
+    drawUtils.drawConnectors(hand.landmarks, HandLandmarker.HAND_CONNECTIONS, {
+      color: "#00FF00",
+      lineWidth: 2
+    });
     drawUtils.drawLandmarks(hand.landmarks, {
       color: "#00FF00",
       lineWidth: 2
@@ -115,16 +156,12 @@ function drawDebug() {
       FaceLandmarker.FACE_LANDMARKS_TESSELATION,
       { color: "#C0C0C070", lineWidth: 1 }
     );
-    drawUtils.drawConnectors(
-      mediapipeState.faceResults,
-      FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE,
-      { color: "#FF3030" }
-    );
-    drawUtils.drawConnectors(
-      mediapipeState.faceResults,
-      FaceLandmarker.FACE_LANDMARKS_LEFT_EYE,
-      { color: "#FF3030" }
-    );
+    drawUtils.drawConnectors(mediapipeState.faceResults, FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE, {
+      color: "#FF3030"
+    });
+    drawUtils.drawConnectors(mediapipeState.faceResults, FaceLandmarker.FACE_LANDMARKS_LEFT_EYE, {
+      color: "#FF3030"
+    });
   }
 
   OCTX.restore();
