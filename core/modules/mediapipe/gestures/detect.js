@@ -135,7 +135,7 @@ export class MotionGesture {
 }
 
 export class PinchGesture extends HandGesture {
-  constructor(id, fingers, maxDistance, activationThreshold = 3, activeCooldown = 33) {
+  constructor(id, fingers, maxDistance, activationThreshold = 2, activeCooldown = 33) {
     let detectPinch = (hand) => {
       const distances = fingerDistances(hand.landmarks, LM.THUMB_TIP, fingers);
       return Math.max(...distances) < maxDistance;

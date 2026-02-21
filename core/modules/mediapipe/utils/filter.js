@@ -151,3 +151,32 @@ export class KalmanFilter {
     return this.update(z);
   }
 }
+
+export class OneEuroFilter {
+  constructor(freq, minCutoff = 1.0, beta = 0.2, dCutoff = 1.0) {
+    this.freq = freq;
+    this.minCutoff = minCutoff;
+    this.beta = beta;
+    this.dCutoff = dCutoff;
+
+    this.x = new LowPassFilter1D(this.alpha(minCutoff));
+    this.dx = new LowPassFilter1D(this.alpha(dCutoff));
+  }
+
+  alpha(cutoff) {
+    const te = 1 / this.freq;
+    const tau = 1 / (2 * Math.PI * cutoff);
+    return 1 / (1 + tau / te);
+  }
+
+  filter(value) {
+    const dvalue = (value - (this.x.prev ?? 0)) * this.freq;
+
+    this.dx.factor = this.alpha(this.dCutoff)
+    const edvalue = this.dx.filter(dvalue);
+    const cutoff = this.minCutoff + this.beta * Math.abs(edvalue);
+
+    this.x.factor = this.alpha(cutoff)
+    return this.x.filter(value);
+  }
+}

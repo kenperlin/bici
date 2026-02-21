@@ -6,7 +6,7 @@ import {
 } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0";
 import { mediapipeState } from "./state.js";
 import { videoState } from "../ui/video.js";
-import { KalmanFilter, LowPassFilter1D } from "./utils/filter.js";
+import { KalmanFilter, LowPassFilter1D, OneEuroFilter } from "./utils/filter.js";
 
 let drawUtils;
 let handLandmarker;
@@ -17,12 +17,17 @@ const handFilters = {
   right: {}
 };
 
+const dt = 1 / 30;
+const lowpassParam = 0.3;
 const kalmanParams = {
-  dt: 1 / 30,
-  Q: 0.005,
-  R: 0.01,
+  Q: 0.02,
+  R: 0.015,
 }
-const lowpassParam = 0.2;
+const oneEuroParams = {
+  minCutoff: 2.0,
+  beta: 0.8,
+  dCutoff: 0.2,
+};
 
 export async function initMediapipe() {
   drawUtils = new DrawingUtils(OCTX);
@@ -49,29 +54,7 @@ export async function initMediapipe() {
       numFaces: 1
     })
   ]);
-
-  for (const h in handFilters) {
-    handFilters[h].kalman = [];
-    handFilters[h].lowpass = [];
-    for (let i = 0; i < 21; i++) {
-      handFilters[h].kalman[i] = {
-        x: new KalmanFilter(kalmanParams.dt, kalmanParams.Q, kalmanParams.R),
-        y: new KalmanFilter(kalmanParams.dt, kalmanParams.Q, kalmanParams.R),
-        z: new KalmanFilter(kalmanParams.dt, kalmanParams.Q, kalmanParams.R),
-        worldX: new KalmanFilter(kalmanParams.dt, kalmanParams.Q, kalmanParams.R),
-        worldY: new KalmanFilter(kalmanParams.dt, kalmanParams.Q, kalmanParams.R),
-        worldZ: new KalmanFilter(kalmanParams.dt, kalmanParams.Q, kalmanParams.R)
-      };
-      handFilters[h].lowpass[i] = {
-        x: new LowPassFilter1D(lowpassParam),
-        y: new LowPassFilter1D(lowpassParam),
-        z: new LowPassFilter1D(lowpassParam),
-        worldX: new LowPassFilter1D(lowpassParam),
-        worldY: new LowPassFilter1D(lowpassParam),
-        worldZ: new LowPassFilter1D(lowpassParam)
-      };
-    }
-  }
+  initFilters();
 
   mediapipeState.isReady = true;
 }
@@ -90,6 +73,43 @@ export function mediapipePredict(video) {
 
   if (mediapipeState.debugMode) {
     drawDebug();
+  }
+}
+
+function initFilters() {
+  for (const h in handFilters) {
+    handFilters[h].kalman = [];
+    handFilters[h].lowpass = [];
+    handFilters[h].oneEuro = [];
+    for (let i = 0; i < 21; i++) {
+      handFilters[h].lowpass[i] = {
+        x: new LowPassFilter1D(lowpassParam),
+        y: new LowPassFilter1D(lowpassParam),
+        z: new LowPassFilter1D(lowpassParam),
+        worldX: new LowPassFilter1D(lowpassParam),
+        worldY: new LowPassFilter1D(lowpassParam),
+        worldZ: new LowPassFilter1D(lowpassParam)
+      };
+      const { Q, R } = kalmanParams;
+      handFilters[h].kalman[i] = {
+        x: new KalmanFilter(dt, Q, R),
+        y: new KalmanFilter(dt, Q, R),
+        z: new KalmanFilter(dt, Q, R),
+        worldX: new KalmanFilter(dt, Q, R),
+        worldY: new KalmanFilter(dt, Q, R),
+        worldZ: new KalmanFilter(dt, Q, R)
+      };
+      const { minCutoff, beta, dCutoff } = oneEuroParams;
+      const freq = 1 / dt;
+      handFilters[h].oneEuro[i] = {
+        x: new OneEuroFilter(freq, minCutoff, beta, dCutoff),
+        y: new OneEuroFilter(freq, minCutoff, beta, dCutoff),
+        z: new OneEuroFilter(freq, minCutoff, beta, dCutoff),
+        worldX: new OneEuroFilter(freq, minCutoff, beta, dCutoff),
+        worldY: new OneEuroFilter(freq, minCutoff, beta, dCutoff),
+        worldZ: new OneEuroFilter(freq, minCutoff, beta, dCutoff)
+      };
+    }
   }
 }
 
@@ -112,15 +132,18 @@ function processResults(handResults, faceResults) {
 
   for (const hand of newHands) {
     const h = hand.handedness;
+    const activeFilter = handFilters[h][mediapipeState.filter]
+    if(!activeFilter) continue;
+
     hand.landmarks = hand.landmarks.map((lm, i) => ({
-      x: handFilters[h].kalman[i].x.filter(lm.x),
-      y: handFilters[h].kalman[i].y.filter(lm.y),
-      z: handFilters[h].kalman[i].z.filter(lm.z)
+      x: activeFilter[i].x.filter(lm.x),
+      y: activeFilter[i].y.filter(lm.y),
+      z: activeFilter[i].z.filter(lm.z)
     }));
     hand.worldLandmarks = hand.worldLandmarks.map((lm, i) => ({
-      x: handFilters[h].kalman[i].worldX.filter(lm.x),
-      y: handFilters[h].kalman[i].worldY.filter(lm.y),
-      z: handFilters[h].kalman[i].worldZ.filter(lm.z)
+      x: activeFilter[i].worldX.filter(lm.x),
+      y: activeFilter[i].worldY.filter(lm.y),
+      z: activeFilter[i].worldZ.filter(lm.z)
     }));
   }
 

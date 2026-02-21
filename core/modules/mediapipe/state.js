@@ -4,6 +4,7 @@ export const mediapipeState = {
   isReady: false,
   isRunning: true,
   debugMode: false,
+  filter: "kalman",
 
   handResults: [],
   faceResults: [],
