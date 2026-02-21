@@ -3,7 +3,7 @@ export const videoState = {
   y: 0,
   w: window.innerWidth,
   h: window.innerHeight,
-  isVisible: true,
+  isVisible: false,
 }
 
 export function drawVideoToCover(ctx, src, isFlipped) {

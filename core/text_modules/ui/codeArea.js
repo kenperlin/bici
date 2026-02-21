@@ -1,5 +1,4 @@
 import * as NumberString from "../math/numberString.js";
-import { webrtcClient } from "../yjs/yjs.js";
 
 const offsetX = 20;
 const offsetY = 20;
@@ -13,17 +12,13 @@ export class CodeArea {
     this.element = textareaElement;
     this.fontSize = 18;
     this.element.style.fontSize = this.fontSize + "px";
-    this.element.style.left = "-2000px"
-    this.isVisible = false;
+    this.isVisible = true;
 
     this.ey = 0;
     this.dial = 0;
     this.isReloadScene = false;
     this.lastReloadTime = 0;
     this.onReloadScene = () => {}
-    
-    this._varsToFlush = {};
-    this._isFlushScheduled = false;
     this.onValueChanged = () => {}
 
     this.initInteractions();
@@ -100,25 +95,13 @@ export class CodeArea {
 
   update(time = Date.now() / 1000) {
     let lines = this.element.value.split("\n");
-    this.element.rows = Math.min((790 / this.fontSize) >> 0, lines.length);
-    this.element.cols = lines.reduce((acc, cur) => Math.max(acc, cur.length - 1), 0)
+    // this.element.rows = Math.min((790 / this.fontSize) >> 0, lines.length);
+    // this.element.cols = lines.reduce((acc, cur) => Math.max(acc, cur.length - 1), 0)
     if (this.isReloadScene && time - this.lastReloadTime > 0.1) {
-      try {
-        // Remove zero-width space markers (\u200B) added by Yjs sync before eval
-        this.element.value = this.element.value.replace(/\u200B/g, "");
 
-        // Replace imports with absolute URLs for scene reloading
-        const code = this.element.value.replace(
-          /from\s+['"]([^'"]+)['"]/g,
-          (_, spec) => {
-            const url = new URL(spec, import.meta.url).href;
-            return `from '${url}'`;
-          }
-        );
-        this.onReloadScene(code)
-      } catch (e) {
-        console.error("Scene code error:", e);
-      }
+      // Remove zero-width space markers (\u200B) added by Yjs sync
+      this.element.value = this.element.value.replace(/\u200B/g, "");
+
       this.lastReloadTime = time;
       this.isReloadScene = false;
     }
@@ -160,98 +143,10 @@ export class CodeArea {
     });
 
     this.element.addEventListener("keyup", (event) => {
-      if (event.key == "Shift") {
-        this.ey = 0;
-      }
-      if (event.key == "Meta") {
-        // Trigger input event to sync reload to other users via Yjs
-        this.isReloadScene = true;
-        this.onValueChanged()
-      }
-      if (event.key == "Control") {
-        let i0 = this.element.selectionStart;
-        let i1 = this.element.selectionEnd;
-        if (i0 < i1)
-          try {
-            let func = new Function(
-              "return " + this.element.value.substring(i0, i1)
-            );
-            let result = "" + func();
-            this.element.value =
-              this.element.value.substring(0, i0) +
-              result +
-              this.element.value.substring(i1);
-            this.element.selectionStart = this.element.selectionEnd =
-              i0 + result.length;
-          } catch (e) {
-            console.log("error:", e);
-          }
-      }
+      if (event.key == "Shift") this.ey = 0;
     });
-    this.element.addEventListener("input", () => {
-      this.onValueChanged();
-    })
-  }
-  // Internal helper to apply a single var change to the text
-  _applyVarToText(text, name, value) {
-    let i = text.indexOf("let " + name);
-    if (i >= 0) {
-      if (typeof value == "number" && !Number.isInteger(value))
-        value =
-          (Math.sign(value) * ((1000 * Math.abs(value) + 0.5) >> 0)) / 1000;
-      else if (Array.isArray(value)) value = "[" + value + "]";
-
-      let j = i + 4 + name.length;
-      let k = text.indexOf(";", j);
-      return text.substring(0, j) + " = " + value + text.substring(k);
-    }
-    return text;
-  };
-
-  _scheduleFlush() {
-    // Use queueMicrotask to flush after all synchronous setVar calls complete
-    if(this._isFlushScheduled) return;
-    this._isFlushScheduled = true;
-    queueMicrotask(() => this._flushPendingVars())
   }
 
-  _flushPendingVars() {
-    this._isFlushScheduled = false;
-    const vars = this._varsToFlush;
-
-    if (Object.keys(vars).length === 0) return;
-
-    let newText = this.element.value;
-    for (const name in vars) {
-      newText = this._applyVarToText(newText, name, vars[name]);
-    }
-    this.element.value = newText;
-    this._varsToFlush = {};
-
-    this.isReloadScene = true;
-    this.onValueChanged();
-  };
-
-  setVar(name, value) {
-    this._varsToFlush[name] = value;
-    this._scheduleFlush();
-  };
-
-  setVars(vars) {
-    Object.assign(this._varsToFlush, vars);
-    this._scheduleFlush();
-  };
-
-  getVar(name) {
-    let text = this.element.value;
-    let i = text.indexOf("let " + name);
-    if (i >= 0) {
-      let j = i + 4 + name.length + 3;
-      let k = text.indexOf(";", j);
-      return text.substring(j, k);
-    }
-    return null;
-  };
 
   slideValue(y) {
     if (this.ey && Math.abs((this.dial += y - this.ey)) >= 3) {

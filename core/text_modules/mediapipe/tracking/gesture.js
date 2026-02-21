@@ -4,7 +4,6 @@ import {
   handScale,
   LM,
   lmDistance,
-  MotionGesture,
   fingerDistances,
   PinchGesture
 } from "../gestures/detect.js";
@@ -13,18 +12,18 @@ import { toScreen } from "../utils/mapping.js";
 
 let gestureTracker;
 
-export function initGestureTracker(controller) {
+export function initGestureTracker() {
   const indexPinch = new PinchGesture("index pinch", [1], 0.25);
   indexPinch.onStart = ({state, id}, hand) => {
     const h = hand.handedness;
     const { x, y, z } = toScreen(state[h], h);
     const { headX, headY } = trackingState;
 
-    if(controller.triggerDown(`${id}.${h}`, x, y, z)) {
-      state[h].pointer = h;
-    } else if(controller.triggerDown(`${id}.${"head"}`, headX, headY, 0)) {
-      state[h].pointer = "head"
-    }
+    // if(controller.triggerDown(`${id}.${h}`, x, y, z)) {
+    //   state[h].pointer = h;
+    // } else if(controller.triggerDown(`${id}.${"head"}`, headX, headY, 0)) {
+    //   state[h].pointer = "head"
+    // }
   }
 
   indexPinch.onActive = ({ state, id }, hand) => {
@@ -34,12 +33,12 @@ export function initGestureTracker(controller) {
     const { x, y, z } = toScreen(state[h], h);
     const { headX, headY } = trackingState;
 
-    const eventId = `${id}.${state[h].pointer}`;
-    if (state[h].pointer !== "head") {
-      controller.triggerMove(eventId, x, y, z);
-    } else {
-      controller.triggerMove(eventId, headX, headY, 0);
-    }
+    // const eventId = `${id}.${state[h].pointer}`;
+    // if (state[h].pointer !== "head") {
+    //   controller.triggerMove(eventId, x, y, z);
+    // } else {
+    //   controller.triggerMove(eventId, headX, headY, 0);
+    // }
   }
 
   indexPinch.onEnd = ({ state, id }, hand) => {
@@ -49,15 +48,13 @@ export function initGestureTracker(controller) {
     const { x, y, z } = toScreen(state[h], h);
     const { headX, headY } = trackingState;
 
-    const eventId = `${id}.${state[h].pointer}`;
-    if (state[h].pointer !== "head") {
-      controller.triggerUp(eventId, x, y, z);
-    } else {
-      controller.triggerUp(eventId, headX, headY, 0);
-    }
+    // const eventId = `${id}.${state[h].pointer}`;
+    // if (state[h].pointer !== "head") {
+    //   controller.triggerUp(eventId, x, y, z);
+    // } else {
+    //   controller.triggerUp(eventId, headX, headY, 0);
+    // }
   }
-
-  const middlePinch = new PinchGesture("middle pinch", [2], 0.25);
 
   let detectFist = (hand) => {
     const scale = handScale(hand.landmarks);
@@ -83,79 +80,13 @@ export function initGestureTracker(controller) {
   };
   const gripperGesture = new HandGesture("gripper", detectGripper);
 
-  let detectFrame = (hand) => {
-    const thumbVertical = Math.abs(hand.landmarks[LM.THUMB_MCP].y - hand.landmarks[LM.THUMB_TIP].y);
-    const thumbHorizontal = Math.abs(hand.landmarks[LM.THUMB_MCP].x - hand.landmarks[LM.THUMB_TIP].x);
-    const indexVertical = Math.abs(hand.landmarks[LM.INDEX_MCP].y - hand.landmarks[LM.INDEX_TIP].y);
-    const indexHorizontal = Math.abs(hand.landmarks[LM.INDEX_MCP].x - hand.landmarks[LM.INDEX_TIP].x);
-    return thumbVertical > 3 * thumbHorizontal && indexHorizontal > 3 * indexVertical;
-  };
-  const frameGesture = new HandGesture("frame", detectFrame);
-  frameGesture.onActive = ({state, id}, hand) => {
-    const h = hand.handedness;
-    const thumbTip = toScreen(hand.landmarks[LM.THUMB_TIP], h);
-    const indexTip = toScreen(hand.landmarks[LM.INDEX_TIP], h);
-    
-    const width = Math.abs(indexTip.x - thumbTip.x);
-    const height = width * HEIGHT / WIDTH;
-    const x = Math.min(indexTip.x, thumbTip.x)
-    const y = indexTip.y - height;
-    state[h] = { width, height, x, y }
-  }
-
-  let detectSpreadStart = (hand) => {
-    let distances = fingerDistances(hand.landmarks, LM.THUMB_TIP);
-    return Math.max(...distances) < 0.35;
-  };
-
-  let detectSpreadEnd = (hand) => {
-    let distances = fingerDistances(hand.landmarks, LM.THUMB_TIP);
-    return Math.max(...distances) > 1.2;
-  };
-
-  const spreadGesture = new MotionGesture("spread", detectSpreadStart, detectSpreadEnd, 300);
-  spreadGesture.onTriggerAB = (self, hand) => {
-    if (
-      trackingState.spotlightElement ||
-      (trackingState.spotlightElement = trackingState.domDistances[0]) == null
-    )
-      return;
-
-    trackingState.domDistances.forEach((elem) => {
-      elem.element.style.display = "none";
-    });
-
-    let element = trackingState.spotlightElement.element;
-    element.style.transition = "all 0.1s ease-in-out";
-    element.style.top = "50%";
-    element.style.left = "50%";
-    element.style.transform = "translate(-50%, -50%) scale(1.25)";
-    element.style.display = "block";
-  };
-  spreadGesture.onTriggerBA = (self, hand) => {
-    if (!trackingState.spotlightElement) return;
-
-    let element = trackingState.spotlightElement.element;
-    element.style.top = "";
-    element.style.left = "";
-    element.style.transform = "";
-    trackingState.spotlightElement = null;
-
-    trackingState.domDistances.forEach((elem) => {
-      elem.element.style.display = "block";
-    });
-  };
-
   gestureTracker = new GestureTracker();
   trackingState.gestures = gestureTracker.active;
 
   gestureTracker.add(indexPinch);
-  gestureTracker.add(middlePinch);
   gestureTracker.add(gripperGesture, null, -1);
   gestureTracker.add(fistGesture, null, 1);
   gestureTracker.add(pointGesture, null, 1);
-  gestureTracker.add(spreadGesture);
-  gestureTracker.add(frameGesture);
 }
 
 export function updateGesture() {

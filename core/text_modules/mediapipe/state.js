@@ -37,10 +37,8 @@ export const trackingState = {
   },
   gestures: { left: null, right: null },
 
-  isLarge: false,
-  isObvious: false,
+  isObvious: true,
   isFramingHands: false,
-  isSteady: false,
   isSeparateHandAvatars: true,
   isScalingHandAvatars: false,
 

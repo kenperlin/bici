@@ -497,8 +497,7 @@ body {
 }
 
 #project-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  display: flex;
   gap: 12px;
   max-width: 600px;
 }
@@ -574,18 +573,6 @@ body {
   height: 100%;
 }
 
-#canvas-scene {
-  bottom: 40px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-#canvas-slide {
-  top: 20px;
-  right: 20px;
-  opacity: 0.5;
-}
-
 #canvas-overlay {
   width: 100%;
   height: 100%;
@@ -596,8 +583,11 @@ body {
 }
 
 #code-editor {
-  left: 20px;
-  top: 20px;
+  left: 50%;
+  top: 50%;
+  width: 80%;
+  height: 80%;
+  transform: translate(-50%, -50%);
   background-color: rgba(255,255,255,.6);
   overflow-y: scroll
 }
