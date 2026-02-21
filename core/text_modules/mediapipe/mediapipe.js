@@ -20,8 +20,8 @@ const handFilters = {
 const dt = 1 / 30;
 const lowpassParam = 0.3;
 const kalmanParams = {
-  Q: 0.02,
-  R: 0.015,
+  Q: 0.05,
+  R: 0.08,
 }
 const oneEuroParams = {
   minCutoff: 2.0,

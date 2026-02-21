@@ -101,28 +101,8 @@ export function yjsBindPen(pen) {
   };
 }
 
-export function yjsBindAppState({ codeArea, slideManager, sceneManager }) {
+export function yjsBindAppState(codeArea) {
   appState = {
-    slideNum: {
-      get: () => slideManager.currentSlide,
-      set: (val) => slideManager.setSlide(val)
-    },
-    slideIsVisible: {
-      get: () => slideManager.canvas.isVisible,
-      set: (val) => slideManager.canvas.setVisible(val)
-    },
-    slideIsOpaque: {
-      get: () => slideManager.canvas.isOpaque,
-      set: (val) => slideManager.canvas.setOpaque(val)
-    },
-    sceneNum: {
-      get: () => sceneManager.sceneNum,
-      set: (val) => sceneManager.load(val, { codeArea })
-    },
-    sceneIsVisible: {
-      get: () => sceneManager.canvas.isVisible,
-      set: (val) => sceneManager.canvas.setVisible(val)
-    },
     codeIsVisible: {
       get: () => codeArea.isVisible,
       set: (val) => codeArea.setVisible(val)

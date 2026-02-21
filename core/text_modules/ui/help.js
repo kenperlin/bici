@@ -6,15 +6,8 @@ export const helpState = {
 
 const helpText = `\
 Hot keys
-0-9    Select 3D scene 0-9.
-c Toggle editable code for 3D scene.
 \u2193 Smaller text
 \u2191 Larger text
-i Toggle show/hide slides.
-o Toggle whether slides are opaque.
-\u2190 Previous slide
-\u2192 Next slide
-s Toggle show/hide 3D scene.
 M Toggle mediapipe face/hand tracking.
 V Toggle head+hands tracking data.
 F Toggle gaze-mapped hand tracking
@@ -22,15 +15,7 @@ L Toggle large area head tracking.
 N Toggle no visible tracking feedback.
 H Toggle separate hand avatars.
 H Toggle scaling hand avatars.
-X Toggle AI script panel.
 W Toggle webcam video.
-, Make pen line thinner.
-. Make pen line thicker.
-[ Red pen
-] Blue pen
-\\ Black pen
-\u232B Delete pen line 
-/ Hold down to draw.
 h Toggle this help menu.
 `.split("\n");
 
