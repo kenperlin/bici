@@ -871,6 +871,10 @@ animate = () => {
 
    trackingUpdate();
 
+   if (! window.handPose)
+      window.handPose = new HandPose();
+   handPose.update();
+
    //projectSwitcher.style.top = document.documentElement.clientHeight - 43;
    projectSwitcher.style.top = Math.min(screen.height - 80,
                                         document.documentElement.clientHeight - 43);
