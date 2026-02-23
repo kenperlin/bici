@@ -1,5 +1,6 @@
 export function Pen() {
   this.strokes = [];
+  this.allStrokes = [];
   this.width = 7;
 
   let color = "#000000";
@@ -15,7 +16,8 @@ export function Pen() {
   this.onDown = (x, y, z, id) => {
     if (this.isDown[id]) return;
 
-    let stroke = [];
+    let stroke = {};
+    stroke.points = [];
     stroke.color = color;
     stroke.lineWidth = this.width;
     stroke.xlo = stroke.ylo = 10000;
@@ -34,7 +36,7 @@ export function Pen() {
     if (strokeIdx == null) return;
     
     let stroke = this.strokes[strokeIdx];
-    stroke.push([x, y]);
+    stroke.points.push([x, y]);
 
     let r = stroke.lineWidth / 2;
     stroke.xlo = Math.min(stroke.xlo, x - r);
@@ -49,8 +51,14 @@ export function Pen() {
     this.onStrokesChanged?.();
   };
 
-  this.delete = () => this.strokes.pop();
-  this.clear = () => (this.strokes = []);
+  this.delete = () => {
+    this.strokes.pop();
+    this.onStrokesChanged();
+  }
+  this.clear = () => {
+    this.strokes.length = 0;
+    this.onStrokesCleared();
+  };
 
   this.draw = (ctx, lineWidth) => {
     ctx.save();
@@ -58,18 +66,18 @@ export function Pen() {
     if (highlightSketches && ss.xlo) {
       ctx.fillStyle = "#0080ff40";
       ctx.fillRect(
-        this.strokes.xlo,
-        this.strokes.ylo,
-        this.strokes.xhi - this.strokes.xlo,
-        this.strokes.yhi - this.strokes.ylo
+        this.allStrokes.xlo,
+        this.allStrokes.ylo,
+        this.allStrokes.xhi - this.allStrokes.xlo,
+        this.allStrokes.yhi - this.allStrokes.ylo
       );
     }
-    for (const s of this.strokes) {
+    for (const s of this.allStrokes) {
       ctx.lineWidth = lineWidth ?? s.lineWidth;
       ctx.strokeStyle = s.color;
       ctx.beginPath();
-      for (let i = 0; i < s.length; i++) {
-         let [x, y] = s[i];
+      for (let i = 0; i < s.points.length; i++) {
+         let [x, y] = s.points[i];
          ctx[i ? "lineTo" : "moveTo"](x, y);
       }
       ctx.stroke();

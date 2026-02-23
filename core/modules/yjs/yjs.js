@@ -1,8 +1,4 @@
-import {
-  showErrorNotification,
-  showInvitationUI,
-  showRoomFullNotification
-} from "./ui.js";
+import { showErrorNotification, showInvitationUI, showRoomFullNotification } from "./ui.js";
 import { VideoUI } from "./videoUI.js";
 import { WebRTCClient } from "./webrtcClient.js";
 import * as Y from "https://cdn.jsdelivr.net/npm/yjs@13.6.18/+esm";
@@ -101,10 +97,7 @@ export function yjsBindCodeArea(codeArea) {
         const cursorPos = textarea.selectionStart;
         textarea.value = newText;
         // Try to restore cursor position
-        textarea.selectionStart = textarea.selectionEnd = Math.min(
-          cursorPos,
-          newText.length
-        );
+        textarea.selectionStart = textarea.selectionEnd = Math.min(cursorPos, newText.length);
       }
 
       codeArea.isReloadScene = true;
@@ -141,63 +134,65 @@ export function yjsBindCodeArea(codeArea) {
 
 export function yjsBindPen(pen) {
   // Setup Yjs pen strokes synchronization
-  const ypenStrokes = ydoc.getArray("penStrokes");
+  const ypenStrokesMap = ydoc.getMap("penStrokes");
   let isUpdatingFromYjs = false;
 
-  // All clients observe pen strokes changes and render
-  ypenStrokes.observe((event) => {
-    // Master client already has the correct pen.strokes locally
-    // Only secondary clients need to update from Yjs
-    if (webrtcClient.isMaster()) {
-      return;
-    }
-
+  ypenStrokesMap.observe((event) => {
     isUpdatingFromYjs = true;
-    // Update pen.strokes in place to preserve reference
-    const yjsArray = ypenStrokes.toArray();
-    pen.strokes.length = 0;
-    pen.strokes.push(...yjsArray);
+
+    const allStrokes = [];
+    ypenStrokesMap.forEach((clientStrokes) => allStrokes.push(...clientStrokes));
+    pen.allStrokes.length = 0;
+    pen.allStrokes.push(...allStrokes);
+
     isUpdatingFromYjs = false;
   });
 
   // Set up callback to sync local pen changes to Yjs (only master will actually sync)
   let syncPenStrokesTimer = null;
   pen.onStrokesChanged = () => {
-    if (isUpdatingFromYjs || !ypenStrokes || !webrtcClient.isMaster()) return;
+    if (isUpdatingFromYjs) return;
 
-   // Throttle updates to avoid excessive syncing (sync immediately, then debounce)
-   if (syncPenStrokesTimer) clearTimeout(syncPenStrokesTimer);
+    const clientId = webrtcClient.myClientId;
 
-   const doSync = () => {
+    const doSync = () => {
       ydoc.transact(() => {
-         ypenStrokes.delete(0, ypenStrokes.length);
-         ypenStrokes.insert(0, pen.strokes);
+        ypenStrokesMap.set(clientId, pen.strokes);
       });
-   };
-   doSync();
+      const allStrokes = [];
+      ypenStrokesMap.forEach((clientStrokes) => allStrokes.push(...clientStrokes));
+      pen.allStrokes.length = 0;
+      pen.allStrokes.push(...allStrokes);
+      syncPenStrokesTimer = null;
+    };
 
-   // Also schedule a final sync after 100ms to ensure we catch the last update
-   syncPenStrokesTimer = setTimeout(doSync, 100);
+    doSync();
+    // Also schedule a final sync after 100ms to ensure we catch the last update
+    if (syncPenStrokesTimer) clearTimeout(syncPenStrokesTimer);
+    syncPenStrokesTimer = setTimeout(doSync, 100);
+  };
+
+  pen.onStrokesCleared = () => {
+    if (isUpdatingFromYjs) return;
+    ydoc.transact(() => {
+      ypenStrokesMap.clear();
+    });
+    pen.allStrokes.length = 0;
   };
 }
 
 // Initialize Yjs for collaborative editing (called after room is joined)
 function initializeYjs(roomId) {
   console.log("[BICI] initializeYjs called with roomId:", roomId);
-  
+
   // Create separate WebSocket for Yjs (different from WebRTC signaling)
   // Scope Yjs document to room
   const docName = roomId ? `bici-code-editor-${roomId}` : "bici-code-editor";
 
-  console.log(
-    "[BICI] Creating Yjs WebSocket connection for document:",
-    docName
-  );
+  console.log("[BICI] Creating Yjs WebSocket connection for document:", docName);
 
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  const yjsWs = new WebSocket(
-    `${protocol}//${window.location.host}/${docName}`
-  );
+  const yjsWs = new WebSocket(`${protocol}//${window.location.host}/${docName}`);
   yjsWs.binaryType = "arraybuffer";
 
   yjsWs.onopen = () => {

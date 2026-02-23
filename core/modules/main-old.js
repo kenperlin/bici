@@ -174,54 +174,7 @@ let broadcastState = () => {
    }, 50);
 };
 
-let D = {
-   ctx : canvasDiagram.getContext('2d'),
-   left : screen.width - 20 - 500, top : 20, w : 500, h : 500,
-   isIn : (x,y) => (x??D.x) >= 0 && (x??D.x) < D.w && (y??D.y) >= 0 && (y??D.y) < D.h,
-};
-D.ctx.font = '30px Helvetica';
-D.ctx.lineCap = 'round';
-D.ctx.lineWidth = 3;
-
 let startTime = Date.now() / 1000;
 let timePrev = startTime;
 window.isReloadScene = false;
 let reloadTime = 0;
-
-animate = () => {
-
-   let time = Date.now() / 1000;
-   let deltaTime = time - timePrev;
-   timePrev = time;
-
-         ctx.save();
-            ctx.beginPath();
-            ctx.moveTo(x,y);
-            ctx.lineTo(x+w,y);
-            ctx.lineTo(x+w,y+h);
-            ctx.lineTo(x,y+h);
-            ctx.clip();
-            ctx.drawImage(canvasDiagram, x, y);
-         ctx.restore();
-      
-   if (isDrawpad) {
-      let w = 500, h = 400, x = window.innerWidth - 20 - w, y = screen.height - 60 - h;
-      ctx.fillStyle = isOpaque ? 'white' : '#ffffff80';
-      ctx.fillRect(x, y, w, h);
-   }
-
-   if (isLightPen && p)
-      penMove(p.x * w / 640, p.y * h / 440);
-   pen.draw(pen.strokes);
-
-   help.display(ctx);
-
-   if (isLightPen) {
-      ctx.fillStyle = 'black';
-      ctx.fillRect(screen.width-8,screen.height-8,8,8);
-   }
-
-   trackingUpdate();
-
-}
-
