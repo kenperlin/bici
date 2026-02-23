@@ -21,9 +21,10 @@ export class CodeArea {
     this.isReloadScene = false;
     this.lastReloadTime = 0;
     this.onReloadScene = () => {}
-
+    
     this._varsToFlush = {};
     this._isFlushScheduled = false;
+    this.onValueChanged = () => {}
 
     this.initInteractions();
   }
@@ -160,10 +161,9 @@ export class CodeArea {
         this.ey = 0;
       }
       if (event.key == "Meta") {
-        // window.isReloading = true;
         // Trigger input event to sync reload to other users via Yjs
-        this.element.dispatchEvent(new Event("input", { bubbles: true }));
         this.isReloadScene = true;
+        this.onValueChanged()
       }
       if (event.key == "Control") {
         let i0 = this.element.selectionStart;
@@ -185,6 +185,9 @@ export class CodeArea {
           }
       }
     });
+    this.element.addEventListener("input", () => {
+      this.onValueChanged();
+    })
   }
   // Internal helper to apply a single var change to the text
   _applyVarToText(text, name, value) {
@@ -236,9 +239,8 @@ export class CodeArea {
     this.element.value = newText;
     this._varsToFlush = {};
 
-    // window.isReloading = true;
-    this.element.dispatchEvent(new Event("input", { bubbles: true }));
     this.isReloadScene = true;
+    this.onValueChanged();
   };
 
   setVar(name, value) {
@@ -283,8 +285,8 @@ export class CodeArea {
         this.element.selectionStart = this.element.selectionEnd = i0 + s1.length;
 
         // Trigger input event to sync with Yjs
-        this.element.dispatchEvent(new Event("input", { bubbles: true }));
         this.isReloadScene = true;
+        this.onValueChanged()
       }
       this.dial = 0;
     }

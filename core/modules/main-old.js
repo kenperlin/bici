@@ -73,63 +73,7 @@ let processAction = (action, fromClientId) => {
             window.keyUp(action.key);
          }
          break;
-
-      case 'penDown':
-         console.log('Master received penDown from:', fromClientId, 'dragOwner:', dragOwner);
-         // First person to pen down gets drag ownership
-         if (!dragOwner) {
-            dragOwner = fromClientId;
-            console.log('Assigned drag ownership to:', fromClientId);
-         }
-         if (dragOwner === fromClientId) {
-            pen.x = action.x;
-            pen.y = action.y;
-            pen.width = action.width;
-            pen.down();
-            console.log('Called pen.down(), pen.strokes length:', pen.strokes.length);
-            syncPenStrokesToYjs();
-         }
-         break;
-
-      case 'penUp':
-         // Release drag ownership when pen up
-         if (dragOwner === fromClientId) {
-            pen.up();
-            dragOwner = null;
-            syncPenStrokesToYjs();
-         }
-         break;
-
-      case 'penMove':
-         // Handle move ownership (first person to move in diagram)
-         if (action.isMove && !moveOwner) {
-            moveOwner = fromClientId;
-         }
-
-         // Process move from owner
-         if (moveOwner === fromClientId && action.isMove) {
-            pen.move(action.x, action.y);
-            if (typeof chalktalk !== 'undefined') {
-               chalktalk.move(action.x, action.y);
-            }
-         }
-
-         // Process drag from drag owner
-         if (dragOwner === fromClientId && action.isDrag) {
-            console.log('Master processing drag move from:', fromClientId, 'pos:', action.x, action.y);
-            pen.move(action.x, action.y);
-            if (typeof chalktalk !== 'undefined') {
-               chalktalk.drag(action.x, action.y);
-            }
-            syncPenStrokesToYjs();
-         }
-
-         // Always update pen position
-         if (dragOwner === fromClientId || moveOwner === fromClientId) {
-            pen.move(action.x, action.y);
-         }
-         break;
-
+         
       case 'setVar':
          // Secondary client sent a setVar action - master processes it and syncs to Yjs
          // This ensures only one client (master) writes to Yjs, preventing duplicate text

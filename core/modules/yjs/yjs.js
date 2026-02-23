@@ -73,63 +73,62 @@ export function setupYjsClient(webcam) {
 
 export function yjsBindCodeArea(codeArea) {
   // Setup textarea binding
-  const textarea = codeArea.element;
+  const element = codeArea.element;
   const ytext = ydoc.getText("codemirror");
+  const ycontrol = ydoc.getMap("control");
 
   let isLocalUpdate = false;
+  let version = 0;
 
-  // Use window.isReloading for global state shared with codeArea.js
-  window.isReloading = window.isReloading || false;
   // When Yjs text changes, update textarea
+  
   ytext.observe((event) => {
     if (isLocalUpdate) return;
     isLocalUpdate = true;
+
     const newText = ytext.toString();
 
-    // Check if slider marker was added (slider reload trigger)
-    const hasSliderMarker = newText.includes("\u200B");
-
-    // Only update textarea and reload when there's a trigger
-    // NOT on every keystroke from remote user
-    if (window.isReloading || hasSliderMarker || window.isShift) {
-      // Update textarea with Yjs text
-      if (textarea.value !== newText) {
-        const cursorPos = textarea.selectionStart;
-        textarea.value = newText;
-        // Try to restore cursor position
-        textarea.selectionStart = textarea.selectionEnd = Math.min(cursorPos, newText.length);
-      }
-
-      codeArea.isReloadScene = true;
-      window.isReloading = false;
+    if (element.value !== newText) {
+      const cursorPos = element.selectionStart;
+      element.value = newText;
+      element.selectionStart = element.selectionEnd = Math.min(cursorPos, newText.length);
     }
-
     isLocalUpdate = false;
   });
 
-  // When textarea changes, update Yjs text
-  textarea.addEventListener("input", () => {
-    if (isLocalUpdate) {
-      return;
+  let reloadSceneTimer = null;
+  ycontrol.observe((e) => {
+    const newVersion = ycontrol.get("version") || 0;
+    if (version !== newVersion) {
+      version = newVersion;
+      // Reload scene after timeout to allow text to update
+      if (reloadSceneTimer) clearTimeout(reloadSceneTimer);
+      reloadSceneTimer = setTimeout(() => (codeArea.isReloadScene = true), 100);
     }
+  });
+
+  // When textarea changes, update Yjs text
+  codeArea.onValueChanged = () => {
+    if (isLocalUpdate) return;
     isLocalUpdate = true;
+
     const currentText = ytext.toString();
-    let newText = textarea.value;
+    let newText = element.value;
 
-    // Update Yjs if text changed OR if we're reloading (even with same text)
-    if (currentText !== newText || window.isReloading) {
-      // Add invisible marker for real-time sync when shift is held OR when reloading
-      if (window.isShift || window.isReloading) {
-        newText = newText + "\u200B";
-      }
+    if (codeArea.isReloadScene) {
+      ydoc.transact(() => {
+        ycontrol.set("version", ++version);
+      });
+    }
 
+    if (currentText !== newText) {
       ydoc.transact(() => {
         ytext.delete(0, currentText.length);
         ytext.insert(0, newText);
       });
     }
     isLocalUpdate = false;
-  });
+  };
 }
 
 export function yjsBindPen(pen) {
