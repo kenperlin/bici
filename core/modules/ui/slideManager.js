@@ -20,6 +20,7 @@ export class SlideManager {
     this.urlMap = {};
     this.currentSlide = 0;
     this.context = context;
+    this.canvas.toggleOpaque();
 
     for (let line of slidesList) {
       line = line.split("//")[0].trim();
@@ -70,7 +71,6 @@ export class SlideManager {
       }
     }
 
-    this.canvas.toggleOpaque();
     this.registerSlide();
   }
 

@@ -2,7 +2,8 @@ import { debounce } from "../utils/utils.js";
 import { showErrorNotification, showInvitationUI, showRoomFullNotification } from "./ui.js";
 import { VideoUI } from "./videoUI.js";
 import { WebRTCClient } from "./webrtcClient.js";
-import * as Y from "https://cdn.jsdelivr.net/npm/yjs@13.6.18/+esm";
+import * as Y from "https://esm.sh/yjs@^13";
+import { WebsocketProvider } from "https://esm.sh/y-websocket@^3";
 
 let ydoc = new Y.Doc();
 
@@ -108,7 +109,7 @@ export function yjsBindCodeArea(codeArea) {
 
     if (codeArea.isReloadScene) {
       ydoc.transact(() => {
-        reloadVersion = (ycontrol.get("version") || 0) + 1
+        reloadVersion = (ycontrol.get("version") || 0) + 1;
         ycontrol.set("version", reloadVersion);
       });
     }
@@ -128,7 +129,7 @@ export function yjsBindPen(pen) {
   let isUpdatingFromYjs = false;
 
   ypenStrokesMap.observe((event, txn) => {
-    if(txn.local) return;
+    if (txn.local) return;
     isUpdatingFromYjs = true;
 
     const allStrokes = [];
@@ -182,7 +183,7 @@ export function yjsBindAppState(appState) {
   };
 
   ystate.observe((event, txn) => {
-    if(txn.local) return;
+    if (txn.local) return;
     const changed = event.keysChanged;
     const s = ystate.toJSON();
     for (const key of changed) {
@@ -202,25 +203,11 @@ function initializeYjs(roomId) {
   console.log("[BICI] Creating Yjs WebSocket connection for document:", docName);
 
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  const yjsWs = new WebSocket(`${protocol}//${window.location.host}/${docName}`);
-  yjsWs.binaryType = "arraybuffer";
+  const wsUrl = `${protocol}//${window.location.host}`;
+  const yjsWsProvider = new WebsocketProvider(wsUrl, docName, ydoc);
 
-  yjsWs.onopen = () => {
-    console.log("Yjs WebSocket connected");
-  };
-
-  yjsWs.onmessage = (event) => {
-    if (event.data instanceof ArrayBuffer) {
-      const update = new Uint8Array(event.data);
-      Y.applyUpdate(ydoc, update);
-    }
-  };
-
-  // Send Yjs updates through the dedicated Yjs WebSocket
-  ydoc.on("update", (update) => {
-    if (yjsWs.readyState === WebSocket.OPEN) {
-      yjsWs.send(update);
-    }
+  yjsWsProvider.on("status", (event) => {
+    console.log("Yjs WebSocket provider status:", event.status);
   });
 
   console.log("Yjs collaborative editing initialized");

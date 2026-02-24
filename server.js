@@ -4,6 +4,7 @@ import { createServer } from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import * as Y from 'yjs';
+import { docs, setupWSConnection } from 'y-websocket/bin/utils';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -57,9 +58,11 @@ app.post('/api/clear-yjs-cache/:docName?', (req, res) => {
   const docName = req.params.docName;
 
   if (docName) {
+    const doc = docs.get(docName);
     // Clear specific document
-    if (yjsDocs.has(docName)) {
-      yjsDocs.delete(docName);
+    if (doc) {
+      doc.destroy();
+      docs.delete(docName);
       console.log(`Cleared Yjs document: ${docName}`);
       res.json({ success: true, message: `Cleared document: ${docName}` });
     } else {
@@ -67,8 +70,8 @@ app.post('/api/clear-yjs-cache/:docName?', (req, res) => {
     }
   } else {
     // Clear all documents
-    const count = yjsDocs.size;
-    yjsDocs.clear();
+    const count = docs.size;
+    docs.clear();
     console.log(`Cleared all ${count} Yjs documents`);
     res.json({ success: true, message: `Cleared ${count} documents` });
   }
@@ -79,16 +82,19 @@ app.get('/api/clear-yjs-cache/:docName?', (req, res) => {
   const docName = req.params.docName;
 
   if (docName) {
-    if (yjsDocs.has(docName)) {
-      yjsDocs.delete(docName);
+    const doc = docs.get(docName);
+    if (doc) {
+      doc.destroy();
+      docs.delete(docName);
       console.log(`Cleared Yjs document: ${docName}`);
       res.send(`<h1>Cleared document: ${docName}</h1><p><a href="/">Back to BICI</a></p>`);
     } else {
       res.send(`<h1>Document not found: ${docName}</h1><p><a href="/">Back to BICI</a></p>`);
     }
   } else {
-    const count = yjsDocs.size;
-    yjsDocs.clear();
+    const count = docs.size;
+    docs.forEach((doc) => doc.destroy());
+    docs.clear();
     console.log(`Cleared all ${count} Yjs documents`);
     res.send(`<h1>Cleared ${count} documents</h1><p><a href="/">Back to BICI</a></p>`);
   }
@@ -96,12 +102,6 @@ app.get('/api/clear-yjs-cache/:docName?', (req, res) => {
 
 // Store connected clients
 const clients = new Map();
-
-// Store Yjs documents (one per room/document name)
-const yjsDocs = new Map();
-
-// Store Yjs WebSocket connections per document: docName -> Set<WebSocket>
-const yjsConnections = new Map();
 
 // Store rooms: roomId -> { clients: Set<clientId>, createdAt: timestamp }
 const rooms = new Map();
@@ -179,73 +179,15 @@ function getRoomClients(roomId) {
   return room ? Array.from(room.clients) : [];
 }
 
-// Get or create a Yjs document for a room
-function getYDoc(docName) {
-  if (!yjsDocs.has(docName)) {
-    const ydoc = new Y.Doc();
-    yjsDocs.set(docName, ydoc);
-    console.log(`Created new Yjs document: ${docName}`);
-  }
-  return yjsDocs.get(docName);
-}
-
 wss.on('connection', (ws, req) => {
   // Check if this is a y-websocket connection (has docName in URL)
   const url = new URL(req.url, `http://${req.headers.host}`);
   const docName = url.pathname.slice(1); // Remove leading '/'
 
-  if (docName && docName !== '') {
-    // This is a y-websocket connection for collaborative editing
+  if (docName) {
     console.log(`Yjs client connected to document: ${docName}`);
-
-    const ydoc = getYDoc(docName);
-
-    // Track this WebSocket connection for this document
-    if (!yjsConnections.has(docName)) {
-      yjsConnections.set(docName, new Set());
-    }
-    yjsConnections.get(docName).add(ws);
-    console.log(`Yjs connections for ${docName}: ${yjsConnections.get(docName).size}`);
-
-    // Send current document state to new client
-    const currentState = Y.encodeStateAsUpdate(ydoc);
-    if (currentState.length > 0) {
-      ws.send(currentState);
-    }
-
-    // Handle incoming Yjs updates (raw binary)
-    ws.on('message', (message) => {
-      const update = new Uint8Array(message);
-
-      // Apply update to server's document
-      Y.applyUpdate(ydoc, update);
-
-      // Broadcast to other clients connected to the SAME document only
-      const docConnections = yjsConnections.get(docName);
-      if (docConnections) {
-        docConnections.forEach((client) => {
-          if (client !== ws && client.readyState === 1) {
-            client.send(message);
-          }
-        });
-      }
-    });
-
-    ws.on('close', () => {
-      console.log(`Yjs client disconnected from document: ${docName}`);
-      // Remove from document connections
-      const docConnections = yjsConnections.get(docName);
-      if (docConnections) {
-        docConnections.delete(ws);
-        console.log(`Yjs connections for ${docName}: ${docConnections.size}`);
-        // Clean up empty sets
-        if (docConnections.size === 0) {
-          yjsConnections.delete(docName);
-        }
-      }
-    });
-
-    return;
+    setupWSConnection(ws, req, { docName });
+    return
   }
 
   // Regular WebRTC signaling connection
