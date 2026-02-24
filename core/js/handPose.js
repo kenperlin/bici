@@ -1,13 +1,9 @@
 function HandPose() {
-   let distance = (a,b) => norm(subtract(a,b));
-   let dot = (a,b) => a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
-   let norm = a => Math.sqrt(dot(a,a));
-   let subtract = (a,b) => [a[0]-b[0], a[1]-b[1], a[2]-b[2]];
-
    let poseData = [ {}, {} ];
 
    this.update = () => {
       if (mediapipe.isRunning) {
+         console.log(JSON.stringify(mediapipe.handResults));
          for (let hand = 0 ; hand < 2 ; hand++) {
             let handResults = mediapipe.handResults[hand];
 	    if (handResults) {
@@ -17,9 +13,21 @@ function HandPose() {
 	       for (let n = 0 ; n < landmarks.length ; n++)
 	          joints.push([landmarks[n].x, landmarks[n].y, landmarks[n].z]);
 
-               let d = (i,j) => distance(joints[i], joints[j]);
+               let d = (i,j) => norm(subtract(joints[i], joints[j]));
 
 	       let data = poseData[hand];
+
+	       data.hand = handResults.handedness;
+
+	       let X = normalize(subtract(joints[17], joints[5]));
+	       let Y = normalize(subtract(joints[ 9], joints[0]));
+	       let Z = normalize(cross(X,Y));
+
+               let xx = Math.max(0, 1+X[0]-Y[1]-Z[2]) / 4, x = Math.sqrt(xx) * Math.sign(Y[2] - Z[1]),
+                   yy = Math.max(0, 1-X[0]+Y[1]-Z[2]) / 4, y = Math.sqrt(yy) * Math.sign(Z[0] - X[2]),
+                   zz = Math.max(0, 1-X[0]-Y[1]+Z[2]) / 4, z = Math.sqrt(zz) * Math.sign(X[1] - Y[0]);
+
+	       data.rigid = [joints[9][0]-.5,.4-joints[9][1],joints[9][2], x,y,z,Math.sqrt(1-xx-yy-zz)];
 
 	       data.curl = data.curl ?? [];
 	       for (let f = 0 ; f < 5 ; f++) {
@@ -42,6 +50,6 @@ function HandPose() {
          }
       }
    }
-   this.getData = hand => poseData[hand=='left' ? 0 : hand=='right' ? 1 : hand];
+   this.getData = hand => poseData[hand];
 }
 
