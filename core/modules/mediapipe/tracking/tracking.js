@@ -10,6 +10,8 @@ import {
 } from "./drawing.js";
 import { fingerDistances, handScale, LM } from "../gestures/detect.js";
 import { toVideo } from "../utils/mapping.js";
+import { videoState } from "../../ui/video.js";
+import { webrtcClient } from "../../yjs/yjs.js";
 
 const headPcaFilter = new PCAFilter2D();
 const headLowPassFilter = new LowPassFilter2D(2 / 3);
@@ -97,7 +99,7 @@ export function updateTracking() {
 
   for (const id in peerTrackingState) {
     const peerState = peerTrackingState[id];
-    if(!peerState.id) continue;
+    if(!peerState.id || peerState.id === webrtcClient.myClientId) continue;
     
     if (state.isObvious) {
       drawEyesObvious(
@@ -110,7 +112,7 @@ export function updateTracking() {
     }
     for(const hand of peerState.handResults) {
       const handAvatar = peerState.handAvatar[hand.handedness];
-      if(handAvatar.x === 0 && handAvatar.y === 0 && handAvatar.s === 1) continue;
+      if(handAvatar.x === 0 && handAvatar.y === 0 && handAvatar.s === 1 && videoState.isVisible) continue;
 
       drawShadowHand(hand, peerState.handAvatar[hand.handedness], peerState.gestures);
     }

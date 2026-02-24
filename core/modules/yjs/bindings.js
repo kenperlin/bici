@@ -1,5 +1,6 @@
 import { mediapipeState, trackingState } from "../mediapipe/state.js";
 import { helpState } from "../ui/help.js";
+import { videoState } from "../ui/video.js";
 import { debounce } from "../utils/utils.js";
 import { getYjsAwareness, webrtcClient, ydoc } from "./yjs.js";
 
@@ -133,6 +134,10 @@ export function yjsBindAppState({ codeArea, slideManager, sceneManager }) {
     helpIsVisible: {
       get: () => helpState.isVisible,
       set: (val) => (helpState.isVisible = val)
+    },
+    videoIsVisible: {
+      get: () => videoState.isVisible,
+      set: (val) => (videoState.isVisible = val)
     }
   };
 
