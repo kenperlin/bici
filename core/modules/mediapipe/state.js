@@ -55,3 +55,5 @@ export const trackingState = {
     trackingState.debugMode = !trackingState.debugMode;
   }
 };
+
+export const peerTrackingState = {}

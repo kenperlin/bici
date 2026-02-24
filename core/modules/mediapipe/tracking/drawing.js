@@ -4,7 +4,7 @@ import { trackingState as state } from "../state.js";
 import { handScale, LM } from "../gestures/detect.js";
 import { videoState } from "../../ui/video.js";
 
-export function drawHands(handResults) {
+export function drawFingertips(handResults, gestures) {
   OCTX.save();
   for (const hand of handResults) {
     const h = hand.handedness;
@@ -14,7 +14,7 @@ export function drawHands(handResults) {
     OCTX.fillStyle = "#00000060";
     OCTX.strokeStyle = "#00000060";
 
-    const gesture = state.gestures[h];
+    const gesture = gestures[h];
     if (gesture?.id.includes("pinch")) {
       const gestureState = toScreen(gesture.state[h], h);
       gesture.fingers.forEach((it) => fingersToDraw.delete(it));
@@ -23,8 +23,12 @@ export function drawHands(handResults) {
       let radius = 0.025 * scale;
       if (state.isObvious) {
         switch (gesture.id) {
-          case "index pinch": OCTX.fillStyle = "#ffff0080"; break;
-          case "middle pinch": OCTX.fillStyle = "#ff00ff80"; break;
+          case "index pinch":
+            OCTX.fillStyle = "#ffff0080";
+            break;
+          case "middle pinch":
+            OCTX.fillStyle = "#ff00ff80";
+            break;
         }
         radius *= 2;
       }
@@ -40,9 +44,15 @@ export function drawHands(handResults) {
       let radius = 0.03 * scale;
       if (state.isObvious) {
         switch (idx) {
-          case 0: OCTX.fillStyle = "#ff000080"; break;
-          case 1: OCTX.fillStyle = "#00ff0080"; break;
-          case 2: OCTX.fillStyle = "#0000ff80"; break;
+          case 0:
+            OCTX.fillStyle = "#ff000080";
+            break;
+          case 1:
+            OCTX.fillStyle = "#00ff0080";
+            break;
+          case 2:
+            OCTX.fillStyle = "#0000ff80";
+            break;
         }
         radius *= 2;
 
@@ -110,64 +120,63 @@ export function drawDomSelection() {
   }
 }
 
-export function drawEyes() {
+export function drawEyesObvious(headX, headY, eyeGazeX, eyeGazeY, eyeOpen) {
   OCTX.save();
-  if (state.isObvious)
-    for (let eye = -1; eye <= 1; eye += 2) {
-      OCTX.fillStyle = state.eyeOpen < 0.4 ? "#00000080" : "#ffffff40";
+  for (let eye = -1; eye <= 1; eye += 2) {
+    OCTX.fillStyle = eyeOpen < 0.4 ? "#00000080" : "#ffffff40";
+    OCTX.beginPath();
+    OCTX.ellipse(headX + 70 * eye, headY, 35, 35 * eyeOpen, 0, 0, 2 * Math.PI);
+    OCTX.fill();
+    OCTX.strokeStyle = "#00000040";
+    OCTX.lineWidth = 2;
+    OCTX.beginPath();
+    OCTX.ellipse(headX + 70 * eye, headY, 35, 35 * eyeOpen, 0, 0, 2 * Math.PI);
+    OCTX.stroke();
+
+    if (eyeOpen >= 0.4) {
+      OCTX.fillStyle = "#00000040";
       OCTX.beginPath();
-      OCTX.ellipse(state.headX + 70 * eye, state.headY, 35, 35 * state.eyeOpen, 0, 0, 2 * Math.PI);
+      let ex = 50 * eyeGazeX;
+      let t = Math.abs(headX - WIDTH / 2) / (HEIGHT / 2);
+      let ey = 50 * eyeGazeY + 23 - ((9 - 3 * t) * headY) / (HEIGHT / 2);
+      -8 * t -
+        30 * Math.pow(Math.max(0, eyeOpen - 0.7) / 0.3, 1.5) * 0.3 -
+        20 * Math.pow(Math.max(0, 0.7 - eyeOpen) / 0.3, 1.5) * 0.3;
+      OCTX.arc(headX + 70 * eye + ex, headY + ey, 20, 0, 2 * Math.PI);
       OCTX.fill();
-      OCTX.strokeStyle = "#00000040";
-      OCTX.lineWidth = 2;
-      OCTX.beginPath();
-      OCTX.ellipse(state.headX + 70 * eye, state.headY, 35, 35 * state.eyeOpen, 0, 0, 2 * Math.PI);
-      OCTX.stroke();
-
-      if (state.eyeOpen >= 0.4) {
-        OCTX.fillStyle = "#00000040";
-        OCTX.beginPath();
-        let ex = 50 * state.eyeGazeX;
-        let t = Math.abs(state.headX - WIDTH / 2) / (HEIGHT / 2);
-        let ey = 50 * state.eyeGazeY + 23 - ((9 - 3 * t) * state.headY) / (HEIGHT / 2);
-        -8 * t -
-          30 * Math.pow(Math.max(0, state.eyeOpen - 0.7) / 0.3, 1.5) * 0.3 -
-          20 * Math.pow(Math.max(0, 0.7 - state.eyeOpen) / 0.3, 1.5) * 0.3;
-        OCTX.arc(state.headX + 70 * eye + ex, state.headY + ey, 20, 0, 2 * Math.PI);
-        OCTX.fill();
-      }
-    }
-  else {
-    if (state.isShadowAvatar() && !state.isSeparateHandAvatars) {
-      // Draw head and eyes of shadow avatar.
-
-      OCTX.strokeStyle = "#00000060";
-      OCTX.fillStyle = "#00000060";
-      OCTX.lineWidth = 2;
-      const s = state.globalAvatar.s;
-      OCTX.lineWidth = 4;
-
-      let tilt = Math.atan2(state.headMatrix[4], state.headMatrix[5]);
-      OCTX.translate(state.globalAvatar.x, state.globalAvatar.y);
-      OCTX.rotate(tilt);
-
-      OCTX.beginPath();
-      OCTX.ellipse(0, 0, s * 125, s * 175, 0, 0, 2 * Math.PI);
-      OCTX.stroke();
-
-      let theta = (Math.PI * (state.headX - WIDTH / 2)) / WIDTH;
-      let phi = ((Math.PI / 2) * (state.headY - HEIGHT / 2)) / HEIGHT;
-      let dx = 40 * Math.sin(theta) * s;
-      let dy = 55 * Math.sin(phi) * s;
-      OCTX.beginPath();
-      OCTX.ellipse(dx - 55 * s, dy - 10 * s, 40 * s, 35 * s * state.eyeOpen, 0, 0, 2 * Math.PI);
-      OCTX.ellipse(dx + 55 * s, dy - 10 * s, 40 * s, 35 * s * state.eyeOpen, 0, 0, 2 * Math.PI);
-      OCTX.fill();
-
-      OCTX.rotate(-tilt);
-      OCTX.translate(-state.globalAvatar.x, -state.globalAvatar.y);
     }
   }
+  OCTX.restore();
+}
+
+export function drawGlobalShadowHead(globalAvatar, headMatrix, headX, headY, eyeOpen) {
+  OCTX.save();
+  // Draw head and eyes of shadow avatar.
+  OCTX.strokeStyle = "#00000060";
+  OCTX.fillStyle = "#00000060";
+  OCTX.lineWidth = 2;
+  const s = globalAvatar.s;
+  OCTX.lineWidth = 4;
+
+  let tilt = Math.atan2(headMatrix[4], headMatrix[5]);
+  OCTX.translate(globalAvatar.x, globalAvatar.y);
+  OCTX.rotate(tilt);
+
+  OCTX.beginPath();
+  OCTX.ellipse(0, 0, s * 125, s * 175, 0, 0, 2 * Math.PI);
+  OCTX.stroke();
+
+  let theta = (Math.PI * (headX - WIDTH / 2)) / WIDTH;
+  let phi = ((Math.PI / 2) * (headY - HEIGHT / 2)) / HEIGHT;
+  let dx = 40 * Math.sin(theta) * s;
+  let dy = 55 * Math.sin(phi) * s;
+  OCTX.beginPath();
+  OCTX.ellipse(dx - 55 * s, dy - 10 * s, 40 * s, 35 * s * eyeOpen, 0, 0, 2 * Math.PI);
+  OCTX.ellipse(dx + 55 * s, dy - 10 * s, 40 * s, 35 * s * eyeOpen, 0, 0, 2 * Math.PI);
+  OCTX.fill();
+
+  OCTX.rotate(-tilt);
+  OCTX.translate(-globalAvatar.x, -globalAvatar.y);
   OCTX.restore();
 }
 
@@ -175,8 +184,6 @@ const shadowCanvas = document.createElement("canvas");
 const sctx = shadowCanvas.getContext("2d");
 
 export function drawShadowHand(hand, avatarInfo) {
-  if (!state.isShadowAvatar()) return;
-
   const { x, y, s } = avatarInfo;
   const { handedness: h, landmarks } = hand;
   const hScale = videoState.w * handScale(landmarks);
@@ -215,63 +222,67 @@ export function drawShadowHand(hand, avatarInfo) {
     }
   }
 
-  // If pointing, draw a ray out of the index finger.
-  if (state.gestures[h]?.id === "point") {
-    let a = toScreen(landmarks[LM.INDEX_MCP], h);
-    let b = toScreen(landmarks[LM.INDEX_TIP], h);
-    for (let i = 0; i <= 1; i++) {
-      sctx.strokeStyle = i ? "#a0a0a0" : "black";
-      sctx.lineWidth = s * (20 - 10 * i);
-      sctx.beginPath();
-      sctx.moveTo(b.x, b.y);
-      sctx.lineTo(b.x + 100 * (b.x - a.x), b.y + 100 * (b.y - a.y));
-      sctx.stroke();
-    }
-  }
-
-  // If making a gripper gesture, show the line between thumb and index fingers.
-  if (state.gestures[h]?.id === "gripper") {
-    let p = toScreen(landmarks[LM.THUMB_TIP], h);
-    let q = toScreen(landmarks[LM.INDEX_TIP], h);
-    for (let i = 0; i <= 1; i++) {
-      sctx.strokeStyle = i ? "#a0a0a0" : "black";
-      sctx.lineWidth = s * (20 - 10 * i);
-      sctx.beginPath();
-      sctx.moveTo(p.x, p.y);
-      sctx.lineTo(q.x, q.y);
-      sctx.stroke();
-    }
-  }
-
-  // If pinching, show pinch point.
-  if (state.gestures[h]?.id === "index pinch") {
-    const { x, y } = toScreen(state.gestures[h].state[h], h)
-    sctx.beginPath();
-    sctx.fillStyle = "#a0a0a0";
-    sctx.arc(x, y, 0.05 * s * hScale, 0, 2 * Math.PI);
-    sctx.fill();
-  }
-
-  // If making a frame, show the frame.
-  if (state.gestures[h]?.id === "frame") {
-    const { width, height, x, y } = state.gestures[h].state[h]
-    sctx.fillStyle = '#ff00ffff';
-    sctx.fillRect(x, y, width, height);
-  }
-
   // Copy the shadow transparently onto the target canvas.
+  OCTX.save();
   OCTX.globalAlpha = 0.3;
   OCTX.drawImage(shadowCanvas, 0, 0);
-  OCTX.globalAlpha = 1.0;
+  OCTX.restore();
 }
 
-export function drawShadowGesture(handResults) {
-  OCTX.save();
+export function drawShadowGesture(handResults, handAvatar, gestures) {
+  for (const hand of handResults) {
+    const h = hand.handedness;
+    const s = handAvatar[h].s;
+    const hScale = videoState.w * handScale(hand.landmarks);
+    // If pointing, draw a ray out of the index finger.
+    if (gestures[h]?.id === "point") {
+      let a = toScreen(hand.landmarks[LM.INDEX_MCP], h);
+      let b = toScreen(hand.landmarks[LM.INDEX_TIP], h);
+      for (let i = 0; i <= 1; i++) {
+        OCTX.strokeStyle = i ? "#ffffff40" : "#00000040";
+        OCTX.lineWidth = s * (20 - 10 * i);
+        OCTX.beginPath();
+        OCTX.moveTo(b.x, b.y);
+        OCTX.lineTo(b.x + 100 * (b.x - a.x), b.y + 100 * (b.y - a.y));
+        OCTX.stroke();
+      }
+    }
+
+    // If making a gripper gesture, show the line between thumb and index fingers.
+    if (gestures[h]?.id === "gripper") {
+      let p = toScreen(hand.landmarks[LM.THUMB_TIP], h);
+      let q = toScreen(hand.landmarks[LM.INDEX_TIP], h);
+      for (let i = 0; i <= 1; i++) {
+        OCTX.strokeStyle = i ? "#ffffff40" : "#00000040";
+        OCTX.lineWidth = s * (20 - 10 * i);
+        OCTX.beginPath();
+        OCTX.moveTo(p.x, p.y);
+        OCTX.lineTo(q.x, q.y);
+        OCTX.stroke();
+      }
+    }
+
+    // If pinching, show pinch point.
+    if (gestures[h]?.id === "index pinch") {
+      const { x, y } = toScreen(gestures[h].state[h], h);
+      OCTX.beginPath();
+      OCTX.fillStyle = "#ffffff40";
+      OCTX.arc(x, y, 0.05 * s * hScale, 0, 2 * Math.PI);
+      OCTX.fill();
+    }
+
+    // If making a frame, show the frame.
+    if (gestures[h]?.id === "frame") {
+      const { width, height, x, y } = gestures[h].state[h];
+      OCTX.fillStyle = "#ff00ffff40";
+      OCTX.fillRect(x, y, width, height);
+    }
+  }
 
   const leftHand = handResults.find((e) => e.handedness === "left");
   const rightHand = handResults.find((e) => e.handedness === "right");
 
-  if (!leftHand || !rightHand || !state.gestures.left || !state.gestures.right) return;
+  if (!leftHand || !rightHand || !gestures.left || !gestures.right) return;
 
   let fingerTip = (hand, i) => {
     return toScreen(hand.landmarks[LM.TIPS[i]], hand.handedness);
@@ -279,9 +290,10 @@ export function drawShadowGesture(handResults) {
   let fingerMcp = (hand, i) => {
     return toScreen(hand.landmarks[LM.MCPS[i]], hand.handedness);
   };
+  OCTX.save();
 
   // If both hands are pinching, draw a line between them.
-  if (state.gestures.left.id == "index pinch" && state.gestures.right.id == "index pinch") {
+  if (gestures.left.id == "index pinch" && gestures.right.id == "index pinch") {
     let p0 = fingerTip(leftHand, 0);
     let p1 = fingerTip(leftHand, 1);
     let q0 = fingerTip(rightHand, 0);
@@ -296,10 +308,10 @@ export function drawShadowGesture(handResults) {
 
   // If one hand is pinching and the other is gripping, project a line from the pinch to the gripper.
   if (
-    (state.gestures.left.id === "index pinch" && state.gestures.right.id === "gripper") ||
-    (state.gestures.left.id === "gripper" && state.gestures.right.id === "index pinch")
+    (gestures.left.id === "index pinch" && gestures.right.id === "gripper") ||
+    (gestures.left.id === "gripper" && gestures.right.id === "index pinch")
   ) {
-    const isLeftPinch = state.gestures.left.id === "index pinch";
+    const isLeftPinch = gestures.left.id === "index pinch";
     const pincher = isLeftPinch ? leftHand : rightHand;
     const gripper = isLeftPinch ? rightHand : leftHand;
 
@@ -331,63 +343,53 @@ export function drawShadowGesture(handResults) {
 
   // If one hand is pointing and the other is gripping, draw a variable length pointing ray.
   if (
-    (state.gestures.left.id === "point" && state.gestures.right.id === "gripper") ||
-    (state.gestures.left.id === "gripper" && state.gestures.right.id === "point")
+    (gestures.left.id === "point" && gestures.right.id === "gripper") ||
+    (gestures.left.id === "gripper" && gestures.right.id === "point")
   ) {
-    const isLeftPoint = state.gestures.left.id === "point";
+    const isLeftPoint = gestures.left.id === "point";
     const pointer = isLeftPoint ? leftHand : rightHand;
     const gripper = isLeftPoint ? rightHand : leftHand;
-    
+
     let a = fingerMcp(pointer, 1);
     let b = fingerTip(pointer, 1);
     let c = fingerTip(gripper, 0);
     let d = fingerTip(gripper, 1);
 
-    let scale = 3 * norm([c.x-d.x,c.y-d.y,0]) / norm([a.x-b.x,a.y-b.y,0]);
-    let e = { x: b.x+scale*(b.x-a.x), y: b.y+scale*(b.y-a.y) };
+    let scale = (3 * norm([c.x - d.x, c.y - d.y, 0])) / norm([a.x - b.x, a.y - b.y, 0]);
+    let e = { x: b.x + scale * (b.x - a.x), y: b.y + scale * (b.y - a.y) };
 
-    OCTX.strokeStyle = '#ff00ff80';
-    OCTX.lineCap = 'round';
+    OCTX.strokeStyle = "#ff00ff80";
+    OCTX.lineCap = "round";
     OCTX.lineWidth = 20;
 
     OCTX.beginPath();
-    OCTX.moveTo(b.x,b.y);
-    OCTX.lineTo(e.x,e.y);
+    OCTX.moveTo(b.x, b.y);
+    OCTX.lineTo(e.x, e.y);
     OCTX.stroke();
 
-    OCTX.fillStyle = 'white';
+    OCTX.fillStyle = "white";
     OCTX.beginPath();
     OCTX.roundRect(e.x - 80, e.y - 60, 150, 120, 10, 10);
     OCTX.fill();
-    OCTX.strokeStyle = 'black';
+    OCTX.strokeStyle = "black";
     OCTX.lineWidth = 3;
     OCTX.stroke();
 
-    OCTX.fillStyle = 'black';
-    OCTX.font = '40px Helvetica';
-    OCTX.fillText('text', e.x-40, e.y-10);
-    OCTX.fillText('box' , e.x-40, e.y+40);
-	 }
+    OCTX.fillStyle = "black";
+    OCTX.font = "40px Helvetica";
+    OCTX.fillText("text", e.x - 40, e.y - 10);
+    OCTX.fillText("box", e.x - 40, e.y + 40);
+  }
 
   // If both hands are gripping, create a rectangle between them.
 
-  if (state.gestures.left.id == "gripper" && state.gestures.right.id == "gripper") {
+  if (gestures.left.id == "gripper" && gestures.right.id == "gripper") {
     let p0 = fingerTip(leftHand, 0);
     let p1 = fingerTip(leftHand, 1);
     let q0 = fingerTip(rightHand, 0);
     let q1 = fingerTip(rightHand, 1);
     OCTX.fillStyle = OCTX.strokeStyle = "#ff00ff40";
     OCTX.lineWidth = 10;
-    /*
-	 OCTX.beginPath();
-	 OCTX.moveTo(p0.x,p0.y);
-	 OCTX.lineTo(p1.x,p1.y);
-	 OCTX.lineTo(q1.x,q1.y);
-	 OCTX.lineTo(q0.x,q0.y);
-	 OCTX.lineTo(p0.x,p0.y);
-	 OCTX.fill();
-	 OCTX.stroke();
-*/
     let x0 = (p0.x + p1.x) >> 1,
       x1 = (q0.x + q1.x) >> 1;
     let y0 = (p1.y + q1.y) >> 1,

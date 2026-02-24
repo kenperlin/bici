@@ -3,6 +3,7 @@ import { VideoUI } from "./videoUI.js";
 import { WebRTCClient } from "./webrtcClient.js";
 import * as Y from "https://esm.sh/yjs@^13";
 import { WebsocketProvider } from "https://esm.sh/y-websocket@^3";
+import { peerTrackingState } from "../mediapipe/state.js";
 
 export let ydoc = new Y.Doc();
 export let webrtcClient;
@@ -74,7 +75,7 @@ export function setupYjsClient(webcam) {
 }
 
 export function getYjsAwareness() {
-  return yjsWsProvider.awareness;
+  return yjsWsProvider?.awareness;
 }
 
 // Initialize Yjs for collaborative editing (called after room is joined)
@@ -98,7 +99,7 @@ function initializeYjs(roomId) {
   awareness.on("change", () => {
     const states = awareness.getStates();
     states.forEach((state) => {
-      // console.log(state.id, state);
+      peerTrackingState[state.id] = state
     });
   });
 

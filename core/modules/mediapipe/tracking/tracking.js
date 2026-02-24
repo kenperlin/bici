@@ -1,7 +1,13 @@
 import { add, clamp, cross, dot, mix, norm, normalize, resize, subtract } from "../../math/math.js";
 import { LowPassFilter2D, PCAFilter2D } from "../utils/filter.js";
-import { trackingState as state, mediapipeState } from "../state.js";
-import { drawEyes, drawHands, drawShadowGesture, drawShadowHand } from "./drawing.js";
+import { trackingState as state, mediapipeState, peerTrackingState } from "../state.js";
+import {
+  drawEyesObvious,
+  drawFingertips,
+  drawGlobalShadowHead,
+  drawShadowGesture,
+  drawShadowHand
+} from "./drawing.js";
 import { fingerDistances, handScale, LM } from "../gestures/detect.js";
 import { toVideo } from "../utils/mapping.js";
 
@@ -57,23 +63,62 @@ export function updateTracking() {
   //    state.headY = frameToRect(state.headY, canvas3D.getBoundingClientRect());
   // }
 
-  drawEyes();
+  if (state.isObvious)
+    drawEyesObvious(state.headX, state.headY, state.eyeGazeX, state.eyeGazeY, state.eyeOpen);
+  else if (state.isShadowAvatar() && !state.isSeparateHandAvatars) {
+    drawGlobalShadowHead(
+      state.globalAvatar,
+      state.headMatrix,
+      state.headX,
+      state.headY,
+      state.eyeOpen
+    );
+  }
 
-  if (!state.isShadowAvatar()) drawHands(handResults);
+  if (!state.isShadowAvatar()) drawFingertips(handResults, state.gestures);
 
   if (state.isSeparateHandAvatars) {
     for (const hand of handResults) {
       computeShadowHand(hand);
       drawShadowHand(hand, state.handAvatar[hand.handedness]);
     }
-    drawShadowGesture(handResults);
-  } else {
+    drawShadowGesture(handResults, state.handAvatar, state.gestures);
+  } else if (state.isShadowAvatar()) {
     computeGlobalShadowAvatar(handResults);
     for (const hand of handResults) {
       computeShadowHand(hand);
       drawShadowHand(hand, state.globalAvatar);
     }
   }
+
+  OCTX.save();
+  OCTX.translate(WIDTH, 0);
+  OCTX.scale(-1, 1);
+
+  for (const id in peerTrackingState) {
+    const peerState = peerTrackingState[id];
+    if(!peerState.id) continue;
+    
+    if (state.isObvious) {
+      drawEyesObvious(
+        peerState.headX,
+        peerState.headY,
+        peerState.eyeGazeX,
+        peerState.eyeGazeY,
+        peerState.eyeOpen
+      );
+    }
+    for(const hand of peerState.handResults) {
+      const handAvatar = peerState.handAvatar[hand.handedness];
+      if(handAvatar.x === 0 && handAvatar.y === 0 && handAvatar.s === 1) continue;
+
+      drawShadowHand(hand, peerState.handAvatar[hand.handedness], peerState.gestures);
+    }
+    drawShadowGesture(peerState.handResults, peerState.handAvatar, peerState.gestures);
+  }
+  OCTX.translate(WIDTH, 0);
+  OCTX.scale(-1, 1);
+  OCTX.restore();
 }
 
 // GIVEN THREE POINTS ON THE FACE, COMPUTE THE USER'S HEAD MATRIX
@@ -131,9 +176,9 @@ function computeEyeGaze(la, lb, lc, ld, le, lf, lg, ra, rb, rc, rd, re, rf, rg) 
 function computeShadowHand(hand) {
   const { handedness: h, landmarks } = hand;
 
-  if(!state.isScalingHandAvatars) {
+  if (!state.isScalingHandAvatars) {
     const oppositeH = h === "left" ? "right" : "left";
-    if (state.gestures[h]?.id === 'frame') {
+    if (state.gestures[h]?.id === "frame") {
       const { width, x, y } = state.gestures[h].state[h];
       state.handAvatar[oppositeH].x = x;
       state.handAvatar[oppositeH].y = y;
@@ -151,11 +196,11 @@ function computeShadowHand(hand) {
     });
     const avatar = state.handAvatar[h];
     const targetScale = clamp(2.3 - 7 * handScale(landmarks), 0.2, 1);
-    
+
     avatar.x = x * (1 - avatar.s);
     avatar.y = y * (1 - avatar.s);
     avatar.s = 0.5 * avatar.s + 0.5 * targetScale;
-    console.log(avatar)
+    console.log(avatar);
   }
 }
 
@@ -178,7 +223,8 @@ function computeGlobalShadowAvatar(handResults) {
       w += weight;
     }
   }
-  if (w) [state.globalAvatar.x, state.globalAvatar.y] = globalAvatarFilter.filter(x / w, y / w - 300);
+  if (w)
+    [state.globalAvatar.x, state.globalAvatar.y] = globalAvatarFilter.filter(x / w, y / w - 300);
 
   // Use change in distance between the two fists to rescale the shadow avatar.
   if (fists.left && fists.right) {

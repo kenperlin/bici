@@ -150,7 +150,7 @@ export function yjsBindAppState({ codeArea, slideManager, sceneManager }) {
 
 export function updateAppState() {
   const ystate = ydoc.getMap("appState");
-
+  
   ydoc.transact(() => {
     for (const key in appState) {
       const next = appState[key].get();
