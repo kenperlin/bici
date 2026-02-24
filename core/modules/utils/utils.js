@@ -6,3 +6,13 @@ export async function fetchText(file) {
     console.error(`Failed to get text from file ${file}:`, error);
   }
 }
+
+export function debounce(callback, delay) {
+  let timeoutId = null;
+  return (...args) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+      callback(...args);
+    }, delay);
+  };
+}

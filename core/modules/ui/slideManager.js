@@ -88,6 +88,7 @@ export class SlideManager {
 
   registerSlide() {
     const currentSlide = this.getSlide();
+    if(!currentSlide) return;
 
     if (currentSlide.type === "diagram" || currentSlide.type === "text") {
       this.canvas.element.width = currentSlide.content.width;

@@ -15,6 +15,8 @@ export class SceneManager {
   }
 
   async load(num, context) {
+    if(!this.projectName) return;
+    
     this.sceneNum = num;
     const path = `/projects/${this.projectName}/scenes/scene${num}.js`;
     let sceneModule;

@@ -1,3 +1,4 @@
+import { debounce } from "../utils/utils.js";
 import { showErrorNotification, showInvitationUI, showRoomFullNotification } from "./ui.js";
 import { VideoUI } from "./videoUI.js";
 import { WebRTCClient } from "./webrtcClient.js";
@@ -77,15 +78,9 @@ export function yjsBindCodeArea(codeArea) {
   const ytext = ydoc.getText("codemirror");
   const ycontrol = ydoc.getMap("control");
 
-  let isLocalUpdate = false;
-  let version = 0;
-
   // When Yjs text changes, update textarea
-
-  ytext.observe((event) => {
-    if (isLocalUpdate) return;
-    isLocalUpdate = true;
-
+  ytext.observe((event, origin) => {
+    if (origin.local) return;
     const newText = ytext.toString();
 
     if (element.value !== newText) {
@@ -93,31 +88,27 @@ export function yjsBindCodeArea(codeArea) {
       element.value = newText;
       element.selectionStart = element.selectionEnd = Math.min(cursorPos, newText.length);
     }
-    isLocalUpdate = false;
   });
 
-  let reloadSceneTimer = null;
-  ycontrol.observe((e) => {
+  // Reload scene after debounce to allow text to update
+  let reloadVersion = 0;
+  const debouncedReload = debounce(() => (codeArea.isReloadScene = true), 100);
+  ycontrol.observe((event) => {
     const newVersion = ycontrol.get("version") || 0;
-    if (version !== newVersion) {
-      version = newVersion;
-      // Reload scene after timeout to allow text to update
-      if (reloadSceneTimer) clearTimeout(reloadSceneTimer);
-      reloadSceneTimer = setTimeout(() => (codeArea.isReloadScene = true), 100);
+    if (reloadVersion !== newVersion) {
+      reloadVersion = newVersion;
+      debouncedReload();
     }
   });
 
   // When textarea changes, update Yjs text
   codeArea.onValueChanged = () => {
-    if (isLocalUpdate) return;
-    isLocalUpdate = true;
-
     const currentText = ytext.toString();
     let newText = element.value;
 
     if (codeArea.isReloadScene) {
       ydoc.transact(() => {
-        ycontrol.set("version", ++version);
+        ycontrol.set("version", ++reloadVersion);
       });
     }
 
@@ -127,7 +118,6 @@ export function yjsBindCodeArea(codeArea) {
         ytext.insert(0, newText);
       });
     }
-    isLocalUpdate = false;
   };
 }
 
@@ -136,7 +126,8 @@ export function yjsBindPen(pen) {
   const ypenStrokesMap = ydoc.getMap("penStrokes");
   let isUpdatingFromYjs = false;
 
-  ypenStrokesMap.observe((event) => {
+  ypenStrokesMap.observe((event, origin) => {
+    if(origin.local) return;
     isUpdatingFromYjs = true;
 
     const allStrokes = [];
@@ -147,28 +138,23 @@ export function yjsBindPen(pen) {
     isUpdatingFromYjs = false;
   });
 
+  const doSync = () => {
+    const clientId = webrtcClient.myClientId;
+    ydoc.transact(() => {
+      ypenStrokesMap.set(clientId, pen.strokes);
+    });
+    const allStrokes = [];
+    ypenStrokesMap.forEach((clientStrokes) => allStrokes.push(...clientStrokes));
+    pen.allStrokes.length = 0;
+    pen.allStrokes.push(...allStrokes);
+  };
+  const debouncedSync = debounce(doSync, 100);
+
   // Set up callback to sync local pen changes to Yjs (only master will actually sync)
-  let syncPenStrokesTimer = null;
   pen.onStrokesChanged = () => {
     if (isUpdatingFromYjs) return;
-
-    const clientId = webrtcClient.myClientId;
-
-    const doSync = () => {
-      ydoc.transact(() => {
-        ypenStrokesMap.set(clientId, pen.strokes);
-      });
-      const allStrokes = [];
-      ypenStrokesMap.forEach((clientStrokes) => allStrokes.push(...clientStrokes));
-      pen.allStrokes.length = 0;
-      pen.allStrokes.push(...allStrokes);
-      syncPenStrokesTimer = null;
-    };
-
     doSync();
-    // Also schedule a final sync after 100ms to ensure we catch the last update
-    if (syncPenStrokesTimer) clearTimeout(syncPenStrokesTimer);
-    syncPenStrokesTimer = setTimeout(doSync, 100);
+    debouncedSync();
   };
 
   pen.onStrokesCleared = () => {
@@ -184,17 +170,18 @@ export function yjsBindAppState(appState) {
   const ystate = ydoc.getMap("appState");
 
   appState.onUpdate = () => {
-    ydoc.transact(()=> {
-      for(const key in appState) {
-        if(key === "onUpdate") continue;
+    ydoc.transact(() => {
+      for (const key in appState) {
+        if (key === "onUpdate") continue;
         const next = appState[key].get();
         const prev = ystate.get(key);
         if (prev !== next) ystate.set(key, next);
       }
-    })
+    });
   };
 
-  ystate.observe((event) => {
+  ystate.observe((event, origin) => {
+    if(origin.local) return;
     const changed = event.keysChanged;
     const s = ystate.toJSON();
     for (const key of changed) {
