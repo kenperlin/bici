@@ -8,6 +8,7 @@ export class SceneManager {
     this.canvas = new InteractiveCanvas(canvas, 'webgl2');
     this.scene = null;
     this.sceneCounter = 0;
+    this.sceneNum = null;
 
     this.projectName = null;
     this.context = {};
@@ -21,6 +22,7 @@ export class SceneManager {
       sceneModule = await import(path + "?t=" + Date.now()); // cache busting
       if (!sceneModule.Scene) throw new Error(`Scene ${num} does not export a Scene class.`);
       context.codeArea.element.value = await fetchText(path);
+      this.sceneNum = num;
     } catch (e) {
       console.error(`Failed to load scene ${num} of project ${this.projectName}:`, e);
     }

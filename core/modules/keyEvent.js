@@ -3,20 +3,19 @@ import { trackingState, mediapipeState } from "./mediapipe/state.js";
 import { webrtcClient } from "./yjs/yjs.js";
 import { videoState } from "./ui/video.js";
 
-let controller;
+let controller
+let sendStateToYjs;
 
 export let state = {
   isShift: false,
   isAlt: false
 };
 
-export function initKeyHandler(appController) {
+export function initKeyHandler(appController, stateUpdateFn) {
   controller = appController;
+  sendStateToYjs = stateUpdateFn
   window.addEventListener("keydown", handleKeyDown);
   window.addEventListener("keyup", handleKeyUp);
-  window.addEventListener("mousemove", (e) => {
-    controller.triggerMove("/", e.clientX, e.clientY, 0);
-  });
 }
 
 function handleKeyDown(e) {
@@ -49,10 +48,12 @@ function handleKeyUp(e) {
 
 function handleCommand(key) {
   if (key >= "0" && key <= "9") {
-    controller.sceneManager.load(key, { codeArea: controller.codeArea });
+    controller.sceneManager.load(Number(key), { codeArea: controller.codeArea });
+    sendStateToYjs();
     return;
   }
-
+  
+  let commandTriggered = true;
   switch (key) {
     case "Alt": state.isAlt = false; break;
     case "Shift": state.isShift = false; break;
@@ -94,5 +95,12 @@ function handleCommand(key) {
     case "Backspace": state.isShift ? controller.pen.clear() : controller.pen.delete(); break;
 
     case "h": toggleHelp(); break;
+
+    default: commandTriggered = false;
+  }
+
+  if(commandTriggered) {
+    console.log('sending state from handler')
+    sendStateToYjs();
   }
 }

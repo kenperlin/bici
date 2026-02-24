@@ -3,12 +3,12 @@ import { addDiagramProperties, TextDiagram } from "./diagram.js";
 
 export class SlideManager {
   constructor(canvas) {
-    this.canvas = new InteractiveCanvas(canvas, "2d")
+    this.canvas = new InteractiveCanvas(canvas, "2d");
     this.slides = [];
     this.modules = {};
     this.urlMap = {};
     this.currentSlide = 0;
-    
+
     this.projectName = null;
     this.context = {};
   }
@@ -70,8 +70,8 @@ export class SlideManager {
       }
     }
 
-    this.canvas.toggleOpaque()
-    this.registerSlide()
+    this.canvas.toggleOpaque();
+    this.registerSlide();
   }
 
   async _loadImage(src) {
@@ -87,30 +87,35 @@ export class SlideManager {
   }
 
   registerSlide() {
-    const currentSlide = this.getSlide()
+    const currentSlide = this.getSlide();
 
     if (currentSlide.type === "diagram" || currentSlide.type === "text") {
       this.canvas.element.width = currentSlide.content.width;
       this.canvas.element.height = currentSlide.content.height;
-      this.canvas.registerEvents(currentSlide.content)
+      this.canvas.registerEvents(currentSlide.content);
     } else if (currentSlide.type === "image") {
       this.canvas.element.width = 500;
       this.canvas.element.height = 500;
     }
   }
 
+  setSlide(num) {
+    this.currentSlide = num;
+    this.registerSlide();
+  }
+
   next() {
     this.currentSlide = Math.min(this.currentSlide + 1, this.slides.length - 1);
-    this.registerSlide()
+    this.registerSlide();
   }
 
   prev() {
     this.currentSlide = Math.max(this.currentSlide - 1, 0);
-    this.registerSlide()
+    this.registerSlide();
   }
 
   draw(idx = this.currentSlide) {
-    if(!this.canvas.isVisible) return;
+    if (!this.canvas.isVisible) return;
 
     const ctx = this.canvas.ctx;
     const slide = this.getSlide(idx);
@@ -126,9 +131,8 @@ export class SlideManager {
       ctx.drawImage(slide.content, 0, 0, 500, 500);
     }
 
-    ctx.font = '20px Courier';
+    ctx.font = "20px Courier";
     ctx.fillText(idx + 1, 10, 30);
     ctx.restore();
   }
 }
-

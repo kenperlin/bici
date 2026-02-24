@@ -1,7 +1,7 @@
 
-const helpState = {
+export const helpState = {
   isSplash: false,
-  isHelp: false
+  isVisible: false
 };
 
 const helpText = `\
@@ -43,7 +43,7 @@ export function displayHelp(ctx, fontSize) {
     ctx.fillStyle = "black";
     ctx.font = "bold " + fs + "px Arial";
     ctx.fillText("For help, type 'h'", 26, 60);
-  } else if (helpState.isHelp) {
+  } else if (helpState.isVisible) {
     ctx.fillStyle = "#ffffff80";
     ctx.fillRect(18, 20, (500 * fs) / 40, 0.85 * fs * helpText.length + 5);
     ctx.fillStyle = "black";
@@ -63,5 +63,5 @@ export function displayHelp(ctx, fontSize) {
 }
 
 export function toggleHelp() {
-   helpState.isHelp = !helpState.isHelp
+   helpState.isVisible = !helpState.isVisible
 }

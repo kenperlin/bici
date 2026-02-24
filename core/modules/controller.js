@@ -12,6 +12,7 @@ export class InteractionController {
     window.addEventListener("mousemove", (e) => {
       this.mouseX = e.clientX;
       this.mouseY = e.clientY;
+      this.triggerMove("/", e.clientX, e.clientY, 0);
       this.triggerMove("mouse", e.clientX, e.clientY, 0);
     });
     window.addEventListener("mousedown", (e) => {
