@@ -99,8 +99,5 @@ function handleCommand(key) {
     default: commandTriggered = false;
   }
 
-  if(commandTriggered) {
-    console.log('sending state from handler')
-    sendStateToYjs();
-  }
+  if(commandTriggered) sendStateToYjs();
 }

@@ -21,12 +21,20 @@ export class InteractiveCanvas {
   }
 
   toggleVisible() {
-    this.isVisible = !this.isVisible;
+    this.setVisible(!this.isVisible)
+  }
+
+  setVisible(val) {
+    this.isVisible = val;
     this.element.style.display = this.isVisible ? "block" : "none";
   }
 
   toggleOpaque() {
-    this.isOpaque = !this.isOpaque;
+    this.setOpaque(!this.isOpaque)
+  }
+
+  setOpaque(val) {
+    this.isOpaque = val;
     this.element.style.opacity = this.isOpaque ? 1 : 0.5;
   }
 

@@ -184,20 +184,18 @@ export function yjsBindAppState(appState) {
   const ystate = ydoc.getMap("appState");
 
   appState.onUpdate = () => {
-    console.log('handling state locally')
-
     ydoc.transact(()=> {
       for(const key in appState) {
         if(key === "onUpdate") continue;
-        console.log(appState[key])
-        ystate.set(key, appState[key].get())
+        const next = appState[key].get();
+        const prev = ystate.get(key);
+        if (prev !== next) ystate.set(key, next);
       }
     })
   };
 
   ystate.observe((event) => {
     const changed = event.keysChanged;
-    console.log('updating new state', changed)
     const s = ystate.toJSON();
     for (const key of changed) {
       if (appState[key] && s[key] != null) appState[key].set(s[key]);

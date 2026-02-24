@@ -53,42 +53,34 @@ const controller = new InteractionController({ codeArea, slideManager, sceneMana
 const appState = {
   slideNum: {
     get: () => slideManager.currentSlide,
-    set: (val) => slideManager.setSlide(val),
-    prev: () => slideManager.prev(),
-    next: () => slideManager.prev()
+    set: (val) => slideManager.setSlide(val)
   },
   slideIsVisible: {
-    get: ()=> slideManager.canvas.isVisible,
-    set: (val) => (slideManager.canvas.isVisible = val),
-    toggle: () => slideManager.canvas.toggleVisible()
+    get: () => slideManager.canvas.isVisible,
+    set: (val) => slideManager.canvas.setVisible(val)
   },
   slideIsOpaque: {
-    get: ()=> slideManager.canvas.isOpaque,
-    set: (val) => (slideManager.canvas.isOpaque = val),
-    toggle: () => slideManager.canvas.toggleOpaque()
+    get: () => slideManager.canvas.isOpaque,
+    set: (val) => (slideManager.canvas.setOpaque(val))
   },
   sceneNum: {
-    get: ()=> sceneManager.sceneNum,
+    get: () => sceneManager.sceneNum,
     set: (val) => sceneManager.load(val, { codeArea })
   },
   sceneIsVisible: {
-    get: ()=> sceneManager.canvas.isVisible,
-    set: (val) => (sceneManager.canvas.isVisible = val),
-    toggle: () => sceneManager.canvas.toggleVisible("scene")
+    get: () => sceneManager.canvas.isVisible,
+    set: (val) => sceneManager.canvas.setVisible(val)
   },
   codeIsVisible: {
-    get: ()=> codeArea.isVisible,
-    set: (val) => (codeArea.isVisible = val),
-    toggle: () => codeArea.toggleVisible()
+    get: () => codeArea.isVisible,
+    set: (val) => codeArea.setVisible(val)
   },
   codeFontSize: {
-    get: ()=> codeArea.fontSize,
-    set: (val) => (codeArea.fontSize = val),
-    increase: () => codeArea.increaseFontSize(),
-    decrease: () => codeArea.decreaseFontSize()
+    get: () => codeArea.fontSize,
+    set: (val) => codeArea.setFontSize(val)
   },
   helpIsVisible: {
-    get: ()=> helpState.isVisible,
+    get: () => helpState.isVisible,
     set: (val) => (helpState.isVisible = val)
   },
   onUpdate: () => {}
@@ -165,7 +157,6 @@ function animate() {
   let backgroundVideo = hasRemoteVideo ? videoUI.remoteVideo : DOM.webcam;
 
   drawVideoToCover(ctx, backgroundVideo, !hasRemoteVideo);
-
   codeArea.update();
   slideManager.draw();
   pen.draw(ctx);

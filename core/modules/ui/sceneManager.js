@@ -15,6 +15,7 @@ export class SceneManager {
   }
 
   async load(num, context) {
+    this.sceneNum = num;
     const path = `/projects/${this.projectName}/scenes/scene${num}.js`;
     let sceneModule;
 
@@ -22,7 +23,6 @@ export class SceneManager {
       sceneModule = await import(path + "?t=" + Date.now()); // cache busting
       if (!sceneModule.Scene) throw new Error(`Scene ${num} does not export a Scene class.`);
       context.codeArea.element.value = await fetchText(path);
-      this.sceneNum = num;
     } catch (e) {
       console.error(`Failed to load scene ${num} of project ${this.projectName}:`, e);
     }

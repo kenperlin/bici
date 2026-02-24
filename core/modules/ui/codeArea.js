@@ -37,9 +37,12 @@ export class CodeArea {
   }
 
   toggleVisible() {
-    this.isVisible = !this.isVisible;
-    this.element.style.left = `${this.isVisible ? 20 : -2000}px`;
+    this.setVisible(!this.isVisible)
   };
+  setVisible(val) {
+    this.isVisible = val;
+    this.element.style.left = `${this.isVisible ? 20 : -2000}px`;
+  }
 
   setFontSize(size) {
     this.fontSize = size;
