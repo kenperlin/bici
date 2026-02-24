@@ -1,14 +1,14 @@
-import { debounce } from "../utils/utils.js";
 import { showErrorNotification, showInvitationUI, showRoomFullNotification } from "./ui.js";
 import { VideoUI } from "./videoUI.js";
 import { WebRTCClient } from "./webrtcClient.js";
 import * as Y from "https://esm.sh/yjs@^13";
 import { WebsocketProvider } from "https://esm.sh/y-websocket@^3";
 
-let ydoc = new Y.Doc();
-
+export let ydoc = new Y.Doc();
 export let webrtcClient;
 export let videoUI;
+
+let yjsWsProvider;
 
 export function setupYjsClient(webcam) {
   webrtcClient = new WebRTCClient();
@@ -73,123 +73,8 @@ export function setupYjsClient(webcam) {
     });
 }
 
-export function yjsBindCodeArea(codeArea) {
-  // Setup textarea binding
-  const element = codeArea.element;
-  const ytext = ydoc.getText("code");
-  const ycontrol = ydoc.getMap("control");
-
-  // When Yjs text changes, update textarea
-  ytext.observe((event, txn) => {
-    if (txn.local) return;
-    const newText = ytext.toString();
-
-    if (element.value !== newText) {
-      const cursorPos = element.selectionStart;
-      element.value = newText;
-      element.selectionStart = element.selectionEnd = Math.min(cursorPos, newText.length);
-    }
-  });
-
-  // Reload scene after debounce to allow text to update
-  let reloadVersion = 0;
-  const debouncedReload = debounce(() => (codeArea.isReloadScene = true), 100);
-  ycontrol.observe((event) => {
-    const newVersion = ycontrol.get("version") || 0;
-    if (reloadVersion !== newVersion) {
-      reloadVersion = newVersion;
-      debouncedReload();
-    }
-  });
-
-  // When textarea changes, update Yjs text
-  codeArea.onValueChanged = () => {
-    const currentText = ytext.toString();
-    let newText = element.value;
-
-    if (codeArea.isReloadScene) {
-      ydoc.transact(() => {
-        reloadVersion = (ycontrol.get("version") || 0) + 1;
-        ycontrol.set("version", reloadVersion);
-      });
-    }
-
-    if (currentText !== newText) {
-      ydoc.transact(() => {
-        ytext.delete(0, currentText.length);
-        ytext.insert(0, newText);
-      });
-    }
-  };
-}
-
-export function yjsBindPen(pen) {
-  // Setup Yjs pen strokes synchronization
-  const ypenStrokesMap = ydoc.getMap("penStrokes");
-  let isUpdatingFromYjs = false;
-
-  ypenStrokesMap.observe((event, txn) => {
-    if (txn.local) return;
-    isUpdatingFromYjs = true;
-
-    const allStrokes = [];
-    ypenStrokesMap.forEach((clientStrokes) => allStrokes.push(...clientStrokes));
-    pen.allStrokes.length = 0;
-    pen.allStrokes.push(...allStrokes);
-
-    isUpdatingFromYjs = false;
-  });
-
-  const doSync = () => {
-    const clientId = webrtcClient.myClientId;
-    ydoc.transact(() => {
-      ypenStrokesMap.set(clientId, pen.strokes);
-    });
-    const allStrokes = [];
-    ypenStrokesMap.forEach((clientStrokes) => allStrokes.push(...clientStrokes));
-    pen.allStrokes.length = 0;
-    pen.allStrokes.push(...allStrokes);
-  };
-  const debouncedSync = debounce(doSync, 100);
-
-  // Set up callback to sync local pen changes to Yjs (only master will actually sync)
-  pen.onStrokesChanged = () => {
-    if (isUpdatingFromYjs) return;
-    doSync();
-    debouncedSync();
-  };
-
-  pen.onStrokesCleared = () => {
-    if (isUpdatingFromYjs) return;
-    ydoc.transact(() => {
-      ypenStrokesMap.clear();
-    });
-    pen.allStrokes.length = 0;
-  };
-}
-
-export function yjsBindAppState(appState) {
-  const ystate = ydoc.getMap("appState");
-
-  appState.onUpdate = () => {
-    ydoc.transact(() => {
-      for (const key in appState) {
-        if (key === "onUpdate") continue;
-        const next = appState[key].get();
-        const prev = ystate.get(key);
-        if (prev !== next) ystate.set(key, next);
-      }
-    });
-  };
-
-  ystate.observe((event, txn) => {
-    if (txn.local) return;
-    const changed = event.keysChanged;
-    const s = ystate.toJSON();
-    for (const key of changed) {
-      if (appState[key] && s[key] != null) appState[key].set(s[key]);
-    }
-  });
+export function getYjsAwareness() {
+  return yjsWsProvider.awareness;
 }
 
 // Initialize Yjs for collaborative editing (called after room is joined)
@@ -204,10 +89,17 @@ function initializeYjs(roomId) {
 
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   const wsUrl = `${protocol}//${window.location.host}`;
-  const yjsWsProvider = new WebsocketProvider(wsUrl, docName, ydoc);
-
+  yjsWsProvider = new WebsocketProvider(wsUrl, docName, ydoc);
   yjsWsProvider.on("status", (event) => {
     console.log("Yjs WebSocket provider status:", event.status);
+  });
+
+  const awareness = getYjsAwareness();
+  awareness.on("change", () => {
+    const states = awareness.getStates();
+    states.forEach((state) => {
+      // console.log(state.id, state);
+    });
   });
 
   console.log("Yjs collaborative editing initialized");

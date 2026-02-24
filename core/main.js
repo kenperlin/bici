@@ -1,25 +1,25 @@
 import { CodeArea } from "./modules/ui/codeArea.js";
-import { SlideManager } from "./modules/ui/SlideManager.js";
+import { SlideManager } from "./modules/ui/slideManager.js";
 import { displayHelp, helpState } from "./modules/ui/help.js";
 import { initKeyHandler } from "./modules/keyEvent.js";
 import { initMediapipe, mediapipePredict } from "./modules/mediapipe/mediapipe.js";
 import { Pen } from "./modules/pen.js";
 import { SceneManager } from "./modules/ui/sceneManager.js";
 import { fetchText } from "./modules/utils/utils.js";
-import {
-  webrtcClient,
-  videoUI,
-  setupYjsClient,
-  yjsBindCodeArea,
-  yjsBindPen,
-  yjsBindAppState
-} from "./modules/yjs/yjs.js";
+import { webrtcClient, videoUI, setupYjsClient } from "./modules/yjs/yjs.js";
 import { updateTracking } from "./modules/mediapipe/tracking/tracking.js";
 import { updateDomFocus } from "./modules/mediapipe/tracking/dom.js";
 import { mediapipeState } from "./modules/mediapipe/state.js";
 import { initGestureTracker, updateGesture } from "./modules/mediapipe/tracking/gesture.js";
 import { InteractionController } from "./modules/controller.js";
 import { drawVideoToCover } from "./modules/ui/video.js";
+import {
+  yjsBindAppState,
+  yjsBindCodeArea,
+  yjsBindPen,
+  updateAppState,
+  updateUserState
+} from "./modules/yjs/bindings.js";
 
 const DOM = {
   projectSelector: document.getElementById("project-selector"),
@@ -50,42 +50,6 @@ const codeArea = new CodeArea(DOM.textarea);
 const pen = new Pen();
 const controller = new InteractionController({ codeArea, slideManager, sceneManager, pen });
 
-const appState = {
-  slideNum: {
-    get: () => slideManager.currentSlide,
-    set: (val) => slideManager.setSlide(val)
-  },
-  slideIsVisible: {
-    get: () => slideManager.canvas.isVisible,
-    set: (val) => slideManager.canvas.setVisible(val)
-  },
-  slideIsOpaque: {
-    get: () => slideManager.canvas.isOpaque,
-    set: (val) => (slideManager.canvas.setOpaque(val))
-  },
-  sceneNum: {
-    get: () => sceneManager.sceneNum,
-    set: (val) => sceneManager.load(val, { codeArea })
-  },
-  sceneIsVisible: {
-    get: () => sceneManager.canvas.isVisible,
-    set: (val) => sceneManager.canvas.setVisible(val)
-  },
-  codeIsVisible: {
-    get: () => codeArea.isVisible,
-    set: (val) => codeArea.setVisible(val)
-  },
-  codeFontSize: {
-    get: () => codeArea.fontSize,
-    set: (val) => codeArea.setFontSize(val)
-  },
-  helpIsVisible: {
-    get: () => helpState.isVisible,
-    set: (val) => (helpState.isVisible = val)
-  },
-  onUpdate: () => {}
-};
-
 function resizeStage() {
   window.DPR = window.devicePixelRatio;
 
@@ -100,16 +64,16 @@ function resizeStage() {
 
 async function init() {
   resizeStage();
-  initMediapipe();
-  initGestureTracker(controller);
-  initKeyHandler(controller, () => appState.onUpdate());
-  codeArea.onReloadScene = sceneManager.hotReload.bind(sceneManager);
-
   // Collaboration
   await setupYjsClient(DOM.webcam);
   yjsBindCodeArea(codeArea);
   yjsBindPen(pen);
-  yjsBindAppState(appState);
+  yjsBindAppState({ codeArea, slideManager, sceneManager });
+
+  initMediapipe();
+  initGestureTracker(controller);
+  initKeyHandler(controller, updateAppState);
+  codeArea.onReloadScene = sceneManager.hotReload.bind(sceneManager);
 
   // Event listeners
   window.addEventListener("resize", resizeStage);
@@ -168,6 +132,7 @@ function animate() {
     updateTracking();
     updateGesture();
     updateDomFocus(controller);
+    updateUserState();
   }
 
   requestAnimationFrame(animate);
