@@ -75,12 +75,12 @@ export function setupYjsClient(webcam) {
 export function yjsBindCodeArea(codeArea) {
   // Setup textarea binding
   const element = codeArea.element;
-  const ytext = ydoc.getText("codemirror");
+  const ytext = ydoc.getText("code");
   const ycontrol = ydoc.getMap("control");
 
   // When Yjs text changes, update textarea
-  ytext.observe((event, origin) => {
-    if (origin.local) return;
+  ytext.observe((event, txn) => {
+    if (txn.local) return;
     const newText = ytext.toString();
 
     if (element.value !== newText) {
@@ -108,7 +108,8 @@ export function yjsBindCodeArea(codeArea) {
 
     if (codeArea.isReloadScene) {
       ydoc.transact(() => {
-        ycontrol.set("version", ++reloadVersion);
+        reloadVersion = (ycontrol.get("version") || 0) + 1
+        ycontrol.set("version", reloadVersion);
       });
     }
 
@@ -126,8 +127,8 @@ export function yjsBindPen(pen) {
   const ypenStrokesMap = ydoc.getMap("penStrokes");
   let isUpdatingFromYjs = false;
 
-  ypenStrokesMap.observe((event, origin) => {
-    if(origin.local) return;
+  ypenStrokesMap.observe((event, txn) => {
+    if(txn.local) return;
     isUpdatingFromYjs = true;
 
     const allStrokes = [];
@@ -180,8 +181,8 @@ export function yjsBindAppState(appState) {
     });
   };
 
-  ystate.observe((event, origin) => {
-    if(origin.local) return;
+  ystate.observe((event, txn) => {
+    if(txn.local) return;
     const changed = event.keysChanged;
     const s = ystate.toJSON();
     for (const key of changed) {

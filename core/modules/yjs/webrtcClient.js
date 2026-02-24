@@ -18,8 +18,6 @@ export class WebRTCClient {
     this.onRemoteStreamAdded = null;
     this.onRemoteStreamRemoved = null;
     this.onConnectionStatusChanged = null;
-    this.onStateUpdate = null;  // Callback for receiving state updates
-    this.onActionReceived = null;  // Callback for master receiving actions from secondary clients
     this.onRoomJoined = null;  // Callback when room is joined successfully
     this.onRoomFull = null;  // Callback when trying to join a full room
 
@@ -153,22 +151,6 @@ export class WebRTCClient {
 
         case 'ice-candidate':
           await this.handleIceCandidate(data.from, data.candidate);
-          break;
-
-        case 'state-update':
-          // Handle state updates from other clients
-          console.log('Received state update from:', data.from, data.state);
-          if (this.onStateUpdate) {
-            this.onStateUpdate(data.from, data.state);
-          }
-          break;
-
-        case 'action':
-          // Handle action from secondary client (master only)
-          console.log('Received action from:', data.from, data.action);
-          if (this.isMasterClient && this.onActionReceived) {
-            this.onActionReceived(data.from, data.action);
-          }
           break;
         }
       } catch (error) {

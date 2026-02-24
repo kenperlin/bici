@@ -217,28 +217,14 @@ export class CodeArea {
 
   _flushPendingVars() {
     this._isFlushScheduled = false;
-    let vars = this._varsToFlush;
+    const vars = this._varsToFlush;
 
     if (Object.keys(vars).length === 0) return;
 
-    // In multiplayer mode, only master should sync to Yjs
-    // Secondary clients send batched vars to master via WebRTC
-    if (!webrtcClient.isMaster()) {
-      webrtcClient.sendAction({
-        type: "setVars",
-        vars
-      });
-      this._varsToFlush = {};
-      return;
-    }
-
-    // Master: apply all pending var changes atomically
     let newText = this.element.value;
-    
-    for (let name in vars) {
+    for (const name in vars) {
       newText = this._applyVarToText(newText, name, vars[name]);
     }
-
     this.element.value = newText;
     this._varsToFlush = {};
 

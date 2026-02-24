@@ -31,19 +31,11 @@ function handleKeyDown(e) {
 
 function handleKeyUp(e) {
   if (controller.getActiveTargetId() === "code") return;
-  if (e.key.startsWith("Arrow")) e.preventDefault();
-
+  
   const key = e.key;
-  if (!webrtcClient?.isMaster()) {
-    webrtcClient.sendAction({ type: "keyUp", key });
-  }
-
+  if (key.startsWith("Arrow")) e.preventDefault();
   if (state.isAlt) handleAltCommand(key);
   else handleCommand(key);
-
-  if (webrtcClient?.isMaster()) {
-    // broadcast state
-  }
 }
 
 function handleCommand(key) {
