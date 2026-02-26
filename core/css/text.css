@@ -1,0 +1,603 @@
+body {
+  margin: 0;
+}
+
+/* Always-visible panel toggle button */
+#webrtc-panel-toggle {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1001;
+  width: 50px;
+  height: 50px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+#webrtc-panel-toggle:hover {
+  background: rgba(0, 0, 0, 0.9);
+  transform: scale(1.1);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+#webrtc-panel-toggle:active {
+  transform: scale(0.95);
+}
+
+#webrtc-panel-toggle.active {
+  background: rgba(76, 175, 80, 0.8);
+  border-color: #4CAF50;
+}
+
+#webrtc-panel-toggle.active:hover {
+  background: rgba(76, 175, 80, 0.95);
+}
+
+/* WebRTC Video Container - Only for local PiP and controls */
+#webrtc-container {
+  position: fixed;
+  bottom: 85px;
+  right: 20px;
+  z-index: 1000;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+#webrtc-container.webrtc-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(20px);
+}
+
+/* Local video (you) - Picture in Picture */
+#local-video-container.local-pip {
+  position: relative;
+  width: 200px;
+  height: 150px;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  border: 2px solid #00ff00;
+  margin-bottom: 10px;
+}
+
+#local-video-container.local-pip video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+
+/* Video Labels */
+.video-label {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: Arial, sans-serif;
+  z-index: 10;
+}
+
+/* Controls */
+#webrtc-controls {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  justify-content: center;
+}
+
+.control-btn {
+  width: 50px;
+  height: 50px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.control-btn:hover {
+  background: rgba(0, 0, 0, 0.95);
+  transform: scale(1.1);
+}
+
+.control-btn:active {
+  transform: scale(0.95);
+}
+
+.control-btn.disabled {
+  background: rgba(255, 0, 0, 0.8);
+}
+
+.control-btn.disabled:hover {
+  background: rgba(255, 0, 0, 0.95);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  #webrtc-panel-toggle {
+    bottom: 10px;
+    right: 10px;
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+  }
+
+  #webrtc-container {
+    bottom: 65px;
+    right: 10px;
+  }
+
+  .video-container {
+    width: 150px;
+    height: 112px;
+  }
+
+  .control-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+}
+
+/* Multiple remote videos - stack vertically if more than 2 */
+#remote-videos-container:has(.video-container:nth-child(3)) {
+  flex-direction: column;
+}
+
+/* Invitation UI */
+.invitation-container {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000;
+  background: rgba(0, 0, 0, 0.95);
+  border: 2px solid #4CAF50;
+  border-radius: 12px;
+  padding: 20px;
+  min-width: 400px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  font-family: Arial, sans-serif;
+}
+
+.invitation-content {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.room-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: rgba(76, 175, 80, 0.2);
+  border-radius: 6px;
+}
+
+.status-label {
+  color: #ccc;
+  font-size: 14px;
+}
+
+.room-code {
+  color: #4CAF50;
+  font-size: 18px;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 2px;
+}
+
+.invitation-link {
+  display: flex;
+  gap: 10px;
+}
+
+.invitation-link input {
+  flex: 1;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid #555;
+  border-radius: 6px;
+  color: white;
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
+}
+
+.invitation-link input:focus {
+  outline: none;
+  border-color: #4CAF50;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.invitation-link button,
+#close-invitation-btn {
+  padding: 10px 20px;
+  background: #4CAF50;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.invitation-link button:hover,
+#close-invitation-btn:hover {
+  background: #45a049;
+  transform: scale(1.05);
+}
+
+.invitation-link button:active,
+#close-invitation-btn:active {
+  transform: scale(0.95);
+}
+
+.peer-status {
+  padding: 10px;
+  background: rgba(255, 193, 7, 0.2);
+  border-radius: 6px;
+  text-align: center;
+  color: #FFC107;
+  font-size: 14px;
+}
+
+#close-invitation-btn {
+  background: rgba(255, 255, 255, 0.1);
+  margin-top: 5px;
+}
+
+#close-invitation-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Room Full Notification */
+.room-full-notification {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Arial, sans-serif;
+}
+
+.notification-content {
+  background: rgba(30, 30, 30, 0.98);
+  border: 2px solid #f44336;
+  border-radius: 12px;
+  padding: 30px;
+  max-width: 500px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  text-align: center;
+}
+
+.notification-content h3 {
+  color: #f44336;
+  margin: 0 0 20px 0;
+  font-size: 24px;
+}
+
+.notification-content p {
+  color: #ccc;
+  margin: 10px 0;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.notification-content strong {
+  color: #fff;
+  font-family: 'Courier New', monospace;
+}
+
+#close-notification-btn {
+  margin-top: 20px;
+  padding: 12px 30px;
+  background: #f44336;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+#close-notification-btn:hover {
+  background: #da190b;
+  transform: scale(1.05);
+}
+
+#close-notification-btn:active {
+  transform: scale(0.95);
+}
+
+/* Error Notification */
+.error-notification {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 3500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Arial, sans-serif;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.error-notification .notification-content {
+  background: rgba(40, 40, 40, 0.98);
+  border: 2px solid #ff5722;
+  border-radius: 12px;
+  padding: 30px;
+  max-width: 600px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+  text-align: left;
+}
+
+.error-notification .notification-content h3 {
+  color: #ff5722;
+  margin: 0 0 20px 0;
+  font-size: 24px;
+  text-align: center;
+}
+
+.error-notification .notification-content p {
+  color: #e0e0e0;
+  margin: 15px 0;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.error-notification details {
+  margin-top: 20px;
+  padding: 15px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  border: 1px solid #555;
+}
+
+.error-notification summary {
+  color: #ffa726;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  padding: 5px;
+  user-select: none;
+}
+
+.error-notification summary:hover {
+  color: #ffb74d;
+}
+
+.error-notification pre {
+  color: #ccc;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  margin: 10px 0 0 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.error-notification .close-notification-btn {
+  display: block;
+  margin: 20px auto 0;
+  padding: 12px 30px;
+  background: #ff5722;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.error-notification .close-notification-btn:hover {
+  background: #f4511e;
+  transform: scale(1.05);
+}
+
+.error-notification .close-notification-btn:active {
+  transform: scale(0.95);
+}
+
+/* Responsive Design for Invitation UI */
+@media (max-width: 768px) {
+  .invitation-container {
+    min-width: 90%;
+    max-width: 90%;
+  }
+
+  .notification-content {
+    max-width: 90%;
+    padding: 20px;
+  }
+
+  .error-notification .notification-content {
+    max-width: 90%;
+    padding: 20px;
+  }
+}
+
+/* Project selector overlay */
+#project-selector {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 900;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  transition: opacity 0.3s ease;
+}
+
+/* IMPORTANT: When hidden, move off-screen and disable pointer events */
+/* This prevents the overlay from blocking mouse events on canvas3D and codeArea */
+#project-selector.hidden {
+  left: -9999px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#project-selector h1 {
+  color: #4CAF50;
+  margin-bottom: 10px;
+  font-size: 32px;
+  font-weight: 300;
+}
+
+#project-selector .subtitle {
+  color: #888;
+  margin-bottom: 30px;
+  font-size: 14px;
+}
+
+#project-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  max-width: 600px;
+}
+
+#project-selector button {
+  padding: 15px 25px;
+  font-size: 16px;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+#project-selector button:hover {
+  background: rgba(76, 175, 80, 0.3);
+  border-color: #4CAF50;
+  transform: scale(1.05);
+}
+
+#project-selector button:active {
+  transform: scale(0.98);
+}
+
+/* Mini project switcher (visible after project is loaded) */
+#project-switcher {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 800;
+  display: none;
+}
+
+#project-switcher button {
+  padding: 8px 16px;
+  font-size: 14px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+#project-switcher button:hover {
+  background: rgba(76, 175, 80, 0.5);
+  border-color: #4CAF50;
+}
+
+#current-project {
+  color: #000000;
+  font-weight: bold;
+  margin-right: 10px;
+  font-family: 'Courier New', monospace;
+}
+
+#stage {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
+#stage > * {
+  position: absolute;
+}
+
+#canvas-2d {
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+}
+
+#canvas-scene {
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+#canvas-slide {
+  top: 20px;
+  right: 20px;
+  opacity: 0.5;
+}
+
+#canvas-overlay {
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+#code-editor {
+  left: 20px;
+  top: 20px;
+  background-color: rgba(255,255,255,.6);
+  overflow-y: scroll
+}

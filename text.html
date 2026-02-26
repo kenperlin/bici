@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BICI - Interactive Video Chat Platform</title>
+    <link rel="stylesheet" href="core/css/style.css" />
+  </head>
+  <body>
+    <script src="core/js/bici.js"></script>
+
+    <!-- Main visible elements -->
+    <div id="stage">
+        <video id="webcam" autoplay playsinline hidden></video>
+        <canvas id="canvas-2d"></canvas>
+        <canvas id="canvas-scene" width="500" height="500"></canvas>
+        <canvas id="canvas-slide" width="500" height="500"></canvas>
+        <canvas id="canvas-overlay"></canvas>
+        <textarea id="code-editor" spellcheck="false"></textarea>
+    </div>
+
+    <!-- Project selector overlay (shown at startup) -->
+    <div id="project-selector">
+      <h1>BICI</h1>
+      <div class="subtitle">Select a project to begin</div>
+      <div id="project-grid">
+        <button data-project="0917">0917</button>
+        <button data-project="0924">0924</button>
+        <button data-project="1001">1001</button>
+        <button data-project="1008">1008</button>
+        <button data-project="1015">1015</button>
+        <button data-project="1022">1022</button>
+        <button data-project="1029">1029</button>
+        <button data-project="1105">1105</button>
+        <button data-project="1112">1112</button>
+        <button data-project="1211">1211</button>
+        <button data-project="1224">1224</button>
+        <button data-project="0105">0105</button>
+        <button data-project="0115">0115</button>
+        <button data-project="0116">0116</button>
+      </div>
+    </div>
+
+    <!-- Mini project switcher (visible after project loaded) -->
+    <div id="project-switcher">
+      <span id="current-project"></span>
+      <button id="project-switch-btn">Switch Project</button>
+    </div>
+
+    <script type="module" src="core/main.js"></script>
+  </body>
+</html>
