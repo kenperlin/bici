@@ -30,6 +30,7 @@ export const trackingState = {
   domFocusBounds: null,
   spotlightElement: null,
 
+  handPose: { left: null, right: null },
   globalAvatar: { x: 0, y: 0, s: 1, separation: null },
   handAvatar: {
     left: { x: 0, y: 0, s: 1 },

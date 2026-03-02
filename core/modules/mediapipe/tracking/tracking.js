@@ -1,4 +1,4 @@
-import { add, clamp, cross, dot, mix, norm, normalize, resize, subtract } from "../../math/math.js";
+import { add, clamp, cross, dot, mix, norm, normalize, resize, round, subtract } from "../../math/math.js";
 import { LowPassFilter2D, PCAFilter2D } from "../utils/filter.js";
 import { trackingState as state, mediapipeState, peerTrackingState } from "../state.js";
 import {
@@ -21,7 +21,8 @@ let pointToArray = (p) => [p.x, p.y, p.z];
 
 export function updateTracking() {
   const { handResults, faceResults } = mediapipeState;
-
+  
+  computeHandPose(handResults)
   if (faceResults.length) {
     computeHeadMatrix(
       pointToArray(faceResults[352]),
@@ -93,14 +94,39 @@ export function updateTracking() {
     }
   }
 
+  if (state.debugMode) {
+    OCTX.fillStyle = "#0080ff";
+    OCTX.font = "30px Courier";
+    let x = 100;
+    for (const h in state.handPose) {
+      let data = state.handPose[h]
+      if (!data) continue;
+
+      let line = 0;
+      let hy = 100 + 250 * (h === "left" ? 0 : 1);
+      OCTX.fillText(h.toUpperCase(), x, hy);
+      for (let key in data) {
+        if (key != "hand") {
+          let y = hy + 60 + 30 * line;
+          OCTX.fillText(key, x, y);
+          let v = data[key];
+          if (Array.isArray(v))
+            for (let i = 0; i < v.length; i++) OCTX.fillText(round(v[i]), x + 150 + 150 * i, y);
+          else OCTX.fillText(round(v), x + 150, y);
+          line++;
+        }
+      }
+    }
+  }
+
   OCTX.save();
   OCTX.translate(WIDTH, 0);
   OCTX.scale(-1, 1);
 
   for (const id in peerTrackingState) {
     const peerState = peerTrackingState[id];
-    if(!peerState.id || peerState.id === webrtcClient.myClientId) continue;
-    
+    if (!peerState.id || peerState.id === webrtcClient.myClientId) continue;
+
     if (state.isObvious) {
       drawEyesObvious(
         peerState.headX,
@@ -110,9 +136,10 @@ export function updateTracking() {
         peerState.eyeOpen
       );
     }
-    for(const hand of peerState.handResults) {
+    for (const hand of peerState.handResults) {
       const handAvatar = peerState.handAvatar[hand.handedness];
-      if(handAvatar.x === 0 && handAvatar.y === 0 && handAvatar.s === 1 && videoState.isVisible) continue;
+      if (handAvatar.x === 0 && handAvatar.y === 0 && handAvatar.s === 1 && videoState.isVisible)
+        continue;
 
       drawShadowHand(hand, peerState.handAvatar[hand.handedness], peerState.gestures);
     }
@@ -135,22 +162,10 @@ function computeHeadMatrix(a, b, c) {
   Z = normalize(add(Z, resize(Y, 0.3)));
   Y = normalize(cross(Z, X));
   state.headMatrix = [
-    X[0],
-    X[1],
-    X[2],
-    0,
-    Y[0],
-    Y[1],
-    Y[2],
-    0,
-    Z[0],
-    Z[1],
-    Z[2],
-    0,
-    4 * (b[0] - 0.5),
-    4 * (b[1] + 0.625),
-    4 * b[2],
-    1
+    X[0], X[1], X[2], 0,
+    Y[0], Y[1], Y[2], 0,
+    Z[0], Z[1], Z[2], 0,
+    4 * (b[0] - 0.5), 4 * (b[1] + 0.625), 4 * b[2], 1
   ];
 }
 
@@ -173,6 +188,45 @@ function computeEyeGaze(la, lb, lc, ld, le, lf, lg, ra, rb, rc, rd, re, rf, rg) 
   state.eyeOpen = (lo + ro) / 2;
 
   if (state.eyeOpen < 0.4 && state.blinkTime < 0) state.blinkTime = Date.now() / 1000;
+}
+
+function computeHandPose(handResults) {
+  state.handPose = { left: null, right: null };
+
+  for (const hand of handResults) {
+    let d = (i, j) => norm(subtract(pointToArray(hand.landmarks[i]), pointToArray(hand.landmarks[j])));
+    
+    const h = hand.handedness;
+    let X = normalize(subtract(pointToArray(hand.landmarks[17]), pointToArray(hand.landmarks[5])));
+    let Y = normalize(subtract(pointToArray(hand.landmarks[9]), pointToArray(hand.landmarks[0])));
+    let Z = normalize(cross(X, Y));
+
+    let xx = Math.max(0, 1 + X[0] - Y[1] - Z[2]) / 4;
+    let x = Math.sqrt(xx) * Math.sign(Y[2] - Z[1]);
+    let yy = Math.max(0, 1 - X[0] + Y[1] - Z[2]) / 4;
+    let y = Math.sqrt(yy) * Math.sign(Z[0] - X[2]);
+    let zz = Math.max(0, 1 - X[0] - Y[1] + Z[2]) / 4;
+    let z = Math.sqrt(zz) * Math.sign(X[1] - Y[0]);
+
+    state.handPose[h] = {}
+    state.handPose[h].rigid = [
+      hand.landmarks[9].x - 0.5, 0.4 - hand.landmarks[9].y, hand.landmarks[9].z,
+      x, y, z, Math.sqrt(1 - xx - yy - zz)
+    ];
+    state.handPose[h].curl ??= []
+    for (let f = 0; f < 5; f++) {
+      let i = 1 + 4 * f + (f == 0 ? 1 : 0);
+      let j = 1 + 4 * f + 3;
+      let sum = 0;
+      for (let k = i; k < j; k++) sum += d(k, k + 1);
+      state.handPose[h].curl[f] = 1 - d(i, j) / sum;
+    }
+    state.handPose[h].unpinch ??= [];
+    for (let f = 0; f < 5; f++) state.handPose[h].unpinch[f] = d(1 + 4 * f + 3, 1 + 3) / d(0, 5);
+    state.handPose[h].spread = Math.max(0, d(1 + 4 * 1 + 3, 1 + 4 * 4 + 3) / d(1 + 4 * 1, 1 + 4 * 4) - 1);
+
+    console.log(state.handPose[h])
+  }
 }
 
 function computeShadowHand(hand) {
