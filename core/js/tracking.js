@@ -553,6 +553,9 @@ let trackingUpdate = () => {
       // If both hands are gripping, create a rectangle between them.
 
       if (shadowHandInfo[0].gesture == 'gripper' && shadowHandInfo[1].gesture == 'gripper') {
+         if ( ! mediapipe.handResults || ! mediapipe.handResults[0].landmarks || ! mediapipe.handResults[1].landmarks)
+	    return;
+
          let p0 = fingerTip(0,0);
          let p1 = fingerTip(0,1);
          let q0 = fingerTip(1,0);
