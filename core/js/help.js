@@ -53,8 +53,9 @@ l Toggle lightpen (small blue object).
 L Toggle large area head tracking.
 m Hold down to move a sketch.
 M Toggle mediapipe face/hand tracking.
-N Toggle no visible tracking feedback.
+N Toggle no visual tracking feedback.
 o Toggle whether slides are opaque.
+O Toggle extra tracking visual feedback.
 p Toggle show/hide tracked blue pixels.
 r Toggle if 3D scene is shifted right.
 s Toggle show/hide 3D scene.

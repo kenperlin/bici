@@ -1,7 +1,7 @@
 function Scene() {
    this.update = () => {
       if (window.handPose) {
-         octx.fillStyle = '#0080ff';
+         octx.fillStyle = '#000000';
          octx.font = '30px Courier';
 	 let x = 100;
 	 for (let hand = 0 ; hand < 2 ; hand++) {

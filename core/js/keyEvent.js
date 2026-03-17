@@ -160,6 +160,7 @@ window.keyUp = key => {
    case 'L' : tracking_isLarge = ! tracking_isLarge; break;
    case 'M' : mediapipe.toggleRunning(); break;
    case 'N' : tracking_isObvious = ! tracking_isObvious; break;
+   case 'O' : tracking_showExtras = ! tracking_showExtras; break;
    case 'o' : isOpaque = ! isOpaque; break;
    case 'p' : webcam.isPen = ! webcam.isPen; break;
    case 'r' : shift3D = 1 - shift3D; break;

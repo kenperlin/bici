@@ -3,7 +3,7 @@ function HandPose() {
 
    this.update = () => {
       if (mediapipe.isRunning) {
-         console.log(JSON.stringify(mediapipe.handResults));
+         //console.log(JSON.stringify(mediapipe.handResults));
          for (let hand = 0 ; hand < 2 ; hand++) {
             let handResults = mediapipe.handResults[hand];
 	    if (handResults) {

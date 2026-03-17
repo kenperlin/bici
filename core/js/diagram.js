@@ -5,6 +5,7 @@ let addDiagramProperties = (diagram, ctx) => {
    let yp = y => (.5*h/w - y * .5) * w;
    let M = new M4();
 
+   diagram.setSize = (dw, dh) => { w = dw; h = dh; }
    diagram._px   = x => (x / w - .5    ) /  .5;
    diagram._py   = y => (y / w - .5*h/w) / -.5;
    diagram._beforeUpdate = () => {
@@ -47,6 +48,13 @@ let addDiagramProperties = (diagram, ctx) => {
       ctx.beginPath();
       ctx.arc(A[0], A[1], r*w/2, t0??0, t1??2*Math.PI);
       ctx.stroke();
+      return diagram;
+   }
+   diagram.fillArc = (a,r,t0,t1) => {
+      let A = mxp(a);
+      ctx.beginPath();
+      ctx.arc(A[0], A[1], r*w/2, t0??0, t1??2*Math.PI);
+      ctx.fill();
       return diagram;
    }
    diagram.dot = (a,r) => {
@@ -135,7 +143,7 @@ let addDiagramProperties = (diagram, ctx) => {
 
       return diagram;
    }
-   diagram.curve = (n, f) => {
+   let curve = (n, f) => {
       ctx.beginPath();
       for (let i = 0 ; i <= n ; i++) {
          let A = mxp(f(i/n));
@@ -144,7 +152,14 @@ let addDiagramProperties = (diagram, ctx) => {
          else
             ctx.lineTo(A[0], A[1]);
       }
+   }
+   diagram.curve = (n, f) => {
+      curve(n, f);
       ctx.stroke();
+   }
+   diagram.fillCurve = (n, f) => {
+      curve(n, f);
+      ctx.fill();
    }
    diagram._images = {};
    diagram.image = (image, a, scale) => {

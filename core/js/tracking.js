@@ -1,10 +1,11 @@
 
-let tracking_headXYs   = [];
-let tracking_isLarge   = false;
-let tracking_isLogging = false;
-let tracking_isObvious = false;
-let tracking_debugMode = false;
-let tracking_blinkTime = -1;
+let tracking_headXYs    = [];
+let tracking_showExtras = false;
+let tracking_isLarge    = false;
+let tracking_isLogging  = false;
+let tracking_isObvious  = false;
+let tracking_debugMode  = false;
+let tracking_blinkTime  = -1;
 let tracking_l2x = x => (x - (screen.width - screen.height) / 2) * canvas3D.width  / screen.height + canvas3D_x();
 let tracking_l2y = y =>  y                                       * canvas3D.height / screen.height + canvas3D_y();
 let tracking_isSteadyEnabled = true;
@@ -219,7 +220,10 @@ let trackingUpdate = () => {
       domDistances.forEach((e, i) => e.weight = expWeights[i] / sum);
 
       let closest = domDistances[0];
-      if(closest && !focusedElement) {
+
+/////////////////// SHOW HEAD GAZE WINDOW
+
+      if (tracking_showExtras && closest && ! focusedElement) {
          let confidence = 0.75 * closest.weight + 0.25 * smoothstep(0, -50, closest.dist)
          octx.save();
 
@@ -240,6 +244,8 @@ let trackingUpdate = () => {
 
          octx.restore();
       }
+
+////////////////////////////////////////
 
       let focusThreshold = 600 * (Math.max(0.5, closest?.weight ?? 0) - 0.5); // Softness of selection proportional to confidence
       let isCodeLookedAt =
@@ -466,107 +472,110 @@ let trackingUpdate = () => {
          }
       }
 
-      let fingerTip  = (hand, i) => toScreen(mediapipe.handResults[hand].landmarks[4*i+4], hand);
-      let fingerBase = (hand, i) => toScreen(mediapipe.handResults[hand].landmarks[4*i+1], hand);
+      if (tracking_showExtras) {
 
-      // If both hands are pinching, draw a line between them.
+         let fingerTip  = (hand, i) => toScreen(mediapipe.handResults[hand].landmarks[4*i+4], hand);
+         let fingerBase = (hand, i) => toScreen(mediapipe.handResults[hand].landmarks[4*i+1], hand);
 
-      if (shadowHandInfo[0].gesture == 'pinch' && shadowHandInfo[1].gesture == 'pinch') {
-         let p0 = fingerTip(0,0);
-         let p1 = fingerTip(0,1);
-         let q0 = fingerTip(1,0);
-         let q1 = fingerTip(1,1);
-         octx.strokeStyle = '#ff00ff80';
-         octx.lineWidth   = 10;
-         octx.beginPath();
-         octx.moveTo(p0.x + p1.x >> 1, p0.y + p1.y >> 1);
-         octx.lineTo(q0.x + q1.x >> 1, q0.y + q1.y >> 1);
-         octx.stroke();
-      }
+         // If both hands are pinching, draw a line between them.
 
-      // If one hand is pinching and the other is gripping, project a line from the pinch to the gripper.
+         if (shadowHandInfo[0].gesture == 'pinch' && shadowHandInfo[1].gesture == 'pinch') {
+            let p0 = fingerTip(0,0);
+            let p1 = fingerTip(0,1);
+            let q0 = fingerTip(1,0);
+            let q1 = fingerTip(1,1);
+            octx.strokeStyle = '#ff00ff80';
+            octx.lineWidth   = 10;
+            octx.beginPath();
+            octx.moveTo(p0.x + p1.x >> 1, p0.y + p1.y >> 1);
+            octx.lineTo(q0.x + q1.x >> 1, q0.y + q1.y >> 1);
+            octx.stroke();
+         }
 
-      for (let i = 0 ; i <= 1 ; i++)
-         if (shadowHandInfo[i].gesture == 'pinch' && shadowHandInfo[1-i].gesture == 'gripper') {
+         // If one hand is pinching and the other is gripping, project a line from the pinch to the gripper.
 
-            let p0 = fingerTip(i,0);
-            let p1 = fingerTip(i,1);
-	    let p = { x: p0.x + p1.x >> 1, y: p0.y + p1.y >> 1 };
+         for (let i = 0 ; i <= 1 ; i++)
+            if (shadowHandInfo[i].gesture == 'pinch' && shadowHandInfo[1-i].gesture == 'gripper') {
 
-            let q0 = fingerTip(1-i,0);
-            let q1 = fingerTip(1-i,1);
+               let p0 = fingerTip(i,0);
+               let p1 = fingerTip(i,1);
+	       let p = { x: p0.x + p1.x >> 1, y: p0.y + p1.y >> 1 };
 
-	    if (q0.y > p.y && p.y > q1.y) {
-	       let t = (p.y - q0.y) / (q1.y - q0.y);
-	       let x = q0.x + t * (q1.x - q0.x);
+               let q0 = fingerTip(1-i,0);
+               let q1 = fingerTip(1-i,1);
+
+	       if (q0.y > p.y && p.y > q1.y) {
+	          let t = (p.y - q0.y) / (q1.y - q0.y);
+	          let x = q0.x + t * (q1.x - q0.x);
+
+                  octx.strokeStyle = '#ff00ff80';
+                  octx.lineWidth   = 10;
+
+                  octx.beginPath();
+                  octx.moveTo(q0.x, q0.y);
+                  octx.lineTo(q1.x, q1.y);
+                  octx.stroke();
+
+                  octx.beginPath();
+                  octx.moveTo(p.x, p.y);
+                  octx.lineTo(x, p.y);
+                  octx.stroke();
+	       }
+	    }
+
+         // If one hand is pointing and the other is gripping, draw a variable length pointing ray.
+
+         for (let i = 0 ; i <= 1 ; i++)
+            if (shadowHandInfo[i].gesture == 'point' && shadowHandInfo[1-i].gesture == 'gripper') {
+
+               let a = fingerBase(i,1);
+               let b = fingerTip (i,1);
+               let c = fingerTip (1-i,0);
+               let d = fingerTip (1-i,1);
+	       let scale = 3 * norm([c.x-d.x,c.y-d.y,0]) / norm([a.x-b.x,a.y-b.y,0]);
+               let e = { x: b.x+scale*(b.x-a.x), y: b.y+scale*(b.y-a.y) };
 
                octx.strokeStyle = '#ff00ff80';
-               octx.lineWidth   = 10;
+               octx.lineCap = 'round';
+               octx.lineWidth = 20;
 
                octx.beginPath();
-               octx.moveTo(q0.x, q0.y);
-               octx.lineTo(q1.x, q1.y);
+               octx.moveTo(b.x,b.y);
+               octx.lineTo(e.x,e.y);
                octx.stroke();
 
-               octx.beginPath();
-               octx.moveTo(p.x, p.y);
-               octx.lineTo(x, p.y);
-               octx.stroke();
+	       octx.fillStyle = 'white';
+	       octx.beginPath();
+	       octx.roundRect(e.x - 80, e.y - 60, 150, 120, 10, 10);
+	       octx.fill();
+	       octx.strokeStyle = 'black';
+	       octx.lineWidth = 3;
+	       octx.stroke();
+
+	       octx.fillStyle = 'black';
+	       octx.font = '40px Helvetica';
+	       octx.fillText('text', e.x-40, e.y-10);
+	       octx.fillText('box' , e.x-40, e.y+40);
 	    }
-	 }
 
-      // If one hand is pointing and the other is gripping, draw a variable length pointing ray.
+         // If both hands are gripping, create a rectangle between them.
 
-      for (let i = 0 ; i <= 1 ; i++)
-         if (shadowHandInfo[i].gesture == 'point' && shadowHandInfo[1-i].gesture == 'gripper') {
+         if (shadowHandInfo[0].gesture == 'gripper' && shadowHandInfo[1].gesture == 'gripper') {
+            if ( ! mediapipe.handResults || ! mediapipe.handResults[0].landmarks || ! mediapipe.handResults[1].landmarks)
+	       return;
 
-            let a = fingerBase(i,1);
-            let b = fingerTip (i,1);
-            let c = fingerTip (1-i,0);
-            let d = fingerTip (1-i,1);
-	    let scale = 3 * norm([c.x-d.x,c.y-d.y,0]) / norm([a.x-b.x,a.y-b.y,0]);
-            let e = { x: b.x+scale*(b.x-a.x), y: b.y+scale*(b.y-a.y) };
+            let p0 = fingerTip(0,0);
+            let p1 = fingerTip(0,1);
+            let q0 = fingerTip(1,0);
+            let q1 = fingerTip(1,1);
+	    let x0 = p0.x + p1.x >> 1, x1 = q0.x + q1.x >> 1;
+	    let y0 = p1.y + q1.y >> 1, y1 = p0.y + q0.y >> 1;
 
-            octx.strokeStyle = '#ff00ff80';
-            octx.lineCap = 'round';
-            octx.lineWidth = 20;
-
-            octx.beginPath();
-            octx.moveTo(b.x,b.y);
-            octx.lineTo(e.x,e.y);
-            octx.stroke();
-
-	    octx.fillStyle = 'white';
-	    octx.beginPath();
-	    octx.roundRect(e.x - 80, e.y - 60, 150, 120, 10, 10);
-	    octx.fill();
-	    octx.strokeStyle = 'black';
-	    octx.lineWidth = 3;
-	    octx.stroke();
-
-	    octx.fillStyle = 'black';
-	    octx.font = '40px Helvetica';
-	    octx.fillText('text', e.x-40, e.y-10);
-	    octx.fillText('box' , e.x-40, e.y+40);
-	 }
-
-      // If both hands are gripping, create a rectangle between them.
-
-      if (shadowHandInfo[0].gesture == 'gripper' && shadowHandInfo[1].gesture == 'gripper') {
-         if ( ! mediapipe.handResults || ! mediapipe.handResults[0].landmarks || ! mediapipe.handResults[1].landmarks)
-	    return;
-
-         let p0 = fingerTip(0,0);
-         let p1 = fingerTip(0,1);
-         let q0 = fingerTip(1,0);
-         let q1 = fingerTip(1,1);
-	 let x0 = p0.x + p1.x >> 1, x1 = q0.x + q1.x >> 1;
-	 let y0 = p1.y + q1.y >> 1, y1 = p0.y + q0.y >> 1;
-
-	 octx.fillStyle = octx.strokeStyle = '#ff00ff40';
-	 octx.lineWidth = 10;
-	 octx.fillRect  (x0,y0,x1-x0,y1-y0);
-	 octx.strokeRect(x0,y0,x1-x0,y1-y0);
+	    octx.fillStyle = octx.strokeStyle = '#ff00ff40';
+	    octx.lineWidth = 10;
+	    octx.fillRect  (x0,y0,x1-x0,y1-y0);
+	    octx.strokeRect(x0,y0,x1-x0,y1-y0);
+         }
       }
    }
    else if (mediapipe.handResults[0] || mediapipe.handResults[1]) {

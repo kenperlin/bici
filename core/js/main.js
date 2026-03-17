@@ -392,9 +392,32 @@ let initSlides = () => {
       else if (isDiagram) {
          loadScript('projects/' + project + '/diagrams/' + file, () => {
             let diagram = new Diagram();
-	    diagram.width = D.w;
-	    diagram.height = D.h;
-	    addDiagramProperties(diagram, ctx);
+	    if (diagram.isFullScreen) {
+	       let w = screen.width, h = screen.height;
+	       let dx = x => 2 * x / w - 1;
+	       let dy = y => h / w - 2 * y / w;
+	       addDiagramProperties(diagram, octx);
+	       diagram.setSize(w, h);
+	       diagram.input = { mouse: { pos: [0,0] } };
+	       overlayCanvas.style.pointerEvents = 'auto';
+	       overlayCanvas.isDown = false;
+	       overlayCanvas.addEventListener('mousedown', event => {
+		  diagram.input.mouse.pos = [dx(event.x),dy(event.y)];
+		  diagram.input.mouse.isDown = true;
+	       });
+	       overlayCanvas.addEventListener('mouseup'  , event => {
+		  diagram.input.mouse.pos = [dx(event.x),dy(event.y)];
+		  diagram.input.mouse.isDown = false;
+	       });
+	       overlayCanvas.addEventListener('mousemove', event => {
+		  diagram.input.mouse.pos = [dx(event.x),dy(event.y)];
+	       });
+	    }
+	    else {
+	       overlayCanvas.style.pointerEvents = 'none';
+	       addDiagramProperties(diagram, ctx);
+	       diagram.setSize(D.w, D.h);
+            }
             fq[name].diagram = diagram;
          });
       }
@@ -829,6 +852,44 @@ animate = () => {
          ctx.drawImage(slide, D.left, D.top, 500, 500*slide.height/slide.width);
       else {
          slide._beforeUpdate();
+	 if (slide.isFullScreen) {
+	    let setState = (d0,d1) => !d0 && !d1 ? 'up' : !d0 && d1 ? 'press' : d0 && d1 ? 'down' : 'release';
+
+	    let d0 = slide.input.mouse.wasDown;
+	    let d1 = slide.input.mouse.isDown;
+	    slide.input.mouse.state = setState(d0, d1);
+	    slide.input.mouse.wasDown = d1;
+
+            let isHand = { left:false, right:false };
+            let iHand = 0;
+            for (const handResult of mediapipe.handResults) {
+
+               let hand = handResult.handedness;
+	       isHand[hand] = true;
+
+	       if (! slide.input[hand])
+	          slide.input[hand] = {};
+
+               let x = shadowHandInfo[iHand].px;
+               let y = shadowHandInfo[iHand].py;
+	       let w = screen.width, h = screen.height;
+	       x = 2 * x - 1;
+               y = h/w * (1 - 2 * y);
+
+	       let d0 = window[hand + '_wasDown'];
+	       let d1 = shadowHandInfo[iHand].gesture == 'pinch';
+	       window[hand + '_wasDown'] = d1;
+
+	       slide.input[hand].pos = [x,y];
+	       slide.input[hand].state = setState(d0, d1);
+
+               iHand++;
+            }  
+	    for (let hand in isHand)
+	       if (! isHand[hand])
+	          delete slide.input[hand];
+         }  
+
          slide.update(D.ctx);
          let x = D.left, y = D.top, w = slide.width, h = slide.height;
          ctx.save();

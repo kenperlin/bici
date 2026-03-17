@@ -46,6 +46,9 @@ let drawShadowHand = (ctx, hand, F, x=0, y=0, s=1, isDrawing=true) => {
    shadowHandInfo[hand].x = w * F[10].x;
    shadowHandInfo[hand].y = h * F[10].y;
 
+   shadowHandInfo[hand].px = (F[4].x + F[8].x) / 2;
+   shadowHandInfo[hand].py = (F[4].y + F[8].y) / 2;
+
    let D = [];
    D[0] = distance(4, 5) / t;
    for (let j = 1 ; j < 5 ; j++)
@@ -80,8 +83,8 @@ let drawShadowHand = (ctx, hand, F, x=0, y=0, s=1, isDrawing=true) => {
 
    if ( shadowHandInfo[hand].gesture == null &&
         D[0] > .1 &&
-	distance2D(4,5) / t > .1 &&
-	distance(4,8) < 1.5 * distance(5,8))
+        distance2D(4,5) / t > .1 &&
+        distance(4,8) < 1.5 * distance(5,8))
       shadowHandInfo[hand].gesture = 'gripper';
 
    if (! isDrawing)
@@ -124,38 +127,41 @@ let drawShadowHand = (ctx, hand, F, x=0, y=0, s=1, isDrawing=true) => {
       }
    }
 
-   // If making a gripper gesture, show the line between thumb and index fingers.
+   if (tracking_showExtras) {
 
-   if (shadowHandInfo[hand].gesture == 'gripper') {
-      let p = toScreen(F[4], hand);
-      let q = toScreen(F[8], hand);
-      for (let i = 0 ; i <= 1 ; i++) {
-         sctx.strokeStyle = i ? '#a0a0a0' : 'black';
-         sctx.lineWidth = s * (20 - 10*i);
-         sctx.beginPath();
-         sctx.moveTo(p.x,p.y);
-         sctx.lineTo(q.x,q.y);
-         sctx.stroke();
+      // If making a gripper gesture, show the line between thumb and index fingers.
+
+      if (shadowHandInfo[hand].gesture == 'gripper') {
+         let p = toScreen(F[4], hand);
+         let q = toScreen(F[8], hand);
+         for (let i = 0 ; i <= 1 ; i++) {
+            sctx.strokeStyle = i ? '#a0a0a0' : 'black';
+            sctx.lineWidth = s * (20 - 10*i);
+            sctx.beginPath();
+            sctx.moveTo(p.x,p.y);
+            sctx.lineTo(q.x,q.y);
+            sctx.stroke();
+         }
       }
-   }
 
-   // If making a frame, show the frame.
+      // If making a frame, show the frame.
 
-   if (shadowHandInfo[hand].gesture == 'frame') {
-      let f = shadowHandInfo[hand].frame;
-      sctx.fillStyle = '#ff00ff80';
-      sctx.fillRect(f.x, f.y, f.w, f.h);
-   }
+      if (shadowHandInfo[hand].gesture == 'frame') {
+         let f = shadowHandInfo[hand].frame;
+         sctx.fillStyle = '#ff00ff80';
+         sctx.fillRect(f.x, f.y, f.w, f.h);
+      }
 
-   // If pinching, show pinch point.
+      // If pinching, show pinch point.
 
-   if (shadowHandInfo[hand].gesture == 'pinch') {
-      let p = toScreen(F[4], hand);
-      let q = toScreen(F[8], hand);
-      sctx.beginPath();
-      sctx.fillStyle = '#a0a0a0';
-      sctx.arc(p.x+q.x>>1, p.y+q.y>>1, .7*s * shadowHandInfo[hand].s, 0, 2*Math.PI);
-      sctx.fill();
+      if (shadowHandInfo[hand].gesture == 'pinch') {
+         let p = toScreen(F[4], hand);
+         let q = toScreen(F[8], hand);
+         sctx.beginPath();
+         sctx.fillStyle = '#a0a0a0';
+         sctx.arc(p.x+q.x>>1, p.y+q.y>>1, .7*s * shadowHandInfo[hand].s, 0, 2*Math.PI);
+         sctx.fill();
+      }
    }
 
    // Copy the shadow transparently onto the target canvas.
