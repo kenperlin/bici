@@ -13,6 +13,12 @@ let resize = (v,s) => v.length==2 ? [ s*v[0], s*v[1] ] : [s*v[0], s*v[1], s*v[2]
 let round = t => (1000 * t >> 0) / 1000;
 let subtract = (a,b) => { let v = []; for (let i=0 ; i<a.length ; i++) v.push(a[i] - b[i]); return v; }
 
+// BASE 64
+
+const base64Characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz#';
+let toBase64   = n => base64Characters.charAt(n);
+let fromBase64 = c => base64Characters.indexOf(c);
+
 // MATRIX PRIMITIVES
 
 let c = t => Math.cos(t);

@@ -3,7 +3,7 @@ function Diagram() {
 
    let colors = ['#ff0000','#ff8000','#ffff00','#30d030','#0080ff','#a000ff','#e800a0'];
    let cursorIds = { mouse:0, left:1, right:2 };
-   let S = [], c = 0, X = .53, Y = .47;
+   let c = 0, X = .53, Y = .47;
 
    let superquadric = (t, C, R) => {
       let x = Math.sin(2 * Math.PI * t);
@@ -43,8 +43,8 @@ function Diagram() {
    }
 
    let findShape = (x,y) => {
-      for (let n = 0 ; n < S.length ; n++)
-	 if (Math.abs(S[n].x - x) < .05 && Math.abs(S[n].y - y) < .05)
+      for (let n = 0 ; n < SS.length ; n += 4)
+	 if (Math.abs(SS[n+1] - x) < .05 && Math.abs(SS[n+2] - y) < .05)
 	    return n;
    }
 
@@ -53,9 +53,8 @@ function Diagram() {
       octx.font = '24px Helvetica';
       octx.fillText(str, screen.width/2, 30);
    }
-   
-   this.update = ctx => {
 
+   this.update = ctx => {
       let respondToInput = cursor => {
          let x     = cursor.pos[0];
          let y     = cursor.pos[1];
@@ -69,9 +68,9 @@ function Diagram() {
 
 	 case 'press':
 	    if (x > -X-.12 && x <= -X) {
-	       cursor.n = S.length;
+	       cursor.n = SS.length;
                let type = Math.max(0, Math.min(7, (Y - y) / .15 + .5 >> 0));
-	       S.push({type: type, c: c, x: x, y: y});
+	       SS.push(type, x, y, c);
 	    }
 	    if (x >= X && x < X+.12) {
 	       cursor.c  = c;
@@ -79,13 +78,13 @@ function Diagram() {
 	       cursor.cy = y;
             }
 	    cursor.n = findShape(x, y);
+	    console.log('---------------', cursor.n);
 	    break;
 
          case 'down':
 	    if (cursor.n !== undefined) {
-	       let s = S[cursor.n];
-	       s.x += x - cursor.x0;
-	       s.y += y - cursor.y0;
+	       SS[cursor.n+1] += x - cursor.x0;
+	       SS[cursor.n+2] += y - cursor.y0;
             }
 	    if (cursor.c !== undefined) {
 	       cursor.cx = x;
@@ -96,16 +95,15 @@ function Diagram() {
          case 'release':
 
 	    if (cursor.n !== undefined) {
-	       let s = S[cursor.n];
-	       if (Math.abs(s.x) > X)
-	          S.splice(cursor.n, 1);
+	       if (Math.abs(SS[cursor.n+1]) > X)
+	          SS.splice(cursor.n, 4);
             }
 	    delete cursor.n;
 
 	    if (cursor.c !== undefined) {
 	       let n = findShape(x,y);
 	       if (n !== undefined)
-	          S[n].c = cursor.c;
+	          SS[n+3] = cursor.c;
 	    }
 	    delete cursor.c;
 
@@ -135,8 +133,8 @@ function Diagram() {
 	 this.fillCurve(32, t => superquadric(t, [X + .06, Y-.15*n], n==c ? .05 : .04));
       }
 
-      for (let n = 0 ; n < S.length ; n++)
-         drawShape(S[n].type, S[n].x, S[n].y, S[n].c);
+      for (let n = 0 ; n < SS.length ; n += 4)
+         drawShape(SS[n], SS[n+1], SS[n+2], SS[n+3]);
 
       for (let cursorId in cursorIds) {
 	 let cursor = this.input[cursorId];
@@ -166,6 +164,10 @@ function Diagram() {
             }
          }
       }
+
+      for (let n = 0 ; n < SS.length ; n++)
+         SS[n] = round(SS[n]);
+      codeArea.setVar('SS', SS);
    }
 }
 

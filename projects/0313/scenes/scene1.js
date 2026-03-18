@@ -1,7 +1,6 @@
 function Scene() {
-   this.update = () => {
-      octx.fillStyle = '#000000';
-   }
+   window.SS = [];
+   this.update = () => {}
 }
 
 

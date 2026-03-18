@@ -167,16 +167,21 @@ function CodeArea(x,y) {
 
    // Internal helper to apply a single var change to the text
    let applyVarToText = (text, name, value) => {
-      let i = text.indexOf('let ' + name);
-      if (i >= 0) {
-         if (typeof value == 'number' && ! Number.isInteger(value))
-            value = Math.sign(value) * (1000 * Math.abs(value) + .5 >> 0) / 1000;
-         else if (Array.isArray(value))
-            value = '[' + value + ']';
-
-         let j = i + 4 + name.length;
-         let k = text.indexOf(';', j);
-         return text.substring(0,j) + ' = ' + value + text.substring(k);
+      let prefix = ['let ', 'window.'];
+      for (let n = 0 ; n < prefix.length ; n++) {
+         let i = text.indexOf(prefix[n] + name);
+         if (i >= 0) {
+            if (typeof value == 'number' && ! Number.isInteger(value))
+               value = Math.sign(value) * (1000 * Math.abs(value) + .5 >> 0) / 1000;
+            else if (Array.isArray(value))
+               value = '[' + value + ']';
+            else if (typeof value == 'string')
+               value = '"' + value + '"';
+   
+            let j = i + prefix[n].length + name.length;
+            let k = text.indexOf(';', j);
+            return text.substring(0,j) + ' = ' + value + text.substring(k);
+         }
       }
       return text;
    };
