@@ -864,24 +864,21 @@ animate = () => {
             let iHand = 0;
             for (const handResult of mediapipe.handResults) {
 
-               let hand = handResult.handedness;
-	       isHand[hand] = true;
+	       if (shadowHandInfo[iHand].gesture) {
+                  let hand = handResult.handedness;
+	          isHand[hand] = true;
 
-	       if (! slide.input[hand])
-	          slide.input[hand] = {};
+	          if (! slide.input[hand])
+	             slide.input[hand] = {};
 
-               let x = shadowHandInfo[iHand].px;
-               let y = shadowHandInfo[iHand].py;
-	       let w = screen.width, h = screen.height;
-	       x = 2 * x - 1;
-               y = h/w * (1 - 2 * y);
+	          let d0 = window[hand + '_wasDown'];
+	          let d1 = shadowHandInfo[iHand].gesture == 'pinch';
+	          window[hand + '_wasDown'] = d1;
 
-	       let d0 = window[hand + '_wasDown'];
-	       let d1 = shadowHandInfo[iHand].gesture == 'pinch';
-	       window[hand + '_wasDown'] = d1;
-
-	       slide.input[hand].pos = [x,y];
-	       slide.input[hand].state = setState(d0, d1);
+	          slide.input[hand].pos = shadowHandInfo[iHand].pos;
+	          slide.input[hand].state = setState(d0, d1);
+	          slide.input[hand].gesture = shadowHandInfo[iHand].gesture;
+               }
 
                iHand++;
             }  

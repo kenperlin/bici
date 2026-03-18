@@ -1,2 +1,2 @@
-//Playing with\n2D shapes
-shapes.js
+Arrange\n2D shapes\non a board
+arrange.js

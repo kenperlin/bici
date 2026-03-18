@@ -47,28 +47,14 @@ function Diagram() {
 	 if (Math.abs(S[n].x - x) < .05 && Math.abs(S[n].y - y) < .05)
 	    return n;
    }
+
+   let info = str => {
+      octx.fillStyle = 'black';
+      octx.font = '24px Helvetica';
+      octx.fillText(str, screen.width/2, 30);
+   }
    
    this.update = ctx => {
-
-      for (let hand in {left:0, right:0}) {
-         let cursor = this.input[hand];
-         if (cursor) {
-            let pos   = cursor.pos;
-            let state = cursor.state;
-
-            let color = hand == 'left' ? '#0000ff' : '#ff0000';
-	    this.drawColor('#000000');
-	    this.lineWidth(.004);
-	    this.fillColor('#000000');
-
-	    switch (state) {
-	    case 'up'     : this.    arc(pos,.013); break;
-            case 'press'  : this.fillArc(pos,.015); break;
-            case 'down'   : this.fillArc(pos,.015); break;
-            case 'release': this.    arc(pos,.013); break;
-            }
-         }
-      }
 
       let respondToInput = cursor => {
          let x     = cursor.pos[0];
@@ -82,12 +68,12 @@ function Diagram() {
             break;
 
 	 case 'press':
-	    if (x <= -X) {
+	    if (x > -X-.12 && x <= -X) {
 	       cursor.n = S.length;
                let type = Math.max(0, Math.min(7, (Y - y) / .15 + .5 >> 0));
 	       S.push({type: type, c: c, x: x, y: y});
 	    }
-	    if (x >= X) {
+	    if (x >= X && x < X+.12) {
 	       cursor.c  = c;
 	       cursor.cx = x;
 	       cursor.cy = y;
@@ -109,9 +95,11 @@ function Diagram() {
 
          case 'release':
 
-	    if (cursor.n !== undefined)
-	       if (Math.abs(S[cursor.n].x) > X)
+	    if (cursor.n !== undefined) {
+	       let s = S[cursor.n];
+	       if (Math.abs(s.x) > X)
 	          S.splice(cursor.n, 1);
+            }
 	    delete cursor.n;
 
 	    if (cursor.c !== undefined) {
@@ -155,6 +143,27 @@ function Diagram() {
 	 if (cursor && cursor.c !== undefined) {
             this.fillColor(colors[cursor.c] + '80');
 	    this.fillCurve(32, t => superquadric(t, [cursor.cx,cursor.cy], .04));
+         }
+      }
+
+      for (let cursorId in cursorIds) {
+	 let cursor = this.input[cursorId];
+         if (cursor) {
+            let pos = cursor.pos;
+	    if (pos[2] > 0) {
+               let state = cursor.state;
+	       let r = .015 * pos[2], t = .004 * pos[2];
+	       this.lineWidth(t);
+	       this.drawColor('#00000080');
+	       this.fillColor('#00000080');
+	       let xy = [pos[0],pos[1]];
+	       switch (state) {
+	       case 'up'     : this.    arc(xy,r-t/2); break;
+               case 'press'  : this.fillArc(xy,r    ); break;
+               case 'down'   : this.fillArc(xy,r    ); break;
+               case 'release': this.    arc(xy,r-t/2); break;
+               }
+            }
          }
       }
    }
