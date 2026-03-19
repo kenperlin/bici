@@ -164,11 +164,8 @@ function Diagram() {
 	 cursor.y0 = y;
       }
 
-      // READ THE CURRENT STATE FROM THE SHARED TEXTAREA AND UNPACK IT.
+      // UNPACK THE CURRENT STATE FROM GLOBAL STORAGE.
 
-      let sharedSS = codeArea.getVar('SS');
-      if (sharedSS !== null)
-         SS = sharedSS;
       unpackS();
 
       // RESPOND TO INPUT EVENTS.
