@@ -247,12 +247,24 @@ function CodeArea(x,y) {
 
    this.getVar = name => {
       let text = codeArea.value;
-      let i = text.indexOf('let ' + name);
-      if (i >= 0) {
-         let j = i + 4 + name.length + 3;
+
+      let extractValue = j => {
          let k = text.indexOf(';', j);
-         return text.substring(j, k);
-      }
+         let val = text.substring(j, k);
+         if ((val.startsWith('"') && val.endsWith('"')) ||
+             (val.startsWith("'") && val.endsWith("'")))
+            val = val.slice(1, -1);
+         return val;
+      };
+
+      let i = text.indexOf('let ' + name);
+      if (i >= 0)
+         return extractValue(i + 4 + name.length + 3);
+
+      i = text.indexOf('window.' + name);
+      if (i >= 0)
+         return extractValue(i + 7 + name.length + 3);
+
       return null;
    }
 
