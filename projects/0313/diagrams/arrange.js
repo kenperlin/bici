@@ -1,6 +1,9 @@
 function Diagram() {
    this.isFullScreen = true;
 
+   if (! window.SS)
+      window.SS = [];
+
    let colors = ['#ff0000','#ff8000','#ffff00','#30d030','#0080ff','#a000ff','#e800a0'];
    let cursorIds = { mouse:0, left:1, right:2 };
    let c = 0, X = .53, Y = .47;
