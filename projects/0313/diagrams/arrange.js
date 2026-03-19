@@ -1,12 +1,41 @@
 function Diagram() {
    this.isFullScreen = true;
 
-   if (! window.SS)
-      window.SS = [];
+   // MAKE SURE THAT THE GLOBAL VARIABLE EXISTS.
 
-   let colors = ['#ff0000','#ff8000','#ffff00','#30d030','#0080ff','#a000ff','#e800a0'];
+   if (! window.SS)
+      window.SS = '';
+
+   // METHODS TO PACK/UNPACK ALL THE SHAPES DATA INTO/FROM A COMPACT STRING.
+
+   let packS = () => {
+      SS = '';
+      for (let n = 0 ; n < S.length ; n += 4) {
+         let type = S[n], x = S[n+1], y = S[n+2], c = S[n+3];
+	 let X = 2048.5 + 2048 * x >> 0,
+	     Y = 2048.5 + 2048 * y >> 0;
+	 SS += toBase64(type << 3 | c)
+	      + toBase64(X >> 6) + toBase64(X & 63)
+	      + toBase64(Y >> 6) + toBase64(Y & 63);
+      }
+   }
+
+   let unpackS = () => {
+      S = [];
+      let C = i => fromBase64(SS.charAt(i));
+      for (let i = 0 ; i < SS.length ; i += 5) {
+         let type = C(i) >> 3, c = C(i) & 7,
+	     X = C(i+1) << 6 | C(i+2), x = (X - 2048) / 2048,
+	     Y = C(i+3) << 6 | C(i+4), y = (Y - 2048) / 2048;
+	 S.push(type, x, y, c);
+      }
+   }
+
+   let colors = '#ff0000,#ff8000,#ffff00,#30d030,#0080ff,#a000ff,#e800a0'.split(',');
    let cursorIds = { mouse:0, left:1, right:2 };
-   let c = 0, X = .53, Y = .47;
+   let S = [], c = 0, X = .53, Y = .47;
+
+   // USEFUL PROCEDURAL SHAPE DEFINITIONS.
 
    let superquadric = (t, C, R) => {
       let x = Math.sin(2 * Math.PI * t);
@@ -29,6 +58,8 @@ function Diagram() {
       return [C[0] + 1.25 * r * x, C[1] + .5*R - r * y];
    }
 
+   // DRAW ONE OF THE SEVEN SHAPES, AT A GIVEN LOCATION AND WITH A GIVEN COLOR.
+
    drawShape = (type,x,y,c) => {
       if (c !== undefined)
          this.fillColor(colors[c]);
@@ -45,11 +76,15 @@ function Diagram() {
       }
    }
 
+   // FIND WHICH SHAPE, IF ANY, IS AT THIS POSITION.
+
    let findShape = (x,y) => {
-      for (let n = 0 ; n < SS.length ; n += 4)
-	 if (Math.abs(SS[n+1] - x) < .05 && Math.abs(SS[n+2] - y) < .05)
+      for (let n = 0 ; n < S.length ; n += 4)
+	 if (Math.abs(S[n+1] - x) < .05 && Math.abs(S[n+2] - y) < .05)
 	    return n;
    }
+
+   // METHOD TO DISPLAY VALUES ON-SCREEN WHEN DEBUGGING.
 
    let info = str => {
       octx.fillStyle = 'black';
@@ -57,7 +92,12 @@ function Diagram() {
       octx.fillText(str, screen.width/2, 30);
    }
 
+   // UPDATE FOR THIS ANIMATION FRAME.
+
    this.update = ctx => {
+
+      // METHOD TO RESPOND TO ALL MOUSE EVENTS AND HAND GESTURES.
+
       let respondToInput = cursor => {
          let x     = cursor.pos[0];
          let y     = cursor.pos[1];
@@ -71,9 +111,9 @@ function Diagram() {
 
 	 case 'press':
 	    if (x > -X-.12 && x <= -X) {
-	       cursor.n = SS.length;
+	       cursor.n = S.length;
                let type = Math.max(0, Math.min(7, (Y - y) / .15 + .5 >> 0));
-	       SS.push(type, x, y, c);
+	       S.push(type, x, y, c);
 	    }
 	    if (x >= X && x < X+.12) {
 	       cursor.c  = c;
@@ -86,8 +126,8 @@ function Diagram() {
 
          case 'down':
 	    if (cursor.n !== undefined) {
-	       SS[cursor.n+1] += x - cursor.x0;
-	       SS[cursor.n+2] += y - cursor.y0;
+	       S[cursor.n+1] += x - cursor.x0;
+	       S[cursor.n+2] += y - cursor.y0;
             }
 	    if (cursor.c !== undefined) {
 	       cursor.cx = x;
@@ -98,15 +138,15 @@ function Diagram() {
          case 'release':
 
 	    if (cursor.n !== undefined) {
-	       if (Math.abs(SS[cursor.n+1]) > X)
-	          SS.splice(cursor.n, 4);
+	       if (Math.abs(S[cursor.n+1]) > X)
+	          S.splice(cursor.n, 4);
             }
 	    delete cursor.n;
 
 	    if (cursor.c !== undefined) {
 	       let n = findShape(x,y);
 	       if (n !== undefined)
-	          SS[n+3] = cursor.c;
+	          S[n+3] = cursor.c;
 	    }
 	    delete cursor.c;
 
@@ -117,27 +157,43 @@ function Diagram() {
 	 cursor.y0 = y;
       }
 
+      // UNPACK THE CURRENT STATE RETRIEVED FROM GLOBAL STORAGE.
+
+      unpackS();
+
+      // RESPOND TO INPUT EVENTS.
+
       for (let cursorId in cursorIds) {
          let cursor = this.input[cursorId];
          if (cursor)
 	    respondToInput(cursor);
       }
 
+      // DRAW THE FRAME AROUND THE BOARD.
+
       this.drawColor('black');
       this.lineWidth(.001);
       this.drawRect([-X,-.5],[X,.55]);
+
+      // DRAW ALL THE SHAPE ICONS ALONG THE LEFT OF THE BOARD.
 
       this.fillColor(colors[c] + '80');
       for (let n = 0 ; n < 7 ; n++)
          drawShape(n, -X - .06, Y - .15 * n);
 
+      // DRAW ALL THE COLOR SWATCHES ALONG THE RIGHT OF THE BOARD.
+
       for (let n = 0 ; n < colors.length ; n++) {
          this.fillColor(colors[n] + '80');
-	 this.fillCurve(32, t => superquadric(t, [X + .06, Y-.15*n], n==c ? .05 : .04));
+	 this.fillCurve(32, t => superquadric(t, [X+.06, Y-.15*n], n==c ? .05 : .04));
       }
 
-      for (let n = 0 ; n < SS.length ; n += 4)
-         drawShape(SS[n], SS[n+1], SS[n+2], SS[n+3]);
+      // DRAW ALL THE SHAPES ON THE BOARD.
+
+      for (let n = 0 ; n < S.length ; n += 4)
+         drawShape(S[n], S[n+1], S[n+2], S[n+3]);
+
+      // DRAW ANY COLOR SWATCHES THAT A CURRENTLY BEING DRAGGED ON THE BOARD.
 
       for (let cursorId in cursorIds) {
 	 let cursor = this.input[cursorId];
@@ -146,6 +202,8 @@ function Diagram() {
 	    this.fillCurve(32, t => superquadric(t, [cursor.cx,cursor.cy], .04));
          }
       }
+
+      // DRAW THE CURSORS FOR THE LEFT AND RIGHT HANDS
 
       for (let cursorId in cursorIds) {
 	 let cursor = this.input[cursorId];
@@ -168,8 +226,9 @@ function Diagram() {
          }
       }
 
-      for (let n = 0 ; n < SS.length ; n++)
-         SS[n] = round(SS[n]);
+      // PACK THE CURRENT STATE AND SEND TO GLOBAL STORAGE.
+
+      packS();
       codeArea.setVar('SS', SS);
    }
 }

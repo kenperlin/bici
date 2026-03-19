@@ -1,5 +1,5 @@
 function Scene() {
-   window.SS = [];
+   window.SS = "";
    this.update = () => {}
 }
 
