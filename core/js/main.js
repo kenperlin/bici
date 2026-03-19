@@ -592,6 +592,9 @@ if (webrtcClient) {
       if (state.fontSize !== undefined) {
          fontSize = state.fontSize;
       }
+      if (state.SS !== undefined) {
+         window.SS = state.SS;
+      }
       // penStrokes now synced via Yjs, no longer via WebRTC state updates
    };
 

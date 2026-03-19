@@ -238,6 +238,8 @@ function Diagram() {
       if (dirty) {
          packS();
          codeArea.setVar('SS', SS);
+         if (typeof webrtcClient !== 'undefined' && webrtcClient)
+            webrtcClient.sendStateUpdate({ SS: SS });
          dirty = false;
       }
    }
