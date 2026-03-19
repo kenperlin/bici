@@ -94,6 +94,8 @@ function Diagram() {
 
    // UPDATE FOR THIS ANIMATION FRAME.
 
+   let dirty = false;
+
    this.update = ctx => {
 
       // METHOD TO RESPOND TO ALL MOUSE EVENTS AND HAND GESTURES.
@@ -114,6 +116,7 @@ function Diagram() {
 	       cursor.n = S.length;
                let type = Math.max(0, Math.min(7, (Y - y) / .15 + .5 >> 0));
 	       S.push(type, x, y, c);
+	       dirty = true;
 	    }
 	    if (x >= X && x < X+.12) {
 	       cursor.c  = c;
@@ -128,6 +131,7 @@ function Diagram() {
 	    if (cursor.n !== undefined) {
 	       S[cursor.n+1] += x - cursor.x0;
 	       S[cursor.n+2] += y - cursor.y0;
+	       dirty = true;
             }
 	    if (cursor.c !== undefined) {
 	       cursor.cx = x;
@@ -140,13 +144,16 @@ function Diagram() {
 	    if (cursor.n !== undefined) {
 	       if (Math.abs(S[cursor.n+1]) > X)
 	          S.splice(cursor.n, 4);
+	       dirty = true;
             }
 	    delete cursor.n;
 
 	    if (cursor.c !== undefined) {
 	       let n = findShape(x,y);
-	       if (n !== undefined)
+	       if (n !== undefined) {
 	          S[n+3] = cursor.c;
+	          dirty = true;
+	       }
 	    }
 	    delete cursor.c;
 
@@ -226,10 +233,13 @@ function Diagram() {
          }
       }
 
-      // PACK THE CURRENT STATE AND SEND TO GLOBAL STORAGE.
+      // PACK THE CURRENT STATE AND SEND TO GLOBAL STORAGE ONLY IF LOCAL USER CHANGED IT.
 
-      packS();
-      codeArea.setVar('SS', SS);
+      if (dirty) {
+         packS();
+         codeArea.setVar('SS', SS);
+         dirty = false;
+      }
    }
 }
 
