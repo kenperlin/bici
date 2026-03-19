@@ -194,17 +194,27 @@ export class CodeArea {
   }
   // Internal helper to apply a single var change to the text
   _applyVarToText(text, name, value) {
+    if (typeof value == "number" && !Number.isInteger(value))
+      value =
+        (Math.sign(value) * ((1000 * Math.abs(value) + 0.5) >> 0)) / 1000;
+    else if (Array.isArray(value)) value = "[" + value + "]";
+    else if (typeof value == "string") value = '"' + value + '"';
+
+    // Try "let name" first, then "window.name"
     let i = text.indexOf("let " + name);
     if (i >= 0) {
-      if (typeof value == "number" && !Number.isInteger(value))
-        value =
-          (Math.sign(value) * ((1000 * Math.abs(value) + 0.5) >> 0)) / 1000;
-      else if (Array.isArray(value)) value = "[" + value + "]";
-
       let j = i + 4 + name.length;
       let k = text.indexOf(";", j);
       return text.substring(0, j) + " = " + value + text.substring(k);
     }
+
+    i = text.indexOf("window." + name);
+    if (i >= 0) {
+      let j = i + 7 + name.length;
+      let k = text.indexOf(";", j);
+      return text.substring(0, j) + " = " + value + text.substring(k);
+    }
+
     return text;
   };
 
@@ -244,12 +254,26 @@ export class CodeArea {
 
   getVar(name) {
     let text = this.element.value;
-    let i = text.indexOf("let " + name);
-    if (i >= 0) {
-      let j = i + 4 + name.length + 3;
+
+    let extractValue = (j) => {
       let k = text.indexOf(";", j);
-      return text.substring(j, k);
-    }
+      let val = text.substring(j, k);
+      // Strip surrounding quotes if present
+      if ((val.startsWith('"') && val.endsWith('"')) ||
+          (val.startsWith("'") && val.endsWith("'")))
+        val = val.slice(1, -1);
+      return val;
+    };
+
+    // Try "let name" first, then "window.name"
+    let i = text.indexOf("let " + name);
+    if (i >= 0)
+      return extractValue(i + 4 + name.length + 3);
+
+    i = text.indexOf("window." + name);
+    if (i >= 0)
+      return extractValue(i + 7 + name.length + 3);
+
     return null;
   };
 
