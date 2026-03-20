@@ -106,34 +106,33 @@ function Diagram() {
          let state = cursor.state;
 
          switch (state) {
-	 case 'up':
+	 case 'up':                         // MOUSE OVER A COLOR TO SET COLOR FOR NEW SHAPES
 	    if (x >= X)
                c = Math.max(0, Math.min(colors.length-1, (Y - y) / .15 + .5 >> 0));
             break;
 
 	 case 'press':
-	    if (x > -X-.12 && x <= -X) {
+	    if (x > -X-.12 && x <= -X) {    // PRESS ON A SHAPE ICON TO CREATE A NEW SHAPE
 	       cursor.n = S.length;
                let type = Math.max(0, Math.min(7, (Y - y) / .15 + .5 >> 0));
 	       S.push(type, x, y, c);
 	       dirty = true;
 	    }
-	    if (x >= X && x < X+.12) {
+	    if (x >= X && x < X+.12) {      // PRESS ON A COLOR SWATCH TO START COLOR DRAGGING
 	       cursor.c  = c;
 	       cursor.cx = x;
 	       cursor.cy = y;
             }
-	    cursor.n = findShape(x, y);
-	    console.log('---------------', cursor.n);
+	    cursor.n = findShape(x, y);     // SELECT AN EXISTING SHAPE
 	    break;
 
          case 'down':
-	    if (cursor.n !== undefined) {
+	    if (cursor.n !== undefined) {   // DRAGGING A SHAPE
 	       S[cursor.n+1] += x - cursor.x0;
 	       S[cursor.n+2] += y - cursor.y0;
 	       dirty = true;
             }
-	    if (cursor.c !== undefined) {
+	    if (cursor.c !== undefined) {   // DRAGGING A COLOR SWATCH
 	       cursor.cx = x;
 	       cursor.cy = y;
 	    }
@@ -141,15 +140,15 @@ function Diagram() {
 
          case 'release':
 
-	    if (cursor.n !== undefined) {
+	    if (cursor.n !== undefined) {   // FINISHED DRAGGING A SHAPE
 	       if (Math.abs(S[cursor.n+1]) > X)
 	          S.splice(cursor.n, 4);
 	       dirty = true;
             }
 	    delete cursor.n;
 
-	    if (cursor.c !== undefined) {
-	       let n = findShape(x,y);
+	    if (cursor.c !== undefined) {   // IF DRAGGED A COLOR SWATCH ONTO A SHAPE
+	       let n = findShape(x,y);      // THEN CHANGE THE COLOR OF THAT SHAPE
 	       if (n !== undefined) {
 	          S[n+3] = cursor.c;
 	          dirty = true;
@@ -160,7 +159,7 @@ function Diagram() {
 	    break;
          }
 
-	 cursor.x0 = x;
+	 cursor.x0 = x;                     // REMEMBER PREVIOUS CURSOR POSITION
 	 cursor.y0 = y;
       }
 

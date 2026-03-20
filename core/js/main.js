@@ -856,6 +856,9 @@ animate = () => {
       else {
          slide._beforeUpdate();
 	 if (slide.isFullScreen) {
+
+	    // IF IN FULL SCREEN MODE, MAKE MOUSE AND HAND INPUT EVENTS AVAILABLE TO THE UPDATE METHOD.
+
 	    let setState = (d0,d1) => !d0 && !d1 ? 'up' : !d0 && d1 ? 'press' : d0 && d1 ? 'down' : 'release';
 
 	    let d0 = window.mouse_wasDown;
