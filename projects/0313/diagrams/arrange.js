@@ -164,9 +164,10 @@ function Diagram() {
 	 cursor.y0 = y;
       }
 
-      // UNPACK THE CURRENT STATE FROM GLOBAL STORAGE.
+      // UNPACK THE CURRENT STATE FROM GLOBAL STORAGE (SKIP IF LOCAL USER IS ACTIVELY INTERACTING).
 
-      unpackS();
+      if (!dirty)
+         unpackS();
 
       // RESPOND TO INPUT EVENTS.
 
