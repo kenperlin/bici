@@ -858,10 +858,11 @@ animate = () => {
 	 if (slide.isFullScreen) {
 	    let setState = (d0,d1) => !d0 && !d1 ? 'up' : !d0 && d1 ? 'press' : d0 && d1 ? 'down' : 'release';
 
-	    let d0 = slide.input.mouse.wasDown;
+	    let d0 = window.mouse_wasDown;
 	    let d1 = slide.input.mouse.isDown;
+	    window.mouse_wasDown = d1;
+
 	    slide.input.mouse.state = setState(d0, d1);
-	    slide.input.mouse.wasDown = d1;
 
             let isHand = { left:false, right:false };
             let iHand = 0;
@@ -880,7 +881,6 @@ animate = () => {
 
 	          slide.input[hand].pos = shadowHandInfo[iHand].pos;
 	          slide.input[hand].state = setState(d0, d1);
-	          slide.input[hand].gesture = shadowHandInfo[iHand].gesture;
                }
 
                iHand++;
@@ -888,7 +888,7 @@ animate = () => {
 	    for (let hand in isHand)
 	       if (! isHand[hand])
 	          delete slide.input[hand];
-         }  
+         }
 
          slide.update(D.ctx);
          let x = D.left, y = D.top, w = slide.width, h = slide.height;

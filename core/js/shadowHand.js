@@ -84,18 +84,16 @@ let drawShadowHand = (ctx, hand, F, x=0, y=0, s=1, isDrawing=true) => {
         distance(4,8) < 1.5 * distance(5,8))
       shadowHandInfo[hand].gesture = 'gripper';
 
-   let toScreen = p => [
+   let centered = p => [
       (2 * p.x - 1),
       (2 * p.y - 1) * -screen.height / screen.width,
       (2 * p.z - 1) * -4 - 3
    ];
 
    if (shadowHandInfo[hand].gesture == 'point')
-      shadowHandInfo[hand].pos = toScreen(F[8]);
+      shadowHandInfo[hand].pos = centered(F[8]);
    else
-      shadowHandInfo[hand].pos = mix(toScreen(F[4]), toScreen(F[8]), .5);
-
-   console.log('------------', toScreen(F[8]));
+      shadowHandInfo[hand].pos = mix(centered(F[4]), centered(F[8]), .5);
 
    if (! isDrawing)
       return;
