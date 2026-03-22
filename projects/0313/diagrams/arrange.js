@@ -33,7 +33,7 @@ function Diagram() {
 
    let colors = '#ff0000,#ff8000,#ffff00,#30d030,#0080ff,#a000ff,#e800a0,#ffffff'.split(',');
    let cursorIds = { mouse:0, left:1, right:2 };
-   let S = [], c = 0, X = .53, Y = .47;
+   let S = [], X = .53, Y = .47;
 
    // USEFUL PROCEDURAL SHAPE DEFINITIONS.
 
@@ -97,6 +97,7 @@ function Diagram() {
    let dirty = false;
 
    this.update = ctx => {
+      let y2n = y => Math.max(0, Math.min(7, (Y - y) / .15 + .5 >> 0));
 
       // METHOD TO RESPOND TO ALL MOUSE EVENTS AND HAND GESTURES.
 
@@ -106,19 +107,18 @@ function Diagram() {
          let state = cursor.state;
 
          switch (state) {
-	 case 'up':                         // MOUSE OVER A COLOR TO SET COLOR FOR NEW SHAPES
-	    if (x >= X)
-               c = Math.max(0, Math.min(6, (Y - y) / .15 + .5 >> 0));
+	 case 'up':                         // MOUSE MOVE DOES NOT CURRENTLY DO ANYTHING
             break;
 
 	 case 'press':
 	    if (x > -X-.12 && x <= -X) {    // PRESS ON A SHAPE ICON TO CREATE A NEW SHAPE
 	       cursor.n = S.length;
-               let type = Math.max(0, Math.min(7, (Y - y) / .15 + .5 >> 0));
+               let type = y2n(y);
 	       S.push(type, x, y, 7);
 	       dirty = true;
 	    }
 	    if (x >= X && x < X+.12) {      // PRESS ON A COLOR SWATCH TO START COLOR DRAGGING
+               let c = y2n(y);
 	       cursor.c  = c;
 	       cursor.cx = x;
 	       cursor.cy = y;
@@ -192,7 +192,7 @@ function Diagram() {
 
       for (let n = 0 ; n < 7 ; n++) {
          this.fillColor(colors[n] + '80');
-	 this.fillCurve(32, t => superquadric(t, [X+.06, Y-.15*n], n==c ? .05 : .04));
+	 this.fillCurve(32, t => superquadric(t, [X+.06, Y-.15*n], .04));
       }
 
       // DRAW ALL THE SHAPES ON THE BOARD.
