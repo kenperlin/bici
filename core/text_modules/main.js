@@ -6,7 +6,7 @@ import { updateTracking } from "./mediapipe/tracking/tracking.js";
 import { mediapipeState } from "./mediapipe/state.js";
 import { initGestureTracker, updateGesture } from "./mediapipe/tracking/gesture.js";
 import { drawVideoToCover } from "./ui/video.js";
-import { CodeArea } from "./ui/codeArea.js";
+import { TextArea } from "./ui/textarea.js";
 import { fetchText } from "./utils.js";
 import {
   updateAppState,
@@ -14,7 +14,6 @@ import {
   yjsBindAppState,
   yjsBindCodeArea
 } from "./yjs/bindings.js";
-import { highlightRange } from "../modules/ui/highlight.js";
 
 const DOM = {
   projectSelector: document.getElementById("project-selector"),
@@ -40,7 +39,7 @@ window.CTX = ctx
 window.WIDTH = window.innerWidth;
 window.HEIGHT = window.innerHeight;
 
-const textarea = new CodeArea(DOM.textarea);
+const textarea = new TextArea(DOM.textarea);
 
 function resizeStage() {
   window.DPR = window.devicePixelRatio;
@@ -115,7 +114,7 @@ function animate() {
     updateGesture();
     updateUserState();
   }
-  highlightRange(textarea.element, textarea.element.selectionStart, textarea.element.selectionEnd)
+  textarea.highlightRange(textarea.element.selectionStart, textarea.element.selectionEnd)
 
   requestAnimationFrame(animate);
 }

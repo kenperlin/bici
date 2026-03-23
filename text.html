@@ -4,6 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BICI - Interactive Video Chat Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="core/css/text.css" />
   </head>
   <body>
@@ -12,8 +15,8 @@
         <video id="webcam" autoplay playsinline hidden></video>
         <canvas id="canvas-2d"></canvas>
         <canvas id="canvas-overlay"></canvas>
-        <textarea id="code-editor" spellcheck="false"></textarea>
-        <div id="mirror">
+        <textarea id="code-editor" class="inter" spellcheck="false"></textarea>
+        <div id="mirror" class="inter">
           <span id="before"></span><span id="highlight"></span><span id="after"></span>
         </div>
     </div>
