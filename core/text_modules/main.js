@@ -14,6 +14,7 @@ import {
   yjsBindAppState,
   yjsBindTextArea
 } from "./yjs/bindings.js";
+import { SpeechDetector } from "./speech.js";
 
 const DOM = {
   projectSelector: document.getElementById("project-selector"),
@@ -44,6 +45,7 @@ window.WIDTH = window.innerWidth;
 window.HEIGHT = window.innerHeight;
 
 const textarea = new TextArea(DOM.textarea);
+const speechDetector = new SpeechDetector();
 
 function resizeStage() {
   window.DPR = window.devicePixelRatio;
@@ -76,6 +78,7 @@ async function init() {
   });
 
   DOM.projectGrid.addEventListener("click", (e) => {
+    speechDetector.init();
     const projectName = e.target.dataset.project;
     if (projectName) loadProject(projectName);
   });
@@ -122,11 +125,23 @@ function animate() {
     updateGesture();
     updateUserState();
   }
-  textarea.highlightRange(textarea.element.selectionStart, textarea.element.selectionEnd);
-  textarea.highlightCharAt(mouse.x, mouse.y, "rgba(255, 0, 0, 0.5)");
-  textarea.highlightSegmentAt(mouse.x, mouse.y, "word", "rgba(0, 128, 255, 0.5)");
-  textarea.highlightSegmentAt(mouse.x, mouse.y, "sentence", "rgba(128, 255, 0, 0.5)");
-  textarea.highlightParagraphAt(mouse.x, mouse.y, "rgba(255, 255, 0, 0.5)");
+
+  speechDetector.update();
+
+  // textarea.highlightRange(textarea.element.selectionStart, textarea.element.selectionEnd);
+  // textarea.highlightCharAt(mouse.x, mouse.y, "rgba(255, 0, 0, 0.5)");
+  switch (speechDetector.currentUnit) {
+    case "word":
+      textarea.highlightSegmentAt(mouse.x, mouse.y, "word", "rgba(0, 128, 255, 0.5)");
+      break;
+    case "sentence":
+      textarea.highlightSegmentAt(mouse.x, mouse.y, "sentence", "rgba(128, 255, 0, 0.5)");
+      break;
+    case "paragraph":
+      textarea.highlightParagraphAt(mouse.x, mouse.y, "rgba(255, 255, 0, 0.5)");
+      break;
+  }
+  
   requestAnimationFrame(animate);
 }
 
