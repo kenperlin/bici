@@ -25,7 +25,7 @@ export class TextArea {
   }
   setVisible(val) {
     this.isVisible = val;
-    this.element.style.left = `${this.isVisible ? 20 : -2000}px`;
+    this.element.style.display = val ? "block" : "none";
   }
 
   setFontSize(size) {
@@ -78,6 +78,10 @@ export class TextArea {
 
     this.element.addEventListener("keyup", (event) => {
       if (event.key == "Shift") this.ey = 0;
+    });
+
+    this.element.addEventListener("input", () => {
+      this.onValueChanged();
     });
   }
 
@@ -157,7 +161,7 @@ export class TextArea {
   }
 
   highlightCharAt(x, y, color) {
-    if(!this.contains(x, y)) return;
+    if (!this.contains(x, y)) return;
 
     const idx = this.pointToIndex(x, y);
     this.updateRange(idx, idx + 1);

@@ -10,7 +10,6 @@ export function yjsBindTextArea(textarea) {
   // Setup textarea binding
   const element = textarea.element;
   const ytext = ydoc.getText("code");
-  const ycontrol = ydoc.getMap("control");
 
   // When Yjs text changes, update textarea
   ytext.observe((event, txn) => {
@@ -24,29 +23,10 @@ export function yjsBindTextArea(textarea) {
     }
   });
 
-  // Reload scene after debounce to allow text to update
-  let reloadVersion = 0;
-  const debouncedReload = debounce(() => (textarea.isReloadScene = true), 100);
-  ycontrol.observe((event) => {
-    const newVersion = ycontrol.get("version") || 0;
-    if (reloadVersion !== newVersion) {
-      reloadVersion = newVersion;
-      debouncedReload();
-    }
-  });
-
   // When textarea changes, update Yjs text
   textarea.onValueChanged = () => {
     const currentText = ytext.toString();
     let newText = element.value;
-
-    if (textarea.isReloadScene) {
-      ydoc.transact(() => {
-        reloadVersion = (ycontrol.get("version") || 0) + 1;
-        ycontrol.set("version", reloadVersion);
-      });
-    }
-
     if (currentText !== newText) {
       ydoc.transact(() => {
         ytext.delete(0, currentText.length);

@@ -114,7 +114,6 @@ function animate() {
 
   drawVideoToCover(ctx, backgroundVideo, !hasRemoteVideo);
 
-  textarea.update();
   displayHelp(ctx, textarea.fontSize);
 
   mediapipePredict(DOM.webcam);
