@@ -591,3 +591,23 @@ body {
   background-color: rgba(255,255,255,.6);
   overflow-y: scroll
 }
+
+#mirror {
+  left: 50%;
+  top: 50%;
+  width: 80%;
+  height: 80%;
+  padding: 0;
+  transform: translate(-50%, -50%);
+  visibility: hidden;
+  pointer-events: none;
+  overflow-y: scroll;
+  font-family: monospace;
+  font-size: 18px;
+  overflow-wrap: break-word;
+}
+
+#mirror > span {
+  white-space-collapse: preserve;
+}
+

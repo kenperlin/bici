@@ -14,6 +14,7 @@ import {
   yjsBindAppState,
   yjsBindCodeArea
 } from "./yjs/bindings.js";
+import { highlightRange } from "../modules/ui/highlight.js";
 
 const DOM = {
   projectSelector: document.getElementById("project-selector"),
@@ -34,6 +35,7 @@ const octx = DOM.canvasOverlay.getContext("2d");
 
 // Expose window overlay drawing globally
 window.OCTX = octx;
+window.CTX = ctx
 
 window.WIDTH = window.innerWidth;
 window.HEIGHT = window.innerHeight;
@@ -113,6 +115,7 @@ function animate() {
     updateGesture();
     updateUserState();
   }
+  highlightRange(textarea.element, textarea.element.selectionStart, textarea.element.selectionEnd)
 
   requestAnimationFrame(animate);
 }
