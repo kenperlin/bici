@@ -32,13 +32,13 @@ const DOM = {
 const mouse = {
   x: 0,
   y: 0
-}
+};
 const ctx = DOM.canvas2D.getContext("2d");
 const octx = DOM.canvasOverlay.getContext("2d");
 
 // Expose window overlay drawing globally
 window.OCTX = octx;
-window.CTX = ctx
+window.CTX = ctx;
 
 window.WIDTH = window.innerWidth;
 window.HEIGHT = window.innerHeight;
@@ -122,8 +122,11 @@ function animate() {
     updateGesture();
     updateUserState();
   }
-  textarea.highlightRange(textarea.element.selectionStart, textarea.element.selectionEnd)
-  textarea.highlightCharAt(mouse.x, mouse.y, "rgba(255, 0, 0, 0.5)")
+  textarea.highlightRange(textarea.element.selectionStart, textarea.element.selectionEnd);
+  textarea.highlightCharAt(mouse.x, mouse.y, "rgba(255, 0, 0, 0.5)");
+  textarea.highlightSegmentAt(mouse.x, mouse.y, "word", "rgba(0, 128, 255, 0.5)");
+  textarea.highlightSegmentAt(mouse.x, mouse.y, "sentence", "rgba(128, 255, 0, 0.5)");
+  textarea.highlightParagraphAt(mouse.x, mouse.y, "rgba(255, 255, 0, 0.5)");
   requestAnimationFrame(animate);
 }
 

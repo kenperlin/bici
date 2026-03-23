@@ -164,8 +164,40 @@ export class TextArea {
     if (!this.contains(x, y)) return;
 
     const idx = this.pointToIndex(x, y);
-    this.updateRange(idx, idx + 1);
-    const rects = this.computeRangeRects();
-    this.drawRects(rects, color);
+    this.highlightRange(idx, idx + 1, color);
+  }
+
+  highlightSegmentAt(x, y, granularity, color) {
+    if (!this.contains(x, y)) return;
+
+    const segmenter = new Intl.Segmenter(undefined, { granularity });
+    const idx = this.pointToIndex(x, y);
+
+    let start, end;
+    for (const part of segmenter.segment(this.element.value)) {
+      start = part.index;
+      end = start + part.segment.length;
+      if (idx >= start && idx < end && (granularity !== "word" || part.isWordLike)) {
+        this.highlightRange(start, end, color);
+        return;
+      }
+    }
+  }
+
+  highlightParagraphAt(x, y, color) {
+    if (!this.contains(x, y)) return;
+
+    const idx = this.pointToIndex(x, y);
+    const text = this.element.value;
+
+    let start, end;
+    for (const part of text.split("\n")) {
+      start = text.indexOf(part, end);
+      end = start + part.length;
+      if (idx >= start && idx < end) {
+        this.highlightRange(start, end, color);
+        return;
+      }
+    }
   }
 }
