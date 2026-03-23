@@ -604,7 +604,7 @@ body {
   top: 50%;
   width: 80%;
   height: 80%;
-  padding: 0;
+  padding: 3px;
   transform: translate(-50%, -50%);
   visibility: hidden;
   pointer-events: none;

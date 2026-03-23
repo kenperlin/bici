@@ -12,7 +12,7 @@ import {
   updateAppState,
   updateUserState,
   yjsBindAppState,
-  yjsBindCodeArea
+  yjsBindTextArea
 } from "./yjs/bindings.js";
 
 const DOM = {
@@ -29,6 +29,10 @@ const DOM = {
   textarea: document.getElementById("code-editor")
 };
 
+const mouse = {
+  x: 0,
+  y: 0
+}
 const ctx = DOM.canvas2D.getContext("2d");
 const octx = DOM.canvasOverlay.getContext("2d");
 
@@ -58,7 +62,7 @@ async function init() {
 
   // Collaboration
   await setupYjsClient(DOM.webcam);
-  yjsBindCodeArea(textarea);
+  yjsBindTextArea(textarea);
   yjsBindAppState(textarea);
 
   initMediapipe();
@@ -74,6 +78,11 @@ async function init() {
   DOM.projectGrid.addEventListener("click", (e) => {
     const projectName = e.target.dataset.project;
     if (projectName) loadProject(projectName);
+  });
+
+  window.addEventListener("mousemove", (e) => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
   });
 
   // App
@@ -115,7 +124,7 @@ function animate() {
     updateUserState();
   }
   textarea.highlightRange(textarea.element.selectionStart, textarea.element.selectionEnd)
-
+  textarea.highlightCharAt(mouse.x, mouse.y, "rgba(255, 0, 0, 0.5)")
   requestAnimationFrame(animate);
 }
 

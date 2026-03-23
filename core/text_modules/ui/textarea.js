@@ -1,22 +1,14 @@
 import * as NumberString from "../math/numberString.js";
 
-const offsetX = 20;
-const offsetY = 20;
-const charWidthFactor = 0.6;
-const charHeightFactor = 1.14;
-const charWidthOffset = 0.35;
-const charHeightOffset = 0.15;
-
 export class TextArea {
   constructor(textareaElement) {
     this.element = textareaElement;
+    this.fontSize = 18;
+    this.element.style.fontSize = this.fontSize + "px";
     this.isVisible = true;
 
     this.ey = 0;
     this.dial = 0;
-    this.isReloadScene = false;
-    this.lastReloadTime = 0;
-    this.onReloadScene = () => {};
     this.onValueChanged = () => {};
 
     this.initInteractions();
@@ -26,13 +18,6 @@ export class TextArea {
     this.highlightNode = document.getElementById("highlight");
     this.afterNode = document.getElementById("after");
     this.range = document.createRange();
-  }
-
-  _xToCol(x) {
-    return (x - offsetX) / (charWidthFactor * this.fontSize) + charWidthOffset;
-  }
-  _yToRow(y) {
-    return (y - offsetY) / (charHeightFactor * this.fontSize) + charHeightOffset;
   }
 
   toggleVisible() {
@@ -46,7 +31,9 @@ export class TextArea {
   setFontSize(size) {
     this.fontSize = size;
     this.element.style.fontSize = this.fontSize + "px";
+    this.mirror.style.fontSize = this.fontSize + "px";
   }
+
   increaseFontSize() {
     this.setFontSize(this.fontSize * 1.1);
   }
@@ -59,37 +46,21 @@ export class TextArea {
   }
 
   contains(x, y) {
-    let col = this._xToCol(x);
-    let row = this._yToRow(y);
-    return col >= 0 && col < this.element.cols + 2 && row >= 0 && row < this.element.rows;
+    const { left, right, top, bottom } = this.getRect();
+    return x >= left && x <= right && y >= top && y <= bottom;
   }
 
   pointToIndex(x, y) {
     const text = this.element.value;
-
-    const mirrorBox = mirror.getBoundingClientRect();
-
-    const targetX = x + textarea.scrollLeft + mirrorBox.left;
-    const targetY = y + textarea.scrollTop + mirrorBox.top;
-
     let left = 0;
     let right = text.length;
 
     while (left < right) {
       const mid = (left + right) >> 1;
+      this.updateRange(mid, mid + 1);
+      const rect = this.range.getBoundingClientRect();
 
-      beforeNode.textContent = text.slice(0, mid);
-      highlightNode.textContent = text[mid] || "";
-      afterNode.textContent = text.slice(mid + 1);
-
-      range.selectNodeContents(highlightNode);
-
-      const rect = range.getBoundingClientRect();
-
-      if (
-        targetY < rect.top ||
-        (targetY >= rect.top && targetY <= rect.bottom && targetX < rect.left)
-      ) {
+      if (y < rect.top || (y >= rect.top && y <= rect.bottom && x < rect.left)) {
         right = mid;
       } else {
         left = mid + 1;
@@ -97,29 +68,6 @@ export class TextArea {
     }
 
     return Math.max(0, left - 1);
-  }
-
-  drawOverlayRect(col, row, nCols, nRows, isFill) {
-    let charWidth = charWidthFactor * this.fontSize;
-    let charHeight = charHeightFactor * this.fontSize;
-
-    let drawFn = isFill ? OCTX.fillRect : OCTX.strokeRect;
-    drawFn(
-      offsetX + charWidth * (col + charWidthOffset),
-      offsetY + charHeight * (row + charHeightOffset),
-      nCols * charWidth,
-      nRows * charHeight
-    );
-  }
-
-  update(time = Date.now() / 1000) {
-    let lines = this.element.value.split("\n");
-    if (this.isReloadScene && time - this.lastReloadTime > 0.1) {
-      this.lastReloadTime = time;
-      this.isReloadScene = false;
-    }
-
-    if (!this.isVisible) return;
   }
 
   initInteractions() {
@@ -150,21 +98,11 @@ export class TextArea {
         this.element.selectionStart = this.element.selectionEnd = i0 + s1.length;
 
         // Trigger input event to sync with Yjs
-        this.isReloadScene = true;
         this.onValueChanged();
       }
       this.dial = 0;
     }
     this.ey = y;
-  }
-
-  highlightCharAt(x, y, color = "#00000060") {
-    if (!this.contains(x, y)) return;
-
-    OCTX.save();
-    OCTX.fillStyle = color;
-    this.drawOverlayRect(xToCol(x) >> 0, yToRow(y) >> 0, 1, 1, true);
-    OCTX.restore();
   }
 
   updateRange(start, end) {
@@ -180,15 +118,15 @@ export class TextArea {
     const rectList = this.range.getClientRects();
     const mirrorBox = this.mirror.getBoundingClientRect();
 
-    const scrollLeft = this.element.scrollLeft;
-    const scrollTop = this.element.scrollTop;
+    const gapX = this.element.scrollLeft + mirrorBox.left;
+    const gapY = this.element.scrollTop + mirrorBox.top;
 
     const rects = new Array(rectList.length);
     for (let i = 0; i < rectList.length; i++) {
       const r = rectList[i];
       rects[i] = {
-        x: r.left - mirrorBox.left - scrollLeft,
-        y: r.top - mirrorBox.top - scrollTop,
+        x: r.left - gapX,
+        y: r.top - gapY,
         width: r.width,
         height: r.height
       };
@@ -196,11 +134,11 @@ export class TextArea {
     return rects;
   }
 
-  drawRects(rects) {
+  drawRects(rects, color) {
     const boundingRect = this.element.getBoundingClientRect();
 
     OCTX.save();
-    OCTX.fillStyle = "rgba(255,255,0,0.5)";
+    OCTX.fillStyle = color ?? "rgba(255,255,0,0.5)";
     OCTX.translate(boundingRect.left, boundingRect.top);
     for (let i = 0; i < rects.length; i++) {
       const r = rects[i];
@@ -209,12 +147,21 @@ export class TextArea {
     OCTX.restore();
   }
 
-  highlightRange(start, end) {
+  highlightRange(start, end, color) {
     if (start === end) {
       return;
     }
     this.updateRange(start, end);
     const rects = this.computeRangeRects();
-    this.drawRects(rects);
+    this.drawRects(rects, color);
+  }
+
+  highlightCharAt(x, y, color) {
+    if(!this.contains(x, y)) return;
+
+    const idx = this.pointToIndex(x, y);
+    this.updateRange(idx, idx + 1);
+    const rects = this.computeRangeRects();
+    this.drawRects(rects, color);
   }
 }

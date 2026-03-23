@@ -38,6 +38,7 @@ function handleKeyUp(e) {
 
 function handleCommand(key) {
   let commandTriggered = true;
+  
   switch (key) {
     case "Alt": state.isAlt = false; break;
     case "Shift": state.isShift = false; break;

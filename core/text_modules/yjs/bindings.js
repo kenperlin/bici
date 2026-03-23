@@ -6,9 +6,9 @@ import { getYjsAwareness, webrtcClient, ydoc } from "./yjs.js";
 
 let appState;
 
-export function yjsBindCodeArea(codeArea) {
+export function yjsBindTextArea(textarea) {
   // Setup textarea binding
-  const element = codeArea.element;
+  const element = textarea.element;
   const ytext = ydoc.getText("code");
   const ycontrol = ydoc.getMap("control");
 
@@ -26,7 +26,7 @@ export function yjsBindCodeArea(codeArea) {
 
   // Reload scene after debounce to allow text to update
   let reloadVersion = 0;
-  const debouncedReload = debounce(() => (codeArea.isReloadScene = true), 100);
+  const debouncedReload = debounce(() => (textarea.isReloadScene = true), 100);
   ycontrol.observe((event) => {
     const newVersion = ycontrol.get("version") || 0;
     if (reloadVersion !== newVersion) {
@@ -36,11 +36,11 @@ export function yjsBindCodeArea(codeArea) {
   });
 
   // When textarea changes, update Yjs text
-  codeArea.onValueChanged = () => {
+  textarea.onValueChanged = () => {
     const currentText = ytext.toString();
     let newText = element.value;
 
-    if (codeArea.isReloadScene) {
+    if (textarea.isReloadScene) {
       ydoc.transact(() => {
         reloadVersion = (ycontrol.get("version") || 0) + 1;
         ycontrol.set("version", reloadVersion);
