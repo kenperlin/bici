@@ -15,6 +15,12 @@ export let subtract = (a,b) => { let v = []; for (let i=0 ; i<a.length ; i++) v.
 export let clamp = (t, min, max) => Math.max(min, Math.min(max, t));
 export let smoothstep = (t, low, high) => { t = clamp((t - low) / (high - low), 0, 1); return t * t * (3 - 2 * t); }
 
+// BASE 64
+
+const base64Characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz#';
+export let toBase64   = n => base64Characters.charAt(n);
+export let fromBase64 = c => base64Characters.indexOf(c);
+
 // MATRIX PRIMITIVES
 
 export let c = t => Math.cos(t);

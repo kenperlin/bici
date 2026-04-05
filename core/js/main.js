@@ -100,7 +100,7 @@ window.isShift = false;
 // Initialize Yjs for collaborative code editing
 let ydoc, ytext, ypenStrokes, yjsProvider;
 
-let codeArea = new CodeArea(-2000, 20);
+let codeArea = new CodeArea(2000, 20);
 let chalktalk = new Chalktalk();
 let pen = new Pen();
 console.log(pen)
@@ -402,14 +402,20 @@ let initSlides = () => {
 	       overlayCanvas.style.pointerEvents = 'auto';
 	       overlayCanvas.isDown = false;
 	       overlayCanvas.addEventListener('mousedown', event => {
+		  diagram.input.mouse.x = event.x;
+		  diagram.input.mouse.y = event.y;
 		  diagram.input.mouse.pos = [dx(event.x),dy(event.y)];
 		  diagram.input.mouse.isDown = true;
 	       });
 	       overlayCanvas.addEventListener('mouseup'  , event => {
+		  diagram.input.mouse.x = event.x;
+		  diagram.input.mouse.y = event.y;
 		  diagram.input.mouse.pos = [dx(event.x),dy(event.y)];
 		  diagram.input.mouse.isDown = false;
 	       });
 	       overlayCanvas.addEventListener('mousemove', event => {
+		  diagram.input.mouse.x = event.x;
+		  diagram.input.mouse.y = event.y;
 		  diagram.input.mouse.pos = [dx(event.x),dy(event.y)];
 	       });
 	    }

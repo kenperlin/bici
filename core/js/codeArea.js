@@ -78,7 +78,7 @@ function CodeArea(x,y) {
 
    this.setVisible = isVisible => {
       this.isVisible = isVisible;
-      codeArea.style.left = isVisible ? 20 : -2000;
+      codeArea.style.left = isVisible ? 20 : 2000;
    }
 
    this.pointToIndex = (x,y) => {
