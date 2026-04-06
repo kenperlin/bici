@@ -28,7 +28,6 @@ function Diagram() {
       }
    }
 
-
    let cards = [], nDrags = 0, dirty = false;
 
    let cardsImage = new Image();
@@ -76,7 +75,7 @@ function Diagram() {
    for (let value = 0 ; value < 13 ; value++)
       cards.push({ value: value, suit: suit,
                    x: value * cw * .13 + (.005 + suit * .25) * w,
-                   y: .7   * h });
+                   y: .7 * h });
    pack();
 
    this.update = () => {
@@ -124,7 +123,6 @@ function Diagram() {
 
       if (dirty) {
          pack();
-         codeArea.setVar('SS', SS);
          if (typeof webrtcClient !== 'undefined' && webrtcClient)
             webrtcClient.sendStateUpdate({ SS: SS });
          dirty = false;
