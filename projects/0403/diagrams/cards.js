@@ -1,14 +1,14 @@
 function Diagram() {
    this.isFullScreen = true;
 
-   if (! window.SC)
-      window.SC = '';
+   if (! window.SS)
+      window.SS = '';
 
    let pack = () => {
-      SC = '';
+      SS = '';
       for (let n = 0 ; n < cards.length ; n++) {
          let card = cards[n];
-         SC += toBase64(card.value << 2 | card.suit)
+         SS += toBase64(card.value << 2 | card.suit)
              + toBase64(card.x >> 6)
 	     + toBase64(card.x & 63)
              + toBase64(card.y >> 6 | (card.down ? 1<<5 : 0))
@@ -18,8 +18,8 @@ function Diagram() {
 
    let unpack = () => {
       cards = [];
-      let C = i => fromBase64(SC.charAt(i));
-      for (let i = 0 ; i < SC.length ; i += 5) {
+      let C = i => fromBase64(SS.charAt(i));
+      for (let i = 0 ; i < SS.length ; i += 5) {
          let value =  C(i) >> 2, suit = C(i) & 3,
              x     =  C(i+1)     << 6 | C(i+2),
              y     = (C(i+3)&31) << 6 | C(i+4),
@@ -124,9 +124,9 @@ function Diagram() {
 
       if (dirty) {
          pack();
-         codeArea.setVar('SC', SC);
+         codeArea.setVar('SS', SS);
          if (typeof webrtcClient !== 'undefined' && webrtcClient)
-            webrtcClient.sendStateUpdate({ SC: SC });
+            webrtcClient.sendStateUpdate({ SS: SS });
          dirty = false;
       }
    }
