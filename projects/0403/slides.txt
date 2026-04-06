@@ -1,3 +1,4 @@
 Arrange\n2D shapes\non a board
-cards.js
 arrange.js
+cards.js
+chess.js
