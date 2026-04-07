@@ -60,8 +60,8 @@ function Diagram() {
    this.update = () => {
       let side = isFirstPlayer() ? 0 : 1;
 
-      let colw = row => 120 / (.85 + .4 * row / 8);
-      let rowh = row =>  30 / (.85 + .4 * row / 8);
+      let colw = row => .08 * screen.width / (.85 + .4 * row / 8);
+      let rowh = row => colw(row) / 4;
       let colx = (col,row) => screen.width/2 + (col - 3.7) * colw(row);
       let rowy = row => screen.height - (row + 5.0) * rowh(row);
 
