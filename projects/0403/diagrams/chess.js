@@ -156,10 +156,10 @@ function Diagram() {
       let drawPiece = (n, col, row) => {
          let r = side==0 ? row : 7 - row;
          let w = colw(r);
-         let x = .98*colx(col,r) + w/3 + .4 * (7 - r) * (col - 3.5);
-         let y = .72*rowy(r) + 100 + w/8;
+         let x = colx(col+.25,r);
+         let y = rowy(r) + rowh(r) + dy - w;
          octx.drawImage(chessImage, (n%6) * 120, (1-(n/6>>0)) * 220, 105, 220,
-	                            x, y + dy, .5 * w, .5 * w * .968 / .462);
+	                            x, y, .5 * w, .5 * w * .968 / .462);
       }
 
       if (! dirty)
