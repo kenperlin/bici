@@ -36,24 +36,24 @@ function Diagram() {
 
    let addPieces = side => {
       let row = 7 * side;
-      if (side == 0)
-         for (let n = 0 ; n < 8 ; n++)
-            pieces.push({type: pawn, side: side, col: n, row: side ? 6 : 1});
       pieces.push({type: rook  , side: side, col: 0, row: row});
       pieces.push({type: knight, side: side, col: 1, row: row});
       pieces.push({type: bishop, side: side, col: 2, row: row});
-      pieces.push({type: queen , side: side, col: 3, row: row});
-      pieces.push({type: king  , side: side, col: 4, row: row});
+      pieces.push({type: king  , side: side, col: 3, row: row});
+      pieces.push({type: queen , side: side, col: 4, row: row});
       pieces.push({type: bishop, side: side, col: 5, row: row});
       pieces.push({type: knight, side: side, col: 6, row: row});
       pieces.push({type: rook  , side: side, col: 7, row: row});
-      if (side == 1)
-         for (let n = 0 ; n < 8 ; n++)
-            pieces.push({type: pawn, side: side, col: n, row: side ? 6 : 1});
+      for (let n = 0 ; n < 8 ; n++)
+         pieces.push({type: pawn, side: side, col: n, row: side ? 6 : 1});
    }
-   addPieces(1);
-   addPieces(0);
-   pack();
+
+   this.init = () => {
+      pieces = [];
+      addPieces(0);
+      addPieces(1);
+      pack();
+   }
 
    let dy = 50, mn, dirty = false;
 
@@ -158,7 +158,7 @@ function Diagram() {
          let w = colw(r);
          let x = .98*colx(col,r) + w/3 + .4 * (7 - r) * (col - 3.5);
          let y = .72*rowy(r) + 100 + w/8;
-         octx.drawImage(chessImage, (n%6) * 120, (n/6>>0) * 220, 105, 220,
+         octx.drawImage(chessImage, (n%6) * 120, (1-(n/6>>0)) * 220, 105, 220,
 	                            x, y + dy, .5 * w, .5 * w * .968 / .462);
       }
 

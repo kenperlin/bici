@@ -124,8 +124,8 @@ window.keyUp = key => {
    case 'Shift': isShift = false; break;
    case 'ArrowUp'   : fontSize *= 1.1; break;
    case 'ArrowDown' : fontSize /= 1.1; break;
-   case 'ArrowLeft' : slideIndex = (slideIndex + slides.length - 1) % slides.length; break;
-   case 'ArrowRight': slideIndex = (slideIndex                  + 1) % slides.length; break;
+   case 'ArrowLeft' : setSlide(slideIndex - 1); break;
+   case 'ArrowRight': setSlide(slideIndex + 1); break;
    case "'" : chalktalk.add(pen.strokes,pen.x,pen.y); break;
    case ',' : pen.width *= .707; break;
    case '.' : pen.width /= .707; break;

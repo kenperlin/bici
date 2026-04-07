@@ -71,12 +71,15 @@ function Diagram() {
       }
    }
 
-   for (let suit = 0 ; suit < 4 ; suit++)
-   for (let value = 0 ; value < 13 ; value++)
-      cards.push({ value: value, suit: suit,
-                   x: value * cw * .13 + (.005 + suit * .25) * w,
-                   y: .7 * h });
-   pack();
+   this.init = () => {
+      cards = [];
+      for (let suit = 0 ; suit < 4 ; suit++)
+      for (let value = 0 ; value < 13 ; value++)
+         cards.push({ value: value, suit: suit,
+                      x: value * cw * .13 + (.005 + suit * .25) * w,
+                      y: .7 * h });
+      pack();
+   }
 
    this.update = () => {
       let w = screen.width, h = screen.height;

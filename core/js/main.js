@@ -326,6 +326,16 @@ function initializeYjs(roomId) {
 
 let shift3D = 0, t3D = 0, isDrawpad;
 
+let setSlide = n => {
+   slideIndex = (n + slideNames.length) % slideNames.length;
+   let name = slideNames[slideIndex];
+   if (fq[name].diagram && fq[name].diagram.init) {
+      fq[name].diagram.init();
+      if (typeof webrtcClient !== 'undefined' && webrtcClient)
+         webrtcClient.sendStateUpdate({ SS: SS });
+   }
+}
+
 let gotoSlide = name => {
    for (let n = 0 ; n < slideNames.length ; n++)
       if (name === slideNames[n]) {
@@ -424,6 +434,8 @@ let initSlides = () => {
 	       addDiagramProperties(diagram, ctx);
 	       diagram.setSize(D.w, D.h);
             }
+	    if (diagram.init)
+	       diagram.init();
             fq[name].diagram = diagram;
          });
       }
