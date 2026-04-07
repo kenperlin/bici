@@ -8,11 +8,13 @@ function Diagram() {
       SS = '';
       for (let n = 0 ; n < cards.length ; n++) {
          let card = cards[n];
+	 let x = card.x * 1024 / screen.width;
+	 let y = card.y * 1024 / screen.width;
          SS += toBase64(card.value << 2 | card.suit)
-             + toBase64(card.x >> 6)
-	     + toBase64(card.x & 63)
-             + toBase64(card.y >> 6 | (card.down ? 1<<5 : 0))
-	     + toBase64(card.y & 63);
+             + toBase64(x >> 6)
+	     + toBase64(x & 63)
+             + toBase64(y >> 6 | (card.down ? 1<<5 : 0))
+	     + toBase64(y & 63);
       }
    }
 
@@ -24,6 +26,8 @@ function Diagram() {
              x     =  C(i+1)     << 6 | C(i+2),
              y     = (C(i+3)&31) << 6 | C(i+4),
 	     down  =  C(i+3)     >> 5;
+         x = x * screen.width / 1024;
+         y = y * screen.width / 1024;
          cards.push({suit: suit, value: value, x: x, y: y, down: down});
       }
    }
