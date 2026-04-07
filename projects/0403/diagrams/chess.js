@@ -107,7 +107,7 @@ function Diagram() {
 	       if (mouse.x >= x0 && mouse.x < x1) {
 	          octx.fillStyle = '#ff000060';
 	          octx.fill();
-	          mRow = row;
+	          mRow = side==0 ? row : 7 - row;
 	          mCol = col;
 	       }
 	    }
