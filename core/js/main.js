@@ -442,8 +442,8 @@ let initSlides = () => {
 
       else {
          fq[name].diagram = new (function() {
-            this.width = 500;
-            this.height = 400;
+            this.width = .33 * screen.width;
+            this.height = .8 * this.width;
             this._beforeUpdate = () => { }
             let lines = file.split('\\n');
             this.update = () => {
@@ -458,7 +458,7 @@ let initSlides = () => {
 		     ctx.font = line.substring(i+6, j);
 		     line = line.substring(j+1);
 		  }
-                  centeredText(ctx, line, 250, 210 + 60 * (n - (lines.length-1)/2));
+                  centeredText(ctx, line, this.width/2, (.525 + .15 * (n - (lines.length-1)/2)) * this.height);
                }
 	       ctx.restore();
             }
@@ -545,8 +545,8 @@ window.initProject = () => {
    }
    if (projectSwitcher) {
       projectSwitcher.style.display = 'block';
-      projectSwitcher.style.left = 15;
-      projectSwitcher.style.top = screen.height - 50;
+      projectSwitcher.style.left = .01 * screen.width;
+      projectSwitcher.style.top = screen.height - .033 * screen.width;
    }
    
    // Load the first scene
@@ -931,7 +931,10 @@ animate = () => {
    }
 
    if (isDrawpad) {
-      let w = 500, h = 400, x = window.innerWidth - 20 - w, y = screen.height - 60 - h;
+      let w = .33 * screen.width,
+          h = .8 * w,
+          x = window.innerWidth - h/20 - w,
+	  y = screen.height - h/10 - h;
       ctx.fillStyle = isOpaque ? 'white' : '#ffffff80';
       ctx.fillRect(x, y, w, h);
    }
