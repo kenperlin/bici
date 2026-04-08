@@ -3,7 +3,7 @@ let help = {
 
 display : ctx => {
 
-   let fs = fontSize * 1.2;
+   let fs = fontSize * 1.19;
 
    if (help.isSplash) {
       ctx.fillStyle = '#ffffff80';
@@ -69,6 +69,7 @@ x Copy clipboard buffer to the console.
 X Toggle AI script panel.
 w Toggle world seen thru blue plate.
 W Toggle webcam video.
+z Toggle zoomed-in view.
 \' Convert strokes to a sketch.
 , Make pen line thinner.
 . Make pen line thicker.

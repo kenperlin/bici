@@ -16,6 +16,8 @@ webcam.canvas.width = 640;
 webcam.canvas.height = 480;
 let wctx = webcam.canvas.getContext('2d');
 
+let isZoomed = false;
+
 webcam.isPen = true;
 webcam.opacity = 1;
 
@@ -61,7 +63,10 @@ webcam.update = () => {
 
    // GET THIS FRAME OF VIDEO AS AN RGBA BYTE ARRAY
 
-   wctx.drawImage(videoSrc, 0, 0, 640, 480);
+   if (isZoomed)
+      wctx.drawImage(videoSrc, 640/4, 480/4, 640/2, 480/2, 0, 0, 640, 480);
+   else
+      wctx.drawImage(videoSrc, 0, 0, 640, 480);
    let imgData = wctx.getImageData(0,0,640,480);
    let data = imgData.data;
    webcam.data = data;
@@ -79,7 +84,6 @@ webcam.update = () => {
       }
    }
 
-   //let isBlue = (r,g,b) => b > 60 && b > 1.3 * Math.max(r,g);
    let isBlue = (r,g,b) => b > 115 && b > 1.6 * Math.max(r,g);
 
    // FOLLOW THE POSITION OF A BLUE MARKER PEN

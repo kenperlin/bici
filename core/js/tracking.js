@@ -445,9 +445,12 @@ let trackingUpdate = () => {
    if (isSeparateHandAvatars) {
       for (let hand = 0 ; hand <= 1 ; hand++) {
          if (mediapipe.handResults[hand]) {
-            drawShadowHand(octx, hand, mediapipe.handResults[hand].landmarks, handAvatar[hand].x,
-                                                                              handAvatar[hand].y,
-                                                                              handAvatar[hand].s);
+            drawShadowHand(octx, hand, isZoomed ? mediapipe.zoomedHandResults[hand].landmarks
+                                                : mediapipe.handResults[hand].landmarks,
+	       handAvatar[hand].x,
+               handAvatar[hand].y,
+               handAvatar[hand].s);
+
             if (! isScalingHandAvatars) {
 	       if (shadowHandInfo[hand].gesture == 'frame') {
 	          let f = shadowHandInfo[hand].frame;

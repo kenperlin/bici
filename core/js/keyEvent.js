@@ -179,6 +179,7 @@ window.keyUp = key => {
                        .then(text => console.log('Clipboard content:', text))
 		       .catch(err => {}); break;
    case 'X' : toggleScriptPanel(); break;
+   case 'z' : isZoomed = ! isZoomed; break;
    }
 }
 

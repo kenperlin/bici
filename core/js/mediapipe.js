@@ -219,6 +219,22 @@ class Mediapipe {
 
     this.faceResults = newFace;
     this.handResults = newHands;
+
+    if (isZoomed) {
+       let hR = []; 
+       for (let i = 0 ; i < 2 ; i++)
+          if (this.handResults[i]) {
+             hR[i] = { landmarks: [] };
+	     hR[i].handedness = this.handResults[i].handedness;
+             let L = this.handResults[i].landmarks;
+             for (let n = 0 ; n < L.length ; n++)
+                hR[i].landmarks.push( { x: 2*L[n].x-.5,
+	                                y: 2*L[n].y-.5,
+				        z:   L[n].z } );
+          }
+       this.zoomedHandResults = hR;
+    }
+       
   }
 }
 
