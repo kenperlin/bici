@@ -91,6 +91,12 @@ function PlayingCards() {
       return cards.length - 1;
    }
 
+   this.removeCard = (value, suit) => {
+      for (let n = 0 ; n < cards.length ; n++)
+         if (cards[n].value == value && cards[n].suit == suit)
+	    cards.splice(n--, 1);
+   }
+
    this.moveCardToTop = c => {
       cards.push(cards.splice(c, 1)[0]);
       return cards.length - 1;

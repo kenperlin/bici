@@ -1,14 +1,13 @@
 function Diagram() {
    this.isFullScreen = true;
+   let w = screen.width, h = screen.height, dirty = false, nDrags = 0;
 
-   let w = screen.width, h = screen.height;
    let deck = new PlayingCards();
-   let dirty = false;
 
-   let id = [];
+   let card = [];
    for (let n = 0 ; n < 52 ; n++)
-      id.push({value: n%13, suit: n/13>>0, s: Math.random()});
-   id.sort((a,b) => a.s - b.s);
+      card.push({value: n%13, suit: n/13>>0, s: Math.random()});
+   card.sort((a,b) => a.s - b.s);
 
    this.init = () => {
       deck.emptyDeck();
@@ -22,23 +21,45 @@ function Diagram() {
 
       let mouse = this.input.mouse;
 
+      // Mouse down
+
       if (mouse.isDown && ! mouse.wasDown) {
          nc = deck.findCardAt(mouse.x, mouse.y);
+         nDrags = 0;
       }
 
+      // Mouse drag
+
       if (mouse.isDown && mouse.wasDown) {
-         if (nc !== undefined && nc > 0) {
-	    deck.moveCardBy(nc, mouse.x - mouse.x0, mouse.y - mouse.y0);
-	    dirty = true;
+
+         // Drag on a card to move it.
+
+         if (nc !== undefined) {
+            deck.moveCardBy(nc, mouse.x - mouse.x0, mouse.y - mouse.y0);
+            nDrags++;
+            dirty = true;
          }
       }
 
+      // Mouse up
+
       if (! mouse.isDown && mouse.wasDown) {
-         if (nc == 0) {
+
+         // Click on the down card to deal a new card.
+
+         if (nDrags < 25 && nc == 0) {
             let n = deck.cardCount();
             let x = w/10 + (1 + .14 * n) * deck.cw(), y = h/2;
-            deck.addCard(id[n].value, id[n].suit, x, y);
-	    dirty = true;
+            deck.addCard(card[n].value, card[n].suit, x, y);
+            dirty = true;
+         }
+
+	 // Click on an up card to remove it and put it at the end of the deck.
+
+         if (nDrags < 25 && nc > 0) {
+            deck.removeCard(card[nc].value, card[nc].suit);
+            card.push(card.splice(nc, 1)[0]);
+            dirty = true;
          }
       }
 

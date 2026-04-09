@@ -1,9 +1,8 @@
 function Diagram() {
    this.isFullScreen = true;
+   let w = screen.width, h = screen.height, dirty = false, nc, nDrag = 0;
 
-   let w = screen.width, h = screen.height, nc;
    let deck = new PlayingCards();
-   let nDrags = 0, dirty = false;
 
    this.init = () => {
       deck.emptyDeck();
