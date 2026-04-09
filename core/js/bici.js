@@ -38,7 +38,7 @@ let coreFiles = `M4, pca, loadImage, webgl, webcam, trackHead, help,
 	        glyphs, chalktalk, codeArea, math, shape, shader,
 	        diagram, sliders, widgets, webrtc-client, video-ui, implicit,
 		mediapipe, gesture, shadowHand, tracking, handPose, main,
-		game,fetchWikipediaArticle,playingCards`.split(',');
+		game,fetchWikipediaArticle,playingCards,cardDeck`.split(',');
 
 let project, slideData;
 let coreLoaded = false;

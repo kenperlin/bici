@@ -36,6 +36,8 @@ function Diagram() {
 
          if (nc !== undefined) {
             deck.moveCardBy(nc, mouse.x - mouse.x0, mouse.y - mouse.y0);
+	    card[nc].x += mouse.x - mouse.x0;
+	    card[nc].y += mouse.y - mouse.y0;
             nDrags++;
             dirty = true;
          }
@@ -49,16 +51,25 @@ function Diagram() {
 
          if (nDrags < 25 && nc == 0) {
             let n = deck.cardCount();
-            let x = w/10 + (1 + .14 * n) * deck.cw(), y = h/2;
-            deck.addCard(card[n].value, card[n].suit, x, y);
+            card[n].x = w/10 + (1 + .14 * n) * deck.cw();
+	    card[n].y = h/2;
+            deck.addCard(card[n].value, card[n].suit, card[n].x, card[n].y);
             dirty = true;
          }
-
+/*
 	 // Click on an up card to remove it and put it at the end of the deck.
 
          if (nDrags < 25 && nc > 0) {
             deck.removeCard(card[nc].value, card[nc].suit);
             card.push(card.splice(nc, 1)[0]);
+            dirty = true;
+         }
+*/
+	 // Click on an up card to bring it to the top.
+
+         if (nDrags < 25 && nc > 0) {
+            deck.removeCard(card[nc].value, card[nc].suit);
+            deck.addCard(card[nc].value, card[nc].suit, card[nc].x, card[nc].y);
             dirty = true;
          }
       }
