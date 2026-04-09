@@ -5,7 +5,7 @@ function Diagram() {
 
    this.init = () => {
       deck.emptyDeck();
-      for (let n = 0 ; n < 5 ; n++)
+      for (let n = 0 ; n < 52 ; n++)
          deck.addCard({
 	    value: n % 13,
 	    suit : n/13 >> 0,
@@ -13,7 +13,7 @@ function Diagram() {
 	    order: Math.random(),
          });
       deck.sortDeck();
-      for (let n = 0 ; n < 5 ; n++) {
+      for (let n = 0 ; n < 52 ; n++) {
          let card = deck.getCard(n);
 	 card.x = w/20 - n/2;
 	 card.y = w/20 - n/4;

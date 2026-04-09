@@ -33,12 +33,12 @@ async function getFile(file, callback) {
 let _ = {};
 
 // Core scripts - loaded once at startup (includes WebRTC)
-let coreFiles = `M4, pca, loadImage, webgl, webcam, trackHead, help,
-	        midi, numberString, pen, aiScriptPanel, keyEvent, matchCurves,
-	        glyphs, chalktalk, codeArea, math, shape, shader,
-	        diagram, sliders, widgets, webrtc-client, video-ui, implicit,
-		mediapipe, gesture, shadowHand, tracking, handPose, main,
-		game,fetchWikipediaArticle,playingCards,cardDeck`.split(',');
+let coreFiles = `M4,pca,loadImage,webgl,webcam,trackHead,help,cardDeck,
+	        midi,numberString,pen,aiScriptPanel,keyEvent,matchCurves,
+	        glyphs,chalktalk,codeArea,math,shape,shader,
+	        diagram,sliders,widgets,webrtc-client,video-ui,implicit,
+		mediapipe,gesture,shadowHand,tracking,handPose,main,
+		game,fetchWikipediaArticle,playingCards`.split(',');
 
 let project, slideData;
 let coreLoaded = false;
