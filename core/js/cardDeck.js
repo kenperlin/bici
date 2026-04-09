@@ -41,6 +41,8 @@ function CardDeck() {
    this.cardCount = () => cards.length;
    this.addCard = card => cards.push(card);
    this.getCard = n => cards[n];
+   this.getCards = () => cards;
+   this.setCards = newCards => cards = newCards;
 
    this.drawDeck = card => {
       for (let n = 0 ; n < cards.length ; n++)

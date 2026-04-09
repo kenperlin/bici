@@ -13,12 +13,13 @@ function Diagram() {
 	    order: Math.random(),
          });
       deck.sortDeck();
-      for (let n = 0 ; n < 52 ; n++) {
-         let card = deck.getCard(n);
-	 card.x = w/20 - n/2;
-	 card.y = w/20 - n/4;
+
+      let cards = deck.getCards();
+      for (let n = 0 ; n < cards.length ; n++) {
+	 cards[n].x = w/20 - n/2;
+	 cards[n].y = w/20 - n/4;
       }
-      window.SS = deck;
+      window.SS = cards;
    }
 
    this.update = () => {
@@ -60,12 +61,12 @@ function Diagram() {
       mouse.y0 = mouse.y;
 
       if (! dirty)
-	 deck = SS;
+	 deck.setCards(SS);
 
       deck.drawDeck();
 
       if (dirty) {
-	 SS = deck;
+	 SS = deck.getCards();
          if (typeof webrtcClient !== 'undefined' && webrtcClient)
             webrtcClient.sendStateUpdate({ SS: SS });
          dirty = false;

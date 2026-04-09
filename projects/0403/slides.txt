@@ -1,6 +1,6 @@
 Arrange\n2D shapes\non a board
 arrange.js
-//cards.js
-//deal_a_card.js
+cards.js
+deal_a_card.js
 deal.js
 chess.js
