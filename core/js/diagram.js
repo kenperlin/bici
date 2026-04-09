@@ -5,6 +5,13 @@ let addDiagramProperties = (diagram, ctx) => {
    let yp = y => (.5*h/w - y * .5) * w;
    let M = new M4();
 
+   diagram.getState = () => window.SS;
+   diagram.setState = state => {
+      window.SS = state;
+      if (typeof webrtcClient !== 'undefined' && webrtcClient)
+         webrtcClient.sendStateUpdate({ SS: SS });
+   }
+
    diagram.setSize = (dw, dh) => { w = dw; h = dh; }
    diagram._px   = x => (x / w - .5    ) /  .5;
    diagram._py   = y => (y / w - .5*h/w) / -.5;

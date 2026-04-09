@@ -1,25 +1,19 @@
 function Diagram() {
    this.isFullScreen = true;
    let w = screen.width, h = screen.height, dirty = false, nDrags = 0;
-   let deck = new CardDeck(), card;
+   let deck, card;
 
    this.init = () => {
-      deck.emptyDeck();
-      for (let n = 0 ; n < 52 ; n++)
-         deck.addCard({
-	    value: n % 13,
-	    suit : n/13 >> 0,
-	    up   : false,
-	    order: Math.random(),
-         });
-      deck.sortDeck();
+      deck = new CardDeck();
+      deck.shuffleDeck();
 
       let cards = deck.getCards();
       for (let n = 0 ; n < cards.length ; n++) {
 	 cards[n].x = w/20 - n/2;
 	 cards[n].y = w/20 - n/4;
       }
-      window.SS = cards;
+
+      dirty = true;
    }
 
    this.update = () => {
@@ -29,11 +23,10 @@ function Diagram() {
       // Mouse down on a card to bring it to the front.
 
       if (mouse.isDown && ! mouse.wasDown) {
-         if (card = deck.findCardAt(mouse.x, mouse.y)) {
-            deck.removeCard(card);
-            deck.addCard(card);
-         }
+         if (card = deck.findCardAt(mouse.x, mouse.y))
+            deck.addCard(deck.removeCard(card));
          nDrags = 0;
+         dirty = true;
       }
 
       // Drag on a card to move it.
@@ -61,14 +54,12 @@ function Diagram() {
       mouse.y0 = mouse.y;
 
       if (! dirty)
-	 deck.setCards(SS);
+	 deck.setCards(this.getState());
 
       deck.drawDeck();
 
       if (dirty) {
-	 SS = deck.getCards();
-         if (typeof webrtcClient !== 'undefined' && webrtcClient)
-            webrtcClient.sendStateUpdate({ SS: SS });
+         this.setState(deck.getCards());
          dirty = false;
       }
    }

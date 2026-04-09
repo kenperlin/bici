@@ -1,7 +1,11 @@
 function CardDeck() {
 
-   let cards = [], cw = screen.width * .093, ch = cw * 7 / 5;
+   let cw = screen.width * .093, ch = cw * 7 / 5;
    const sw = 62, sh = 96;
+
+   let cards = [];
+   for (let n = 0 ; n < 52 ; n++)
+      cards.push({ value: n % 13, suit: n/13 >> 0 });
 
    let cardsImage = new Image();
    cardsImage.src = 'core/images/cards.png';
@@ -44,6 +48,14 @@ function CardDeck() {
    this.getCards = () => cards;
    this.setCards = newCards => cards = newCards;
 
+   this.shuffleDeck = () => {
+      for (let n = 0 ; n < cards.length ; n++)
+         cards[n].order = Math.random();
+      cards.sort((a,b) => a.order - b.order);
+      for (let n = 0 ; n < cards.length ; n++)
+         delete cards[n].order;
+   }
+
    this.drawDeck = card => {
       for (let n = 0 ; n < cards.length ; n++)
          drawCard(cards[n], card ? cards[n].value == card.value &&
@@ -63,5 +75,6 @@ function CardDeck() {
       for (let n = 0 ; n < cards.length ; n++)
          if (cards[n] == card)
 	    cards.splice(n--, 1);
+      return card;
    }
 }
