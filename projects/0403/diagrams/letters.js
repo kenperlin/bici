@@ -5,8 +5,10 @@ function Diagram() {
 
    let tiles;
 
-   let X = n => .24 * w + w * n / 27.5 >> 0;
-   let Y = n => .88 * h - w * (n + 1) / 27.5 >> 0;
+   let X = col => .24 * w + w * col / 27.5 >> 0;
+   let Y = row => .88 * h - w * (row + 1) / 27.5 >> 0;
+   let C = x => (x - .24 * w) * 27.5 / w + .5 >> 0;
+   let R = y => (.88 * h - y) * 27.5 / w - .5 >> 0;
 
    this.init = () => {
       tiles = [];
@@ -29,6 +31,8 @@ function Diagram() {
 	          tiles.push(tile = { value: n, x: x, y: y });
 	       else
 	          tile = tiles[n];
+               tile.xDown = x;
+               tile.yDown = y;
             }
          }
 	 nDrags = 0;
@@ -44,14 +48,36 @@ function Diagram() {
 	 }
       }
 
+      let removeTile = tile => {
+	 for (let n = 26 ; n < tiles.length ; n++)
+	    if (tiles[n] == tile)
+	       tiles.splice(n, 1);
+      }
+
       if (! mouse.isDown && mouse.wasDown) {
          if (tile !== undefined && nDrags < 25)
-	    for (let n = 26 ; n < tiles.length ; n++)
-	       if (tiles[n] == tile)
-	          tiles.splice(n, 1);
+	    removeTile(tile);
+
          if (tile !== undefined && nDrags >= 25) {
-	    tile.x = (((tile.x - .6) * 27.5 / w >> 0) + .6) * w / 27.5;
-	    tile.y = (((tile.y - .7) * 27.5 / w >> 0) + .7) * w / 27.5;
+	    let col = C(tile.x);
+	    let row = R(tile.y);
+	    if (col < 0 || col > 14 || row < 0 || row > 14)
+	       removeTile(tile);
+            else {
+	       let isOccupied = false;
+	       for (let n = 26 ; n < tiles.length ; n++)
+	          if (tiles[n] != tile && C(tiles[n].x) == col && R(tiles[n].y) == row) {
+		     isOccupied = true;
+		     break;
+	          }
+               if (isOccupied && ! tile.onGrid)
+	          removeTile(tile);
+               else {
+	          tile.onGrid = true;
+	          tile.x = isOccupied ? tile.xDown : X(col);
+	          tile.y = isOccupied ? tile.yDown : Y(row);
+               }
+            }
 	 }
 	    
 	 dirty = true;
@@ -67,13 +93,13 @@ function Diagram() {
       let drawTile = (value,x,y) => {
          octx.fillStyle = '#00000040';
          octx.beginPath();
-         octx.roundRect(x - r, y - r, 2 * r, 2 * r, r/5, r/5);
+         octx.roundRect(x - r, y - r, 2 * r, 2 * r, r/3, r/3);
          octx.fill();
 
          octx.fillStyle = '#ffc08050';
          octx.beginPath();
 	 let s = .9 * r;
-         octx.roundRect(x - s, y - s, 2 * s, 2 * s, s/5, s/5);
+         octx.roundRect(x - s, y - s, 2 * s, 2 * s, s/3, s/3);
          octx.fill();
 
          octx.fillStyle = '#000000';
