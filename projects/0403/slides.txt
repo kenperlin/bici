@@ -1,5 +1,6 @@
-Arrange\n2D shapes\non a board
+Full screen 2D\nmultiplayer\ngames and\nactivities
 arrange.js
 deck.js
 deal.js
 chess.js
+letters.js
