@@ -1,10 +1,15 @@
 function Diagram() {
    this.isFullScreen = true;
 
-   // MAKE SURE THAT THE GLOBAL VARIABLE EXISTS.
+   // MAKE SURE THAT THE GLOBAL VARIABLE EXISTS AND IS INITIALIZED.
 
    if (! window.SS)
       window.SS = '';
+
+   this.init = () => {
+      SS = '';
+      dirty = true;
+   }
 
    // METHODS TO PACK/UNPACK ALL THE SHAPES DATA INTO/FROM A COMPACT STRING.
 
