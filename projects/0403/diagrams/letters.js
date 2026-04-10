@@ -1,6 +1,6 @@
 function Diagram() {
    this.isFullScreen = true;
-   let w = screen.width, h = screen.height, dirty, tile, nDrags;
+   let h = screen.height, w = h * 1512 / 982, dirty, tile, nDrags;
    let r = w / 55;
 
    let tiles;
