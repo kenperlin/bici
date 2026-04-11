@@ -879,11 +879,21 @@ animate = () => {
 
 	    let setState = (d0,d1) => !d0 && !d1 ? 'up' : !d0 && d1 ? 'press' : d0 && d1 ? 'down' : 'release';
 
-	    let d0 = window.mouse_wasDown;
+	    let d0 = window._mouse_down;
+	    let x0 = window._mouse_x;
+	    let y0 = window._mouse_y;
+
 	    let d1 = slide.input.mouse.isDown;
-	    window.mouse_wasDown = d1;
+	    let x1 = slide.input.mouse.x;
+	    let y1 = slide.input.mouse.y;
+
+	    window._mouse_down = d1;
+	    window._mouse_x = x1;
+	    window._mouse_y = y1;
 
 	    slide.input.mouse.state = setState(d0, d1);
+	    slide.input.mouse.dx = x1 - x0;
+	    slide.input.mouse.dy = y1 - y0;
 
             let isHand = { left:false, right:false };
             let iHand = 0;
@@ -896,9 +906,9 @@ animate = () => {
 	          if (! slide.input[hand])
 	             slide.input[hand] = {};
 
-	          let d0 = window[hand + '_wasDown'];
+	          let d0 = window['_' + hand + '_down'];
 	          let d1 = shadowHandInfo[iHand].gesture == 'pinch';
-	          window[hand + '_wasDown'] = d1;
+	          window['_' + hand + '_down'] = d1;
 
 	          slide.input[hand].pos = shadowHandInfo[iHand].pos;
 	          slide.input[hand].state = setState(d0, d1);

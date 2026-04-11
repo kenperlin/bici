@@ -1,9 +1,6 @@
 function Diagram() {
    this.isFullScreen = true;
-   let h = screen.height, w = h * 1512 / 982, dirty, tile, nDrags;
-   let r = w / 55;
-
-   let tiles;
+   let h = screen.height, w = h * 1512 / 982, r = w / 55, dirty, tile, nDrags, tiles;
 
    let X = col => .24 * w + w * col / 27.5 >> 0;
    let Y = row => .88 * h - w * (row + 1) / 27.5 >> 0;
@@ -21,7 +18,14 @@ function Diagram() {
 
       let mouse = this.input.mouse;
 
-      if (mouse.isDown && ! mouse.wasDown) {
+      let removeTile = tile => {
+	 for (let n = 26 ; n < tiles.length ; n++)
+	    if (tiles[n] == tile)
+	       tiles.splice(n, 1);
+      }
+
+      switch (mouse.state) {
+      case 'press':
          tile = undefined;
          for (let n = 0 ; n < tiles.length ; n++) {
 	    let value = tiles[n].value, x = tiles[n].x, y = tiles[n].y;
@@ -37,60 +41,68 @@ function Diagram() {
          }
 	 nDrags = 0;
 	 dirty = true;
-      }
 
-      if (mouse.isDown && mouse.wasDown) {
+      case 'down':
          if (tile !== undefined) {
-            tile.x += mouse.x - mouse.x0;
-	    tile.y += mouse.y - mouse.y0;
+            tile.x += mouse.dx;
+	    tile.y += mouse.dy;
 	    nDrags++;
 	    dirty = true;
 	 }
-      }
+	 break;
 
-      let removeTile = tile => {
-	 for (let n = 26 ; n < tiles.length ; n++)
-	    if (tiles[n] == tile)
-	       tiles.splice(n, 1);
-      }
-
-      if (! mouse.isDown && mouse.wasDown) {
-         if (tile !== undefined && nDrags < 25)
+      case 'release':
+         if (tile !== undefined && nDrags < 25) {
 	    removeTile(tile);
-
+	    dirty = true;
+         }
          if (tile !== undefined && nDrags >= 25) {
 	    let col = C(tile.x);
 	    let row = R(tile.y);
 	    if (col < 0 || col > 14 || row < 0 || row > 14)
 	       removeTile(tile);
             else {
-	       let isOccupied = false;
+	       let isFree = true;
 	       for (let n = 26 ; n < tiles.length ; n++)
 	          if (tiles[n] != tile && C(tiles[n].x) == col && R(tiles[n].y) == row) {
-		     isOccupied = true;
+		     isFree = false;
 		     break;
 	          }
-               if (isOccupied && ! tile.onGrid)
+               if (! isFree && ! tile.onGrid)
 	          removeTile(tile);
                else {
 	          tile.onGrid = true;
-	          tile.x = isOccupied ? tile.xDown : X(col);
-	          tile.y = isOccupied ? tile.yDown : Y(row);
+	          tile.x = isFree ? X(col) : tile.xDown;
+	          tile.y = isFree ? Y(row) : tile.yDown;
                }
             }
+	    dirty = true;
 	 }
-	    
-	 dirty = true;
+	 break;
       }
 
-      mouse.wasDown = mouse.isDown;
-      mouse.x0 = mouse.x;
-      mouse.y0 = mouse.y;
+      // UPDATE SHARED STATE
 
       if (! dirty)
-	 tiles = this.getState();
+	 tiles = this.getState(); // IF NO CHANGES, GET SHARED STATE
+      else
+         this.setState(tiles);    // IF ANY CHANGE, SET SHARED STATE
+      dirty = false;
 
-      let drawTile = (value,x,y) => {
+      // DRAW THE BOARD
+
+      octx.lineWidth = h / 1000;
+      for (let i = -.5 ; i <= 14.5 ; i++) {
+          octx.strokeRect(X(i),Y(14.5),1,Y(-.5)-Y(14.5));
+          octx.strokeRect(X(14.5),Y(i),X(-.5)-X(14.5),1);
+      }
+
+      // DRAW ALL THE TILES
+
+      octx.font = (w/40 >> 0) + 'px Helvetica';
+      for (let n = 0 ; n < tiles.length ; n++) {
+         let value = tiles[n].value, x = tiles[n].x, y = tiles[n].y;
+
          octx.fillStyle = '#00000040';
          octx.beginPath();
          octx.roundRect(x - r, y - r, 2 * r, 2 * r, r/3, r/3);
@@ -105,22 +117,6 @@ function Diagram() {
          octx.fillStyle = '#000000';
          let c = String.fromCharCode(65 + value);
          octx.fillText(c, x - octx.measureText(c).width/2, y + .5 * r);
-      }
-
-      octx.font = (w/40 >> 0) + 'px Helvetica';
-      for (let n = 0 ; n < tiles.length ; n++) {
-         let value = tiles[n].value, x = tiles[n].x, y = tiles[n].y;
-	 drawTile(value, x, y);
-      }
-
-      for (let i = -.5 ; i <= 14.5 ; i++) {
-          octx.strokeRect(X(i),Y(14.5),1,Y(-.5)-Y(14.5));
-          octx.strokeRect(X(14.5),Y(i),X(-.5)-X(14.5),1);
-      }
-
-      if (dirty) {
-         this.setState(tiles);
-         dirty = false;
       }
    }
 }
