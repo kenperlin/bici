@@ -1,6 +1,6 @@
 function Diagram() {
    this.isFullScreen = true;
-   let w = screen.width, h = screen.height, dirty = false, nDrags = 0;
+   let w = screen.width, h = screen.height, dirty = false;
    let deck, card;
 
    this.init = () => {
@@ -12,7 +12,6 @@ function Diagram() {
 	 cards[n].x = w/20 - n/2;
 	 cards[n].y = w/20 - n/4;
       }
-
       dirty = true;
    }
 
@@ -20,48 +19,44 @@ function Diagram() {
 
       let mouse = this.input.mouse;
 
-      // Mouse down on a card to bring it to the front.
+      switch (mouse.state) {
 
-      if (mouse.isDown && ! mouse.wasDown) {
+      // Press on a card to bring it to the front.
+
+      case 'press':
          if (card = deck.findCardAt(mouse.x, mouse.y))
             deck.addCard(deck.removeCard(card));
-         nDrags = 0;
          dirty = true;
-      }
+	 break;
+
 
       // Drag on a card to move it.
 
-      if (mouse.isDown && mouse.wasDown) {
+      case 'down':
          if (card !== undefined) {
-	    card.x += mouse.x - mouse.x0;
-	    card.y += mouse.y - mouse.y0;
-            nDrags++;
+	    card.x += mouse.dx;
+	    card.y += mouse.dy;
             dirty = true;
          }
-      }
+	 break;
 
       // Click on a card to flip it.
 
-      if (! mouse.isDown && mouse.wasDown) {
-         if (card && nDrags < 25) {
+      case 'release':
+         if (card && mouse.isClick) {
 	    card.up = ! card.up;
             dirty = true;
          }
+	 break;
       }
-
-      mouse.wasDown = mouse.isDown;
-      mouse.x0 = mouse.x;
-      mouse.y0 = mouse.y;
 
       if (! dirty)
 	 deck.setCards(this.getState());
+      else
+         this.setState(deck.getCards());
+      dirty = false;
 
       deck.drawDeck();
-
-      if (dirty) {
-         this.setState(deck.getCards());
-         dirty = false;
-      }
    }
 }
 

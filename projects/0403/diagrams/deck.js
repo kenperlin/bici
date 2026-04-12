@@ -1,6 +1,6 @@
 function Diagram() {
    this.isFullScreen = true;
-   let h = screen.height, w = h * 1512 / 982, dirty, card, nDrags;
+   let h = screen.height, w = h * 1512 / 982, dirty, card;
 
    let deck;
 
@@ -16,43 +16,36 @@ function Diagram() {
    }
 
    this.update = () => {
-
       let mouse = this.input.mouse;
 
-      if (mouse.isDown && ! mouse.wasDown) {
+      switch (mouse.state) {
+      case 'press':
          if (card = deck.findCardAt(mouse.x, mouse.y))
             deck.addCard(deck.removeCard(card));
-	 nDrags = 0;
 	 dirty = true;
-      }
+	 break;
 
-      if (mouse.isDown && mouse.wasDown) {
+      case 'down':
          if (card !== undefined) {
-            card.x += mouse.x - mouse.x0;
-	    card.y += mouse.y - mouse.y0;
-	    nDrags++;
+            card.x += mouse.dx;
+	    card.y += mouse.dy;
 	    dirty = true;
 	 }
-      }
+	 break;
 
-      if (! mouse.isDown && mouse.wasDown) {
-         if (card !== undefined && nDrags < 25)
+      case 'release':
+         if (card !== undefined && mouse.isClick)
 	    card.up = ! card.up;
 	 dirty = true;
+	 break;
       }
-
-      mouse.wasDown = mouse.isDown;
-      mouse.x0 = mouse.x;
-      mouse.y0 = mouse.y;
 
       if (! dirty)
 	 deck.setCards(this.getState());
+      else
+         this.setState(deck.getCards());
+      dirty = false;
 
       deck.drawDeck();
-
-      if (dirty) {
-         this.setState(deck.getCards());
-         dirty = false;
-      }
    }
 }

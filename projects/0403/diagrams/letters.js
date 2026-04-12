@@ -1,6 +1,6 @@
 function Diagram() {
    this.isFullScreen = true;
-   let h = screen.height, w = h * 1512 / 982, r = w / 55, dirty, tile, nDrags, tiles;
+   let h = screen.height, w = h * 1512 / 982, r = w / 55, dirty, tile, tiles;
 
    let X = col => .24 * w + w * col / 27.5 >> 0;
    let Y = row => .88 * h - w * (row + 1) / 27.5 >> 0;
@@ -39,24 +39,25 @@ function Diagram() {
                tile.yDown = y;
             }
          }
-	 nDrags = 0;
 	 dirty = true;
 
       case 'down':
          if (tile !== undefined) {
             tile.x += mouse.dx;
 	    tile.y += mouse.dy;
-	    nDrags++;
 	    dirty = true;
 	 }
 	 break;
 
       case 'release':
-         if (tile !== undefined && nDrags < 25) {
-	    removeTile(tile);
-	    dirty = true;
-         }
-         if (tile !== undefined && nDrags >= 25) {
+         if (tile !== undefined) {
+
+	    if (mouse.isClick) {
+	       removeTile(tile);
+	       dirty = true;
+	       break;
+            }
+
 	    let col = C(tile.x);
 	    let row = R(tile.y);
 	    if (col < 0 || col > 14 || row < 0 || row > 14)

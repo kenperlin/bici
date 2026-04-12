@@ -895,6 +895,12 @@ animate = () => {
 	    slide.input.mouse.dx = x1 - x0;
 	    slide.input.mouse.dy = y1 - y0;
 
+	    switch (slide.input.mouse.state) {
+	    case 'press': slide.input.mouse.nDrags = 0; break;
+	    case 'down' : slide.input.mouse.nDrags++  ; break;
+	    }
+	    slide.input.mouse.isClick = slide.input.mouse.nDrags < 25;
+
             let isHand = { left:false, right:false };
             let iHand = 0;
             for (const handResult of mediapipe.handResults) {
