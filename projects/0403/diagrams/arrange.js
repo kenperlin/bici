@@ -1,43 +1,16 @@
 function Diagram() {
    this.isFullScreen = true;
 
-   // MAKE SURE THAT THE GLOBAL VARIABLE EXISTS AND IS INITIALIZED.
+   // INITIALIZE THE SHARED STATE.
 
-   if (! window.SS)
-      window.SS = '';
-
+   let S;
    this.init = () => {
-      SS = '';
+      S = [];
       dirty = true;
    }
 
-   // METHODS TO PACK/UNPACK ALL THE SHAPES DATA INTO/FROM A COMPACT STRING.
-
-   let packS = () => {
-      SS = '';
-      for (let n = 0 ; n < S.length ; n += 4) {
-         let type = S[n], x = S[n+1], y = S[n+2], c = S[n+3];
-         let X = 2048.5 + 2048 * x >> 0,
-             Y = 2048.5 + 2048 * y >> 0;
-         SS += toBase64(type << 3 | c)
-             + toBase64(X >> 6) + toBase64(X & 63)
-             + toBase64(Y >> 6) + toBase64(Y & 63);
-      }
-   }
-
-   let unpackS = () => {
-      S = [];
-      let C = i => fromBase64(SS.charAt(i));
-      for (let i = 0 ; i < SS.length ; i += 5) {
-         let type = C(i) >> 3, c = C(i) & 7,
-             X = C(i+1) << 6 | C(i+2), x = (X - 2048) / 2048,
-             Y = C(i+3) << 6 | C(i+4), y = (Y - 2048) / 2048;
-         S.push(type, x, y, c);
-      }
-   }
-
    let cursorIds = { mouse:0, left:1, right:2 };
-   let S = [], X = .53, Y = .47, e = .06;
+   const X = .53, Y = .47, e = .06;
 
    // DRAW ONE OF THE SEVEN SHAPES, AT A GIVEN LOCATION AND WITH A GIVEN COLOR.
 
@@ -134,11 +107,6 @@ function Diagram() {
          cursor.y0 = y;
       }
 
-      // UNPACK THE CURRENT STATE FROM GLOBAL STORAGE (SKIP IF LOCAL USER IS ACTIVELY INTERACTING).
-
-      if (! dirty)
-         unpackS();
-
       // RESPOND TO INPUT EVENTS.
 
       for (let cursorId in cursorIds) {
@@ -146,6 +114,14 @@ function Diagram() {
          if (cursor)
             respondToInput(cursor);
       }
+
+      // UPDATE SHARED STATE.
+
+      if (! dirty)
+         S = this.getState();
+      else
+         this.setState(S);
+      dirty = false;
 
       // DRAW THE FRAME AROUND THE BOARD.
 
@@ -199,15 +175,6 @@ function Diagram() {
             case 'release': this.    arc(xy,r-t/2); break;
             }
          }
-      }
-
-      // PACK THE CURRENT STATE AND SEND TO GLOBAL STORAGE ONLY IF LOCAL USER CHANGED IT.
-
-      if (dirty) {
-         packS();
-         if (typeof webrtcClient !== 'undefined' && webrtcClient)
-            webrtcClient.sendStateUpdate({ SS: SS });
-         dirty = false;
       }
    }
 }
