@@ -1,16 +1,15 @@
 function Diagram() {
    this.isFullScreen = true;
-   let w = screen.width, h = screen.height, dirty = false;
-   let deck, card;
+   let dirty = false, deck, card;
 
    this.init = () => {
-      deck = new CardDeck();
+      deck = new CardDeck(this);
       deck.shuffleDeck();
 
       let cards = deck.getCards();
       for (let n = 0 ; n < cards.length ; n++) {
-	 cards[n].x = w/20 - n/2;
-	 cards[n].y = w/20 - n/4;
+	 cards[n].x = -.95 - .0005 * n;
+	 cards[n].y =  .32 + .0003 * n;
       }
       dirty = true;
    }
@@ -24,7 +23,7 @@ function Diagram() {
       // Press on a card to bring it to the front.
 
       case 'press':
-         if (card = deck.findCardAt(mouse.x, mouse.y))
+         if (card = deck.findCardAt(mouse.pos))
             deck.addCard(deck.removeCard(card));
          dirty = true;
 	 break;
@@ -34,8 +33,8 @@ function Diagram() {
 
       case 'down':
          if (card !== undefined) {
-	    card.x += mouse.dx;
-	    card.y += mouse.dy;
+	    card.x += mouse.dpos[0];
+	    card.y += mouse.dpos[1];
             dirty = true;
          }
 	 break;

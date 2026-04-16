@@ -102,8 +102,8 @@ function Diagram() {
       for (let n = -7.5 ; n <= 7.5 ; n++) {
          let x = r * n;
          let y = r * (n+1);
-         this.fillRect([x-.001,-r*6.5],[x+.001,r*8.5]);
-         this.fillRect([-r*7.5,y-.001],[r*7.5,y+.001]);
+         this.fillRect([x-.0005,-r*6.5],[x+.0005,r*8.5]);
+         this.fillRect([-r*7.5,y-.0005],[r*7.5,y+.0005]);
       }
       this.setFont(.8*r);
       for (let n = 0 ; n < tiles.length ; n++) {
@@ -112,8 +112,5 @@ function Diagram() {
          this.fillColor('#ffc08040').fillRect([x+e/3,y+e/3],[x+r-e/3,y+r-e/3],e/2);
          this.drawColor('#000000'  ).text(c, [x+.5*r,y+.5*r]);
       }
-      this.fillColor('#ff000040');
-      this.fillRect([X(C(mouse.pos[0]))-r/2,Y(R(mouse.pos[1]))-r/2],
-                    [X(C(mouse.pos[0]))+r/2,Y(R(mouse.pos[1]))+r/2]);
    }
 }
