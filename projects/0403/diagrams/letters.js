@@ -12,10 +12,8 @@ function Diagram() {
 
    this.init = () => {
       tiles = [];
-      for (let n = 0 ; n < 26 ; n++) {
+      for (let n = 0 ; n < 26 ; n++)
          tiles.push({ value: n, x: X((n%13)+1), y: Y(-1-(n/13>>0)), inRack: true });
-	 console.log(n, tiles[n].x, tiles[n].y);
-      }
       dirty = true;
    }
 

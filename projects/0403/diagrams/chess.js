@@ -1,7 +1,7 @@
 function Diagram() {
    this.isFullScreen = true;
 
-   let h = screen.height, w = h * 1512 / 982;
+   let h = .95 * screen.height / screen.width;
 
    let chessImage = new Image();
    chessImage.onload = () => {}
@@ -10,7 +10,7 @@ function Diagram() {
    const rook = 0, knight = 1, bishop = 2, queen = 3, king = 4, pawn = 5;
    const p = [rook,knight,bishop,king,queen,bishop,knight,rook];
 
-   let dy = .05 * h, mn, pieces, dirty;
+   let mn, pieces, dirty;
 
    this.init = () => {
       pieces = [];
@@ -27,14 +27,12 @@ function Diagram() {
 
       let colw = row => .123 * h / (.85 + .4 * row / 8);
       let rowh = row => colw(row) / 4;
-      let colx = (col,row) => w/2 + (col - 3.7) * colw(row);
-      let rowy = row => h - (row + 5.0) * rowh(row);
+      let colx = (col,row) => 2 * (col - 4) * colw(row);
+      let rowy = row => .4 - 2 * (h - (row + 5.0) * rowh(row));
 
       let mouse = this.input.mouse;
 
       let mRow, mCol;
-
-      octx.clearRect(0,0,w,h);
 
       for (let loop = 0 ; loop < 2 ; loop++)
       for (let row = 0 ; row < 8 ; row++)
@@ -42,48 +40,42 @@ function Diagram() {
 
          // COMPUTE POSITIONS OF SQUARE VERTICES
 
-	 let x00 = colx(col  ,row-.5);
-	 let y00 = rowy(      row-.5)+rowh(row-.5) + dy;
-	 let x10 = colx(col+1,row-.5);
-	 let y10 = rowy(      row-.5)+rowh(row-.5) + dy;
+	 let x00 = colx(col  ,row+.5);
+	 let y00 = rowy(      row+.5)+rowh(row+.5);
+	 let x10 = colx(col+1,row+.5);
+	 let y10 = rowy(      row+.5)+rowh(row+.5);
 
-	 let x01 = colx(col  ,row+.5);
-	 let y01 = rowy(      row+.5)+rowh(row+.5) + dy;
-	 let x11 = colx(col+1,row+.5);
-	 let y11 = rowy(      row+.5)+rowh(row+.5) + dy;
+	 let x01 = colx(col  ,row-.5);
+	 let y01 = rowy(      row-.5)+rowh(row-.5);
+	 let x11 = colx(col+1,row-.5);
+	 let y11 = rowy(      row-.5)+rowh(row-.5);
 
 	 // BOARD SQUARE WILL BE RENDERED IN PERSPECTIVE
 
-	 octx.beginPath();
-	 octx.moveTo(x00,y00);
-	 octx.lineTo(x10,y10);
-	 octx.lineTo(x11,y11);
-	 octx.lineTo(x01,y01);
-	 octx.lineTo(x00,y00);
+         let path = [[x00,y00],[x10,y10],[x11,y11],[x01,y01],[x00,y00]];
 
 	 // FIRST TIME THROUGH LOOP, FILL IN SQUARE
 
 	 if (loop == 0) {
-            octx.fillStyle = '#ffffff40';
-	    octx.fill();
+            this.fillColor('#ffffff40');
+            this.fillPolygon(path);
          }
 
 	 // SECOND TIME THROUGH LOOP, DRAW SQUARE OUTLINE
 
          else {
-            octx.lineWidth = (y11-y10) / 100;
-            octx.stroketyle = 'black';
-	    octx.stroke();
+            this.lineWidth((y11-y10) / 30);
+            this.path(path);
 
 	    // IF SQUARE IS AT CURSOR, HIGHLIGHT SQUARE
 
-	    if (mouse.y >= y01 && mouse.y < y00) {
-	       let t = (mouse.y - y01) / (y00 - y01);
+	    if (mouse.pos[1] >= y01 && mouse.pos[1] < y00) {
+	       let t = (mouse.pos[1] - y01) / (y00 - y01);
 	       let x0 = x01 + t * (x01 - x00);
 	       let x1 = x11 + t * (x11 - x10);
-	       if (mouse.x >= x0 && mouse.x < x1) {
-	          octx.fillStyle = '#ff000060';
-	          octx.fill();
+	       if (mouse.pos[0] >= x0 && mouse.pos[0] < x1) {
+                  this.fillColor('#ff000060');
+                  this.fillPolygon(path);
 	          mRow = side==0 ? row : 7 - row;
 	          mCol = col;
 	       }
@@ -148,9 +140,9 @@ function Diagram() {
       {
          let x0 = colx(0, -.5);
          let x1 = colx(8, -.5);
-         let y0 = rowy(-.5)+rowh(-.5) + dy;
-         octx.fillStyle = '#00000080';
-         octx.fillRect(x0, y0, x1-x0+2, .03 * h);
+         let y0 = rowy(-.5)+rowh(-.5);
+         this.fillColor('#00000080');
+         this.fillRect([x0, y0 - .06 * h], [x1, y0]);
       }
 
       // DRAW ALL PIECES IN BACK TO FRONT ORDER
@@ -159,9 +151,8 @@ function Diagram() {
          let r = side==0 ? row : 7 - row;
          let w = colw(r);
          let x = colx(col+.25,r);
-         let y = rowy(r) + rowh(r) + dy - w;
-         octx.drawImage(chessImage, (n%6) * 120, (1-(n/6>>0)) * 220, 105, 220,
-	                            x, y, .5 * w, .5 * w * .968 / .462);
+         let y = rowy(r+.5);
+         this.drawImage(chessImage, (n%6)*120,(1-(n/6>>0))*220,105,220, x,y,w,2.1*w);
       }
 
       let ordered = [];

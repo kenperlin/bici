@@ -169,6 +169,11 @@ let addDiagramProperties = (diagram, ctx) => {
       ctx.fill();
    }
    diagram._images = {};
+   diagram.drawImage = (image, sx,sy,sw,sh, dx,dy,dw,dh) => {
+      let lo = mxp([dx,dy]);
+      let hi = mxp([dx+dw,dy+dh]);
+      ctx.drawImage(image, sx,sy,sw,sh, lo[0],lo[1],hi[0]-lo[0],hi[1]-lo[1]);
+   }
    diagram.image = (image, a, scale) => {
       if (typeof image == 'string')
          if (diagram._images[image] === undefined) {
