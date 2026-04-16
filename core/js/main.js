@@ -882,18 +882,22 @@ animate = () => {
 	    let d0 = window._mouse_down;
 	    let x0 = window._mouse_x;
 	    let y0 = window._mouse_y;
+	    let pos0 = window._mouse_pos;
 
 	    let d1 = slide.input.mouse.isDown;
 	    let x1 = slide.input.mouse.x;
 	    let y1 = slide.input.mouse.y;
+	    let pos1 = slide.input.mouse.pos;
 
 	    window._mouse_down = d1;
 	    window._mouse_x = x1;
 	    window._mouse_y = y1;
+	    window._mouse_pos = pos1;
 
 	    slide.input.mouse.state = setState(d0, d1);
 	    slide.input.mouse.dx = x1 - x0;
 	    slide.input.mouse.dy = y1 - y0;
+	    slide.input.mouse.dpos = [ pos1[0] - pos0[0], pos1[1] - pos0[1] ];
 
 	    switch (slide.input.mouse.state) {
 	    case 'press': slide.input.mouse.nDrags = 0; break;
