@@ -163,7 +163,9 @@
     const params = new URLSearchParams(window.location.search);
     const p = params.get('project');
     const s = params.get('slide');
+    const d = params.get('diagram');
     if (s !== null) window.pendingSlideFromURL = parseInt(s, 10);
+    if (d !== null) window.pendingDiagramFromURL = d;
     if (p) loadProject(p);
   });
 </script>

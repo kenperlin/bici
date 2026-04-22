@@ -843,9 +843,20 @@ animate = () => {
          slideNames[index] = name;
       }
       fqParsed = true;
-      if (typeof window.pendingSlideFromURL === 'number' &&
-          window.pendingSlideFromURL >= 0 &&
-          window.pendingSlideFromURL < slideNames.length) {
+      // Resolve an optional diagram-name URL param (e.g. ?diagram=chess) into a slide index.
+      if (typeof window.pendingDiagramFromURL === 'string') {
+         let want = window.pendingDiagramFromURL;
+         for (let n = 0 ; n < slideNames.length ; n++) {
+            let nm = slideNames[n];
+            if (nm === want || nm === want + '.js' || nm.replace(/\.js$/, '') === want) {
+               setSlide(n);
+               break;
+            }
+         }
+         delete window.pendingDiagramFromURL;
+      } else if (typeof window.pendingSlideFromURL === 'number' &&
+                 window.pendingSlideFromURL >= 0 &&
+                 window.pendingSlideFromURL < slideNames.length) {
          setSlide(window.pendingSlideFromURL);
          delete window.pendingSlideFromURL;
       }
@@ -1022,7 +1033,12 @@ function showInvitationUI(roomId) {
    inviteParams.set('room', roomId);
    if (typeof project !== 'undefined' && project)
       inviteParams.set('project', project);
-   if (typeof slideIndex === 'number' && slideIndex > 0)
+   // Prefer diagram name (e.g. chess) over slide index so the link is robust
+   // against slides.txt reordering. Fall back to slide index for text slides.
+   let currentName = slideNames && slideNames[slideIndex];
+   if (currentName && /\.js$/.test(currentName))
+      inviteParams.set('diagram', currentName.replace(/\.js$/, ''));
+   else if (typeof slideIndex === 'number' && slideIndex > 0)
       inviteParams.set('slide', slideIndex);
    const invitationUrl = `${window.location.origin}${window.location.pathname}?${inviteParams}`;
 
