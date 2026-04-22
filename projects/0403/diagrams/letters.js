@@ -90,6 +90,9 @@ function Diagram() {
 
       // UPDATE SHARED STATE
 
+      let heldIndex = tile !== undefined ? tiles.indexOf(tile) : -1;
+      window.SS_hold = heldIndex >= 0 ? [heldIndex] : [];
+
       if (! dirty)
 	 tiles = this.getState(); // IF NO CHANGES, GET SHARED STATE
       else

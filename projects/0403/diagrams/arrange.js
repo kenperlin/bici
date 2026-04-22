@@ -117,6 +117,14 @@ function Diagram() {
 
       // UPDATE SHARED STATE.
 
+      let hold = [];
+      for (let cursorId in cursorIds) {
+         let cursor = this.input[cursorId];
+         if (cursor && cursor.n !== undefined)
+            hold.push(cursor.n, cursor.n+1, cursor.n+2, cursor.n+3);
+      }
+      window.SS_hold = hold;
+
       if (! dirty)
          S = this.getState();
       else

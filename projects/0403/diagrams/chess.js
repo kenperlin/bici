@@ -127,6 +127,8 @@ function Diagram() {
 
       // UPDATE SHARED STATE
 
+      window.SS_hold = mn !== undefined ? [mn] : [];
+
       if (! dirty)
          pieces = this.getState(); // IF NO CHANGES, GET SHARED STATE
       else

@@ -611,7 +611,15 @@ if (webrtcClient) {
          fontSize = state.fontSize;
       }
       if (state.SS !== undefined) {
-         window.SS = state.SS;
+         if (Array.isArray(state.SS) && Array.isArray(window.SS) && window.SS_hold && window.SS_hold.length) {
+            let merged = state.SS.slice();
+            for (let i of window.SS_hold)
+               if (i >= 0 && i < window.SS.length)
+                  merged[i] = window.SS[i];
+            window.SS = merged;
+         } else {
+            window.SS = state.SS;
+         }
       }
       // penStrokes now synced via Yjs, no longer via WebRTC state updates
    };
