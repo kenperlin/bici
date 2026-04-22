@@ -156,7 +156,15 @@
   // This is accessed by bici.js loadProject() and showProjectSelector()
   window.projectSelectorUI = document.getElementById('project-selector');
   
-  // Load core scripts immediately (starts WebRTC connection)
-  loadCore();
+  // Load core scripts immediately (starts WebRTC connection).
+  // If the URL specifies a project, jump directly into it (skip the selector).
+  // A slide index in the URL is remembered and applied once slideNames are parsed.
+  loadCore(() => {
+    const params = new URLSearchParams(window.location.search);
+    const p = params.get('project');
+    const s = params.get('slide');
+    if (s !== null) window.pendingSlideFromURL = parseInt(s, 10);
+    if (p) loadProject(p);
+  });
 </script>
 </body>

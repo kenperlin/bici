@@ -151,7 +151,12 @@ if (typeof WebRTCClient !== 'undefined') {
    // Handle room joined successfully
    webrtcClient.onRoomJoined = (roomId) => {
       console.log('[BICI] Room joined:', roomId);
-      showInvitationUI(roomId);
+
+      // If the user arrived via an invite URL (?room=...), they already know the room —
+      // no need to show the copy-link popup.
+      const joinedViaLink = new URLSearchParams(window.location.search).has('room');
+      if (! joinedViaLink)
+         showInvitationUI(roomId);
 
       // Initialize Yjs after room is joined to use room-specific document
       console.log('[BICI] Calling initializeYjs with roomId:', roomId);
@@ -838,6 +843,12 @@ animate = () => {
          slideNames[index] = name;
       }
       fqParsed = true;
+      if (typeof window.pendingSlideFromURL === 'number' &&
+          window.pendingSlideFromURL >= 0 &&
+          window.pendingSlideFromURL < slideNames.length) {
+         setSlide(window.pendingSlideFromURL);
+         delete window.pendingSlideFromURL;
+      }
    }
 
    // Clear the overlay canvas before doing anything else for this animation frame.
@@ -1007,7 +1018,13 @@ function showInvitationUI(roomId) {
    invitationUI.id = 'invitation-ui';
    invitationUI.className = 'invitation-container';
 
-   const invitationUrl = `${window.location.origin}${window.location.pathname}?room=${roomId}`;
+   const inviteParams = new URLSearchParams();
+   inviteParams.set('room', roomId);
+   if (typeof project !== 'undefined' && project)
+      inviteParams.set('project', project);
+   if (typeof slideIndex === 'number' && slideIndex > 0)
+      inviteParams.set('slide', slideIndex);
+   const invitationUrl = `${window.location.origin}${window.location.pathname}?${inviteParams}`;
 
    invitationUI.innerHTML = `
       <div class="invitation-content">
