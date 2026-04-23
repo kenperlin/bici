@@ -930,10 +930,16 @@ animate = () => {
 	    slide.input.mouse.dpos = [ pos1[0] - pos0[0], pos1[1] - pos0[1] ];
 
 	    switch (slide.input.mouse.state) {
-	    case 'press': slide.input.mouse.nDrags = 0; break;
-	    case 'down' : slide.input.mouse.nDrags++  ; break;
+	    case 'press': slide.input.mouse.nDrags = 0;
+	                  slide.input.mouse.travel = 0;
+			  break;
+	    case 'down' : slide.input.mouse.nDrags++;
+	                  let d = slide.input.mouse.dpos;
+	                  slide.input.mouse.travel += Math.sqrt(d[0]*d[0] + d[1]*d[1]);
+			  break;
 	    }
-	    slide.input.mouse.isClick = slide.input.mouse.nDrags < 25;
+	    slide.input.mouse.isClick = slide.input.mouse.nDrags < 25 &&
+	                                slide.input.mouse.travel < .1;
 
             let isHand = { left:false, right:false };
             let iHand = 0;

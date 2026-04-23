@@ -61,8 +61,7 @@ let drawShadowHand = (ctx, hand, F, x=0, y=0, s=1, isDrawing=true) => {
    if (D[0] < .1 && D[1] > .3 && Math.max(D[2],D[3],D[4]) < .3)
       shadowHandInfo[hand].gesture = 'point';
 
-   if ( shadowHandInfo[hand].gesture == null &&
-        distance(4,8) / shadowHandInfo[hand].s < .002 )
+   if (distance(4,8) / shadowHandInfo[hand].s < .002)
       shadowHandInfo[hand].gesture = 'pinch';
 
    if ( shadowHandInfo[hand].gesture == null &&
