@@ -87,6 +87,16 @@ let addDiagramProperties = (diagram, ctx) => {
       ctx.stroke();
       return diagram;
    }
+   diagram.clipToRect = (lo,hi) => {
+      lo = mxp(lo);
+      hi = mxp(hi);
+      ctx.beginPath();
+      ctx.moveTo(lo[0],lo[1]);
+      ctx.lineTo(hi[0],lo[1]);
+      ctx.lineTo(hi[0],hi[1]);
+      ctx.lineTo(lo[0],hi[1]);
+      ctx.clip();
+   }
    diagram.fillRect = (lo,hi,r) => {
       lo = mxp(lo);
       hi = mxp(hi);
@@ -189,15 +199,15 @@ let addDiagramProperties = (diagram, ctx) => {
 	 ctx.drawImage(image, A[0]-width/2, A[1]-height/2, width, height);
       }
    }
-   diagram.text = (text, a, justify = .5) => {
+   diagram.text = (text, a, h_justify = .5, v_justify = .5) => {
       let A = mxp(a);
       let lines = ('' + text).split('\n'), n = lines.length;
       let lh = parseInt(ctx.font);
       let saveFillStyle = ctx.fillStyle;
       ctx.fillStyle = ctx.strokeStyle;
       for (let i = 0 ; i < n ; i++) {
-         let dx = ctx.measureText(lines[i]).width * justify;
-         ctx.fillText(lines[i], A[0] - dx, A[1] - (i-n/2+.1411) * lh);
+         let dx = ctx.measureText(lines[i]).width * h_justify;
+         ctx.fillText(lines[i], A[0] - dx, A[1] + (i - n * (1-v_justify) + .1411) * lh);
       }
       ctx.fillStyle = saveFillStyle;
       return diagram;

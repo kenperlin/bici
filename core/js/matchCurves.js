@@ -7,12 +7,15 @@ function MatchCurves() {
                                     (-2*t*t*t + 3*t*t        ) * p2 +
                                     (   t*t*t - 2*t*t + t    ) * d1 +
                                     (   t*t*t -   t*t        ) * d2 ;
+
+   let isFlipY = true;
    let flipY = a => {
+      let s = isFlipY ? -1 : 1;
       let b = [];
       for (let n = 0 ; n < a.length ; n++) {
          b.push([]);
          for (let i = 0 ; i < a[n].length ; i++)
-            b[n].push([a[n][i][0],-a[n][i][1]]);
+            b[n].push([ a[n][i][0], s * a[n][i][1] ]);
       }
       return b;
    }
@@ -102,6 +105,8 @@ function MatchCurves() {
       }
       return dst;
    }
+
+   this.flipY = state => isFlipY = state;
    
    this.glyph = k => glyphs[k];
 
@@ -152,7 +157,7 @@ function MatchCurves() {
             curves.push(resample(curve, 100));
          }
       }
-      glyphs.push({curves: normalize(curves), sketchClass: sketchClass});
+      glyphs.push({name: name, curves: normalize(curves), sketchClass: sketchClass});
    }
    
    this.recognize = src => {

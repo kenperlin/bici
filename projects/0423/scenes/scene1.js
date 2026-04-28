@@ -1,0 +1,5 @@
+function Scene() {
+   this.update = () => {}
+}
+
+

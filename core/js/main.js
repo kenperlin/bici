@@ -115,6 +115,7 @@ overlayCanvas.style.zIndex = 2;
 overlayCanvas.width = screen.width;
 overlayCanvas.height = screen.height;
 let octx = overlayCanvas.getContext('2d');
+octx.lineCap = 'round';
 
 // Show error notification to user
 function showErrorNotification(title, message, details) {

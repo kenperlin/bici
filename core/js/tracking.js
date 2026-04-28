@@ -10,6 +10,7 @@ let tracking_l2x = x => (x - (screen.width - screen.height) / 2) * canvas3D.widt
 let tracking_l2y = y =>  y                                       * canvas3D.height / screen.height + canvas3D_y();
 let tracking_isSteadyEnabled = true;
 let tracking_frameHands = false;
+let tracking_isDrawingShadowAvatar = true;
 
 let frameToElement = (x, y, element) => {
    x -= (screen.width - screen.height) / 2;
@@ -449,7 +450,8 @@ let trackingUpdate = () => {
                                                 : mediapipe.handResults[hand].landmarks,
 	       handAvatar[hand].x,
                handAvatar[hand].y,
-               handAvatar[hand].s);
+               handAvatar[hand].s,
+	       tracking_isDrawingShadowAvatar);
 
             if (! isScalingHandAvatars) {
 	       if (shadowHandInfo[hand].gesture == 'frame') {
@@ -588,7 +590,9 @@ let trackingUpdate = () => {
          if (mediapipe.handResults[hand]) {
             drawShadowHand(octx, hand, mediapipe.handResults[hand].landmarks,
                                        avatarX - as * screen.width/2,
-                                       avatarY - as * screen.height/2, as, isShadowAvatar());
+                                       avatarY - as * screen.height/2,
+				       as,
+				       isShadowAvatar() && tracking_isDrawingShadowAvatar);
             if (shadowHandInfo[hand].gesture == 'fist') {
                lp[hand] = mediapipe.handResults[hand].landmarks[0];
 	       let closed = 1 / shadowHandInfo[hand].open;

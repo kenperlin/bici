@@ -115,6 +115,14 @@ window.keyUp = key => {
       }
       return;
    }
+
+   if (slides[slideIndex].isFullScreen && slides[slideIndex].keyUp) {
+      if (key.indexOf('Arrow') != 0) {
+         slides[slideIndex].keyUp(key);
+	 return;
+      }
+   }
+
    if (key >= '0' && key <= '9') {
       setScene(key);
       return;
@@ -136,7 +144,11 @@ window.keyUp = key => {
    case ';' : isDrag = false; break;
    case 'D':
    case 'Backspace' :
-      if (isShift) {
+      if (slides[slideIndex].isFullScreen) {
+         if (slides[slideIndex].keyUp)
+            slides[slideIndex].keyUp('Backspace');
+      }
+      else if (isShift) {
          chalktalk.clear();
          pen.clear();
       }
