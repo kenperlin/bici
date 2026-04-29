@@ -923,8 +923,8 @@ animate = () => {
 	       case 'press': cursor.pressTime = time;
 	                     cursor.travel = 0;
 			     break;
-	       case 'down' : let d = cursor.dpos;
-			     cursor.travel += Math.sqrt(d[0]*d[0] + d[1]*d[1]);
+	       case 'down' : cursor.travel += Math.sqrt( cursor.dpos[0] * cursor.dpos[0] +
+			                                 cursor.dpos[1] * cursor.dpos[1] );
 			     break;
                }
 	       cursor.isClick = time - cursor.pressTime < .5 && cursor.travel < .1;
