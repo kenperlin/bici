@@ -15,7 +15,7 @@ foo:
 // Replace keyword by a time varying function
 // that displays a mix of text and 2D graphics.
 
-x: t => {
+x: (obj,t) => {
    let s = .5 * Math.sin(t);
    return [
       { text: 'hello', pos: [0,.5+.2*s] },
@@ -28,28 +28,29 @@ x: t => {
 // that displays a mix of text and 2D graphics
 // in response to user input.
 
-track: (t,p,pressed) => {
-   let x = p[0], y = p[1];
-   if (pressed)                  // Cursor down: show
-      return [                   // large crosshairs.
-         [ [ -1, y], [ 1, y] ],
-         [ [ x, -1], [ x, 1] ],
+track: (state,t,p,hasFocus) => {
+   if (! state.p) state.p = [0,0];
+   if (hasFocus) state.p = p;
+   let x = state.p[0], y = state.p[1];
+   if (hasFocus)
+      return [
+         [ [ -1, y], [ 1, y] ],         // If cursor is down,
+         [ [ x, -1], [ x, 1] ],         // draw large crosshairs.
       ];
-   else                          // Cursor up: show
-      return [                   // small cursor.
-         [ [ x-.1, y ], [ x+.1, y ] ],
-         [ [ x, y-.1 ], [ x, y+.1 ] ],
+   else 
+      return [
+         [ [ x-.1, y ], [ x+.1, y ] ],  // If cursor is up,
+         [ [ x, y-.1 ], [ x, y+.1 ] ],  // draw a small cross.
       ];
 },
 
-cube: function(t,p,pressed) {
-   if (this.p === undefined) {
-      this.p = [0,0];
-      this.M = new M4();
-   }
-   if (pressed && p[0]*p[0]<1 && p[1]*p[1]<1)
-     this.p = p;
-   this.M.identity().perspective(0,0,10).rotateX(this.p[1]).rotateY(-this.p[0]).scale(.5);
+// Example of a a 3D object that responds to input.
+
+cube: function(state,t,p,hasFocus) {
+   if (! this.M) this.M = new M4();
+   if (! state.p) state.p = [0,0];
+   if (hasFocus) state.p = p;
+   this.M.identity().perspective(0,0,10).rotateX(state.p[1]).rotateY(-state.p[0]).scale(.5);
    let C = cubeVertices, P = [];
    for (let i = 0 ; i < C.length ; i++)
       P.push(this.M.transform(C[i]));

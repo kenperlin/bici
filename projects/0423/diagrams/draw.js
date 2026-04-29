@@ -337,16 +337,21 @@ function Diagram() {
          this.setState(S);
       dirty = false;
 
-      // DRAW EVERYTHING
+      // COMPUTE THE CURRENT TIME AND THE TIME ELAPSED SINCE THE PREVIOUS FRAME
 
       let elapsed = .03, newTime = Date.now() / 1000;
       if (time !== undefined)
          elapsed = newTime - time;
       time = newTime;
 
+      // DRAW EVERYTHING
+
       for (let n = 0 ; n < S.length ; n++) {
          let object = S[n];
          let strokes = object.strokes;
+
+         // HANDLE OBJECT MORPHING
+
          if (object.morphData && object.morphData[5] < 1) {
             object.morphData[5] += 2 * elapsed;
             strokes = matchCurves.update(object.morphData, object.morphData[5]);
@@ -361,10 +366,14 @@ function Diagram() {
             }
          }
 
+	 // DRAW OBJECTS THAT ARE JUST SEQUENCES OF STROKES
+
+         this.lineWidth(.015);
          for (let i = 0 ; i < strokes.length ; i++)
             this.path(strokes[i]);
 
-         this.lineWidth(.015);
+         // HANDLE INTERPRETATION AND RENDERING OF WINDOW OBJECTS
+
          if (object.type == 'window') {
             let lo = object.lo, hi = object.hi;
 
@@ -386,8 +395,11 @@ function Diagram() {
                let mi = p => [ (p[0] - p0[0]) / dp[0], (p[1] - p0[1]) / dp[1] ];
 
                let value = S_value[object.id];
-               if (typeof value == 'function')
-                  value = value(time, mi(pos), n == nm); // FIX THIS!!!!
+               if (typeof value == 'function') {
+	          if (object.state === undefined)
+		     object.state = {};
+                  value = value(object.state, time, mi(pos), n == nm); // FIX THIS!!!!
+               }
 
                this.lineWidth(.1*s);
                for (let i = 0 ; i < value.length ; i++) {
