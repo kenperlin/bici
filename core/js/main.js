@@ -908,39 +908,34 @@ animate = () => {
 
 	    // IF IN FULL SCREEN MODE, MAKE MOUSE AND HAND INPUT EVENTS AVAILABLE TO THE UPDATE METHOD.
 
-	    let setState = (d0,d1) => !d0 && !d1 ? 'up' : !d0 && d1 ? 'press' : d0 && d1 ? 'down' : 'release';
+	    let setCursorInfo = cursor => {
 
-	    let d0 = window._mouse_down;
-	    let x0 = window._mouse_x;
-	    let y0 = window._mouse_y;
-	    let pos0 = window._mouse_pos;
+	       let setState = (d0,d1) => !d0 && !d1 ? 'up' : !d0 && d1 ? 'press' : d0 && d1 ? 'down' : 'release';
+	       cursor.state = setState(cursor.isDown_prev, cursor.isDown);
+	       cursor.dx    = cursor.x - cursor.x_prev;
+	       cursor.dy    = cursor.y - cursor.y_prev;
+	       if (cursor.pos_prev)
+	          cursor.dpos  = [ cursor.pos[0] - cursor.pos_prev[0],
+	                           cursor.pos[1] - cursor.pos_prev[1] ];
 
-	    let d1 = slide.input.mouse.isDown;
-	    let x1 = slide.input.mouse.x;
-	    let y1 = slide.input.mouse.y;
-	    let pos1 = slide.input.mouse.pos;
+               let time = Date.now() / 1000;
+               switch (cursor.state) {
+	       case 'press': cursor.pressTime = time;
+	                     cursor.travel = 0;
+			     break;
+	       case 'down' : let d = cursor.dpos;
+			     cursor.travel += Math.sqrt(d[0]*d[0] + d[1]*d[1]);
+			     break;
+               }
+	       cursor.isClick = time - cursor.pressTime < .5 && cursor.travel < .1;
 
-	    window._mouse_down = d1;
-	    window._mouse_x = x1;
-	    window._mouse_y = y1;
-	    window._mouse_pos = pos1;
-
-	    slide.input.mouse.state = setState(d0, d1);
-	    slide.input.mouse.dx = x1 - x0;
-	    slide.input.mouse.dy = y1 - y0;
-	    slide.input.mouse.dpos = [ pos1[0] - pos0[0], pos1[1] - pos0[1] ];
-
-	    switch (slide.input.mouse.state) {
-	    case 'press': slide.input.mouse.nDrags = 0;
-	                  slide.input.mouse.travel = 0;
-			  break;
-	    case 'down' : slide.input.mouse.nDrags++;
-	                  let d = slide.input.mouse.dpos;
-	                  slide.input.mouse.travel += Math.sqrt(d[0]*d[0] + d[1]*d[1]);
-			  break;
-	    }
-	    slide.input.mouse.isClick = slide.input.mouse.nDrags < 25 &&
-	                                slide.input.mouse.travel < .1;
+               cursor.isDown_prev = cursor.isDown;
+               cursor.x_prev      = cursor.x;
+               cursor.y_prev      = cursor.y;
+               cursor.pos_prev    = cursor.pos;
+            }
+	    
+	    setCursorInfo(slide.input.mouse);
 
             let isHand = { left:false, right:false };
             let iHand = 0;
@@ -952,13 +947,10 @@ animate = () => {
 
 	          if (! slide.input[hand])
 	             slide.input[hand] = {};
-
-	          let d0 = window['_' + hand + '_down'];
-	          let d1 = shadowHandInfo[iHand].gesture == 'pinch';
-	          window['_' + hand + '_down'] = d1;
-
-	          slide.input[hand].pos = shadowHandInfo[iHand].pos;
-	          slide.input[hand].state = setState(d0, d1);
+                  slide.input[hand].isDown = shadowHandInfo[iHand].gesture == 'pinch';
+		  let p = shadowHandInfo[iHand].pos;
+	          slide.input[hand].pos = [ .97 * p[0], 1.1 * p[1] ];
+                  setCursorInfo(slide.input[hand]);
                }
 
                iHand++;

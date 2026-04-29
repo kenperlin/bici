@@ -39,7 +39,11 @@ function Diagram() {
 
       switch (key) {
       case 'Backspace':
-         if (n >= 2) {
+         if (S.length == 3) {
+            S.splice(2, 1);
+            dirty = true;
+         }
+         else if (n >= 2) {
             S.splice(n, 1);
             dirty = true;
          }
@@ -118,31 +122,15 @@ function Diagram() {
 
       let respondToInput = (cursor, cursorId) => {
          pos = cursor.pos;
-         if (cursorId !== 'mouse') {
-            pos[0] *= .85;
-            switch (cursor.state) {
-            case 'up':
-               for (n = S.length - 1 ; n >= 2 ; n--)
-                  if (contains(n, pos)) {
-                     p = pos;
-                     break;
-                  }
-               break;
-            case 'down':
-               dragItem();
-               break;
-            }
-            return;
-         }
 
          switch (cursor.state) {
 
          case 'up':
 
-            if (isDragging)
+            if (isDragging == cursorId)
                dragItem();
 
-            else if (isResizing)
+            else if (isResizing == cursorId)
 	       resizeItem();
 
             break;
@@ -237,7 +225,7 @@ function Diagram() {
                      // AND THIS CLICK IS IN AN OBJECT, BEGIN DRAGGING THE OBJECT
 
                      if (n >= 2)
-                        isDragging = true;
+                        isDragging = cursorId;
 
                      break;
 
@@ -248,7 +236,7 @@ function Diagram() {
                      // AND THIS CLICK IS IN AN OBJECT, BEGIN RESIZING THE OBJECT
 
                      if (n >= 2) {
-                        isResizing = true;
+                        isResizing = cursorId;
                         sy = pos[1];
                      }
 
@@ -264,12 +252,12 @@ function Diagram() {
 
                // IF AFTER DRAGGING AN OBJECT, JUST TURN OFF DRAGGING MODE
 
-               if (isDragging)
+               if (isDragging == cursorId)
                   isDragging = false;
 
                // IF AFTER RESIZING AN OBJECT, JUST TURN OFF RESIZING MODE
 
-               else if (isResizing)
+               else if (isResizing == cursorId)
                   isResizing = false;
 
                else if (nm < 2) {
