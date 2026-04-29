@@ -159,16 +159,18 @@ function Diagram() {
                   state = (8.5 - 4 * Math.atan2(pos[1] - bgClick[1], bgClick[0] - pos[0]) / Math.PI) % 8 >> 0;
             }
 
+	    // IF THE MOUSE DOWN IS NOT AFTER A PREVIOUS CLICK ON THE BACKGROUND
 
             else {
 
-               // OTHERWISE, CHECK FOR MOUSE DOWN ON A MORPHED OBJECT
+               // IF NOT DRAGGING OR RESIZING, CHECK FOR MOUSE DOWN ON A MORPHED OBJECT
 
-               for (nm = S.length - 1 ; nm >= 2 ; nm--)
-                  if (S[nm].morphData && contains(nm, pos)) {
-                     p = pos;
-                     break;
-                  }
+               if (! isDragging && ! isResizing)
+                  for (nm = S.length - 1 ; nm >= 2 ; nm--)
+                     if (S[nm].morphData && contains(nm, pos)) {
+                        p = pos;
+                        break;
+                     }
 
                // OTHERWISE, START A NEW STROKE
 
@@ -343,19 +345,19 @@ function Diagram() {
       time = newTime;
 
       for (let n = 0 ; n < S.length ; n++) {
-         let thing = S[n];
-         let strokes = thing.strokes;
-         if (thing.morphData && thing.morphData[5] < 1) {
-            thing.morphData[5] += 2 * elapsed;
-            strokes = matchCurves.update(thing.morphData, thing.morphData[5]);
-            if (thing.morphData[5] >= 1) {
-               thing.strokes = strokes;
+         let object = S[n];
+         let strokes = object.strokes;
+         if (object.morphData && object.morphData[5] < 1) {
+            object.morphData[5] += 2 * elapsed;
+            strokes = matchCurves.update(object.morphData, object.morphData[5]);
+            if (object.morphData[5] >= 1) {
+               object.strokes = strokes;
                clearBounds(n);
                for (let i = 0 ; i < strokes.length ; i++)
                   extendBounds(n, strokes[i]);
-               thing.type = matchCurves.glyph(thing.morphData[2]).name;
-	       if (thing.type == 'window')
-	          thing.text = '';
+               object.type = matchCurves.glyph(object.morphData[2]).name;
+	       if (object.type == 'window')
+	          object.text = '';
             }
          }
 
@@ -363,8 +365,8 @@ function Diagram() {
             this.path(strokes[i]);
 
          this.lineWidth(.015);
-         if (thing.type == 'window') {
-            let lo = thing.lo, hi = thing.hi;
+         if (object.type == 'window') {
+            let lo = object.lo, hi = object.hi;
 
 	    octx.save();
 	    this.clipToRect(lo, hi);
@@ -372,20 +374,20 @@ function Diagram() {
             this.fillColor('#ffffff').fillRect(lo, hi);
             let s = .1 * (hi[1] - lo[1]);
 
-	    if (thing.window_type && ! S_value[thing.id])
-	       S_value[thing.id] = dictionary[thing.window_type];
+	    if (object.window_type && ! S_value[object.id])
+	       S_value[object.id] = dictionary[object.window_type];
 
-	    if (! S_value[thing.id])
-               this.setFont(s).text(thing.text, [lo[0] + s/3, hi[1] - s], 0, 1);
+	    if (! S_value[object.id])
+               this.setFont(s).text(object.text, [lo[0] + s/3, hi[1] - s], 0, 1);
             else {
 	       let p0 = [ (lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2 ];
 	       let dp = [ (hi[0] - lo[0]) / 2, (hi[1] - lo[1]) / 2 ];
                let mf = p => [  p0[0] + p[0]  * dp[0],  p0[1] + p[1]  * dp[1] ];
                let mi = p => [ (p[0] - p0[0]) / dp[0], (p[1] - p0[1]) / dp[1] ];
 
-               let value = S_value[thing.id];
+               let value = S_value[object.id];
                if (typeof value == 'function')
-                  value = value(time, mi(pos), n == nm);
+                  value = value(time, mi(pos), n == nm); // FIX THIS!!!!
 
                this.lineWidth(.1*s);
                for (let i = 0 ; i < value.length ; i++) {
