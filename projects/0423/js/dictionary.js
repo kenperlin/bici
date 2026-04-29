@@ -47,15 +47,9 @@ cube: function(t,p,pressed) {
       this.p = [0,0];
       this.M = new M4();
    }
-   if (pressed && p[0]*p[0]<1 && p[1]*p[1]<1) {
-     this.p[0] = p[0];
-     this.p[1] = p[1];
-   }
-   this.M.identity();
-   this.M.perspective(0,0,10);
-   this.M.scale(.5);
-   this.M.rotateX( this.p[1]);
-   this.M.rotateY(-this.p[0]);
+   if (pressed && p[0]*p[0]<1 && p[1]*p[1]<1)
+     this.p = p;
+   this.M.identity().perspective(0,0,10).rotateX(this.p[1]).rotateY(-this.p[0]).scale(.5);
    let C = cubeVertices, P = [];
    for (let i = 0 ; i < C.length ; i++)
       P.push(this.M.transform(C[i]));
