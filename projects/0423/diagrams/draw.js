@@ -22,18 +22,16 @@ function Diagram() {
             break;
          case 'Escape':
             let value = dictionary[S[n].text];
-            if (value !== undefined)
-               if (typeof value == 'string')
-                  S[n].text = value;
-               else {
-                  S[n].value = value;
-                  delete S[n].text;
-               }
+	    if (typeof value == 'string')
+               S[n].text = value;
+            else if (value !== undefined)
+               S[n].window_type = S[n].text;
             break;
          default:
             S[n].text += key;
             break;
          }
+	 dirty = true;
          return;
       }
 
@@ -47,8 +45,6 @@ function Diagram() {
             S.splice(n, 1);
             dirty = true;
          }
-         break;
-      default:
          break;
       }
    }
@@ -66,9 +62,11 @@ function Diagram() {
 
    let S;
    this.init = () => {
-      S = [ { strokes:[[]] }, { strokes:[[]] } ];
+      S = [ { strokes:[[]], id: id++ }, { strokes:[[]], id: id++ } ];
       dirty = true;
    };
+
+   let id = 0, S_value = {};
 
    let contains = (n, p) => S[n].lo[0] - .02 < p[0] && S[n].hi[0] + .02 > p[0] &&
                             S[n].lo[1] - .02 < p[1] && S[n].hi[1] + .02 > p[1] ;
@@ -302,7 +300,7 @@ function Diagram() {
 
                if (n < 2) {
                   n = S.length;
-                  S[n] = { strokes: [ stroke ] };
+                  S[n] = { strokes: [ stroke ], id: id++ };
                   clearBounds(n);
                }
 
@@ -356,6 +354,8 @@ function Diagram() {
                for (let i = 0 ; i < strokes.length ; i++)
                   extendBounds(n, strokes[i]);
                thing.type = matchCurves.glyph(thing.morphData[2]).name;
+	       if (thing.type == 'window')
+	          thing.text = '';
             }
          }
 
@@ -371,16 +371,22 @@ function Diagram() {
 
             this.fillColor('#ffffff').fillRect(lo, hi);
             let s = .1 * (hi[1] - lo[1]);
-            if (thing.text)
+
+	    if (thing.window_type && ! S_value[thing.id])
+	       S_value[thing.id] = dictionary[thing.window_type];
+
+	    if (! S_value[thing.id])
                this.setFont(s).text(thing.text, [lo[0] + s/3, hi[1] - s], 0, 1);
-            if (thing.value) {
+            else {
 	       let p0 = [ (lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2 ];
 	       let dp = [ (hi[0] - lo[0]) / 2, (hi[1] - lo[1]) / 2 ];
                let mf = p => [  p0[0] + p[0]  * dp[0],  p0[1] + p[1]  * dp[1] ];
                let mi = p => [ (p[0] - p0[0]) / dp[0], (p[1] - p0[1]) / dp[1] ];
-               let value = thing.value;
+
+               let value = S_value[thing.id];
                if (typeof value == 'function')
                   value = value(time, mi(pos), n == nm);
+
                this.lineWidth(.1*s);
                for (let i = 0 ; i < value.length ; i++) {
                   let item = value[i];
