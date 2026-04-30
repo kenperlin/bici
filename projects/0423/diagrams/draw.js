@@ -55,7 +55,7 @@ function Diagram() {
 
    let cursorIds = { mouse:0, left:1, right:2 };
    let dirty, bgClick, state = -1, stroke = [], p = [], n = -1;
-   let isDragging = false, isResizing = false, sy, isLinking, nSrc;
+   let isDragging = false, isResizing = false, sy, isLinking, srcId;
    let np = isFirstPlayer() ? 0 : 1;
    let nm = -1;
    let pos = [0,0], time;
@@ -260,7 +260,7 @@ function Diagram() {
 
                      if (n >= 2 && S[n].morphData) {
                         isLinking = cursorId;
-			nSrc = n;
+			srcId = S[n].id;
                      }
 
 		     break;
@@ -284,9 +284,9 @@ function Diagram() {
 
                else if (isLinking == cursorId) {
                   isLinking = false;
-                  for (let n = S.length - 1 ; n >= 2 ; nm--)
+                  for (let n = S.length - 1 ; n >= 2 ; n--)
                      if (S[n].morphData && contains(n, pos)) {
-		        S[n].srcId = S[nSrc].id;
+		        S[n].srcId = srcId;
 			break;
 		     }
                }
