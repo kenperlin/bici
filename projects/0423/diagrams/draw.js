@@ -88,9 +88,11 @@ function Diagram() {
    let remove = n => {
       let id = S[n].id;
       S.splice(n, 1);
+/*
       for (let n = 2 ; n < S.length ; n++)
          if (S[n].srcId == id)
 	    delete S[n].srcId;
+*/
    }
 
    this.update = () => {
