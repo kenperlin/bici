@@ -2,15 +2,40 @@ function Diagram() {
    this.isFullScreen = true;
    tracking_isDrawingShadowAvatar = false;
 
-   let convertCard = n => {
+   let activateCard = n => {
       let value = dictionary[S[n].text];
       if (typeof value == 'string')
          S[n].text = value;
       else if (value !== undefined)
          S[n].window_type = S[n].text;
+      dirty = true;
    }
 
+   let activateCardFromSpeech = n => {
+      let words = speech.toLowerCase().split(' ');
+      for (let word in dictionary)
+         for (let i = 0 ; i < words.length ; i++) {
+            if (word == words[i]) {
+               S[n].text = word;
+               activateCard(n);
+               speech = '';
+               return;
+            }
+         }
+   }
+
+   this.keyDown = key => {
+      if (pen.pos && key == 'Meta') {
+         isPenDown = true;
+         return;
+      }
+   }
    this.keyUp = key => {
+      if (pen.pos && key == 'Meta') {
+         isPenDown = false;
+         return;
+      }
+
       let n;
       for (n = S.length - 1 ; n >= 2 ; n--)
          if (contains(n, pos))
@@ -29,7 +54,10 @@ function Diagram() {
          case 'Shift':
             break;
          case 'Escape':
-	    convertCard(n);
+            activateCard(n);
+            break;
+         case 'Alt':
+            activateCardFromSpeech(n);
             break;
          default:
             S[n].text += key;
@@ -62,7 +90,8 @@ function Diagram() {
    let isDragging = false, isResizing = false, sy, isLinking, srcId;
    let np = isFirstPlayer() ? 0 : 1;
    let nm = -1;
-   let pos = [0,0], time;
+   let pen = {};
+   let pos = [0,0], time, isPenDown, wasPenDown;
 
    let S;
    this.init = () => {
@@ -97,7 +126,15 @@ function Diagram() {
             delete S[n].srcId;
    }
 
+   let previousSpeech = '';
+
    this.update = () => {
+      if (speech != previousSpeech) {
+         dirty = true;
+         previousSpeech = speech;
+      }
+
+      pen.pos = window.penXY ? [ (penXY.x - 320) / 320, (220 - penXY.y) / 350 ] : null;
 
       let dragItem = () => {
          if (n >= 2) {
@@ -353,12 +390,43 @@ function Diagram() {
          }
       }
 
-      // RESPOND TO INPUT FROM ALL KINDS OF CURSORS
+      // COMPUTE THE CURRENT TIME AND THE TIME ELAPSED SINCE THE PREVIOUS FRAME
+
+      let elapsed = .03, newTime = Date.now() / 1000;
+      if (time !== undefined)
+         elapsed = newTime - time;
+      time = newTime;
+
+      // RESPOND TO INPUT FROM MOUSE AND HANDS
 
       for (let cursorId in cursorIds) {
          let cursor = this.input[cursorId];
          if (cursor)
             respondToInput(cursor, cursorId);
+      }
+
+      // RESPOND TO INPUT FROM PEN, IF PEN IS VISIBLE
+
+      if (pen.pos) {
+         if (isPenDown && ! wasPenDown) {
+            pen.state = 'press';
+            pen.pressTime = time;
+            respondToInput(pen, 'pen');
+         }
+         else if (isPenDown && wasPenDown) {
+            pen.state = 'down';
+            respondToInput(pen, 'pen');
+         }
+         else if (! isPenDown && wasPenDown) {
+            pen.state = 'release';
+            pen.isClick = time - pen.pressTime < .5;
+            respondToInput(pen, 'pen');
+         }
+         else {
+            pen.state = 'up';
+            respondToInput(pen, 'pen');
+         }
+         wasPenDown = isPenDown;
       }
 
       // SYNCHRONIZE WITH OTHER THE PLAYER
@@ -370,13 +438,6 @@ function Diagram() {
          this.setState(S);
       dirty = false;
 
-      // COMPUTE THE CURRENT TIME AND THE TIME ELAPSED SINCE THE PREVIOUS FRAME
-
-      let elapsed = .03, newTime = Date.now() / 1000;
-      if (time !== undefined)
-         elapsed = newTime - time;
-      time = newTime;
-
       // DRAW EVERY LINK AS A CONNECTING LINE WITH AN ARROWHEAD IN THE MIDDLE
 
       this.lineWidth(.008);
@@ -384,21 +445,29 @@ function Diagram() {
          if (S[n].srcId)
             for (let ns = 2 ; ns < S.length ; ns++)
                if (S[ns].id == S[n].srcId) {
-                  let x0 = (S[ns].lo[0] + S[ns].hi[0]) / 2,
-                      y0 = (S[ns].lo[1] + S[ns].hi[1]) / 2,
-                      x1 = (S[n ].lo[0] + S[n ].hi[0]) / 2,
-                      y1 = (S[n ].lo[1] + S[n ].hi[1]) / 2,
-                      x  = (x0 + x1) / 2,
-                      y  = (y0 + y1) / 2,
-                      dx = x1 - x0,
-                      dy = y1 - y0,
-                      s  = .02 / Math.sqrt(dx * dx + dy * dy);
-                  this.line([x0,y0],[x1,y1]);
-                  this.fillPolygon([ [x + s*dx       , y + s*dy       ],
-                                     [x - s*dx - s*dy, y - s*dy + s*dx],
-                                     [x - s*dx + s*dy, y - s*dy - s*dx] ]);
+                  let findEdge = (lo,hi,p) => {
+                     let [cx,cy] = mix(lo, hi, .5),
+                         [dx,dy] = subtract(p, [cx,cy]);
+                     if (dx > 0 && dx*dx > dy*dy) return [hi[0]+.004, cy + dy/dx * (hi[1]-cy)];
+                     if (dx < 0 && dx*dx > dy*dy) return [lo[0]-.004, cy - dy/dx * (hi[1]-cy)];
+                     if (dy > 0 && dy*dy > dx*dx) return [cx + dx/dy * (hi[0]-cx), hi[1]+.004];
+                                                  return [cx - dx/dy * (hi[0]-cx), lo[1]-.004];
+                  }
+                  let L0 = S[ns].lo, H0 = S[ns].hi,
+                      L1 = S[n ].lo, H1 = S[n ].hi,
+                      A = findEdge( L0, H0, mix(L1, H1, .5) ),
+                      B = findEdge( L1, H1, mix(L0, H0, .5) );
+                  this.line(A,B);
+
+                  let [cx,cy] = mix(A, B, .5),
+                      [dx,dy] = subtract(B, A),
+                      s = .02 / Math.sqrt(dx * dx + dy * dy);
+                  this.fillPolygon([ [cx + s*dx       , cy + s*dy       ],
+                                     [cx - s*dx - s*dy, cy - s*dy + s*dx],
+                                     [cx - s*dx + s*dy, cy - s*dy - s*dx] ]);
                   break;
                }
+
 
       // DRAW ALL THE OBJECTS
 
@@ -419,15 +488,7 @@ function Diagram() {
                object.type = matchCurves.glyph(object.morphData[2]).name;
                if (object.type == 'card') {
                   object.text = '';
-                  let spoken = speech.toLowerCase().split(' ');
-                  loop:
-                  for (let id in dictionary)
-                  for (let i = 0 ; i < spoken.length ; i++)
-                     if (id == spoken[i]) {
-                        object.text = id;
-			convertCard(n);
-                        break loop;
-                      }
+                  activateCardFromSpeech(n);
                }
             }
          }
@@ -520,5 +581,8 @@ function Diagram() {
             octx.restore();
          }
       }
+
+      this.setFont(.02).drawColor('#00000060').text(speech.toLowerCase(), [-1,-.625], 0);
+      this.drawColor('black');
    }
 }

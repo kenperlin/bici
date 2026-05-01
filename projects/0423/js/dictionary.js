@@ -6,16 +6,16 @@ bar: 'Here is the text\nfor the word "bar".',
 
 // Replace keyword by a mix of text and 2D graphics.
 
-foo:
+bracket:
    [
-      { text: 'foo', pos: [0,0] },
+      { text: 'bracket', pos: [0,0] },
       { draw: [ [-.5,-.5], [-.5, .5], [ .5, .5] ] },
    ],
 
 // Replace keyword by a time varying function
 // that displays a mix of text and 2D graphics.
 
-x: (obj,t) => {
+hello: (obj,t) => {
    let s = .5 * Math.sin(t);
    return [
       { text: 'hello', pos: [0,.5+.2*s] },
@@ -28,10 +28,15 @@ x: (obj,t) => {
 // that displays a mix of text and 2D graphics
 // in response to user input.
 
-track: (state,t,p,hasFocus) => {
+trackpad: (state,t,p,hasFocus) => {
    if (! state.p) state.p = [0,0];
    if (hasFocus) state.p = p;
    let x = state.p[0], y = state.p[1];
+
+   if (! state.T) state.T = [.5,.5,.5,.5,.5,.5,.5,.5,.5,.5];
+   state.T[0] = .5 + .5 * x;
+   state.T[1] = .5 + .5 * y;
+
    if (hasFocus)
       return [
          {draw: [ [ -1, y], [ 1, y] ]},         // If cursor is down,

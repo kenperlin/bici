@@ -1,6 +1,8 @@
 
 function Pen() {
 
+   this.pos = () => [ this.x, this.y ];
+
    this.strokes = [];
    this.width = 7;
    let isDown = false;

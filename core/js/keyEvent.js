@@ -57,6 +57,13 @@ abcdefghijklmnopqrstuvwxyz\
 ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 let keyDown = key => {
+   if (slides[slideIndex].isFullScreen && slides[slideIndex].keyDown) {
+      if (key.indexOf('Arrow') != 0) {
+         slides[slideIndex].keyDown(key);
+	 return;
+      }
+   }
+
    switch (key) {
    case 'Alt': isAlt = true; break;
    case 'Shift': isShift = true; break;
