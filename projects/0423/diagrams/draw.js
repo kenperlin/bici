@@ -2,13 +2,21 @@ function Diagram() {
    this.isFullScreen = true;
    tracking_isDrawingShadowAvatar = false;
 
+   let convertCard = n => {
+      let value = dictionary[S[n].text];
+      if (typeof value == 'string')
+         S[n].text = value;
+      else if (value !== undefined)
+         S[n].window_type = S[n].text;
+   }
+
    this.keyUp = key => {
       let n;
       for (n = S.length - 1 ; n >= 2 ; n--)
          if (contains(n, pos))
             break;
 
-      if (n >= 2 && S[n].type == 'window') {
+      if (n >= 2 && S[n].type == 'card') {
          if (S[n].text === undefined)
             S[n].text = '';
          switch (key) {
@@ -21,17 +29,13 @@ function Diagram() {
          case 'Shift':
             break;
          case 'Escape':
-            let value = dictionary[S[n].text];
-	    if (typeof value == 'string')
-               S[n].text = value;
-            else if (value !== undefined)
-               S[n].window_type = S[n].text;
+	    convertCard(n);
             break;
          default:
             S[n].text += key;
             break;
          }
-	 dirty = true;
+         dirty = true;
          return;
       }
 
@@ -88,11 +92,9 @@ function Diagram() {
    let remove = n => {
       let id = S[n].id;
       S.splice(n, 1);
-/*
       for (let n = 2 ; n < S.length ; n++)
          if (S[n].srcId == id)
-	    delete S[n].srcId;
-*/
+            delete S[n].srcId;
    }
 
    this.update = () => {
@@ -139,7 +141,7 @@ function Diagram() {
                dragItem();
 
             else if (isResizing == cursorId)
-	       resizeItem();
+               resizeItem();
 
             break;
 
@@ -169,7 +171,7 @@ function Diagram() {
                   state = (8.5 - 4 * Math.atan2(pos[1] - bgClick[1], bgClick[0] - pos[0]) / Math.PI) % 8 >> 0;
             }
 
-	    // IF THE MOUSE DOWN IS NOT AFTER A PREVIOUS CLICK ON THE BACKGROUND
+            // IF THE MOUSE DOWN IS NOT AFTER A PREVIOUS CLICK ON THE BACKGROUND
 
             else {
 
@@ -260,10 +262,10 @@ function Diagram() {
 
                      if (n >= 2 && S[n].morphData) {
                         isLinking = cursorId;
-			srcId = S[n].id;
+                        srcId = S[n].id;
                      }
 
-		     break;
+                     break;
                   }
                }
             }
@@ -286,9 +288,9 @@ function Diagram() {
                   isLinking = false;
                   for (let n = S.length - 1 ; n >= 2 ; n--)
                      if (S[n].morphData && contains(n, pos)) {
-		        S[n].srcId = srcId;
-			break;
-		     }
+                        S[n].srcId = srcId;
+                        break;
+                     }
                }
 
                else if (nm < 2) {
@@ -345,7 +347,7 @@ function Diagram() {
             // AFTER MOUSE RELEASE, REMOVE THE TEMPORARY STROKE
 
             S[np].strokes[0] = [];
-	    nm = -1;
+            nm = -1;
             dirty = true;
             break;
          }
@@ -381,21 +383,21 @@ function Diagram() {
       for (let n = 0 ; n < S.length ; n++)
          if (S[n].srcId)
             for (let ns = 2 ; ns < S.length ; ns++)
-	       if (S[ns].id == S[n].srcId) {
-	          let x0 = (S[ns].lo[0] + S[ns].hi[0]) / 2,
-		      y0 = (S[ns].lo[1] + S[ns].hi[1]) / 2,
-	              x1 = (S[n ].lo[0] + S[n ].hi[0]) / 2,
-		      y1 = (S[n ].lo[1] + S[n ].hi[1]) / 2,
-		      x  = (x0 + x1) / 2,
-		      y  = (y0 + y1) / 2,
-		      dx = x1 - x0,
-		      dy = y1 - y0,
-		      s  = .02 / Math.sqrt(dx * dx + dy * dy);
-	          this.line([x0,y0],[x1,y1]);
-	          this.fillPolygon([ [x + s*dx       , y + s*dy       ],
-		                     [x - s*dx - s*dy, y - s*dy + s*dx],
-		                     [x - s*dx + s*dy, y - s*dy - s*dx] ]);
-	          break;
+               if (S[ns].id == S[n].srcId) {
+                  let x0 = (S[ns].lo[0] + S[ns].hi[0]) / 2,
+                      y0 = (S[ns].lo[1] + S[ns].hi[1]) / 2,
+                      x1 = (S[n ].lo[0] + S[n ].hi[0]) / 2,
+                      y1 = (S[n ].lo[1] + S[n ].hi[1]) / 2,
+                      x  = (x0 + x1) / 2,
+                      y  = (y0 + y1) / 2,
+                      dx = x1 - x0,
+                      dy = y1 - y0,
+                      s  = .02 / Math.sqrt(dx * dx + dy * dy);
+                  this.line([x0,y0],[x1,y1]);
+                  this.fillPolygon([ [x + s*dx       , y + s*dy       ],
+                                     [x - s*dx - s*dy, y - s*dy + s*dx],
+                                     [x - s*dx + s*dy, y - s*dy - s*dx] ]);
+                  break;
                }
 
       // DRAW ALL THE OBJECTS
@@ -415,12 +417,22 @@ function Diagram() {
                for (let i = 0 ; i < strokes.length ; i++)
                   extendBounds(n, strokes[i]);
                object.type = matchCurves.glyph(object.morphData[2]).name;
-	       if (object.type == 'window')
-	          object.text = '';
+               if (object.type == 'card') {
+                  object.text = '';
+                  let spoken = speech.toLowerCase().split(' ');
+                  loop:
+                  for (let id in dictionary)
+                  for (let i = 0 ; i < spoken.length ; i++)
+                     if (id == spoken[i]) {
+                        object.text = id;
+			convertCard(n);
+                        break loop;
+                      }
+               }
             }
          }
 
-	 // DRAW OBJECTS THAT CONSIST OF SEQUENCES OF STROKES
+         // DRAW OBJECTS THAT CONSIST OF SEQUENCES OF STROKES
 
          this.lineWidth(.015);
          for (let i = 0 ; i < strokes.length ; i++)
@@ -428,26 +440,26 @@ function Diagram() {
 
          // HANDLE INTERPRETATION AND RENDERING OF WINDOW OBJECTS
 
-         if (object.type == 'window') {
+         if (object.type == 'card') {
             let lo = object.lo, hi = object.hi;
 
-	    // TURN ON CLIPPING, SO THAT RENDERING IS CONFINED TO THE WINDOW.
+            // TURN ON CLIPPING, SO THAT RENDERING IS CONFINED TO THE WINDOW.
 
-	    octx.save();
-	    this.clipToRect(lo, hi);
+            octx.save();
+            this.clipToRect(lo, hi);
 
             this.fillColor('#ffffff').fillRect(lo, hi);
 
-	    // TEXT HEIGHT AND LINE THICKNESS WILL SCALE WITH WINDOW SIZE.
+            // TEXT HEIGHT AND LINE THICKNESS WILL SCALE WITH WINDOW SIZE.
 
             let s = .1 * (hi[1] - lo[1]);
 
-	    // IF EVALUATION WAS TRIGGERED, SEE IF TEXT IS A VALID WINDOW TYPE NAME.
+            // IF EVALUATION WAS TRIGGERED, SEE IF TEXT IS A VALID WINDOW TYPE NAME.
 
-	    if (object.window_type && ! S_value[object.id])
-	       S_value[object.id] = dictionary[object.window_type];
+            if (object.window_type && ! S_value[object.id])
+               S_value[object.id] = dictionary[object.window_type];
 
-	    if (! S_value[object.id])
+            if (! S_value[object.id])
                this.setFont(.95 * s).text(object.text, [lo[0] + s/3, hi[1] - s], 0, 1);
 
             // IF THIS IS A VALID WINDOW TYPE, DO PROCEDURAL RENDERING.
@@ -456,48 +468,48 @@ function Diagram() {
 
                // COORDINATE CONVERSIONS BETWEEN SCREEN AND INTERNAL WINDOW COORDS.
 
-	       let p0 = [ (lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2 ];
-	       let dp = [ (hi[0] - lo[0]) / 2, (hi[1] - lo[1]) / 2 ];
+               let p0 = [ (lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2 ];
+               let dp = [ (hi[0] - lo[0]) / 2, (hi[1] - lo[1]) / 2 ];
                let mf = p => [  p0[0] + p[0]  * dp[0],  p0[1] + p[1]  * dp[1] ];
                let mi = p => [ (p[0] - p0[0]) / dp[0], (p[1] - p0[1]) / dp[1] ];
 
-	       // IF A PROCEDURE, GIVE OBJECT A PLACE TO MAINTAIN THE CURRENT STATE.
+               // IF A PROCEDURE, GIVE OBJECT A PLACE TO MAINTAIN THE CURRENT STATE.
 
                let value = S_value[object.id];
-	       let params;
+               let params;
                if (typeof value == 'function') {
-	          if (object.state === undefined)
-		     object.state = {};
+                  if (object.state === undefined)
+                     object.state = {};
 
                   if (object.srcId)
-		     for (let n = 2 ; n < S.length ; n++)
-		        if (S[n].id == object.srcId) {
-			   object.state.T = S[n].state.T;
-			   break;
+                     for (let n = 2 ; n < S.length ; n++)
+                        if (S[n].id == object.srcId) {
+                           object.state.T = S[n].state.T;
+                           break;
                         }
 
                   value = value(object.state, time, mi(pos), n == nm); // FIX THIS!!!!
                }
 
-	       // DRAW ALL THE LINES AND TEXT IN THE WINDOW OBJECT.
+               // DRAW ALL THE LINES AND TEXT IN THE WINDOW OBJECT.
 
                this.lineWidth(.1*s);
                for (let i = 0 ; i < value.length ; i++) {
                   let item = value[i];
-		  if (item.draw) {
+                  if (item.draw) {
                      let path = [];
                      for (let j = 0 ; j < item.draw.length ; j++)
                         path.push(mf(item.draw[j]));
                      this.drawColor(item.color ?? '#000000');
                      this.path(path);
                   }
-		  else if (item.fill) {
+                  else if (item.fill) {
                      let path = [];
                      for (let j = 0 ; j < item.fill.length ; j++)
                         path.push(mf(item.fill[j]));
                      this.fillColor(item.color ?? '#000000');
                      this.fillPolygon(path);
-		  }
+                  }
                   else if (item.text) {
                      this.fillColor(item.color ?? '#000000');
                      this.setFont(.9*s, 'Courier').text(item.text, mf(item.pos));
@@ -505,7 +517,7 @@ function Diagram() {
                }
             }
 
-	    octx.restore();
+            octx.restore();
          }
       }
    }

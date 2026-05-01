@@ -87,6 +87,17 @@ let loadProject = projectName => {
    });
 }
 
+window.speech = '';
+{
+   let reco = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+   reco.continuous = true;
+   reco.lang = 'en-US';
+   reco.interimResults = false;
+   reco.maxAlternatives = 1;
+   reco.onresult = event => speech = event.results[event.resultIndex][0].transcript;
+   reco.start();
+}
+
 // Show project selector UI
 let showProjectSelector = () => {
    // Use window.projectSelectorUI to access the global variable set in index.html
