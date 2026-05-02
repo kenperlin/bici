@@ -526,27 +526,32 @@ function Diagram() {
 
          // DRAW OBJECTS THAT CONSIST OF SEQUENCES OF STROKES
 
-         this.lineWidth(.015);
-         for (let i = 0 ; i < strokes.length ; i++)
-            this.path(strokes[i]);
+         if (object.type != 'card') {
+            this.lineWidth(.015);
+            for (let i = 0 ; i < strokes.length ; i++)
+               this.path(strokes[i]);
+         }
 
-         // HANDLE INTERPRETATION AND RENDERING OF WINDOW OBJECTS
+         // HANDLE INTERPRETATION AND RENDERING OF CARD OBJECTS
 
-         if (object.type == 'card') {
+         else {
             let lo = object.lo, hi = object.hi;
 
-            // TURN ON CLIPPING, SO THAT RENDERING IS CONFINED TO THE WINDOW.
+            this.lineWidth(.004);
+	    this.drawRect([lo[0]-.002,lo[1]-.002], [hi[0]+.002,hi[1]+.002]);
+
+            // TURN ON CLIPPING, SO THAT RENDERING IS CONFINED TO THE CARD.
 
             octx.save();
             this.clipToRect(lo, hi);
 
             this.fillColor('#ffffff').fillRect(lo, hi);
 
-            // TEXT HEIGHT AND LINE THICKNESS WILL SCALE WITH WINDOW SIZE.
+            // TEXT HEIGHT AND LINE THICKNESS WILL SCALE WITH CARD SIZE.
 
             let s = .1 * (hi[1] - lo[1]);
 
-            // IF EVALUATION WAS TRIGGERED, SEE IF TEXT IS A VALID WINDOW TYPE NAME.
+            // IF EVALUATION WAS TRIGGERED, SEE IF TEXT IS A VALID CARD TYPE NAME.
 
             if (object.window_type && ! S_value[object.id])
                S_value[object.id] = dictionary[object.window_type];
@@ -554,11 +559,11 @@ function Diagram() {
             if (! S_value[object.id])
                this.setFont(.95 * s).text(object.text, [lo[0] + s/3, hi[1] - s], 0, 1);
 
-            // IF THIS IS A VALID WINDOW TYPE, DO PROCEDURAL RENDERING.
+            // IF THIS IS A VALID CARD TYPE, DO PROCEDURAL RENDERING.
 
             else {
 
-               // COORDINATE CONVERSIONS BETWEEN SCREEN AND INTERNAL WINDOW COORDS.
+               // COORDINATE CONVERSIONS BETWEEN SCREEN AND INTERNAL CARD COORDS.
 
                let p0 = [ (lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2 ];
                let dp = [ (hi[0] - lo[0]) / 2, (hi[1] - lo[1]) / 2 ];
@@ -577,7 +582,8 @@ function Diagram() {
                   if (object.srcId)
                      for (let n = 2 ; n < S.length ; n++)
                         if (S[n].id == object.srcId) {
-                           state.T = S[n].state.T;
+			   if (S[n].state)
+                              state.T = S[n].state.T;
                            break;
                         }
 
@@ -587,7 +593,7 @@ function Diagram() {
 		  if (state.keyState == 'release') state.keyState = 'up';
                }
 
-               // DRAW ALL THE LINES AND TEXT IN THE WINDOW OBJECT.
+               // DRAW ALL THE LINES AND TEXT IN THE CARD OBJECT.
 
                this.lineWidth(.1*s);
 	       let color = '#000000';
