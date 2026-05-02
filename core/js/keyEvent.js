@@ -57,12 +57,10 @@ abcdefghijklmnopqrstuvwxyz\
 ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 let keyDown = key => {
-   if (slides[slideIndex].isFullScreen && slides[slideIndex].keyDown) {
-      if (key.indexOf('Arrow') != 0) {
-         slides[slideIndex].keyDown(key);
-	 return;
-      }
-   }
+   if ( slides[slideIndex].isFullScreen &&
+        slides[slideIndex].keyDown &&
+        slides[slideIndex].keyDown(key) )
+      return;
 
    switch (key) {
    case 'Alt': isAlt = true; break;
@@ -123,12 +121,10 @@ window.keyUp = key => {
       return;
    }
 
-   if (slides[slideIndex].isFullScreen && slides[slideIndex].keyUp) {
-      if (key.indexOf('Arrow') != 0) {
-         slides[slideIndex].keyUp(key);
-	 return;
-      }
-   }
+   if ( slides[slideIndex].isFullScreen &&
+        slides[slideIndex].keyUp &&
+        slides[slideIndex].keyUp(key) )
+      return;
 
    if (key >= '0' && key <= '9') {
       setScene(key);

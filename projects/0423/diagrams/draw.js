@@ -27,13 +27,7 @@ function Diagram() {
    this.keyDown = key => {
       if (pen.pos && key == 'Meta') {
          isPenDown = true;
-         return;
-      }
-   }
-   this.keyUp = key => {
-      if (pen.pos && key == 'Meta') {
-         isPenDown = false;
-         return;
+         return true;
       }
 
       let n;
@@ -42,9 +36,44 @@ function Diagram() {
             break;
 
       if (n >= 2 && S[n].type == 'card') {
+         if (typeof S_value[S[n].id] == 'function') {
+            S[n].state.keyState = 'press';
+            S[n].state.key = key;
+	    return true;
+         }
+      }
+   }
+
+   this.keyUp = key => {
+      if (pen.pos && key == 'Meta') {
+         isPenDown = false;
+         return true;
+      }
+
+      let n;
+      for (n = S.length - 1 ; n >= 2 ; n--)
+         if (contains(n, pos))
+            break;
+
+      if (key.indexOf('Arrow') == 0 && (n < 2 || S[n].type != 'card'))
+         return false;
+
+      if (n >= 2 && S[n].type == 'card') {
+
+         if (typeof S_value[S[n].id] == 'function') {
+            S[n].state.keyState = 'release';
+            S[n].state.key = key;
+	    return true;
+         }
+
          if (S[n].text === undefined)
             S[n].text = '';
          switch (key) {
+         case 'ArrowLeft':
+         case 'ArrowRight':
+         case 'ArrowUp':
+         case 'ArrowDown':
+	    break;
          case 'Backspace':
             S[n].text = S[n].text.substring(0,S[n].text.length-1);
             break;
@@ -64,7 +93,7 @@ function Diagram() {
             break;
          }
          dirty = true;
-         return;
+         return true;
       }
 
       switch (key) {
@@ -79,6 +108,8 @@ function Diagram() {
          }
          break;
       }
+
+      return true;
    }
 
    let matchCurves = new MatchCurves();
@@ -537,44 +568,51 @@ function Diagram() {
                // IF A PROCEDURE, GIVE OBJECT A PLACE TO MAINTAIN THE CURRENT STATE.
 
                let value = S_value[object.id];
-               let params;
                if (typeof value == 'function') {
+
                   if (object.state === undefined)
-                     object.state = {};
+                     object.state = { };
+                  let state = object.state;
 
                   if (object.srcId)
                      for (let n = 2 ; n < S.length ; n++)
                         if (S[n].id == object.srcId) {
-                           object.state.T = S[n].state.T;
+                           state.T = S[n].state.T;
                            break;
                         }
 
-                  value = value(object.state, time, mi(pos), n == nm); // FIX THIS!!!!
+                  value = value(state, time, mi(pos), n == nm);
+
+		  if (state.keyState == 'press'  ) state.keyState = 'down';
+		  if (state.keyState == 'release') state.keyState = 'up';
                }
 
                // DRAW ALL THE LINES AND TEXT IN THE WINDOW OBJECT.
 
                this.lineWidth(.1*s);
+	       let color = '#000000';
                for (let i = 0 ; i < value.length ; i++) {
                   let item = value[i];
                   if (item.draw) {
                      let path = [];
                      for (let j = 0 ; j < item.draw.length ; j++)
                         path.push(mf(item.draw[j]));
-                     this.drawColor(item.color ?? '#000000');
+                     this.drawColor(item.color ?? color);
                      this.path(path);
                   }
                   else if (item.fill) {
                      let path = [];
                      for (let j = 0 ; j < item.fill.length ; j++)
                         path.push(mf(item.fill[j]));
-                     this.fillColor(item.color ?? '#000000');
+                     this.fillColor(item.color ?? color);
                      this.fillPolygon(path);
                   }
                   else if (item.text) {
-                     this.fillColor(item.color ?? '#000000');
+                     this.drawColor(item.color ?? color);
                      this.setFont(.9*s, 'Courier').text(item.text, mf(item.pos));
                   }
+                  else if (item.color)
+		     color = item.color;
                }
             }
 

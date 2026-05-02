@@ -93,11 +93,14 @@ cube: function(state,t,p,hasFocus) {
    let C = cubeVertices, P = [];
    for (let i = 0 ; i < C.length ; i++)
       P.push(this.M.transform(C[i]));
-   return [
-      {draw: [P[0],P[1]]}, {draw: [P[2],P[3]]}, {draw: [P[4],P[5]]}, {draw: [P[6],P[7]]},
-      {draw: [P[0],P[2]]}, {draw: [P[1],P[3]]}, {draw: [P[4],P[6]]}, {draw: [P[5],P[7]]},
-      {draw: [P[0],P[4]]}, {draw: [P[1],P[5]]}, {draw: [P[2],P[6]]}, {draw: [P[3],P[7]]},
-    ];
+
+   let S = [];
+   if (state.keyState == 'down')
+      S.push({text: state.key, pos: [0,0], color: 'red'});
+   S.push({draw: [P[0],P[1]]}, {draw: [P[2],P[3]]}, {draw: [P[4],P[5]]}, {draw: [P[6],P[7]]},
+          {draw: [P[0],P[2]]}, {draw: [P[1],P[3]]}, {draw: [P[4],P[6]]}, {draw: [P[5],P[7]]},
+          {draw: [P[0],P[4]]}, {draw: [P[1],P[5]]}, {draw: [P[2],P[6]]}, {draw: [P[3],P[7]]});
+   return S;
 },
 
 };
