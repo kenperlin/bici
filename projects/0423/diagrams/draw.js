@@ -543,14 +543,20 @@ function Diagram() {
             let lo = object.lo, hi = object.hi;
 
             this.lineWidth(.004);
-            this.drawRect([lo[0]-.002,lo[1]-.002], [hi[0]+.002,hi[1]+.002]);
+
+            let showFrame = ! S_value[object.id] || ! ( S_value[object.id].constructor &&
+	                                                S_value[object.id].constructor.name == 'ShaderCard' );
+
+            if (showFrame)
+               this.drawRect([lo[0]-.002,lo[1]-.002], [hi[0]+.002,hi[1]+.002]);
 
             // TURN ON CLIPPING, SO THAT RENDERING IS CONFINED TO THE CARD.
 
             octx.save();
             this.clipToRect(lo, hi);
 
-            this.fillColor('#ffffff').fillRect(lo, hi);
+            if (showFrame)
+               this.fillColor('#ffffff').fillRect(lo, hi);
 
             // TEXT HEIGHT AND LINE THICKNESS WILL SCALE WITH CARD SIZE.
 
