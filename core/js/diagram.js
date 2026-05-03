@@ -31,6 +31,8 @@ let addDiagramProperties = (diagram, ctx) => {
       ctx.fillStyle = saveFillStyle;
    }
 
+   diagram.mxp = mxp;
+
    diagram.identity  = ()      => { M.identity()      ; return diagram; }
    diagram.move      = (x,y,z) => { M.translate(x,y,z); return diagram; }
    diagram.pop       = ()      => { M.restore  ()     ; return diagram; }

@@ -3,11 +3,15 @@ function Diagram() {
    tracking_isDrawingShadowAvatar = false;
 
    let activateCard = n => {
-      let value = dictionary[S[n].text];
-      if (typeof value == 'string')
-         S[n].text = value;
-      else if (value !== undefined)
+      if (S[n].text == 'shader')
          S[n].window_type = S[n].text;
+      else {
+         let value = dictionary[S[n].text];
+         if (typeof value == 'string')
+            S[n].text = value;
+         else if (value !== undefined)
+            S[n].window_type = S[n].text;
+      }
       dirty = true;
    }
 
@@ -35,15 +39,11 @@ function Diagram() {
          if (contains(n, pos))
             break;
 
-console.log('-------- n, pos =', n, pos[0], pos[1]);
-
       if (n >= 2 && S[n].type == 'card') {
-console.log('AAAAAAAAAAAAAA');
          if (typeof S_value[S[n].id] == 'function') {
-console.log('BBBBBBBBBBBBBB');
             S[n].state.keyState = 'press';
             S[n].state.key = key;
-	    return true;
+            return true;
          }
       }
    }
@@ -67,7 +67,7 @@ console.log('BBBBBBBBBBBBBB');
          if (typeof S_value[S[n].id] == 'function') {
             S[n].state.keyState = 'release';
             S[n].state.key = key;
-	    return true;
+            return true;
          }
 
          if (S[n].text === undefined)
@@ -77,7 +77,7 @@ console.log('BBBBBBBBBBBBBB');
          case 'ArrowRight':
          case 'ArrowUp':
          case 'ArrowDown':
-	    break;
+            break;
          case 'Backspace':
             S[n].text = S[n].text.substring(0,S[n].text.length-1);
             break;
@@ -442,7 +442,8 @@ console.log('BBBBBBBBBBBBBB');
 
       // RESPOND TO INPUT FROM PEN, IF PEN IS VISIBLE
 
-      if (pen.pos) {
+      //if (pen.pos) {
+      if (false) {
          if (isPenDown && ! wasPenDown) {
             pen.state = 'press';
             pen.pressTime = time;
@@ -536,13 +537,28 @@ console.log('BBBBBBBBBBBBBB');
                this.path(strokes[i]);
          }
 
+	 // DRAW SHADER CARDS
+
+         else if (S_value[object.id] && S_value[object.id].constructor.name == 'ShaderCard') {
+            let shaderCard = S_value[object.id];
+            if (object.srcId)
+               for (let n = 2 ; n < S.length ; n++)
+                  if (S[n].id == object.srcId) {
+                     shaderCard.setShader(S[n].state.text);
+                     break;
+                  }
+            let lo = this.mxp(object.lo);
+            let hi = this.mxp(object.hi);
+            shaderCard.draw((lo[0]+hi[0])/2, (lo[1]+hi[1])/2, hi[0]-lo[0]);
+         }
+
          // HANDLE INTERPRETATION AND RENDERING OF CARD OBJECTS
 
          else {
             let lo = object.lo, hi = object.hi;
 
             this.lineWidth(.004);
-	    this.drawRect([lo[0]-.002,lo[1]-.002], [hi[0]+.002,hi[1]+.002]);
+            this.drawRect([lo[0]-.002,lo[1]-.002], [hi[0]+.002,hi[1]+.002]);
 
             // TURN ON CLIPPING, SO THAT RENDERING IS CONFINED TO THE CARD.
 
@@ -558,12 +574,19 @@ console.log('BBBBBBBBBBBBBB');
             // IF EVALUATION WAS TRIGGERED, SEE IF TEXT IS A VALID CARD TYPE NAME.
 
             if (object.window_type && ! S_value[object.id])
-               S_value[object.id] = dictionary[object.window_type];
+               switch (object.window_type) {
+               case 'shader':
+                  let shaderCard = new ShaderCard(octx);
+                  shaderCard.setShader('rgb = vec3(0.,0.,1.);');
+                  S_value[object.id] = shaderCard;
+                  break;
+               default:
+                  S_value[object.id] = dictionary[object.window_type];
+                  break;
+               }
 
-            if (! S_value[object.id]) {
-	       console.log('object.text', object.text);
+            if (! S_value[object.id])
                this.setFont(.95 * s).text(object.text, [lo[0] + s/3, hi[1] - s], 0, 1);
-            }
 
             // IF THIS IS A VALID CARD TYPE, DO PROCEDURAL RENDERING.
 
@@ -588,22 +611,22 @@ console.log('BBBBBBBBBBBBBB');
                   if (object.srcId)
                      for (let n = 2 ; n < S.length ; n++)
                         if (S[n].id == object.srcId) {
-			   if (S[n].state)
+                           if (S[n].state)
                               state.T = S[n].state.T;
                            break;
                         }
 
                   value = value(state, time, mi(pos), n == nm);
 
-		  if (state.keyState == 'press'  ) state.keyState = 'down';
-		  if (state.keyState == 'release') state.keyState = 'up';
+                  if (state.keyState == 'press'  ) state.keyState = 'down';
+                  if (state.keyState == 'release') state.keyState = 'up';
                }
 
                // DRAW ALL THE LINES AND TEXT IN THE CARD OBJECT.
 
                this.lineWidth(.1*s);
-	       let color = '#000000';
-	       object.state.cardSize = hi[1] - lo[1];
+               let color = '#000000';
+               object.state.cardSize = hi[1] - lo[1];
                for (let i = 0 ; i < value.length ; i++) {
                   let item = value[i];
                   if (item.draw) {
@@ -622,11 +645,11 @@ console.log('BBBBBBBBBBBBBB');
                   }
                   else if (item.text) {
                      this.drawColor(item.color ?? color);
-		     let j = item.justify ?? [.5,.5];
+                     let j = item.justify ?? [.5,.5];
                      this.setFont(item.size ?? .9*s, 'Courier').text(item.text, mf(item.pos), j[0],j[1]);
                   }
                   else if (item.color)
-		     color = item.color;
+                     color = item.color;
                }
             }
 

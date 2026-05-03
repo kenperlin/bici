@@ -104,25 +104,85 @@ cube: function(state,t,p,hasFocus) {
 },
 
 editor: function(state,t,p,hasFocus) {
+   let dirty = false;
+
+   let rowLength = row => row < 0 || row >= state.lines.length ? 0 : state.lines[row].length;
+
+   let computeIndex = () => {
+      state.index = 0;
+      let r = Math.min(state.row, state.lines.length);
+      for (let n = 0 ; n < r ; n++) 
+         state.index += state.lines[n].length + 1; 
+      state.index += Math.min(state.col, state.lines[r].length);
+   }
+
+   let insertChar = ch => {
+      state.text = state.text.substring(0, state.index) + ch + state.text.substring(state.index, state.text.length);
+      if (ch == '\n') {
+         state.row++;
+         state.col = 0;
+      }
+      else {
+         state.col++;                                     // AFTER INSERT: IF THE LINE ENDS
+         let i = state.text.indexOf('\n', state.index);   // WITH A SPACE, THEN REMOVE IT.
+         if (i >= 0 && state.text.charAt(i-1) == ' ')
+            state.text = state.text.substring(0, i-1) + state.text.substring(i, state.text.length);
+      }
+      dirty = true;
+   }
+
+   let deleteChar = () => {
+      if (state.row > 0 || state.col > 0) {
+         let ch = state.text.substring(state.index, state.index+1);
+         state.text = state.text.substring(0, state.index-1) + state.text.substring(state.index, state.text.length);
+         if (state.col == 0)
+            state.col = rowLength(--state.row);
+         else
+            state.col--;
+      }
+      else
+         state.text = state.text.substring(1, state.text.length);
+      dirty = true;
+   }
+
    if (! state.text) {
-      state.text = 'Now is the time\nHor all good menN\nto come To the aid\nof their party.\nA B C D ElF G H\nB\nC\nD\nE\nF\nH';
+      state.text = '';
+      dirty = true;
+   }
+
+   if (! state.lines) {
       state.col = 0;
       state.row = 0;
+      dirty = true;
    }
 
    if (state.keyState == 'release')
       switch (state.key) {
-      case 'ArrowRight': state.col++; break;
-      case 'ArrowLeft' : state.col--; break;
-      case 'ArrowUp'   : state.row--; break;
-      case 'ArrowDown' : state.row++; break;
+      case 'ArrowRight': state.col = Math.min(state.col+1, 80); dirty = true; break;
+      case 'ArrowLeft' : state.col = Math.max(state.col-1,  0); dirty = true; break;
+      case 'ArrowUp'   : state.row = Math.max(state.row-1,  0); dirty = true; break;
+      case 'ArrowDown' : state.row = Math.min(state.row+1, state.lines.length-1); dirty = true; break;
+      case 'Backspace' : deleteChar(); break;
+      case 'Enter'     : insertChar('\n'); break;
+      default          : insertChar(state.key); break;
+      case 'Alt':
+      case 'Control':
+      case 'Escape':
+      case 'Meta':
+      case 'Shift':
+         break;
       }
 
-   let s = state.cardSize;
+   if (dirty) {
+      state.lines = state.text.split('\n');
+      computeIndex();
+   }
+
    S = [];
-   let w = .036/s, h = .058/s, x = -.997 + w * state.col, y = .8 - h * state.row + .11 * s;
-   S.push({text: state.text, pos: [-1,.88+.1*s], justify: [0,1], size: .03});
-   S.push({fill: [[x,y], [x+w,y], [x+w,y+h], [x,y+h]], color: '#00000040'});
+   let s = state.cardSize, w = .036/s, h = .058/s, x = -.997 + w * state.col, y = 1 - h * state.row;
+   for (let n = 0 ; n < state.lines.length ; n++)
+      S.push({text: state.lines[n], pos: [-1,1-(n+.6)*h], justify: [0,1], size: .03});
+   S.push({fill: [[x,y-h], [x+w,y-h], [x+w,y], [x,y]], color: '#00000040'});
    return S;
 },
 
