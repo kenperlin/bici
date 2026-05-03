@@ -35,8 +35,12 @@ function Diagram() {
          if (contains(n, pos))
             break;
 
+console.log('-------- n, pos =', n, pos[0], pos[1]);
+
       if (n >= 2 && S[n].type == 'card') {
+console.log('AAAAAAAAAAAAAA');
          if (typeof S_value[S[n].id] == 'function') {
+console.log('BBBBBBBBBBBBBB');
             S[n].state.keyState = 'press';
             S[n].state.key = key;
 	    return true;
@@ -556,8 +560,10 @@ function Diagram() {
             if (object.window_type && ! S_value[object.id])
                S_value[object.id] = dictionary[object.window_type];
 
-            if (! S_value[object.id])
+            if (! S_value[object.id]) {
+	       console.log('object.text', object.text);
                this.setFont(.95 * s).text(object.text, [lo[0] + s/3, hi[1] - s], 0, 1);
+            }
 
             // IF THIS IS A VALID CARD TYPE, DO PROCEDURAL RENDERING.
 
@@ -597,6 +603,7 @@ function Diagram() {
 
                this.lineWidth(.1*s);
 	       let color = '#000000';
+	       object.state.cardSize = hi[1] - lo[1];
                for (let i = 0 ; i < value.length ; i++) {
                   let item = value[i];
                   if (item.draw) {
@@ -615,7 +622,8 @@ function Diagram() {
                   }
                   else if (item.text) {
                      this.drawColor(item.color ?? color);
-                     this.setFont(.9*s, 'Courier').text(item.text, mf(item.pos));
+		     let j = item.justify ?? [.5,.5];
+                     this.setFont(item.size ?? .9*s, 'Courier').text(item.text, mf(item.pos), j[0],j[1]);
                   }
                   else if (item.color)
 		     color = item.color;

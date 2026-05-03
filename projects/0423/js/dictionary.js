@@ -103,5 +103,28 @@ cube: function(state,t,p,hasFocus) {
    return S;
 },
 
+editor: function(state,t,p,hasFocus) {
+   if (! state.text) {
+      state.text = 'Now is the time\nHor all good menN\nto come To the aid\nof their party.\nA B C D ElF G H\nB\nC\nD\nE\nF\nH';
+      state.col = 0;
+      state.row = 0;
+   }
+
+   if (state.keyState == 'release')
+      switch (state.key) {
+      case 'ArrowRight': state.col++; break;
+      case 'ArrowLeft' : state.col--; break;
+      case 'ArrowUp'   : state.row--; break;
+      case 'ArrowDown' : state.row++; break;
+      }
+
+   let s = state.cardSize;
+   S = [];
+   let w = .036/s, h = .058/s, x = -.997 + w * state.col, y = .8 - h * state.row + .11 * s;
+   S.push({text: state.text, pos: [-1,.88+.1*s], justify: [0,1], size: .03});
+   S.push({fill: [[x,y], [x+w,y], [x+w,y+h], [x,y+h]], color: '#00000040'});
+   return S;
+},
+
 };
 
