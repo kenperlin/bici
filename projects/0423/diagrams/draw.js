@@ -537,21 +537,6 @@ function Diagram() {
                this.path(strokes[i]);
          }
 
-	 // DRAW SHADER CARDS
-
-         else if (S_value[object.id] && S_value[object.id].constructor.name == 'ShaderCard') {
-            let shaderCard = S_value[object.id];
-            if (object.srcId)
-               for (let n = 2 ; n < S.length ; n++)
-                  if (S[n].id == object.srcId) {
-                     shaderCard.setShader(S[n].state.text);
-                     break;
-                  }
-            let lo = this.mxp(object.lo);
-            let hi = this.mxp(object.hi);
-            shaderCard.draw((lo[0]+hi[0])/2, (lo[1]+hi[1])/2, hi[0]-lo[0]);
-         }
-
          // HANDLE INTERPRETATION AND RENDERING OF CARD OBJECTS
 
          else {
@@ -587,6 +572,21 @@ function Diagram() {
 
             if (! S_value[object.id])
                this.setFont(.95 * s).text(object.text, [lo[0] + s/3, hi[1] - s], 0, 1);
+
+	    // DRAW SHADER CARDS
+
+            else if (S_value[object.id].constructor.name == 'ShaderCard') {
+               let shaderCard = S_value[object.id];
+               if (object.srcId)
+                  for (let n = 2 ; n < S.length ; n++)
+                     if (S[n].id == object.srcId) {
+                        shaderCard.setShader(S[n].state.text);
+                        break;
+                     }
+               let L = this.mxp(lo);
+               let H = this.mxp(hi);
+               shaderCard.draw((L[0]+H[0])/2, (L[1]+H[1])/2, H[0]-L[0]);
+            }
 
             // IF THIS IS A VALID CARD TYPE, DO PROCEDURAL RENDERING.
 
