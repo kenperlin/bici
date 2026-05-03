@@ -145,14 +145,21 @@ editor: function(state,t,p,hasFocus) {
       dirty = true;
    }
 
-   if (! state.text) {
+   if (! state.text)
       state.text = '';
-      dirty = true;
-   }
 
    if (! state.lines) {
       state.col = 0;
       state.row = 0;
+      state.lines = state.text.split('\n');
+      computeIndex();
+   }
+
+   let s = state.cardSize, w = .036/s, h = .058/s;
+
+   if (hasFocus) {
+      state.row = Math.min((1 - p[1]) / h >> 0, state.lines.length-1);
+      state.col = Math.min((p[0] + 1) / w >> 0, state.lines[state.row].length);
       dirty = true;
    }
 
@@ -178,8 +185,9 @@ editor: function(state,t,p,hasFocus) {
       computeIndex();
    }
 
+   let x = -.997 + w * state.col, y = 1 - h * state.row;
+
    S = [];
-   let s = state.cardSize, w = .036/s, h = .058/s, x = -.997 + w * state.col, y = 1 - h * state.row;
    for (let n = 0 ; n < state.lines.length ; n++)
       S.push({text: state.lines[n], pos: [-1,1-(n+.6)*h], justify: [0,1], size: .03});
    S.push({fill: [[x,y-h], [x+w,y-h], [x+w,y], [x,y]], color: '#00000040'});
