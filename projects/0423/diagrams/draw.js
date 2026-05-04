@@ -15,15 +15,14 @@ function Diagram() {
       dirty = true;
    }
 
-   let activateCardFromSpeech = n => {
-      let words = speech.toLowerCase().split(' ');
+   let activateCardFromText = (n, text) => {
+      let words = text.toLowerCase().split(' ');
       for (let word in dictionary)
          for (let i = 0 ; i < words.length ; i++) {
             if (word == words[i]) {
                S[n].text = word;
                activateCard(n);
-               speech = '';
-               return;
+               return true;
             }
          }
    }
@@ -90,7 +89,8 @@ function Diagram() {
             activateCard(n);
             break;
          case 'Alt':
-            activateCardFromSpeech(n);
+            if (activateCardFromText(n, speech))
+	       speech = '';
             break;
          default:
             S[n].text += key;
@@ -524,7 +524,8 @@ function Diagram() {
                object.type = matchCurves.glyph(object.morphData[2]).name;
                if (object.type == 'card') {
                   object.text = '';
-                  activateCardFromSpeech(n);
+                  if (activateCardFromText(n, speech))
+		     speech = '';
                }
             }
          }
@@ -607,12 +608,17 @@ function Diagram() {
 
                // IF A PROCEDURE, GIVE OBJECT A PLACE TO MAINTAIN THE CURRENT STATE.
 
+               let activationText = null;
+
                let value = S_value[object.id];
                if (typeof value == 'function') {
 
                   if (object.state === undefined)
                      object.state = { };
                   let state = object.state;
+
+                  if (object.text == 'editor' && state.key == 'Meta' && state.keyState == 'release')
+		     activationText = object.state.text;
 
                   if (object.srcId)
                      for (let n = 2 ; n < S.length ; n++)
@@ -657,6 +663,11 @@ function Diagram() {
                   else if (item.color)
                      color = item.color;
                }
+
+	       if (activationText) {
+	          delete S_value[object.id];
+		  activateCardFromText(n, activationText);
+	       }
             }
 
             octx.restore();
