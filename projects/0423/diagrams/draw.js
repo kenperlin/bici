@@ -3,16 +3,8 @@ function Diagram() {
    tracking_isDrawingShadowAvatar = false;
 
    let activateCard = n => {
-      if (S[n].text == 'shader')
+      if (dictionary[S[n].text])
          S[n].window_type = S[n].text;
-      else {
-         let value = dictionary[S[n].text];
-         if (typeof value == 'string')
-            S[n].text = value;
-         else if (value !== undefined)
-            S[n].window_type = S[n].text;
-      }
-      dirty = true;
    }
 
    let activateCardFromText = (n, text) => {
@@ -39,11 +31,9 @@ function Diagram() {
             break;
 
       if (n >= 2 && S[n].type == 'card') {
-         if (typeof S_value[S[n].id] == 'function') {
-            S[n].state.keyState = 'press';
-            S[n].state.key = key;
-            return true;
-         }
+         S[n].state.keyState = 'press';
+         S[n].state.key = key;
+         return true;
       }
    }
 
@@ -53,52 +43,28 @@ function Diagram() {
          return true;
       }
 
+      // FIND OUT WHAT OBJECT, IF ANY, IS AT THE CURSOR.
+
       let n;
       for (n = S.length - 1 ; n >= 2 ; n--)
          if (contains(n, pos))
             break;
 
+      // IGNORE ARROW KEYS THAT ARE NOT ON A CARD.
+
       if (key.indexOf('Arrow') == 0 && (n < 2 || S[n].type != 'card'))
          return false;
 
+      // SEND TEXT EVENTS TO THE CARD AT THE CURSOR.
+
       if (n >= 2 && S[n].type == 'card') {
-
-         if (typeof S_value[S[n].id] == 'function') {
-            S[n].state.keyState = 'release';
-            S[n].state.key = key;
-            return true;
-         }
-
-         if (S[n].text === undefined)
-            S[n].text = '';
-         switch (key) {
-         case 'ArrowLeft':
-         case 'ArrowRight':
-         case 'ArrowUp':
-         case 'ArrowDown':
-            break;
-         case 'Backspace':
-            S[n].text = S[n].text.substring(0,S[n].text.length-1);
-            break;
-         case 'Enter':
-            S[n].text += '\n';
-            break;
-         case 'Shift':
-            break;
-         case 'Escape':
-            activateCard(n);
-            break;
-         case 'Alt':
-            if (activateCardFromText(n, speech))
-	       speech = '';
-            break;
-         default:
-            S[n].text += key;
-            break;
-         }
-         dirty = true;
+         S[n].state.keyState = 'release';
+         S[n].state.key = key;
+	 dirty = true;
          return true;
       }
+
+      // DELETE KEY ON BACKGROUND REMOVES OBJECT AT THE CURSOR.
 
       switch (key) {
       case 'Backspace':
@@ -164,6 +130,7 @@ function Diagram() {
    let previousSpeech = '';
 
    this.update = () => {
+
       if (speech != previousSpeech) {
          dirty = true;
          previousSpeech = speech;
@@ -522,15 +489,15 @@ function Diagram() {
                for (let i = 0 ; i < strokes.length ; i++)
                   extendBounds(n, strokes[i]);
                object.type = matchCurves.glyph(object.morphData[2]).name;
-               if (object.type == 'card') {
-                  object.text = '';
+               if (object.type == 'card')
                   if (activateCardFromText(n, speech))
 		     speech = '';
-               }
+                  else
+		     activateCardFromText(n, 'editor');
             }
          }
 
-         // DRAW OBJECTS THAT CONSIST OF SEQUENCES OF STROKES
+         // DRAW AN OBJECT THAT CONSISTS OF A SEQUENCE OF STROKES
 
          if (object.type != 'card') {
             this.lineWidth(.015);
@@ -538,7 +505,7 @@ function Diagram() {
                this.path(strokes[i]);
          }
 
-         // HANDLE INTERPRETATION AND RENDERING OF CARD OBJECTS
+         // HANDLE INTERPRETATION AND RENDERING OF A CARD OBJECT
 
          else {
             let lo = object.lo, hi = object.hi;
@@ -580,14 +547,28 @@ function Diagram() {
             if (! S_value[object.id])
                this.setFont(.95 * s).text(object.text, [lo[0] + s/3, hi[1] - s], 0, 1);
 
-	    // DRAW SHADER CARDS
+	    // DRAW A SHADER CARD
 
             else if (S_value[object.id].constructor.name == 'ShaderCard') {
                let shaderCard = S_value[object.id];
                if (object.srcId)
+
+	          // IF THERE IS AN IN-LINK, LINK SHADER CODE FROM THE SOURCE CARD
+
                   for (let n = 2 ; n < S.length ; n++)
                      if (S[n].id == object.srcId) {
                         shaderCard.setShader(S[n].state.text);
+
+			// IF SRC CARD HAS AN IN-LINK, LINK SHADER T[] UNIFORMS FROM IT
+
+                        if (S[n].srcId)
+                           for (let nt = 2 ; nt < S.length ; nt++)
+                              if (S[nt].id == S[n].srcId) {
+			         if (S[nt].state)
+                                    shaderCard.setT(S[nt].state.T);
+                                 break;
+                              }
+
                         break;
                      }
                let L = this.mxp(lo);
@@ -628,7 +609,9 @@ function Diagram() {
                            break;
                         }
 
+                  state.dirty = false;
                   value = value(state, time, mi(pos), n == nm);
+		  dirty = state.dirty;
 
                   if (state.keyState == 'press'  ) state.keyState = 'down';
                   if (state.keyState == 'release') state.keyState = 'up';
@@ -665,8 +648,16 @@ function Diagram() {
                }
 
 	       if (activationText) {
-	          delete S_value[object.id];
-		  activateCardFromText(n, activationText);
+	          if (activationText == 'shader') {
+                     let shaderCard = new ShaderCard(octx);
+                     shaderCard.setShader('rgb = vec3(0.,0.,1.);');
+                     S_value[object.id] = shaderCard;
+                  }
+		  else {
+	             delete S_value[object.id];
+		     activateCardFromText(n, activationText);
+                  }
+		  dirty = true;
 	       }
             }
 

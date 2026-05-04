@@ -1,5 +1,5 @@
 function ShaderCard(ctx) {
-   let canvas = document.createElement('canvas'), shader = '', gl, prog, uTime, startTime;
+   let canvas = document.createElement('canvas'), shader = '', gl, prog, uTime, uT, startTime;
    canvas.width = canvas.height = 500;
    document.body.appendChild(canvas);
    gl = canvas.getContext("experimental-webgl");
@@ -27,8 +27,11 @@ float noise(vec3 p) {
          gl.attachShader(prog, shader);
       };
       addshader(gl.VERTEX_SHADER, 'attribute vec3 _p;varying float x,y;void main(){gl_Position=vec4(x=_p.x,y=_p.y,0.,1.);}');
-      addshader(gl.FRAGMENT_SHADER, `precision highp float;uniform float time;varying float x,y;
-` + noise + `
+      addshader(gl.FRAGMENT_SHADER, `precision highp float;
+                                     uniform float time;
+                                     uniform float T[10];
+				     varying float x,y;
+                                     ` + noise + `
                                      void main(){vec3 rgb;` + shader + `gl_FragColor=vec4(rgb,1.);}`);
       gl.linkProgram(prog);
       gl.useProgram(prog);
@@ -38,8 +41,11 @@ float noise(vec3 p) {
       gl.enableVertexAttribArray(_p);
       gl.vertexAttribPointer(_p, 3, gl.FLOAT, false, 0, 0);
       uTime = gl.getUniformLocation(prog,'time');
+      uT = gl.getUniformLocation(prog,'T');
       startTime = Date.now() / 1000;
    }
+
+   this.setT = T => gl.uniform1fv(uT, T);
 
    this.draw = (x,y,w) => {
       let elapsed = Date.now() / 1000 - startTime;

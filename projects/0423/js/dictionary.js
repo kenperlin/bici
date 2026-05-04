@@ -1,17 +1,5 @@
 let dictionary = {
 
-// Simplest case: Replace keyword by text.
-
-bar: 'Here is the text\nfor the word "bar".',
-
-// Replace keyword by a mix of text and 2D graphics.
-
-bracket:
-   [
-      { text: 'bracket', pos: [0,0] },
-      { draw: [ [-.5,-.5], [-.5, .5], [ .5, .5] ] },
-   ],
-
 // Replace keyword by a time varying function
 // that displays a mix of text and 2D graphics.
 
@@ -182,6 +170,7 @@ editor: function(state,t,p,hasFocus) {
 
    if (dirty) {
       state.lines = state.text.split('\n');
+      state.dirty = true;
       computeIndex();
    }
 
