@@ -13,7 +13,17 @@ float noise(vec3 p) {
                   mix(t(i, u, vec3(0.,1.,0.)), t(i, u, vec3(1.,1.,0.)), v.x), v.y),
               mix(mix(t(i, u, vec3(0.,0.,1.)), t(i, u, vec3(1.,0.,1.)), v.x),
                   mix(t(i, u, vec3(0.,1.,1.)), t(i, u, vec3(1.,1.,1.)), v.x), v.y), v.z);
-}`;
+}
+float turbulence(vec3 P) {
+   float f = 0., s = 1.;
+   for (int i = 0 ; i < 9 ; i++) {
+      f += abs(noise(s * P)) / s;
+      s *= 2.;
+      P = vec3(.866 * P.x + .5 * P.z, P.y + 100., -.5 * P.x + .866 * P.z);
+   }
+   return f;
+}
+`;
 
    this.setShader = text => {
       if (text == shader)

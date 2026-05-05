@@ -5,8 +5,6 @@ function Diagram() {
    let isControl = key => key == 'Control' || key == 'Alt' || key == 'Meta';
 
    let activateCard = n => {
-      if (dictionary[S[n].text])
-         S[n].window_type = S[n].text;
    }
 
    let activateCardFromText = (n, text) => {
@@ -15,7 +13,8 @@ function Diagram() {
          for (let i = 0 ; i < words.length ; i++) {
             if (word == words[i]) {
                S[n].text = word;
-               activateCard(n);
+               if (dictionary[S[n].text])
+                  S[n].window_type = S[n].text;
                return true;
             }
          }
@@ -499,7 +498,7 @@ function Diagram() {
          // DRAW AN OBJECT THAT CONSISTS OF A SEQUENCE OF STROKES
 
          if (object.type != 'card') {
-            this.lineWidth(.015);
+            this.lineWidth(.008);
             for (let i = 0 ; i < strokes.length ; i++)
                this.path(strokes[i]);
          }
@@ -511,8 +510,6 @@ function Diagram() {
 
 	    if (S_value[object.id] && object.text == 'editor' && object.state && object.state.lines)
 	       lo[1] = hi[1] - .029 * Math.max(1, object.state.lines.length);
-            else
-	       lo[1] = hi[1] + lo[0] - hi[0];
 
             let isShader = S_value[object.id] && S_value[object.id].constructor.name == 'ShaderCard';
 
@@ -541,10 +538,8 @@ function Diagram() {
             // IF EVALUATION WAS TRIGGERED, SEE IF TEXT IS A VALID CARD TYPE NAME.
 
             if (object.window_type && ! S_value[object.id]) {
-	       object.lo[1] = object.hi[1] - (object.hi[0] - object.lo[0]);
                switch (object.window_type) {
                case 'shader':
-	          lo[1] = hi[1] + lo[0] - hi[0];
                   let shaderCard = new ShaderCard(octx);
                   shaderCard.setShader('rgb = vec3(0.,0.,1.);');
                   S_value[object.id] = shaderCard;
@@ -561,7 +556,6 @@ function Diagram() {
 
 	    // DRAW A SHADER CARD
 
-            //else if (S_value[object.id].constructor.name == 'ShaderCard') {
             else if (isShader) {
                let shaderCard = S_value[object.id];
                if (object.srcId)
@@ -584,6 +578,7 @@ function Diagram() {
 
                         break;
                      }
+	       lo[1] = hi[1] + lo[0] - hi[0];
                let L = this.mxp(lo);
                let H = this.mxp(hi);
                shaderCard.draw((L[0]+H[0])/2, (L[1]+H[1])/2, H[0]-L[0]);
@@ -599,18 +594,6 @@ function Diagram() {
                let dp = [ (hi[0] - lo[0]) / 2, (hi[1] - lo[1]) / 2 ];
                let mf = p => [  p0[0] + p[0]  * dp[0],  p0[1] + p[1]  * dp[1] ];
                let mi = p => [ (p[0] - p0[0]) / dp[0], (p[1] - p0[1]) / dp[1] ];
-/*
-               let mf = p => [ lo[0] + p[0] * (hi[0]-lo[0]), hi[1] - (1-p[1]) * (hi[0]-lo[0]) ];
-	       let mi = p => [ (p[0]-lo[0]) / (hi[0]-lo[0]), p[1]/(hi[0]-lo[0]) - hi[1] + 1 ];
-
-	       y = hi[1] - (1-p[1]) * (hi[0]-lo[0])
-	       y/(hi[0]-lo[0]) = hi[1] - (1-p[1])
-	       y/(hi[0]-lo[0]) - hi[1] = p[1]-1
-	       y/(hi[0]-lo[0]) - hi[1] + 1 = p[1]
-*/
-
-
-
 
                // IF A PROCEDURE, GIVE OBJECT A PLACE TO MAINTAIN THE CURRENT STATE.
 

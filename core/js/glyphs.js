@@ -27,7 +27,8 @@ mc.addGlyph('Y',[[-.6,1],[0,.1]],[[.6,1],[0,.1],[0,-1]]);
 mc.addGlyph('Z',[[-.6,1],[.6,1],[-.6,-1],[.6,-1]]);
 
 //mc.addGlyph('square',[[-1,1],[1,1],[1,-1],[-1,-1],[-1,1]]);
-mc.addGlyph('card',[[-1,-1],[-1,1],[1,1],[1,-1],[-1,-1]]);
+//mc.addGlyph('card',[[-1,-1],[-1,1],[1,1],[1,-1],[-1,-1]]);
+mc.addGlyph('card',[[-1,-.1],[-1,.1],[1,.1],[1,-.1],[-1,-.1]]);
 mc.addGlyph('circle',[[-.01,1],[.01,1],2,[.01,-1],[-.01,-1],2,[-.01,1],[.01,1]]);
 //mc.addGlyph('plus',[[0,1],[0,-1]],[[-1,0],[1,0]]);
 //mc.addGlyph('minus',[[-1,0],[1,0]]);
@@ -102,7 +103,7 @@ mc.addGlyph('test1',function() {
       [ [  1,Math.sin(4*time)], [0,-1], [-1,Math.sin(4*time)] ]
    ];
 });
-
+/*
 mc.addGlyph('flapping',function() {
    this.update = time => {
       let t = .1 * Math.sin(8 * time + .2);
@@ -113,6 +114,7 @@ mc.addGlyph('flapping',function() {
       return [ [ [-x,y+4*s-.2], [-c/2,y+s], [0,y-s], [c/2,y+s], [x,y+4*s-.2] ] ];
    };
 });
+*/
 
 mc.addGlyph('fish',function() {
    this.update = time => {
