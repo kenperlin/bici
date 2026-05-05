@@ -606,11 +606,6 @@ function Diagram() {
                      object.state = { };
                   let state = object.state;
 
-		  if (state.keyState == 'release') {
-		     console.log('A', object.text);
-		     console.log('B', state.key);
-                  }
-
                   if (object.text == 'editor' && isControl(state.key) && state.keyState == 'release') {
 		     let text = object.state.text;
 		     if (text.indexOf('.') > 0)

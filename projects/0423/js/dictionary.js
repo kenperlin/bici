@@ -130,8 +130,8 @@ editor: function(state,t,p,hasFocus) {
    let deleteChar = () => {
       if (state.selectionStart < state.selectionEnd) {
          state.text = state.text.substring(0, state.selectionStart) + state.text.substring(state.selectionEnd+1);
-	 state.index = state.selectionStart;
-	 state.selectionStart = state.selectionEnd = -1;
+         state.index = state.selectionStart;
+         state.selectionStart = state.selectionEnd = -1;
       }
       else if (state.row > 0 || state.col > 0) {
          let ch = state.text.substring(state.index, state.index+1);
@@ -188,45 +188,101 @@ editor: function(state,t,p,hasFocus) {
 
    state.hadFocus = hasFocus;
 
+   let process = () => {
+      state.lines = state.text.split('\n');
+      state.dirty = true;
+      computeIndex();
+   }
+
+   async function controlC() {
+      try {
+          let text = state.text.substring(state.selectionStart, state.selectionEnd+1);
+          await navigator.clipboard.writeText(text);
+	  process();
+      } catch (err) {
+          console.error('Command-c failed:', err);
+      }
+   }
+
+   async function controlV() {
+      try {
+          let text = await navigator.clipboard.readText();
+          state.text = state.text.substring(0,state.index) + text + state.text.substring(state.index);
+	  process();
+       } catch (err) {
+          console.error('Command-v failed:', err);
+       }
+   }
+
+   async function controlX() {
+      try {
+         let text = state.text.substring(state.selectionStart, state.selectionEnd+1);
+         await navigator.clipboard.writeText(text);
+         state.text = state.text.substring(0,state.selectionStart) + state.text.substring(state.selectionEnd+1);
+         process();
+      } catch (err) {
+         console.error('Command-x failed:', err);
+      }
+   }
+
+   if (state.keyState == 'press')
+      if (state.key == 'Meta')
+         state.isMetaDown = true;
+      else if (state.isMetaDown)
+         switch (state.key) {
+         case 'c': controlC(); break;
+         case 'v': controlV(); break;
+         case 'x': controlX(); break;
+         }
+      
    if (state.keyState == 'release')
       switch (state.key) {
       case 'ArrowRight':
          if (state.col < state.lines[state.row].length)
             state.col++;
-	 else if (state.row < state.lines.length - 1) {
-	    state.row++;
-	    state.col = 0;
-	 }
-	 dirty = true;
-	 break;
+         else if (state.row < state.lines.length - 1) {
+            state.row++;
+            state.col = 0;
+         }
+         dirty = true;
+         break;
       case 'ArrowLeft':
          if (state.col > 0)
-	    state.col--;
-	 else if (state.row > 0) {
-	    state.row--;
-	    state.col = state.lines[state.row].length;
-	 }
-	 dirty = true;
-	 break;
-      case 'ArrowUp'   : state.row = Math.max(state.row-1,  0); dirty = true; break;
-      case 'ArrowDown' : state.row = Math.min(state.row+1, state.lines.length-1); dirty = true; break;
-      case 'Backspace' : deleteChar(); break;
-      case 'Enter'     : insertChar('\n'); break;
-      default          : insertChar(state.key); break;
+            state.col--;
+         else if (state.row > 0) {
+            state.row--;
+            state.col = state.lines[state.row].length;
+         }
+         dirty = true;
+         break;
+      case 'ArrowUp':
+         state.row = Math.max(state.row-1,  0); dirty = true;
+         break;
+      case 'ArrowDown':
+         state.row = Math.min(state.row+1, state.lines.length-1); dirty = true;
+         break;
+      case 'Backspace':
+         deleteChar();
+         break;
+      case 'Enter':
+         insertChar('\n');
+         break;
+      default :
+         insertChar(state.key);
+         break;
+      case 'Meta':
+         state.isMetaDown = false;
+         break;
       case 'Alt':
       case 'Control':
       case 'Escape':
-      case 'Meta':
       case 'Shift':
       case 'Tab':
          break;
       }
 
-   if (dirty) {
-      state.lines = state.text.split('\n');
-      state.dirty = true;
-      computeIndex();
-   }
+   if (dirty)
+      process();
 
    let x = -.997 + w * state.col, y = 1 - h * state.row;
 
