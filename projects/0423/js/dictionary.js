@@ -190,8 +190,24 @@ editor: function(state,t,p,hasFocus) {
 
    if (state.keyState == 'release')
       switch (state.key) {
-      case 'ArrowRight': state.col = Math.min(state.col+1, 80); dirty = true; break;
-      case 'ArrowLeft' : state.col = Math.max(state.col-1,  0); dirty = true; break;
+      case 'ArrowRight':
+         if (state.col < state.lines[state.row].length)
+            state.col++;
+	 else if (state.row < state.lines.length - 1) {
+	    state.row++;
+	    state.col = 0;
+	 }
+	 dirty = true;
+	 break;
+      case 'ArrowLeft':
+         if (state.col > 0)
+	    state.col--;
+	 else if (state.row > 0) {
+	    state.row--;
+	    state.col = state.lines[state.row].length;
+	 }
+	 dirty = true;
+	 break;
       case 'ArrowUp'   : state.row = Math.max(state.row-1,  0); dirty = true; break;
       case 'ArrowDown' : state.row = Math.min(state.row+1, state.lines.length-1); dirty = true; break;
       case 'Backspace' : deleteChar(); break;
@@ -231,8 +247,11 @@ editor: function(state,t,p,hasFocus) {
          }
       i += text.length + 1;
    }
-   if (state.selectionStart == state.selectionEnd)
+   if (state.selectionStart == state.selectionEnd) {
+      let col = Math.min(state.col, state.lines[state.row].length);
+      let x = w * col - 1;
       S.push({fill: [[x,y-h], [x+w,y-h], [x+w,y], [x,y]], color: '#00000040'});
+   }
    return S;
 },
 
