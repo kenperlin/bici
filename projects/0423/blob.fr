@@ -1,0 +1,7 @@
+float r = 2.*x*x + 2.*y*y;
+float f = 10.*T[0];
+vec3 v = vec3(f*x,f*y,time);
+r += noise(v);
+if (r > 1.)
+   discard;
+rgb = vec3(r);

@@ -66,6 +66,11 @@ sliders: function(state,t,p,hasFocus) {
       let y = .9 - .2 * n;
       S.push({draw: [[-1,y-.1],[1,y-.1]]});
       S.push({text: 'T[' + n + ']', pos: [-.76,y-.11]});
+      let s = '' + (100 * state.T[n] >> 0) / 100;
+      if (s.indexOf('.') == s.length - 2) s += '0';
+      if (s.indexOf('-') == 0) s += ' ';
+      if (s.length == 2) s = s.substring(0,1) + '.00';
+      S.push({text: s, pos: [0,y-.11]});
    }
    return S;
 },
@@ -105,6 +110,9 @@ editor: function(state,t,p,hasFocus) {
    }
 
    let insertChar = ch => {
+      if (state.selectionStart < state.selectionEnd)
+         deleteChar();
+
       state.text = state.text.substring(0, state.index) + ch + state.text.substring(state.index, state.text.length);
       if (ch == '\n') {
          state.row++;
@@ -120,9 +128,14 @@ editor: function(state,t,p,hasFocus) {
    }
 
    let deleteChar = () => {
-      if (state.row > 0 || state.col > 0) {
+      if (state.selectionStart < state.selectionEnd) {
+         state.text = state.text.substring(0, state.selectionStart) + state.text.substring(state.selectionEnd+1);
+	 state.index = state.selectionStart;
+	 state.selectionStart = state.selectionEnd = -1;
+      }
+      else if (state.row > 0 || state.col > 0) {
          let ch = state.text.substring(state.index, state.index+1);
-         state.text = state.text.substring(0, state.index-1) + state.text.substring(state.index, state.text.length);
+         state.text = state.text.substring(0, state.index-1) + state.text.substring(state.index);
          if (state.col == 0)
             state.col = rowLength(--state.row);
          else
@@ -139,17 +152,41 @@ editor: function(state,t,p,hasFocus) {
    if (! state.lines) {
       state.col = 0;
       state.row = 0;
+      state.selectionStart = -1;
+      state.selectionEnd = -1;
       state.lines = state.text.split('\n');
       computeIndex();
    }
 
-   let s = state.cardSize, w = .036/s, h = .058/s;
+   let s = state.cardSize, w = .036/s, h = 2 / Math.max(1, state.lines.length);
 
-   if (hasFocus) {
+   let computeColRowIndex = p => {
       state.row = Math.min((1 - p[1]) / h >> 0, state.lines.length-1);
       state.col = Math.min((p[0] + 1) / w >> 0, state.lines[state.row].length);
+      computeIndex();
+   }
+
+   if (! state.hadFocus && hasFocus) {
+      computeColRowIndex(p);
+      state.selectionStart = state.selectionEnd = state.index;
       dirty = true;
    }
+
+   if (state.hadFocus && hasFocus) {
+      computeColRowIndex(p);
+      state.selectionStart = Math.min(state.selectionStart, state.index);
+      state.selectionEnd   = Math.max(state.selectionEnd  , state.index);
+      dirty = true;
+   }
+
+   if (state.hadFocus && ! hasFocus) {
+      if (state.selectionStart == state.selectionEnd) {
+         state.selectionStart = -1;
+         state.selectionEnd   = -1;
+      }
+   }
+
+   state.hadFocus = hasFocus;
 
    if (state.keyState == 'release')
       switch (state.key) {
@@ -165,6 +202,7 @@ editor: function(state,t,p,hasFocus) {
       case 'Escape':
       case 'Meta':
       case 'Shift':
+      case 'Tab':
          break;
       }
 
@@ -176,10 +214,25 @@ editor: function(state,t,p,hasFocus) {
 
    let x = -.997 + w * state.col, y = 1 - h * state.row;
 
+   let getXY = (col,row) => {
+      return [ -1 + w * col, 1 - row*h ];
+   }
+
    S = [];
-   for (let n = 0 ; n < state.lines.length ; n++)
-      S.push({text: state.lines[n], pos: [-1,1-(n+.6)*h], justify: [0,1], size: .03});
-   S.push({fill: [[x,y-h], [x+w,y-h], [x+w,y], [x,y]], color: '#00000040'});
+   let i = 0;
+   for (let row = 0 ; row < state.lines.length ; row++) {
+      let text = state.lines[row];
+      S.push({text: text, pos: [-1,1-(row+.6)*h], justify: [0,1], size: .03});
+      for (let col = 0 ; col < text.length ; col++)
+         if (i + col >= state.selectionStart && i + col <= state.selectionEnd) {
+            let x = w * col - 1;
+            let y = 1 - row * h;
+            S.push({fill: [[x,y-h], [x+w,y-h], [x+w,y], [x,y]], color: '#00000040'});
+         }
+      i += text.length + 1;
+   }
+   if (state.selectionStart == state.selectionEnd)
+      S.push({fill: [[x,y-h], [x+w,y-h], [x+w,y], [x,y]], color: '#00000040'});
    return S;
 },
 

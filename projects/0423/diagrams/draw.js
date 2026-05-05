@@ -2,6 +2,8 @@ function Diagram() {
    this.isFullScreen = true;
    tracking_isDrawingShadowAvatar = false;
 
+   let isControl = key => key == 'Control' || key == 'Alt' || key == 'Meta';
+
    let activateCard = n => {
       if (dictionary[S[n].text])
          S[n].window_type = S[n].text;
@@ -20,7 +22,7 @@ function Diagram() {
    }
 
    this.keyDown = key => {
-      if (pen.pos && key == 'Meta') {
+      if (pen.pos && isControl(key)) {
          isPenDown = true;
          return true;
       }
@@ -38,7 +40,7 @@ function Diagram() {
    }
 
    this.keyUp = key => {
-      if (pen.pos && key == 'Meta') {
+      if (pen.pos && isControl(key)) {
          isPenDown = false;
          return true;
       }
@@ -441,7 +443,7 @@ function Diagram() {
          this.setState(S);
       dirty = false;
 
-      // DRAW EVERY LINK AS A CONNECTING LINE WITH AN ARROWHEAD IN THE MIDDLE
+      // DRAW EVERY LINK AS A CONNECTING ARROW
 
       this.lineWidth(.008);
       for (let n = 0 ; n < S.length ; n++)
@@ -459,15 +461,12 @@ function Diagram() {
                   let L0 = S[ns].lo, H0 = S[ns].hi,
                       L1 = S[n ].lo, H1 = S[n ].hi,
                       A = findEdge( L0, H0, mix(L1, H1, .5) ),
-                      B = findEdge( L1, H1, mix(L0, H0, .5) );
-                  this.line(A,B);
-
-                  let [cx,cy] = mix(A, B, .5),
-                      [dx,dy] = subtract(B, A),
-                      s = .02 / Math.sqrt(dx * dx + dy * dy);
-                  this.fillPolygon([ [cx + s*dx       , cy + s*dy       ],
-                                     [cx - s*dx - s*dy, cy - s*dy + s*dx],
-                                     [cx - s*dx + s*dy, cy - s*dy - s*dx] ]);
+                      B = findEdge( L1, H1, mix(L0, H0, .5) ),
+		      D = resize(normalize(subtract(B,A)),.02),
+		      E = resize(D,1/3);
+                  this.line(A,subtract(B,E));
+		  this.fillPolygon([ add(B,E), add(B, [-2*D[0] - D[1], -2*D[1] + D[0]]),
+                                               add(B, [-2*D[0] + D[1], -2*D[1] - D[0]]) ]);
                   break;
                }
 
@@ -510,6 +509,13 @@ function Diagram() {
          else {
             let lo = object.lo, hi = object.hi;
 
+	    if (S_value[object.id] && object.text == 'editor' && object.state && object.state.lines)
+	       lo[1] = hi[1] - .029 * Math.max(1, object.state.lines.length);
+            else
+	       lo[1] = hi[1] + lo[0] - hi[0];
+
+            let isShader = S_value[object.id] && S_value[object.id].constructor.name == 'ShaderCard';
+
             this.lineWidth(.004);
 
             let showFrame = ! S_value[object.id] || ! ( S_value[object.id].constructor &&
@@ -520,8 +526,10 @@ function Diagram() {
 
             // TURN ON CLIPPING, SO THAT RENDERING IS CONFINED TO THE CARD.
 
-            octx.save();
-            this.clipToRect(lo, hi);
+	    if (! isShader) {
+	       octx.save();
+               this.clipToRect(lo, hi);
+            }
 
             if (showFrame)
                this.fillColor('#ffffff').fillRect(lo, hi);
@@ -532,24 +540,29 @@ function Diagram() {
 
             // IF EVALUATION WAS TRIGGERED, SEE IF TEXT IS A VALID CARD TYPE NAME.
 
-            if (object.window_type && ! S_value[object.id])
+            if (object.window_type && ! S_value[object.id]) {
+	       object.lo[1] = object.hi[1] - (object.hi[0] - object.lo[0]);
                switch (object.window_type) {
                case 'shader':
+	          lo[1] = hi[1] + lo[0] - hi[0];
                   let shaderCard = new ShaderCard(octx);
                   shaderCard.setShader('rgb = vec3(0.,0.,1.);');
                   S_value[object.id] = shaderCard;
                   break;
                default:
+	          lo[1] = hi[1] + lo[0] - hi[0];
                   S_value[object.id] = dictionary[object.window_type];
                   break;
                }
+            }
 
             if (! S_value[object.id])
                this.setFont(.95 * s).text(object.text, [lo[0] + s/3, hi[1] - s], 0, 1);
 
 	    // DRAW A SHADER CARD
 
-            else if (S_value[object.id].constructor.name == 'ShaderCard') {
+            //else if (S_value[object.id].constructor.name == 'ShaderCard') {
+            else if (isShader) {
                let shaderCard = S_value[object.id];
                if (object.srcId)
 
@@ -586,6 +599,18 @@ function Diagram() {
                let dp = [ (hi[0] - lo[0]) / 2, (hi[1] - lo[1]) / 2 ];
                let mf = p => [  p0[0] + p[0]  * dp[0],  p0[1] + p[1]  * dp[1] ];
                let mi = p => [ (p[0] - p0[0]) / dp[0], (p[1] - p0[1]) / dp[1] ];
+/*
+               let mf = p => [ lo[0] + p[0] * (hi[0]-lo[0]), hi[1] - (1-p[1]) * (hi[0]-lo[0]) ];
+	       let mi = p => [ (p[0]-lo[0]) / (hi[0]-lo[0]), p[1]/(hi[0]-lo[0]) - hi[1] + 1 ];
+
+	       y = hi[1] - (1-p[1]) * (hi[0]-lo[0])
+	       y/(hi[0]-lo[0]) = hi[1] - (1-p[1])
+	       y/(hi[0]-lo[0]) - hi[1] = p[1]-1
+	       y/(hi[0]-lo[0]) - hi[1] + 1 = p[1]
+*/
+
+
+
 
                // IF A PROCEDURE, GIVE OBJECT A PLACE TO MAINTAIN THE CURRENT STATE.
 
@@ -598,8 +623,18 @@ function Diagram() {
                      object.state = { };
                   let state = object.state;
 
-                  if (object.text == 'editor' && state.key == 'Meta' && state.keyState == 'release')
-		     activationText = object.state.text;
+		  if (state.keyState == 'release') {
+		     console.log('A', object.text);
+		     console.log('B', state.key);
+                  }
+
+                  if (object.text == 'editor' && isControl(state.key) && state.keyState == 'release') {
+		     let text = object.state.text;
+		     if (text.indexOf('.') > 0)
+		        getFile('projects/' + project + '/' + text, text => object.state.text = text);
+		     else
+		        activationText = text;
+                  }
 
                   if (object.srcId)
                      for (let n = 2 ; n < S.length ; n++)
@@ -621,7 +656,7 @@ function Diagram() {
 
                this.lineWidth(.1*s);
                let color = '#000000';
-               object.state.cardSize = hi[1] - lo[1];
+               object.state.cardSize = hi[0] - lo[0];
                for (let i = 0 ; i < value.length ; i++) {
                   let item = value[i];
                   if (item.draw) {
@@ -661,7 +696,9 @@ function Diagram() {
 	       }
             }
 
-            octx.restore();
+            if (! isShader)
+               octx.restore();
+
          }
       }
 
