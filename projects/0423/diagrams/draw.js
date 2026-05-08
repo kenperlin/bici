@@ -437,8 +437,8 @@ function Diagram() {
 
       // RESPOND TO INPUT FROM PEN, IF PEN IS VISIBLE
 
-      //if (pen.pos) {
-      if (false) {
+      if (pen.pos) {
+      //if (false) {
          if (isPenDown && ! wasPenDown) {
             pen.state = 'press';
             pen.pressTime = time;
