@@ -1,6 +1,6 @@
 float r = 2.*(x*x + y*y);
-float f = T[0] * 10.;
-float t = T[1] * time;
+float f = #0 * 10.;
+float t = #1 * time;
 vec3 v = vec3(f*x, f*y, t);
 r += noise(v);
 if (r > 1.)

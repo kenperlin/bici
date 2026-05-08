@@ -2,6 +2,13 @@ function Diagram() {
    this.isFullScreen = true;
    tracking_isDrawingShadowAvatar = false;
 
+   let replaceNumberSigns = s => {
+      let t = '';
+      for (let n = 0 ; n < s.length ; n++)
+         t += s.charAt(n) == '#' ? 'T[' + s.charAt(++n) + ']' : s.charAt(n);
+      return t;
+   }
+
    let activateCardFromText = (n, text) => {
       let words = text.toLowerCase().split(' ');
       for (let word in dictionary)
@@ -608,7 +615,7 @@ function Diagram() {
 
                   for (let n = 2 ; n < S.length ; n++)
                      if (S[n].id == object.srcId) {
-                        shaderCard.setShader(S[n].state.text);
+                        shaderCard.setShader(replaceNumberSigns(S[n].state.text));
 
 			// IF SRC CARD HAS AN IN-LINK, LINK SHADER T[] UNIFORMS FROM IT
 

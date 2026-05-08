@@ -92,7 +92,7 @@ sliders: function(state,t,p,hasFocus) {
    for (let n = 0 ; n < 10 ; n++) {
       let y = .9 - .2 * n;
       S.push({draw: [[-1,y-.1],[1,y-.1]]});
-      S.push({text: 'T[' + n + ']', pos: [-.76,y-.11]});
+      S.push({text: '#' + n, pos: [-.86,y-.11]});
       let s = '' + (100 * state.T[n] >> 0) / 100;
       if (s.indexOf('.') == s.length - 2) s += '0';
       if (s.indexOf('-') == 0) s += ' ';
