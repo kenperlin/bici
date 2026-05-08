@@ -233,7 +233,7 @@ function Diagram() {
          case 'down':
 
             if (bgClick) {
-	       console.log('DRAGGING AFTER A CLICK ON THE BACKGROUND');
+	       ; // DRAGGING AFTER A CLICK ON THE BACKGROUND
 	    }
 	    else {
                if (nm < 2)
@@ -551,7 +551,6 @@ function Diagram() {
 	    if (S_value[object.id] && object.text == 'editor' && object.state && object.state.lines)
 	       lo[1] = hi[1] - .029 * Math.max(1, object.state.lines.length);
 
-            //let isShader = S_value[object.id] && S_value[object.id].constructor.name == 'ShaderCard';
             let isShader = object.card_type == 'shader';
 
             this.lineWidth(.004);
@@ -656,6 +655,8 @@ function Diagram() {
 		     };
                   let state = object.state;
 
+		  // ON CONTROL KEY RELEASE, CONVERT CARD TO THE CARD TYPE PRINTED ON THE CARD.
+
                   if (object.text == 'editor' && state.key == 'Control' && state.keyState == 'release') {
 		     let text = object.state.text;
 		     if (text.indexOf('.') > 0)
@@ -664,6 +665,8 @@ function Diagram() {
 		        activationText = text;
                   }
 
+		  // IF CARD HAS AN IN-LINK, SET ITS PARAMETERS TO THAT CARD'S PARAMETER VALUES.
+
                   if (object.srcId)
                      for (let n = 2 ; n < S.length ; n++)
                         if (S[n].id == object.srcId) {
@@ -671,6 +674,8 @@ function Diagram() {
                               state.T = S[n].state.T;
                            break;
                         }
+
+                  // PROCEDURALLY EVALUATE THE CARD CONTENTS.
 
                   state.dirty = false;
                   value = value(state, time, mi(pos), n == nm);

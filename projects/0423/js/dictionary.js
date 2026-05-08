@@ -44,11 +44,25 @@ sliderX: (state,t,p,hasFocus) => {
    state.lineWidth = .008;
 
    if (hasFocus) state.T[0] = .5 + .5 * p[0];
-   let x = 2 * state.T[0] - 1;
 
+   let x = 2 * state.T[0] - 1;
    return [
       {draw: [ [ -1, 0 ], [ 1, 0 ] ]},
       {draw: [ [ x, -1 ], [ x, 1 ] ]},
+   ];
+},
+
+sliderY: (state,t,p,hasFocus) => {
+   state.hideFrame = true;
+   state.aspectRatio = 1/5;
+   state.lineWidth = .008;
+
+   if (hasFocus) state.T[0] = .5 + .5 * p[1];
+
+   let y = 2 * state.T[0] - 1;
+   return [
+      {draw: [ [ 0, -1 ], [ 0, 1 ] ]},
+      {draw: [ [ -1, y ], [ 1, y ] ]},
    ];
 },
 
