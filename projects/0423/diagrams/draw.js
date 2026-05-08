@@ -9,7 +9,7 @@ function Diagram() {
             if (word == words[i]) {
                S[n].text = word;
                if (dictionary[S[n].text])
-                  S[n].window_type = S[n].text;
+                  S[n].card_type = S[n].text;
                return true;
             }
          }
@@ -496,7 +496,7 @@ function Diagram() {
          let object = S[n];
          let strokes = object.strokes;
 
-         // HANDLE OBJECT MORPHING
+         // HANDLE MORPHING A DRAWING TO A KNOWN DRAWING OR TO A CARD
 
          if (object.morphData && object.morphData[5] < 1) {
             object.morphData[5] += 2 * elapsed;
@@ -516,13 +516,20 @@ function Diagram() {
                   else
 		     activateCardFromText(n, 'editor');
 
-               // CONVERT OBJECT TO A CARD IF THERE IS A MATCHING CARD TYPE
+               // CONVERT DRAWING TO A SHADER CARD
+
+               else if (object.type == 'shader') {
+                  object.type = 'card';
+                  object.card_type = 'shader';
+	       }
+
+               // CONVERT DRAWING TO A CARD IF THERE IS A MATCHING CARD TYPE
 
                else
                   for (let word in dictionary)
 	             if (object.type == word) {
 		        object.type = 'card';
-		        object.window_type = word;
+		        object.card_type = word;
 			break;
                      }
             }
@@ -544,7 +551,8 @@ function Diagram() {
 	    if (S_value[object.id] && object.text == 'editor' && object.state && object.state.lines)
 	       lo[1] = hi[1] - .029 * Math.max(1, object.state.lines.length);
 
-            let isShader = S_value[object.id] && S_value[object.id].constructor.name == 'ShaderCard';
+            //let isShader = S_value[object.id] && S_value[object.id].constructor.name == 'ShaderCard';
+            let isShader = object.card_type == 'shader';
 
             this.lineWidth(.004);
 
@@ -574,8 +582,8 @@ function Diagram() {
 
             // IF EVALUATION WAS TRIGGERED, SEE IF TEXT IS A VALID CARD TYPE NAME.
 
-            if (object.window_type && ! S_value[object.id]) {
-               switch (object.window_type) {
+            if (object.card_type && ! S_value[object.id]) {
+               switch (object.card_type) {
                case 'shader':
                   let shaderCard = new ShaderCard(octx);
                   shaderCard.setShader('rgb = vec3(0.,0.,1.);');
@@ -583,7 +591,7 @@ function Diagram() {
                   break;
                default:
 	          lo[1] = hi[1] + lo[0] - hi[0];
-                  S_value[object.id] = dictionary[object.window_type];
+                  S_value[object.id] = dictionary[object.card_type];
                   break;
                }
             }
