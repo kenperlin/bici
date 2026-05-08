@@ -2,11 +2,6 @@ function Diagram() {
    this.isFullScreen = true;
    tracking_isDrawingShadowAvatar = false;
 
-   let isControl = key => key == 'Control' || key == 'Alt' || key == 'Meta';
-
-   let activateCard = n => {
-   }
-
    let activateCardFromText = (n, text) => {
       let words = text.toLowerCase().split(' ');
       for (let word in dictionary)
@@ -21,7 +16,8 @@ function Diagram() {
    }
 
    this.keyDown = key => {
-      if (pen.pos && isControl(key)) {
+
+      if (pen.pos && key == 'Meta') {
          isPenDown = true;
          return true;
       }
@@ -39,7 +35,8 @@ function Diagram() {
    }
 
    this.keyUp = key => {
-      if (pen.pos && isControl(key)) {
+
+      if (pen.pos && key == 'Meta') {
          isPenDown = false;
          return true;
       }
@@ -235,8 +232,13 @@ function Diagram() {
 
          case 'down':
 
-            if (nm < 2)
-               S[np].strokes[0].push(pos);
+            if (bgClick) {
+	       console.log('DRAGGING AFTER A CLICK ON THE BACKGROUND');
+	    }
+	    else {
+               if (nm < 2)
+                  S[np].strokes[0].push(pos);
+            }
             dirty = true;
             break;
 
@@ -308,6 +310,24 @@ function Diagram() {
                      break;
                   }
                }
+
+	       // FINISHED DRAGGING AFTER A BACKROUND CLICK
+
+	       else {
+
+                  switch (state) {
+
+                  // IF DRAG STARTED EAST OF THE BACKGROUND CLICK, CREATE A LINK
+
+                  case 4:
+                     for (let nn = S.length - 1 ; nn >= 2 ; nn--)
+                        if (S[nn].morphData && contains(nn, pos)) {
+                           S[nn].srcId = S[n].id;
+                           break;
+                        }
+                     break;
+                  }
+	       }
             }
 
             // IF THIS IS A CLICK (NOT FOLLOWING A PREVIOUS CLICK ON THE BACKGROUND)
@@ -487,11 +507,24 @@ function Diagram() {
                for (let i = 0 ; i < strokes.length ; i++)
                   extendBounds(n, strokes[i]);
                object.type = matchCurves.glyph(object.morphData[2]).name;
+
+	       // ACTIVATE A CARD FROM ITS TEXT OR FROM SPEECH
+
                if (object.type == 'card')
                   if (activateCardFromText(n, speech))
 		     speech = '';
                   else
 		     activateCardFromText(n, 'editor');
+
+               // CONVERT OBJECT TO A CARD IF THERE IS A MATCHING CARD TYPE
+
+               else
+                  for (let word in dictionary)
+	             if (object.type == word) {
+		        object.type = 'card';
+		        object.window_type = word;
+			break;
+                     }
             }
          }
 
@@ -515,17 +548,21 @@ function Diagram() {
 
             this.lineWidth(.004);
 
-            let showFrame = ! S_value[object.id] || ! ( S_value[object.id].constructor &&
-	                                                S_value[object.id].constructor.name == 'ShaderCard' );
+            let showFrame = ! isShader && object.state;
+
+            if (object.state && object.state.hideFrame)
+	       showFrame = false;
 
             if (showFrame)
                this.drawRect([lo[0]-.002,lo[1]-.002], [hi[0]+.002,hi[1]+.002]);
 
             // TURN ON CLIPPING, SO THAT RENDERING IS CONFINED TO THE CARD.
 
-	    if (! isShader) {
+	    let isClipping = ! isShader && ! (object.state && object.state.noClipping);
+
+	    if (isClipping) {
 	       octx.save();
-               this.clipToRect(lo, hi);
+               this.clipToRect([lo[0]-.002,lo[1]-.002], [hi[0]+.002,hi[1]+.002]);
             }
 
             if (showFrame)
@@ -533,7 +570,7 @@ function Diagram() {
 
             // TEXT HEIGHT AND LINE THICKNESS WILL SCALE WITH CARD SIZE.
 
-            let s = .1 * (hi[1] - lo[1]);
+            let s = .1 * (hi[0] - lo[0]);
 
             // IF EVALUATION WAS TRIGGERED, SEE IF TEXT IS A VALID CARD TYPE NAME.
 
@@ -588,6 +625,9 @@ function Diagram() {
 
             else {
 
+	       if (object.state && object.state.aspectRatio)
+	          lo[1] = hi[1] - (hi[0] - lo[0]) / object.state.aspectRatio;
+
                // COORDINATE CONVERSIONS BETWEEN SCREEN AND INTERNAL CARD COORDS.
 
                let p0 = [ (lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2 ];
@@ -603,10 +643,12 @@ function Diagram() {
                if (typeof value == 'function') {
 
                   if (object.state === undefined)
-                     object.state = { };
+                     object.state = {
+		        T: [.5,.5,.5,.5,.5,.5,.5,.5,.5,.5],
+		     };
                   let state = object.state;
 
-                  if (object.text == 'editor' && isControl(state.key) && state.keyState == 'release') {
+                  if (object.text == 'editor' && state.key == 'Control' && state.keyState == 'release') {
 		     let text = object.state.text;
 		     if (text.indexOf('.') > 0)
 		        getFile('projects/' + project + '/' + text, text => object.state.text = text);
@@ -632,7 +674,11 @@ function Diagram() {
 
                // DRAW ALL THE LINES AND TEXT IN THE CARD OBJECT.
 
-               this.lineWidth(.1*s);
+	       let lineWidth = .1 * s;
+	       if (object.state && object.state.lineWidth)
+	          lineWidth = object.state.lineWidth;
+
+               this.lineWidth(lineWidth);
                let color = '#000000';
                object.state.cardSize = hi[0] - lo[0];
                for (let i = 0 ; i < value.length ; i++) {
@@ -674,7 +720,7 @@ function Diagram() {
 	       }
             }
 
-            if (! isShader)
+            if (isClipping)
                octx.restore();
 
          }

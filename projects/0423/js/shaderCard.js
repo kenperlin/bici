@@ -52,6 +52,7 @@ float turbulence(vec3 P) {
       gl.vertexAttribPointer(_p, 3, gl.FLOAT, false, 0, 0);
       uTime = gl.getUniformLocation(prog,'time');
       uT = gl.getUniformLocation(prog,'T');
+      gl.uniform1fv(uT, [.5,.5,.5,.5,.5,.5,.5,.5,.5,.5]);
       startTime = Date.now() / 1000;
    }
 

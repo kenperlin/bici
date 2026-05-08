@@ -21,20 +21,35 @@ trackpad: (state,t,p,hasFocus) => {
    if (hasFocus) state.p = p;
    let x = state.p[0], y = state.p[1];
 
-   if (! state.T) state.T = [.5,.5,.5,.5,.5,.5,.5,.5,.5,.5];
    state.T[0] = .5 + .5 * x;
    state.T[1] = .5 + .5 * y;
 
-   if (hasFocus)
-      return [
-         {draw: [ [ -1, y], [ 1, y] ]},         // If cursor is down,
-         {draw: [ [ x, -1], [ x, 1] ]},         // draw large crosshairs.
-      ];
-   else 
-      return [
-         {draw: [ [ x-.1, y ], [ x+.1, y ] ]},  // If cursor is up,
-         {draw: [ [ x, y-.1 ], [ x, y+.1 ] ]},  // draw a small cross.
-      ];
+   let round = t => {
+      let s = '' + (100 * Math.abs(t) >> 0);
+      let n = s.length;
+      return (t<0 ? '-' : '') + s.substring(0,n-2) + (n<2 ? '.0' : '.') + s.substring(n-2);
+   }
+
+   return [
+      {draw: [ [ -1, y], [ 1, y] ]},         // If cursor is down,
+      {draw: [ [ x, -1], [ x, 1] ]},         // draw large crosshairs.
+      {text: 'x=' + round(state.T[0]), pos: [-.5,.5]},
+      {text: 'y=' + round(state.T[1]), pos: [.5,.5]},
+   ];
+},
+
+sliderX: (state,t,p,hasFocus) => {
+   state.hideFrame = true;
+   state.aspectRatio = 5;
+   state.lineWidth = .008;
+
+   if (hasFocus) state.T[0] = .5 + .5 * p[0];
+   let x = 2 * state.T[0] - 1;
+
+   return [
+      {draw: [ [ -1, 0 ], [ 1, 0 ] ]},
+      {draw: [ [ x, -1 ], [ x, 1 ] ]},
+   ];
 },
 
 sliders: function(state,t,p,hasFocus) {
@@ -43,8 +58,6 @@ sliders: function(state,t,p,hasFocus) {
       state.p = [0,0];
    if (hasFocus)
       state.p = p;
-
-   if (! state.T) state.T = [.5,.5,.5,.5,.5,.5,.5,.5,.5,.5];
 
    let px = state.p[0], py = state.p[1];
 
@@ -75,25 +88,60 @@ sliders: function(state,t,p,hasFocus) {
    return S;
 },
 
+timer: function(state,t,p,hasFocus) {
+   state.hideFrame = true;
+   state.lineWidth = .008;
+
+   if (! state.t0)
+      state.t0 = t;
+
+   let S = [];
+   let circle = [];
+   for (let n = 0 ; n <= 30 ; n++) {
+      let theta = 2 * Math.PI * n / 30;
+      circle.push([Math.cos(theta),Math.sin(theta)]);
+   }
+   S.push({ draw: circle });
+
+   for (let n = 0 ; n < 12 ; n++) {
+      let theta = 2 * Math.PI * n / 12;
+      let c = Math.cos(theta);
+      let s = Math.sin(theta);
+      S.push({ draw: [ [c,s], [.85*c,.85*s] ] });
+   }
+
+   state.T[0] = t - state.t0;
+
+   t = 2*Math.PI * state.T[0] / 60;
+   S.push({ draw: [ [0,0],[.8*Math.sin(t),.8*Math.cos(t)] ] });
+
+   let text = '' + ((10*state.T[0]>>0)/10);
+   if (text.indexOf('.') < 0) text += '.0';
+   S.push({ text: text, pos: [0,.5] });
+
+   return S;
+},
+
 // Example of a a 3D object that responds to input.
 
 cube: function(state,t,p,hasFocus) {
+   state.hideFrame = true;
+   state.lineWidth = .008;
+   state.noClipping = true;
+
    if (! this.M) this.M = new M4();
    if (! state.p) state.p = [0,0];
    if (hasFocus) state.p = p;
-   let s = state.T ? state.T[0] : .5;
-   this.M.identity().perspective(0,0,10).rotateX(state.p[1]).rotateY(-state.p[0]).scale(s);
+   let s = state.T ? 2 * state.T[0] : 1;
+   this.M.identity().perspective(0,0,10).rotateX(state.p[1]).rotateY(-state.p[0]).scale(.9*s);
    let C = cubeVertices, P = [];
    for (let i = 0 ; i < C.length ; i++)
       P.push(this.M.transform(C[i]));
 
-   let S = [];
-   if (state.keyState == 'down')
-      S.push({text: state.key, pos: [0,0], color: 'red'});
-   S.push({draw: [P[0],P[1]]}, {draw: [P[2],P[3]]}, {draw: [P[4],P[5]]}, {draw: [P[6],P[7]]},
-          {draw: [P[0],P[2]]}, {draw: [P[1],P[3]]}, {draw: [P[4],P[6]]}, {draw: [P[5],P[7]]},
-          {draw: [P[0],P[4]]}, {draw: [P[1],P[5]]}, {draw: [P[2],P[6]]}, {draw: [P[3],P[7]]});
-   return S;
+   return [
+      {draw: [P[0],P[1]]}, {draw: [P[2],P[3]]}, {draw: [P[4],P[5]]}, {draw: [P[6],P[7]]},
+      {draw: [P[0],P[2]]}, {draw: [P[1],P[3]]}, {draw: [P[4],P[6]]}, {draw: [P[5],P[7]]},
+      {draw: [P[0],P[4]]}, {draw: [P[1],P[5]]}, {draw: [P[2],P[6]]}, {draw: [P[3],P[7]]} ];
 },
 
 editor: function(state,t,p,hasFocus) {
