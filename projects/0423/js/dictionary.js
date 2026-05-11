@@ -166,6 +166,10 @@ editor: function(state,t,p,hasFocus) {
    let computeIndex = () => {
       state.index = 0;
       let r = Math.min(state.row, state.lines.length);
+      console.log('row', state.row);
+      console.log('lines', state.lines);
+      console.log('lines.length', state.lines.length);
+      console.log('r', r);
       for (let n = 0 ; n < r ; n++) 
          state.index += state.lines[n].length + 1; 
       state.index += Math.min(state.col, state.lines[r].length);
@@ -173,22 +177,40 @@ editor: function(state,t,p,hasFocus) {
 
    //////////////// HANDLE UNDO AND REDO
 
+   let getTextState = () => {
+      return {
+         text : state.text,
+         col  : state.col,
+         row  : state.row,
+         index: state.index,
+      };
+   }
+
+   let setTextState = info => {
+      state.text  = info.text;
+      state.col   = info.col;
+      state.row   = info.row;
+      state.index = info.index;
+      dirty = true;
+   }
+
+   let initUndo = () => {
+      state.stackPointer = 0;
+      state.stack = [ getTextState() ];
+   }
+
    let saveForUndo = () => {
-      state.stack[++state.stackPointer] = state.text;
+      state.stack[++state.stackPointer] = getTextState();
    }
 
    let undo = () => {
-      if (state.stackPointer >= 0) {
-         state.text = state.stack[state.stackPointer--];
-	 dirty = true;
-      }
+      if (state.stackPointer >= 0)
+         setTextState(state.stack[state.stackPointer--]);
    }
 
    let redo = () => {
-      if (state.stackPointer < state.stack.length - 1) {
-         state.text = state.stack[++state.stackPointer];
-	 dirty = true;
-      }
+      if (state.stackPointer < state.stack.length - 1)
+         setTextState(state.stack[++state.stackPointer]);
    }
 
    /////////////////////////////////////
@@ -241,6 +263,10 @@ editor: function(state,t,p,hasFocus) {
       state.lines = state.text.split('\n');
       state.stack = [];
       state.stackPointer = -1;
+      state.setText = text => {
+         state.text = text;
+	 initUndo();
+      }
       computeIndex();
    }
 
