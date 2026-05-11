@@ -171,6 +171,28 @@ editor: function(state,t,p,hasFocus) {
       state.index += Math.min(state.col, state.lines[r].length);
    }
 
+   //////////////// HANDLE UNDO AND REDO
+
+   let saveForUndo = () => {
+      state.stack[++state.stackPointer] = state.text;
+   }
+
+   let undo = () => {
+      if (state.stackPointer >= 0) {
+         state.text = state.stack[state.stackPointer--];
+	 dirty = true;
+      }
+   }
+
+   let redo = () => {
+      if (state.stackPointer < state.stack.length - 1) {
+         state.text = state.stack[++state.stackPointer];
+	 dirty = true;
+      }
+   }
+
+   /////////////////////////////////////
+
    let insertChar = ch => {
       if (state.selectionStart < state.selectionEnd)
          deleteChar();
@@ -192,7 +214,7 @@ editor: function(state,t,p,hasFocus) {
    let deleteChar = () => {
       if (state.selectionStart < state.selectionEnd) {
          state.text = state.text.substring(0, state.selectionStart) + state.text.substring(state.selectionEnd+1);
-         state.index = state.selectionStart;
+         state.col -= state.selectionEnd - state.selectionStart;
          state.selectionStart = state.selectionEnd = -1;
       }
       else if (state.row > 0 || state.col > 0) {
@@ -217,6 +239,8 @@ editor: function(state,t,p,hasFocus) {
       state.selectionStart = -1;
       state.selectionEnd = -1;
       state.lines = state.text.split('\n');
+      state.stack = [];
+      state.stackPointer = -1;
       computeIndex();
    }
 
@@ -256,34 +280,35 @@ editor: function(state,t,p,hasFocus) {
       computeIndex();
    }
 
-   async function controlC() {
+   async function copy() {
       try {
           let text = state.text.substring(state.selectionStart, state.selectionEnd+1);
           await navigator.clipboard.writeText(text);
 	  process();
       } catch (err) {
-          console.error('Command-c failed:', err);
+          console.error('Copy failed:', err);
       }
    }
 
-   async function controlV() {
+   async function paste() {
       try {
           let text = await navigator.clipboard.readText();
           state.text = state.text.substring(0,state.index) + text + state.text.substring(state.index);
 	  process();
        } catch (err) {
-          console.error('Command-v failed:', err);
+          console.error('Paste failed:', err);
        }
    }
 
-   async function controlX() {
+   async function cut() {
       try {
          let text = state.text.substring(state.selectionStart, state.selectionEnd+1);
          await navigator.clipboard.writeText(text);
          state.text = state.text.substring(0,state.selectionStart) + state.text.substring(state.selectionEnd+1);
+         state.col -= state.selectionEnd - state.selectionStart;
          process();
       } catch (err) {
-         console.error('Command-x failed:', err);
+         console.error('Cut failed:', err);
       }
    }
 
@@ -292,12 +317,14 @@ editor: function(state,t,p,hasFocus) {
          state.isMetaDown = true;
       else if (state.isMetaDown)
          switch (state.key) {
-         case 'c': controlC(); break;
-         case 'v': controlV(); break;
-         case 'x': controlX(); break;
+         case 'c': copy() ; break;
+         case 'v': paste(); break;
+         case 'x': cut()  ; break;
+         case 'y': redo() ; break;
+         case 'z': undo() ; break;
          }
       
-   if (state.keyState == 'release')
+   if (state.keyState == 'release') {
       switch (state.key) {
       case 'ArrowRight':
          if (state.col < state.lines[state.row].length)
@@ -335,13 +362,17 @@ editor: function(state,t,p,hasFocus) {
       case 'Meta':
          state.isMetaDown = false;
          break;
-      case 'Alt':
       case 'Control':
+         state.isControlDown = false;
+	 break;
+      case 'Alt':
       case 'Escape':
       case 'Shift':
       case 'Tab':
          break;
       }
+      saveForUndo();
+   }
 
    if (dirty)
       process();

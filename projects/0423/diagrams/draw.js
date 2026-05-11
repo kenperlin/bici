@@ -2,6 +2,8 @@ function Diagram() {
    this.isFullScreen = true;
    tracking_isDrawingShadowAvatar = false;
 
+   let penColor = '#000000';
+
    let replaceNumberSigns = s => {
       let t = '';
       for (let n = 0 ; n < s.length ; n++)
@@ -12,14 +14,13 @@ function Diagram() {
    let activateCardFromText = (n, text) => {
       let words = text.toLowerCase().split(' ');
       for (let word in dictionary)
-         for (let i = 0 ; i < words.length ; i++) {
+         for (let i = 0 ; i < words.length ; i++)
             if (word == words[i]) {
                S[n].text = word;
                if (dictionary[S[n].text])
                   S[n].card_type = S[n].text;
                return true;
             }
-         }
    }
 
    this.keyDown = key => {
@@ -141,7 +142,11 @@ function Diagram() {
          previousSpeech = speech;
       }
 
-      pen.pos = window.penXY ? [ (penXY.x - 320) / 320, (220 - penXY.y) / 350 ] : null;
+      pen.pos = window.penXYN ? [ (penXYN.x - 320) / 320, (220 - penXYN.y) / 350 ] : null;
+
+      let penSize = 0;
+      if (window.penXYN)
+         penSize = Math.sqrt(penXYN.n);
 
       let dragItem = () => {
          if (n >= 2) {
@@ -437,8 +442,7 @@ function Diagram() {
 
       // RESPOND TO INPUT FROM PEN, IF PEN IS VISIBLE
 
-      if (pen.pos) {
-      //if (false) {
+      if (pen.pos && false) {
          if (isPenDown && ! wasPenDown) {
             pen.state = 'press';
             pen.pressTime = time;
@@ -699,7 +703,7 @@ function Diagram() {
 	          lineWidth = object.state.lineWidth;
 
                this.lineWidth(lineWidth);
-               let color = '#000000';
+               let color = penColor;
                object.state.cardSize = hi[0] - lo[0];
                for (let i = 0 ; i < value.length ; i++) {
                   let item = value[i];
@@ -746,7 +750,14 @@ function Diagram() {
          }
       }
 
+      // IF USING A PEN, DISPLAY THE PEN TIP IN FRONT OF EVERYTHING ELSE
+
+      if (penSize > 0)
+         this.drawColor('#00008040').dot(pen.pos, .002 * penSize);
+
+      // SHOW THE USER'S LATEST SPOKEN WORDS AT THE BOTTOM LEFT OF THE SCREEN
+
       this.setFont(.02).drawColor('#00000060').text(speech.toLowerCase(), [-1,-.625], 0);
-      this.drawColor('black');
+      this.drawColor(penColor);
    }
 }

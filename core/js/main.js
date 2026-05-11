@@ -881,7 +881,7 @@ animate = () => {
       videoSrc = webcam;
 
    let p = webcam.update();
-   window.penXY = p;
+   window.penXYN = p;
    codeArea.update();
    ctx.drawImage(webcam.canvas, 0,0,640,440, 0,0,w,h);
 

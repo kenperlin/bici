@@ -36,13 +36,25 @@ float turbulence(vec3 P) {
          gl.compileShader(shader);
          gl.attachShader(prog, shader);
       };
-      addshader(gl.VERTEX_SHADER, 'attribute vec3 _p;varying float x,y;void main(){gl_Position=vec4(x=_p.x,y=_p.y,0.,1.);}');
-      addshader(gl.FRAGMENT_SHADER, `precision highp float;
-                                     uniform float time;
-                                     uniform float T[10];
-				     varying float x,y;
-                                     ` + noise + `
-                                     void main(){vec3 rgb;` + shader + `gl_FragColor=vec4(rgb,1.);}`);
+      addshader(gl.VERTEX_SHADER, `
+         attribute vec3 _p;
+         varying float x,y;
+         void main() {
+            gl_Position = vec4(x = _p.x, y = _p.y, 0., 1.);
+         }
+      `);
+      addshader(gl.FRAGMENT_SHADER, `
+         precision highp float;
+         uniform float time;
+         uniform float T[10];
+         varying float x,y;
+         ` + noise + `
+         void main() {
+	    vec3 rgb;
+	    ` + shader + `
+	    gl_FragColor = vec4(rgb, 1.);
+	 }
+      `);
       gl.linkProgram(prog);
       gl.useProgram(prog);
       gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());

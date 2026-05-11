@@ -228,7 +228,7 @@ webcam.update = () => {
 
    wctx.putImageData(imgData, 0,0);
 
-   return ns > 20 ? {x: xs/ns, y: ys/ns} : null;
+   return ns > 20 ? {x: xs/ns, y: ys/ns, n: ns} : null;
 }
 
 webcam.A = 450;
