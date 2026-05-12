@@ -343,14 +343,20 @@ editor: function(state,t,p,hasFocus) {
          state.isMetaDown = true;
       else if (state.isMetaDown)
          switch (state.key) {
-         case 'c': copy() ; break;
-         case 'v': paste(); break;
-         case 'x': cut()  ; break;
+         case 'c': saveForUndo(); copy() ; break;
+         case 'v': saveForUndo(); paste(); break;
+         case 'x': saveForUndo(); cut()  ; break;
          case 'y': redo() ; break;
          case 'z': undo() ; break;
          }
       
    if (state.keyState == 'release') {
+
+      // BEFORE THIS KEY STROKE IS PROCESSED, SAVE THE PREVIOUS STATE FOR UNDO.
+
+      if (! state.isMetaDown)
+         saveForUndo();
+
       switch (state.key) {
       case 'ArrowRight':
          if (state.col < state.lines[state.row].length)
@@ -371,10 +377,12 @@ editor: function(state,t,p,hasFocus) {
          dirty = true;
          break;
       case 'ArrowUp':
-         state.row = Math.max(state.row-1,  0); dirty = true;
+         state.row = Math.max(state.row-1, 0);
+	 dirty = true;
          break;
       case 'ArrowDown':
-         state.row = Math.min(state.row+1, state.lines.length-1); dirty = true;
+         state.row = Math.min(state.row+1, state.lines.length-1);
+	 dirty = true;
          break;
       case 'Backspace':
          deleteChar();
@@ -397,7 +405,6 @@ editor: function(state,t,p,hasFocus) {
       case 'Tab':
          break;
       }
-      saveForUndo();
    }
 
    if (dirty)
@@ -408,6 +415,8 @@ editor: function(state,t,p,hasFocus) {
    let getXY = (col,row) => {
       return [ -1 + w * col, 1 - row*h ];
    }
+
+   // CREATE DISPLAY LIST TO SHOW THE TEXT.
 
    S = [];
    let i = 0;
@@ -422,6 +431,9 @@ editor: function(state,t,p,hasFocus) {
          }
       i += text.length + 1;
    }
+
+   // CREATE DISPLAY LIST TO SHOW THE SELECTED REGION, IF ANY.
+
    if (state.selectionStart == state.selectionEnd) {
       let col = Math.min(state.col, state.lines[state.row].length);
       let x = w * col - 1;
