@@ -284,9 +284,10 @@ function Diagram() {
 
                      break;
 
-                  // IF THE PREVIOUS CLICK WAS NORTH OF THIS CLICK
+                  // IF THE PREVIOUS CLICK WAS NORTH OR SOUTH OF THIS CLICK
 
                   case 2:
+                  case 6:
 
                      // AND THIS CLICK IS IN AN OBJECT, BEGIN DRAGGING THE OBJECT
 
@@ -304,19 +305,6 @@ function Diagram() {
                      if (n >= 2) {
                         isResizing = cursorId;
                         sy = pos[1];
-                     }
-
-                     break;
-
-                  // IF THE PREVIOUS CLICK WAS SOUTH OF THIS CLICK
-
-                  case 6:
-
-                     // AND THIS CLICK IS IN AN OBJECT, CREATE A LINK
-
-                     if (n >= 2 && S[n].morphData) {
-                        isLinking = cursorId;
-                        srcId = S[n].id;
                      }
 
                      break;
@@ -442,7 +430,7 @@ function Diagram() {
 
       // RESPOND TO INPUT FROM PEN, IF PEN IS VISIBLE
 
-      if (pen.pos && false) {
+      if (pen.pos) {
          if (isPenDown && ! wasPenDown) {
             pen.state = 'press';
             pen.pressTime = time;
