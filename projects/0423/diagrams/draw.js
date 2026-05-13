@@ -44,6 +44,21 @@ function Diagram() {
 
    this.keyUp = key => {
 
+      // SAVE (Tab 0...9) OR LOAD (Escape 0...9) SCENE STATE
+
+      if (ioState) {
+         let k = parseInt(key);
+         if (k >= 0 && k <= 9) {
+	    if (ioState == 'save')
+	       localStorage.setItem('S_' + key, JSON.stringify(S));
+	    if (ioState == 'load') {
+	       S = JSON.parse(localStorage.getItem('S_' + key));
+	       dirty = true;
+            }
+         }
+      }
+      ioState = key == 'Tab' ? 'save' : key == 'Escape' ? 'load' : null;
+
       if (pen.pos && key == 'Meta') {
          isPenDown = false;
          return true;
@@ -98,7 +113,7 @@ function Diagram() {
    let np = isFirstPlayer() ? 0 : 1;
    let nm = -1;
    let pen = {};
-   let pos = [0,0], time, isPenDown, wasPenDown;
+   let pos = [0,0], time, isPenDown, wasPenDown, ioState;
 
    let S;
    this.init = () => {
