@@ -659,7 +659,7 @@ function Diagram() {
                   if (object.text == 'editor' && state.key == 'Control' && state.keyState == 'release') {
 		     let text = object.state.text;
 		     if (text.indexOf('.') > 0)
-		        getFile('projects/' + project + '/' + text, text => object.state.setText(text));
+		        getFile('projects/' + project + '/' + text, text => object.state.newText = text);
 		     else
 		        activationText = text;
                   }

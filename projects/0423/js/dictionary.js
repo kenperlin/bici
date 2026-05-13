@@ -263,11 +263,14 @@ editor: function(state,t,p,hasFocus) {
       state.lines = state.text.split('\n');
       state.stack = [];
       state.stackPointer = -1;
-      state.setText = text => {
-         state.text = text;
-	 initUndo();
-      }
       computeIndex();
+   }
+
+   if (state.newText) {
+      state.text = state.newText;
+      initUndo();
+      delete state.newText;
+      dirty = true;
    }
 
    let s = state.cardSize, w = .036/s, h = 2 / Math.max(1, state.lines.length);
