@@ -1,21 +1,5 @@
 let dictionary = {
 
-// Replace keyword by a time varying function
-// that displays a mix of text and 2D graphics.
-
-hello: (obj,t) => {
-   let s = .5 * Math.sin(t);
-   return [
-      { text: 'hello', pos: [0,.5+.2*s] },
-      { draw: [ [-s,-.5], [ s,.5] ] },
-      { draw: [ [ s,-.5], [-s,.5] ] },
-   ];
-},
-
-// Replace keyword by a time varying function
-// that displays a mix of text and 2D graphics
-// in response to user input.
-
 trackpad: (state,t,p,hasFocus) => {
    if (! state.p) state.p = [0,0];
    if (hasFocus) state.p = p;
@@ -136,8 +120,6 @@ timer: function(state,t,p,hasFocus) {
    return S;
 },
 
-// Example of a a 3D object that responds to input.
-
 cube: function(state,t,p,hasFocus) {
    state.hideFrame = true;
    state.lineWidth = .008;
@@ -175,22 +157,20 @@ editor: function(state,t,p,hasFocus) {
       state.index += Math.min(state.col, state.lines[r].length);
    }
 
-   //////////////// HANDLE UNDO AND REDO
+   //////////////// HANDLE UNDO AND REDO ////////////////
 
    let getTextState = () => {
       return {
-         text : state.text,
-         col  : state.col,
-         row  : state.row,
-         index: state.index,
+         text: state.text,
+         col : state.col,
+         row : state.row,
       };
    }
 
    let setTextState = info => {
-      state.text  = info.text;
-      state.col   = info.col;
-      state.row   = info.row;
-      state.index = info.index;
+      state.text = info.text;
+      state.col  = info.col;
+      state.row  = info.row;
       dirty = true;
    }
 
@@ -213,7 +193,7 @@ editor: function(state,t,p,hasFocus) {
          setTextState(state.stack[++state.stackPointer]);
    }
 
-   /////////////////////////////////////
+   //////////////////////////////////////////////////////
 
    let insertChar = ch => {
       if (state.selectionStart < state.selectionEnd)
@@ -335,6 +315,7 @@ editor: function(state,t,p,hasFocus) {
          await navigator.clipboard.writeText(text);
          state.text = state.text.substring(0,state.selectionStart) + state.text.substring(state.selectionEnd+1);
          state.col -= state.selectionEnd - state.selectionStart;
+	 state.selectionStart = state.selectionEnd = -1;
          process();
       } catch (err) {
          console.error('Cut failed:', err);
