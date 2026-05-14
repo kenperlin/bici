@@ -2,6 +2,7 @@ import express from 'express';
 import { WebSocketServer } from 'ws';
 import { createServer } from 'http';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import * as Y from 'yjs';
 import { docs, setupWSConnection } from 'y-websocket/bin/utils';
@@ -52,6 +53,47 @@ app.post('/api/gemini', async (req, res) => {
   }
 });
 
+
+// Save / load named scene snapshots to disk (used by projects/0423 draw.js)
+const SAVES_DIR = path.join(__dirname, 'saves');
+if (!fs.existsSync(SAVES_DIR)) fs.mkdirSync(SAVES_DIR, { recursive: true });
+
+function safeName(name) {
+  return String(name).replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 64);
+}
+
+app.post('/api/save/:name', (req, res) => {
+  try {
+    const file = path.join(SAVES_DIR, safeName(req.params.name) + '.json');
+    fs.writeFileSync(file, JSON.stringify(req.body));
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('save error:', err);
+    res.status(500).json({ error: 'save failed' });
+  }
+});
+
+app.get('/api/load/:name', (req, res) => {
+  try {
+    const file = path.join(SAVES_DIR, safeName(req.params.name) + '.json');
+    if (!fs.existsSync(file)) return res.status(404).json({ error: 'not found' });
+    res.json(JSON.parse(fs.readFileSync(file, 'utf8')));
+  } catch (err) {
+    console.error('load error:', err);
+    res.status(500).json({ error: 'load failed' });
+  }
+});
+
+app.get('/api/saves', (req, res) => {
+  try {
+    const names = fs.readdirSync(SAVES_DIR)
+      .filter(f => f.endsWith('.json'))
+      .map(f => f.slice(0, -5));
+    res.json({ saves: names });
+  } catch (err) {
+    res.status(500).json({ error: 'list failed' });
+  }
+});
 
 // Endpoint to clear Yjs document cache
 app.post('/api/clear-yjs-cache/:docName?', (req, res) => {

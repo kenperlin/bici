@@ -49,11 +49,22 @@ function Diagram() {
       if (ioState) {
          let k = parseInt(key);
          if (k >= 0 && k <= 9) {
-	    if (ioState == 'save')
+	    if (ioState == 'save') {
 	       localStorage.setItem('S_' + key, JSON.stringify(S));
+	       fetch('/api/save/' + key, {
+	          method: 'POST',
+	          headers: { 'Content-Type': 'application/json' },
+	          body: JSON.stringify(S)
+	       }).catch(err => console.error('server save failed:', err));
+	    }
 	    if (ioState == 'load') {
-	       S = JSON.parse(localStorage.getItem('S_' + key));
-	       dirty = true;
+	       fetch('/api/load/' + key)
+	          .then(r => r.ok ? r.json() : Promise.reject(r.status))
+	          .then(data => { S = data; dirty = true; })
+	          .catch(() => {
+	             const local = localStorage.getItem('S_' + key);
+	             if (local) { S = JSON.parse(local); dirty = true; }
+	          });
             }
          }
       }
