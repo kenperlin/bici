@@ -1,5 +1,27 @@
 let dictionary = {
 
+fish: (state,t,p,hasFocus) => {
+   state.hideFrame = true;
+   state.aspectRatio = 5;
+   state.lineWidth = .008;
+   state.noClipping = true;
+
+   if (state.t0)
+      state.move = [.4 * (t - state.t0), 0];
+   state.t0 = t;
+
+   let s = Math.sin(10*t);
+   let curve = [];
+   for (let n = 0 ; n <= 30 ; n++)
+      curve.push([ evalBezier([-1, 1.7,1.7, -1], n/30),
+                   evalBezier([1-s/2,-5,5,-1-s/2], n/30) + s*(.1-.05*Math.cos(4*Math.PI*n/30))]);
+   let S = [ {draw: curve},
+             {draw: [[-1,1-s/2],[-1,-1-s/2]]} ];
+   if (t > 1)
+      S.push({draw: [[.7,.1-.05*s],[.733,.15-.05*s],[.77,.15-.05*s],[.8,.1-.05*s]]});
+   return S;
+},
+
 trackpad: (state,t,p,hasFocus) => {
    if (! state.p) state.p = [0,0];
    if (hasFocus) state.p = p;

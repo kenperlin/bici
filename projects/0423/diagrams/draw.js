@@ -508,7 +508,17 @@ function Diagram() {
 
       for (let n = 0 ; n < S.length ; n++) {
          let object = S[n];
-         let strokes = object.strokes;
+         let strokes = object.strokes,
+             lo = object.lo,
+	     hi = object.hi;
+
+         // REMOVE ANY OBJECT THAT HAS WANDERED OFF THE SCREEN
+
+         if (hi && (hi[0] < -1 || hi[1] < -screen.height/screen.width) ||
+             lo && (lo[0] >  1 || lo[1] >  screen.height/screen.width)) {
+	    remove(n--);
+	    continue;
+         }
 
          // HANDLE MORPHING A DRAWING TO A KNOWN DRAWING OR TO A CARD
 
@@ -560,7 +570,6 @@ function Diagram() {
          // HANDLE INTERPRETATION AND RENDERING OF A CARD OBJECT
 
          else {
-            let lo = object.lo, hi = object.hi;
 
 	    if (S_value[object.id] && object.text == 'editor' && object.state && object.state.lines)
 	       lo[1] = hi[1] - .029 * Math.max(1, object.state.lines.length);
@@ -693,6 +702,12 @@ function Diagram() {
 
                   state.dirty = false;
                   value = value(state, time, mi(pos), n == nm);
+		  if (state.move) {
+		     lo[0] += state.move[0];
+		     hi[0] += state.move[0];
+		     lo[1] += state.move[1];
+		     hi[1] += state.move[1];
+		  }
 		  dirty = state.dirty;
 
                   if (state.keyState == 'press'  ) state.keyState = 'down';
@@ -749,7 +764,6 @@ function Diagram() {
 
             if (isClipping)
                octx.restore();
-
          }
       }
 
