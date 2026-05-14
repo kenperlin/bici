@@ -405,7 +405,6 @@ class WebRTCClient {
         type: 'state-update',
         state: state
       }));
-      console.log('Sent state update:', state);
     }
   }
 
@@ -417,7 +416,6 @@ class WebRTCClient {
         to: this.masterClientId,
         action: action
       }));
-      console.log('Sent action to master:', action);
     }
   }
 

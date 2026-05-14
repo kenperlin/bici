@@ -4,6 +4,25 @@ function Diagram() {
 
    let penColor = '#000000';
 
+   let save = name => {
+      localStorage.setItem('saved_' + name, JSON.stringify(S));
+      fetch('/api/save/' + name, {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify(S)
+      }).catch(err => console.error('server save failed:', err));
+   }
+
+   let load = name => {
+      fetch('/api/load/' + name)
+         .then(r => r.ok ? r.json() : Promise.reject(r.status))
+         .then(data => { S = data; dirty = true; })
+         .catch(() => {
+            const local = localStorage.getItem('saved_' + name);
+            if (local) { S = JSON.parse(local); dirty = true; }
+         });
+   }
+
    let replaceNumberSigns = s => {
       let t = '';
       for (let n = 0 ; n < s.length ; n++)
@@ -23,6 +42,8 @@ function Diagram() {
             }
    }
 
+   let isCommandKey, isTextString, textString = '';
+
    this.keyDown = key => {
 
       if (pen.pos && key == 'Meta') {
@@ -40,35 +61,81 @@ function Diagram() {
          S[n].state.key = key;
          return true;
       }
+
+      // RECOGNIZE COMMAND KEYS
+
+      switch (key) {
+      case 'Escape':
+      case 'c':
+      case 'i':
+      case 'l':
+      case 's':
+         isCommandKey = true;
+         return true;
+      }
    }
 
    this.keyUp = key => {
 
-      // SAVE (Tab 0...9) OR LOAD (Escape 0...9) SCENE STATE
+      // ADDING TO THE TEXT STRING
 
-      if (ioState) {
-         let k = parseInt(key);
-         if (k >= 0 && k <= 9) {
-	    if (ioState == 'save') {
-	       localStorage.setItem('S_' + key, JSON.stringify(S));
-	       fetch('/api/save/' + key, {
-	          method: 'POST',
-	          headers: { 'Content-Type': 'application/json' },
-	          body: JSON.stringify(S)
-	       }).catch(err => console.error('server save failed:', err));
-	    }
-	    if (ioState == 'load') {
-	       fetch('/api/load/' + key)
-	          .then(r => r.ok ? r.json() : Promise.reject(r.status))
-	          .then(data => { S = data; dirty = true; })
-	          .catch(() => {
-	             const local = localStorage.getItem('S_' + key);
-	             if (local) { S = JSON.parse(local); dirty = true; }
-	          });
-            }
-         }
+      if (isTextString && key != 'Escape') {
+         switch (key) {
+	 case 'Alt':
+	 case 'Command':
+	 case 'Meta':
+	 case 'Shift':
+	 case 'Tab':
+	    break;
+	 case 'Backspace':
+	    textString = textString.substring(0, textString.length-1);
+	    break;
+	 default:
+            textString += key;
+	    break;
+	 }
+         return true;
       }
-      ioState = key == 'Tab' ? 'save' : key == 'Escape' ? 'load' : null;
+
+      // ACT ON A COMMAND KEY
+
+      if (isCommandKey) {
+         switch (key) {
+         case 'Escape':
+            isTextString = false;
+            break;
+         case 'c':
+            if (dictionary[textString]) {
+               let n = S.length;
+	       let p = this.input.mouse.pos;
+               S[n] = { type: 'card',
+	                text: textString,
+			card_type: textString,
+			morphData: 1,
+			strokes: [],
+			id: id++,
+			lo: [p[0]-.2,p[1]-.2],
+			hi: [p[0]+.2,p[1]+.2],
+		      };
+            }
+            textString = '';
+	    break;
+         case 'i':
+            isTextString = true;
+            textString = '';
+            break;
+         case 'l':
+	    load(textString);
+            textString = '';
+            break;
+         case 's':
+	    save(textString);
+            textString = '';
+            break;
+         }
+         isCommandKey = false;
+         return true;
+      }
 
       if (pen.pos && key == 'Meta') {
          isPenDown = false;
@@ -92,7 +159,7 @@ function Diagram() {
       if (n >= 2 && S[n].type == 'card') {
          S[n].state.keyState = 'release';
          S[n].state.key = key;
-	 dirty = true;
+         dirty = true;
          return true;
       }
 
@@ -124,7 +191,7 @@ function Diagram() {
    let np = isFirstPlayer() ? 0 : 1;
    let nm = -1;
    let pen = {};
-   let pos = [0,0], time, isPenDown, wasPenDown, ioState;
+   let pos = [0,0], time, isPenDown, wasPenDown;
 
    let S;
    this.init = () => {
@@ -164,8 +231,9 @@ function Diagram() {
    this.update = () => {
 
       if (speech != previousSpeech) {
-         dirty = true;
+         textString = speech;
          previousSpeech = speech;
+         dirty = true;
       }
 
       pen.pos = window.penXYN ? [ (penXYN.x - 320) / 320, (220 - penXYN.y) / 350 ] : null;
@@ -271,9 +339,9 @@ function Diagram() {
          case 'down':
 
             if (bgClick) {
-	       ; // DRAGGING AFTER A CLICK ON THE BACKGROUND
-	    }
-	    else {
+               ; // DRAGGING AFTER A CLICK ON THE BACKGROUND
+            }
+            else {
                if (nm < 2)
                   S[np].strokes[0].push(pos);
             }
@@ -337,9 +405,9 @@ function Diagram() {
                   }
                }
 
-	       // FINISHED DRAGGING AFTER A BACKROUND CLICK
+               // FINISHED DRAGGING AFTER A BACKROUND CLICK
 
-	       else {
+               else {
 
                   switch (state) {
 
@@ -353,7 +421,7 @@ function Diagram() {
                         }
                      break;
                   }
-	       }
+               }
             }
 
             // IF THIS IS A CLICK (NOT FOLLOWING A PREVIOUS CLICK ON THE BACKGROUND)
@@ -506,10 +574,10 @@ function Diagram() {
                       L1 = S[n ].lo, H1 = S[n ].hi,
                       A = findEdge( L0, H0, mix(L1, H1, .5) ),
                       B = findEdge( L1, H1, mix(L0, H0, .5) ),
-		      D = resize(normalize(subtract(B,A)),.02),
-		      E = resize(D,1/3);
+                      D = resize(normalize(subtract(B,A)),.02),
+                      E = resize(D,1/3);
                   this.line(A,subtract(B,E));
-		  this.fillPolygon([ add(B,E), add(B, [-2*D[0] - D[1], -2*D[1] + D[0]]),
+                  this.fillPolygon([ add(B,E), add(B, [-2*D[0] - D[1], -2*D[1] + D[0]]),
                                                add(B, [-2*D[0] + D[1], -2*D[1] - D[0]]) ]);
                   break;
                }
@@ -521,14 +589,14 @@ function Diagram() {
          let object = S[n];
          let strokes = object.strokes,
              lo = object.lo,
-	     hi = object.hi;
+             hi = object.hi;
 
          // REMOVE ANY OBJECT THAT HAS WANDERED OFF THE SCREEN
 
          if (hi && (hi[0] < -1 || hi[1] < -screen.height/screen.width) ||
              lo && (lo[0] >  1 || lo[1] >  screen.height/screen.width)) {
-	    remove(n--);
-	    continue;
+            remove(n--);
+            continue;
          }
 
          // HANDLE MORPHING A DRAWING TO A KNOWN DRAWING OR TO A CARD
@@ -543,29 +611,29 @@ function Diagram() {
                   extendBounds(n, strokes[i]);
                object.type = matchCurves.glyph(object.morphData[2]).name;
 
-	       // ACTIVATE A CARD FROM ITS TEXT OR FROM SPEECH
+               // ACTIVATE A CARD FROM ITS TEXT OR FROM SPEECH
 
                if (object.type == 'card')
-                  if (activateCardFromText(n, speech))
-		     speech = '';
+                  if (activateCardFromText(n, textString))
+                     textString = '';
                   else
-		     activateCardFromText(n, 'editor');
+                     activateCardFromText(n, 'editor');
 
                // CONVERT DRAWING TO A SHADER CARD
 
                else if (object.type == 'shader') {
                   object.type = 'card';
                   object.card_type = 'shader';
-	       }
+               }
 
                // CONVERT DRAWING TO A CARD IF THERE IS A MATCHING CARD TYPE
 
                else
                   for (let word in dictionary)
-	             if (object.type == word) {
-		        object.type = 'card';
-		        object.card_type = word;
-			break;
+                     if (object.type == word) {
+                        object.type = 'card';
+                        object.card_type = word;
+                        break;
                      }
             }
          }
@@ -582,8 +650,8 @@ function Diagram() {
 
          else {
 
-	    if (S_value[object.id] && object.text == 'editor' && object.state && object.state.lines)
-	       lo[1] = hi[1] - .029 * Math.max(1, object.state.lines.length);
+            if (S_value[object.id] && object.text == 'editor' && object.state && object.state.lines)
+               lo[1] = hi[1] - .029 * Math.max(1, object.state.lines.length);
 
             let isShader = object.card_type == 'shader';
 
@@ -592,17 +660,17 @@ function Diagram() {
             let showFrame = ! isShader && object.state;
 
             if (object.state && object.state.hideFrame)
-	       showFrame = false;
+               showFrame = false;
 
             if (showFrame)
                this.drawRect([lo[0]-.002,lo[1]-.002], [hi[0]+.002,hi[1]+.002]);
 
             // TURN ON CLIPPING, SO THAT RENDERING IS CONFINED TO THE CARD.
 
-	    let isClipping = ! isShader && ! (object.state && object.state.noClipping);
+            let isClipping = ! isShader && ! (object.state && object.state.noClipping);
 
-	    if (isClipping) {
-	       octx.save();
+            if (isClipping) {
+               octx.save();
                this.clipToRect([lo[0]-.002,lo[1]-.002], [hi[0]+.002,hi[1]+.002]);
             }
 
@@ -623,6 +691,7 @@ function Diagram() {
                   S_value[object.id] = shaderCard;
                   break;
                default:
+	          console.log('creating a', object.card_type);
                   S_value[object.id] = dictionary[object.card_type];
                   break;
                }
@@ -631,31 +700,31 @@ function Diagram() {
             if (! S_value[object.id])
                this.setFont(.95 * s).text(object.text, [lo[0] + s/3, hi[1] - s], 0, 1);
 
-	    // DRAW A SHADER CARD
+            // DRAW A SHADER CARD
 
             else if (isShader) {
                let shaderCard = S_value[object.id];
                if (object.srcId)
 
-	          // IF THERE IS AN IN-LINK, LINK SHADER CODE FROM THE SOURCE CARD
+                  // IF THERE IS AN IN-LINK, LINK SHADER CODE FROM THE SOURCE CARD
 
                   for (let n = 2 ; n < S.length ; n++)
                      if (S[n].id == object.srcId) {
                         shaderCard.setShader(replaceNumberSigns(S[n].state.text));
 
-			// IF SRC CARD HAS AN IN-LINK, LINK SHADER T[] UNIFORMS FROM IT
+                        // IF SRC CARD HAS AN IN-LINK, LINK SHADER T[] UNIFORMS FROM IT
 
                         if (S[n].srcId)
                            for (let nt = 2 ; nt < S.length ; nt++)
                               if (S[nt].id == S[n].srcId) {
-			         if (S[nt].state)
+                                 if (S[nt].state)
                                     shaderCard.setT(S[nt].state.T);
                                  break;
                               }
 
                         break;
                      }
-	       lo[1] = hi[1] + lo[0] - hi[0];
+               lo[1] = hi[1] + lo[0] - hi[0];
                let L = this.mxp(lo);
                let H = this.mxp(hi);
                shaderCard.draw((L[0]+H[0])/2, (L[1]+H[1])/2, H[0]-L[0]);
@@ -665,10 +734,10 @@ function Diagram() {
 
             else {
 
-	       if (object.state && object.state.aspectRatio)
-	          lo[1] = hi[1] - (hi[0] - lo[0]) / object.state.aspectRatio;
+               if (object.state && object.state.aspectRatio)
+                  lo[1] = hi[1] - (hi[0] - lo[0]) / object.state.aspectRatio;
                else if (object.card_type != 'editor')
-	          lo[1] = hi[1] - (hi[0] - lo[0]);
+                  lo[1] = hi[1] - (hi[0] - lo[0]);
 
                // COORDINATE CONVERSIONS BETWEEN SCREEN AND INTERNAL CARD COORDS.
 
@@ -686,21 +755,21 @@ function Diagram() {
 
                   if (object.state === undefined)
                      object.state = {
-		        T: [.5,.5,.5,.5,.5,.5,.5,.5,.5,.5],
-		     };
+                        T: [.5,.5,.5,.5,.5,.5,.5,.5,.5,.5],
+                     };
                   let state = object.state;
 
-		  // ON CONTROL KEY RELEASE, CONVERT CARD TO THE CARD TYPE PRINTED ON THE CARD.
+                  // ON CONTROL KEY RELEASE, CONVERT CARD TO THE CARD TYPE PRINTED ON THE CARD.
 
                   if (object.text == 'editor' && state.key == 'Control' && state.keyState == 'release') {
-		     let text = object.state.text;
-		     if (text.indexOf('.') > 0)
-		        getFile('projects/' + project + '/' + text, text => object.state.newText = text);
-		     else
-		        activationText = text;
+                     let text = object.state.text;
+                     if (text.indexOf('.') > 0)
+                        getFile('projects/' + project + '/' + text, text => object.state.newText = text);
+                     else
+                        activationText = text;
                   }
 
-		  // IF CARD HAS AN IN-LINK, SET ITS PARAMETERS TO THAT CARD'S PARAMETER VALUES.
+                  // IF CARD HAS AN IN-LINK, SET ITS PARAMETERS TO THAT CARD'S PARAMETER VALUES.
 
                   if (object.srcId)
                      for (let n = 2 ; n < S.length ; n++)
@@ -714,13 +783,25 @@ function Diagram() {
 
                   state.dirty = false;
                   value = value(state, time, mi(pos), n == nm);
-		  if (state.move) {
-		     lo[0] += state.move[0];
-		     hi[0] += state.move[0];
-		     lo[1] += state.move[1];
-		     hi[1] += state.move[1];
+
+		  // AFTER THE FIRST TIME EVALUATING A TALL CARD FROM A TEXTSTRING, FIX ITS SIZE.
+
+		  if (object.morphData == 1 && state.aspectRatio < 1) {
+		     let x = (lo[0] + hi[0]) / 2, w = hi[0] - lo[0];
+		     lo[0] = x - w / 2 * state.aspectRatio;
+		     hi[0] = x + w / 2 * state.aspectRatio;
+		     lo[1] = hi[1] - (hi[1] - lo[1]) * state.aspectRatio;
+                     value = S_value[object.id](state, time, mi(pos), n == nm);
+		     object.morphData = 2;
 		  }
-		  dirty = state.dirty;
+
+                  if (state.move) {
+                     lo[0] += state.move[0];
+                     hi[0] += state.move[0];
+                     lo[1] += state.move[1];
+                     hi[1] += state.move[1];
+                  }
+                  dirty = state.dirty;
 
                   if (state.keyState == 'press'  ) state.keyState = 'down';
                   if (state.keyState == 'release') state.keyState = 'up';
@@ -728,9 +809,9 @@ function Diagram() {
 
                // DRAW ALL THE LINES AND TEXT IN THE CARD OBJECT.
 
-	       let lineWidth = .1 * s;
-	       if (object.state && object.state.lineWidth)
-	          lineWidth = object.state.lineWidth;
+               let lineWidth = .1 * s;
+               if (object.state && object.state.lineWidth)
+                  lineWidth = object.state.lineWidth;
 
                let color = penColor;
                object.state.cardSize = hi[0] - lo[0];
@@ -761,18 +842,18 @@ function Diagram() {
                      color = item.color;
                }
 
-	       if (activationText) {
-	          if (activationText == 'shader') {
+               if (activationText) {
+                  if (activationText == 'shader') {
                      let shaderCard = new ShaderCard(octx);
                      shaderCard.setShader('rgb = vec3(0.,0.,1.);');
                      S_value[object.id] = shaderCard;
                   }
-		  else {
-	             delete S_value[object.id];
-		     activateCardFromText(n, activationText);
+                  else {
+                     delete S_value[object.id];
+                     activateCardFromText(n, activationText);
                   }
-		  dirty = true;
-	       }
+                  dirty = true;
+               }
             }
 
             if (isClipping)
@@ -785,9 +866,9 @@ function Diagram() {
       if (penSize > 0)
          this.drawColor('#00008040').dot(pen.pos, .002 * penSize);
 
-      // SHOW THE USER'S LATEST SPOKEN WORDS AT THE BOTTOM LEFT OF THE SCREEN
+      // SHOW THE TEXT STRING OR USER'S LATEST SPOKEN WORDS AT THE BOTTOM LEFT OF THE SCREEN
 
-      this.setFont(.02).drawColor('#00000060').text(speech.toLowerCase(), [-1,-.625], 0);
+      this.setFont(.02).drawColor('#00000060').text(textString, [-.993,-.625], 0);
       this.drawColor(penColor);
    }
 }
