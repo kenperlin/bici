@@ -6,19 +6,28 @@ fish: (state,t,p,hasFocus) => {
    state.lineWidth = .008;
    state.noClipping = true;
 
-   if (state.t0)
-      state.move = [.4 * (t - state.t0), 0];
-   state.t0 = t;
+   if (hasFocus)
+      state.isMoving = true;
 
-   let s = Math.sin(10*t);
+   let s = 0;
+   if (state.isMoving) {
+      if (state.t0)
+         state.move = [.4 * (t - state.t0), 0];
+      state.t0 = t;
+      s = Math.sin(10*t);
+   }
+
    let curve = [];
    for (let n = 0 ; n <= 30 ; n++)
       curve.push([ evalBezier([-1, 1.7,1.7, -1], n/30),
                    evalBezier([1-s/2,-5,5,-1-s/2], n/30) + s*(.1-.05*Math.cos(4*Math.PI*n/30))]);
    let S = [ {draw: curve},
              {draw: [[-1,1-s/2],[-1,-1-s/2]]} ];
-   if (t > 1)
-      S.push({draw: [[.7,.1-.05*s],[.733,.15-.05*s],[.77,.15-.05*s],[.8,.1-.05*s]]});
+   if (t >= 1) {
+      let y = .1 - .05*s;
+      S.push({draw: [[.65,y],[.7,y+.2],[.75,y+.2],[.8,y],[.75,y-.2],[.7,y-.2],[.65,y]],
+                    lineWidth: .004 });
+   }
    return S;
 },
 
@@ -30,17 +39,11 @@ trackpad: (state,t,p,hasFocus) => {
    state.T[0] = .5 + .5 * x;
    state.T[1] = .5 + .5 * y;
 
-   let round = t => {
-      let s = '' + (100 * Math.abs(t) >> 0);
-      let n = s.length;
-      return (t<0 ? '-' : '') + s.substring(0,n-2) + (n<2 ? '.0' : '.') + s.substring(n-2);
-   }
-
    return [
       {draw: [ [ -1, y], [ 1, y] ]},         // If cursor is down,
       {draw: [ [ x, -1], [ x, 1] ]},         // draw large crosshairs.
-      {text: 'x=' + round(state.T[0]), pos: [-.5,.5]},
-      {text: 'y=' + round(state.T[1]), pos: [.5,.5]},
+      {text: 'x=' + round2(state.T[0]), pos: [-.5,.5]},
+      {text: 'y=' + round2(state.T[1]), pos: [.5,.5]},
    ];
 },
 
@@ -48,6 +51,7 @@ sliderX: (state,t,p,hasFocus) => {
    state.hideFrame = true;
    state.aspectRatio = 5;
    state.lineWidth = .008;
+   state.noClipping = true;
 
    if (hasFocus) state.T[0] = .5 + .5 * p[0];
 
@@ -55,6 +59,7 @@ sliderX: (state,t,p,hasFocus) => {
    return [
       {draw: [ [ -1, 0 ], [ 1, 0 ] ]},
       {draw: [ [ x, -1 ], [ x, 1 ] ]},
+      {text: round2(state.T[0]), pos: [x-.22,.1]},
    ];
 },
 
@@ -62,6 +67,7 @@ sliderY: (state,t,p,hasFocus) => {
    state.hideFrame = true;
    state.aspectRatio = 1/5;
    state.lineWidth = .008;
+   state.noClipping = true;
 
    if (hasFocus) state.T[0] = .5 + .5 * p[1];
 
@@ -69,6 +75,7 @@ sliderY: (state,t,p,hasFocus) => {
    return [
       {draw: [ [ 0, -1 ], [ 0, 1 ] ]},
       {draw: [ [ -1, y ], [ 1, y ] ]},
+      {text: round2(state.T[0]), size: 5, pos: [-1,y-.02]},
    ];
 },
 

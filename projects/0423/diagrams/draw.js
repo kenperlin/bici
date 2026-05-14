@@ -720,16 +720,17 @@ function Diagram() {
 	       if (object.state && object.state.lineWidth)
 	          lineWidth = object.state.lineWidth;
 
-               this.lineWidth(lineWidth);
                let color = penColor;
                object.state.cardSize = hi[0] - lo[0];
                for (let i = 0 ; i < value.length ; i++) {
+                  this.lineWidth(lineWidth);
                   let item = value[i];
                   if (item.draw) {
                      let path = [];
                      for (let j = 0 ; j < item.draw.length ; j++)
                         path.push(mf(item.draw[j]));
                      this.drawColor(item.color ?? color);
+                     this.lineWidth(item.lineWidth ?? lineWidth);
                      this.path(path);
                   }
                   else if (item.fill) {
@@ -742,7 +743,7 @@ function Diagram() {
                   else if (item.text) {
                      this.drawColor(item.color ?? color);
                      let j = item.justify ?? [.5,.5];
-                     this.setFont(item.size ?? .9*s, 'Courier').text(item.text, mf(item.pos), j[0],j[1]);
+                     this.setFont((item.size ?? .9)*s, 'Courier').text(item.text, mf(item.pos), j[0],j[1]);
                   }
                   else if (item.color)
                      color = item.color;

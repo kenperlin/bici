@@ -13,6 +13,12 @@ let resize = (v,s) => v.length==2 ? [ s*v[0], s*v[1] ] : [s*v[0], s*v[1], s*v[2]
 let round = t => (1000 * t >> 0) / 1000;
 let subtract = (a,b) => { let v = []; for (let i=0 ; i<a.length ; i++) v.push(a[i] - b[i]); return v; }
 
+let round2 = t => {
+   let s = '' + (100 * Math.abs(t) >> 0);
+   let n = s.length;
+   return (t<0 ? '-' : '') + s.substring(0,n-2) + (n<2 ? '.0' : '.') + s.substring(n-2);
+}
+
 // BASE 64
 
 const base64Characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz#';
