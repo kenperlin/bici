@@ -612,7 +612,6 @@ function Diagram() {
                   S_value[object.id] = shaderCard;
                   break;
                default:
-	          lo[1] = hi[1] + lo[0] - hi[0];
                   S_value[object.id] = dictionary[object.card_type];
                   break;
                }
@@ -657,6 +656,8 @@ function Diagram() {
 
 	       if (object.state && object.state.aspectRatio)
 	          lo[1] = hi[1] - (hi[0] - lo[0]) / object.state.aspectRatio;
+               else
+	          lo[1] = hi[1] - (hi[0] - lo[0]);
 
                // COORDINATE CONVERSIONS BETWEEN SCREEN AND INTERNAL CARD COORDS.
 
