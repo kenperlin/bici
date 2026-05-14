@@ -743,7 +743,7 @@ function Diagram() {
                   else if (item.text) {
                      this.drawColor(item.color ?? color);
                      let j = item.justify ?? [.5,.5];
-                     this.setFont((item.size ?? .9)*s, 'Courier').text(item.text, mf(item.pos), j[0],j[1]);
+                     this.setFont(item.size ?? (item.scale ?? .9)*s, 'Courier').text(item.text, mf(item.pos), j[0],j[1]);
                   }
                   else if (item.color)
                      color = item.color;

@@ -59,7 +59,7 @@ sliderX: (state,t,p,hasFocus) => {
    return [
       {draw: [ [ -1, 0 ], [ 1, 0 ] ]},
       {draw: [ [ x, -1 ], [ x, 1 ] ]},
-      {text: round2(state.T[0]), pos: [x-.22,.1]},
+      {text: round2(state.T[0]), pos: [x-.05,.05], justify: [1,.5]},
    ];
 },
 
@@ -75,7 +75,8 @@ sliderY: (state,t,p,hasFocus) => {
    return [
       {draw: [ [ 0, -1 ], [ 0, 1 ] ]},
       {draw: [ [ -1, y ], [ 1, y ] ]},
-      {text: round2(state.T[0]), size: 5, pos: [-1,y-.02]},
+      (y*y > 1 ? {text: round2(state.T[0]), scale: 5, pos: [0  ,y+.1], justify: [.5,1] }
+               : {text: round2(state.T[0]), scale: 5, pos: [-.2,y+.1], justify: [1 ,1] }),
    ];
 },
 
