@@ -667,7 +667,7 @@ function Diagram() {
 
 	       if (object.state && object.state.aspectRatio)
 	          lo[1] = hi[1] - (hi[0] - lo[0]) / object.state.aspectRatio;
-               else
+               else if (object.card_type != 'editor')
 	          lo[1] = hi[1] - (hi[0] - lo[0]);
 
                // COORDINATE CONVERSIONS BETWEEN SCREEN AND INTERNAL CARD COORDS.
