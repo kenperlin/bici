@@ -55,7 +55,7 @@ app.post('/api/gemini', async (req, res) => {
 
 
 // Save / load named scene snapshots to disk (used by projects/0423 draw.js)
-const SAVES_DIR = path.join(__dirname, 'saves');
+const SAVES_DIR = path.join(__dirname, 'saved');
 if (!fs.existsSync(SAVES_DIR)) fs.mkdirSync(SAVES_DIR, { recursive: true });
 
 function safeName(name) {

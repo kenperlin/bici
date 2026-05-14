@@ -178,10 +178,6 @@ editor: function(state,t,p,hasFocus) {
    let computeIndex = () => {
       state.index = 0;
       let r = Math.min(state.row, state.lines.length);
-      console.log('row', state.row);
-      console.log('lines', state.lines);
-      console.log('lines.length', state.lines.length);
-      console.log('r', r);
       for (let n = 0 ; n < r ; n++) 
          state.index += state.lines[n].length + 1; 
       state.index += Math.min(state.col, state.lines[r].length);
