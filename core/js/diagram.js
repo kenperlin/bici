@@ -124,8 +124,17 @@ let addDiagramProperties = (diagram, ctx) => {
       return diagram;
    }
    diagram.path = P => {
-      for (let i = 0 ; i < P.length-1 ; i++)
-         diagram.line(P[i], P[i+1]);
+      if (P.length == 0)
+         return;
+      let x, y;
+      ctx.beginPath();
+      [x,y] = mxp(P[0]);
+      ctx.moveTo(x, y);
+      for (let i = 1 ; i < P.length ; i++) {
+         [x,y] = mxp(P[i]);
+         ctx.lineTo(x, y);
+      }
+      ctx.stroke();
    }
    diagram.line = (a,b,arrowHead) => {
       let A = mxp(a), B = mxp(b);

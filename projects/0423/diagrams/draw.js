@@ -173,7 +173,7 @@ function Diagram() {
             dirty = true;
          }
          else if (n >= 2) {
-            remove(n);
+            removeObject(n);
             dirty = true;
          }
          break;
@@ -219,7 +219,9 @@ function Diagram() {
       }
    }
 
-   let remove = n => {
+   let removeObject = n => S[n].remove = 1;
+
+   let deleteObject = n => {
       let id = S[n].id;
       S.splice(n, 1);
       for (let n = 2 ; n < S.length ; n++)
@@ -375,7 +377,7 @@ function Diagram() {
                      // AND THIS CLICK IS IN AN OBJECT, DELETE THE OBJECT
 
                      if (n >= 2)
-                        remove(n);
+                        removeObject(n);
 
                      break;
 
@@ -577,9 +579,19 @@ function Diagram() {
                       B = findEdge( L1, H1, mix(L0, H0, .5) ),
                       D = resize(normalize(subtract(B,A)),.02),
                       E = resize(D,1/3);
+
+		  if (S[ns].remove || S[n].remove) {
+		     octx.save();
+		     octx.globalAlpha = ease(S[ns].remove ?? S[n].remove);
+		  }
+
                   this.line(A,subtract(B,E));
                   this.fillPolygon([ add(B,E), add(B, [-2*D[0] - D[1], -2*D[1] + D[0]]),
                                                add(B, [-2*D[0] + D[1], -2*D[1] - D[0]]) ]);
+
+		  if (S[ns].remove || S[n].remove)
+		     octx.restore();
+
                   break;
                }
 
@@ -588,6 +600,19 @@ function Diagram() {
 
       for (let n = 0 ; n < S.length ; n++) {
          let object = S[n];
+
+	 // IF MARKED FOR REMOVAL, FADE OUT THE OBJECT BEFORE DELETING IT
+
+         if (object.remove) {
+            object.remove -= 2 * elapsed;
+	    if (object.remove <= 0) {
+	       deleteObject(n--);
+	       continue;
+            }
+            octx.save();
+	    octx.globalAlpha = ease(object.remove);
+         }
+
          let strokes = object.strokes,
              lo = object.lo,
              hi = object.hi;
@@ -596,7 +621,7 @@ function Diagram() {
 
          if (hi && (hi[0] < -1 || hi[1] < -screen.height/screen.width) ||
              lo && (lo[0] >  1 || lo[1] >  screen.height/screen.width)) {
-            remove(n--);
+            removeObject(n--);
             continue;
          }
 
@@ -882,6 +907,9 @@ function Diagram() {
             if (isClipping)
                octx.restore();
          }
+
+	 if (object.remove)
+	    octx.restore();
       }
 
       // IF USING A PEN, DISPLAY THE PEN TIP IN FRONT OF EVERYTHING ELSE
