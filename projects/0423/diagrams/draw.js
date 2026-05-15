@@ -105,6 +105,7 @@ function Diagram() {
             isTextString = false;
             break;
          case 'c':
+	    textString = textString.trim();
             if (dictionary[textString]) {
                let n = S.length;
 	       let p = this.input.mouse.pos;
@@ -784,7 +785,8 @@ function Diagram() {
                   state.dirty = false;
                   value = value(state, time, mi(pos), n == nm);
 
-		  // AFTER THE FIRST TIME EVALUATING A TALL CARD FROM A TEXTSTRING, FIX ITS SIZE.
+		  // AFTER THE FIRST TIME EVALUATING A NON-SQUARE CARD FROM A TEXTSTRING,
+		  // ADJUST ITS SIZE AND POSITION.
 
 		  if (object.morphData == 1 && state.aspectRatio < 1) {
 		     let x = (lo[0] + hi[0]) / 2, w = hi[0] - lo[0];
@@ -794,6 +796,15 @@ function Diagram() {
                      value = S_value[object.id](state, time, mi(pos), n == nm);
 		     object.morphData = 2;
 		  }
+		  if (object.morphData == 1 && state.aspectRatio > 1) {
+		     let h = (hi[0] - lo[0]) / state.aspectRatio;
+		     hi[1] = this.input.mouse.pos[1] + h/2;
+		     lo[1] = hi[1] - h;
+                     value = S_value[object.id](state, time, mi(pos), n == nm);
+		     object.morphData = 2;
+		  }
+
+		  // GIVE THE OBJECT THE OPTION TO MOVE THE POSITION OF THE CARD.
 
                   if (state.move) {
                      lo[0] += state.move[0];
