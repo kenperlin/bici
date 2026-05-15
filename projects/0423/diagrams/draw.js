@@ -219,7 +219,10 @@ function Diagram() {
       }
    }
 
-   let removeObject = n => S[n].remove = 1;
+   let removeObject = n => {
+      if (S[n].remove === undefined)
+         S[n].remove = 1;
+   }
 
    let deleteObject = n => {
       let id = S[n].id;
@@ -620,10 +623,8 @@ function Diagram() {
          // REMOVE ANY OBJECT THAT HAS WANDERED OFF THE SCREEN
 
          if (hi && (hi[0] < -1 || hi[1] < -screen.height/screen.width) ||
-             lo && (lo[0] >  1 || lo[1] >  screen.height/screen.width)) {
-            removeObject(n--);
-            continue;
-         }
+             lo && (lo[0] >  1 || lo[1] >  screen.height/screen.width))
+            removeObject(n);
 
          // HANDLE MORPHING A DRAWING TO A KNOWN DRAWING OR TO A CARD
 
