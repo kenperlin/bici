@@ -42,7 +42,7 @@ function Diagram() {
             }
    }
 
-   let isCommandKey, isTextString, textString = '', isSpeechKey;
+   let isCommandKey, isTextString, textString = '';
 
    this.keyDown = key => {
 
@@ -73,18 +73,19 @@ function Diagram() {
          isCommandKey = true;
          return true;
       case 'Alt':
-         console.log('SPEECH KEY ENABLED');
          isSpeechKey = true;
+	 previousSpeech = '';
+	 thisSpeech = '';
+	 speech = '';
+	 textString = '';
          return true;
       }
    }
 
    this.keyUp = key => {
 
-      if (key == 'Alt') {
-         console.log('SPEECH KEY DISABLED');
+      if (key == 'Alt')
          isSpeechKey = false;
-      }
 
       // ADDING TO THE TEXT STRING
 
@@ -109,8 +110,12 @@ function Diagram() {
       if (isCommandKey) {
          switch (key) {
          case 'Escape':
-	    if (! isTextString)
+	    if (! isTextString) {
+	       previousSpeech = '';
+	       thisSpeech = '';
+	       speech = '';
 	       textString = '';
+            }
             isTextString = false;
             break;
          case 'c':
@@ -178,7 +183,7 @@ function Diagram() {
       switch (key) {
       case 'Backspace':
          if (S.length == 3) {
-            S.splice(2, 1);
+            removeObject(2);
             dirty = true;
          }
          else if (n >= 2) {
@@ -241,15 +246,19 @@ function Diagram() {
             delete S[n].srcId;
    }
 
-   let previousSpeech = '';
+   let isSpeechKey, previousSpeech = '', thisSpeech = '';
 
    this.update = () => {
 
-      if (speech != previousSpeech && isSpeechKey) {
-         textString = speech;
-         dirty = true;
+      if (isSpeechKey) {
+         thisSpeech = speech;
+
+         if (thisSpeech != previousSpeech) {
+            textString = thisSpeech;
+            dirty = true;
+         }
+         previousSpeech = thisSpeech;
       }
-      previousSpeech = speech;
 
       pen.pos = window.penXYN ? [ (penXYN.x - 320) / 320, (220 - penXYN.y) / 350 ] : null;
 
@@ -543,15 +552,19 @@ function Diagram() {
          if (isPenDown && ! wasPenDown) {
             pen.state = 'press';
             pen.pressTime = time;
+            pen.travel = 0;
+            pen.previousPos = pen.pos;
             respondToInput(pen, 'pen');
          }
          else if (isPenDown && wasPenDown) {
             pen.state = 'down';
+	    pen.travel += norm(subtract(pen.pos, pen.previousPos));
+            pen.previousPos = pen.pos;
             respondToInput(pen, 'pen');
          }
          else if (! isPenDown && wasPenDown) {
             pen.state = 'release';
-            pen.isClick = time - pen.pressTime < .5;
+            pen.isClick = time - pen.pressTime < .5 && pen.travel < .01;
             respondToInput(pen, 'pen');
          }
          else {

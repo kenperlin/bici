@@ -1,4 +1,4 @@
-Presentation\ntool
+Presentation
 SRC js/shaderCard.js
 SRC js/dictionary.js
 draw.js

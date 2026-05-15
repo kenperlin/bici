@@ -88,15 +88,17 @@ let loadProject = projectName => {
 }
 
 window.speech = '';
-{
-   let reco = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+let startSpeechRecognition = () => {
+   let reco = new window.webkitSpeechRecognition();
    reco.continuous = true;
    reco.lang = 'en-US';
    reco.interimResults = false;
    reco.maxAlternatives = 1;
    reco.onresult = event => speech = event.results[event.resultIndex][0].transcript;
+   reco.onend = () => startSpeechRecognition();
    reco.start();
 }
+startSpeechRecognition();
 
 // Show project selector UI
 let showProjectSelector = () => {
