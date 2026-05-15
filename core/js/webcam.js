@@ -84,15 +84,15 @@ webcam.update = () => {
       }
    }
 
-   let isBlue = (r,g,b) => b > 115 && b > 1.6 * Math.max(r,g);
+   let isGreen = (r,g,b) => g > 30 && g > 1.2 * Math.max(r,b);
 
-   // FOLLOW THE POSITION OF A BLUE MARKER PEN
+   // FOLLOW THE POSITION OF A GREEN MARKER PEN
 
    let xs = 0, ys = 0, ns = 0;
    for (let row = 0, n = 0 ; row < 480 ; row++)
    for (let col = 0 ; col < 640 ; col++, n += 4) {
       let r = data[n], g = data[n+1], b = data[n+2];
-      if (isBlue(r,g,b)) {
+      if (isGreen(r,g,b)) {
          data[n+3] = 253;
 	 xs += col;
 	 ys += row;
@@ -118,7 +118,7 @@ webcam.update = () => {
          }
       }
 
-   // SEE THROUGH A BLUE PLATE INTO A MYSTEROUS OTHER WORLD
+   // SEE THROUGH A GREEN PLATE INTO A MYSTEROUS OTHER WORLD
 
    webcam._iw = fade(webcam._iw, webcam.isWorld ? 1 : 0, deltaTime / .5);
 
@@ -131,7 +131,7 @@ webcam.update = () => {
       for (let row = 0, n = 0 ; row < 480 ; row++)
       for (let col = 0 ; col < 640 ; col++, n += 4) {
          let r = data[n], g = data[n+1], b = data[n+2];
-         if (isBlue(r,g,b)) {
+         if (isGreen(r,g,b)) {
 	    let rr = 4 * ( (col-x) * (col-x) + (row-y) * (row-y) );
 	    let t = mix(1, rr / ns, webcam._iw);
 	    if (t < 1) {
@@ -220,7 +220,7 @@ webcam.update = () => {
       for (let row = 0, n = 0 ; row < 480 ; row++)
       for (let col = 0 ; col < 640 ; col++, n += 4)
          if (data[n+3] == 253)
-	    data[n] = data[n+1] = data[n+2] = 0;
+	    data[n] = data[n+1] = data[n+2] = 64;
 
    if (! webcam.isWebcam)
       for (let n = 0 ; n < data.length ; n++)

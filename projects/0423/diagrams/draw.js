@@ -785,6 +785,18 @@ function Diagram() {
                   state.dirty = false;
                   value = value(state, time, mi(pos), n == nm);
 
+		  // ADJUST COORDINATE TRANSFORM MATH FOR NON-SQUARE CARDS
+
+		  if (state.aspectRatio && ! object.hasBeenAdjusted) {
+		     let y = (lo[1] + hi[1]) / 2;
+		     let h = (hi[0] - lo[0]) / object.state.aspectRatio;
+                     lo[1] = y - h/2;
+                     hi[1] = y + h/2;
+                     dp[1] = (hi[1] - lo[1]) / 2;
+                     value = S_value[object.id](state, time, mi(pos), n == nm);
+		     object.hasBeenAdjusted = true;
+		  }
+
 		  // AFTER THE FIRST TIME EVALUATING A NON-SQUARE CARD FROM A TEXTSTRING,
 		  // ADJUST ITS SIZE AND POSITION.
 
@@ -875,7 +887,7 @@ function Diagram() {
       // IF USING A PEN, DISPLAY THE PEN TIP IN FRONT OF EVERYTHING ELSE
 
       if (penSize > 0)
-         this.drawColor('#00008040').dot(pen.pos, .002 * penSize);
+         this.drawColor('#00000040').dot(pen.pos, .002 * penSize);
 
       // SHOW THE TEXT STRING OR USER'S LATEST SPOKEN WORDS AT THE BOTTOM LEFT OF THE SCREEN
 
