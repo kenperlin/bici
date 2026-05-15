@@ -42,7 +42,7 @@ function Diagram() {
             }
    }
 
-   let isCommandKey, isTextString, textString = '';
+   let isCommandKey, isTextString, textString = '', isSpeechKey;
 
    this.keyDown = key => {
 
@@ -72,20 +72,27 @@ function Diagram() {
       case 's':
          isCommandKey = true;
          return true;
+      case 'Alt':
+         console.log('SPEECH KEY ENABLED');
+         isSpeechKey = true;
+         return true;
       }
    }
 
    this.keyUp = key => {
 
+      if (key == 'Alt') {
+         console.log('SPEECH KEY DISABLED');
+         isSpeechKey = false;
+      }
+
       // ADDING TO THE TEXT STRING
 
       if (isTextString && key != 'Escape') {
          switch (key) {
-	 case 'Alt':
 	 case 'Command':
 	 case 'Meta':
 	 case 'Shift':
-	 case 'Tab':
 	    break;
 	 case 'Backspace':
 	    textString = textString.substring(0, textString.length-1);
@@ -102,6 +109,8 @@ function Diagram() {
       if (isCommandKey) {
          switch (key) {
          case 'Escape':
+	    if (! isTextString)
+	       textString = '';
             isTextString = false;
             break;
          case 'c':
@@ -236,11 +245,11 @@ function Diagram() {
 
    this.update = () => {
 
-      if (speech != previousSpeech) {
+      if (speech != previousSpeech && isSpeechKey) {
          textString = speech;
-         previousSpeech = speech;
          dirty = true;
       }
+      previousSpeech = speech;
 
       pen.pos = window.penXYN ? [ (penXYN.x - 320) / 320, (220 - penXYN.y) / 350 ] : null;
 
