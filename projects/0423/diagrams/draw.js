@@ -700,7 +700,7 @@ function Diagram() {
          else {
 
             if (S_value[object.id] && object.text == 'editor' && object.state && object.state.lines)
-               lo[1] = hi[1] - .029 * Math.max(1, object.state.lines.length);
+               lo[1] = hi[1] - object.state.textSize * Math.max(1, object.state.lines.length);
 
             let isShader = object.card_type == 'shader';
 
@@ -735,7 +735,7 @@ function Diagram() {
             if (object.card_type && ! S_value[object.id]) {
                switch (object.card_type) {
                case 'shader':
-                  let shaderCard = new ShaderCard(octx);
+                  let shaderCard = new WebgpuCard(octx);
                   shaderCard.setShader('rgb = vec3(0.,0.,1.);');
                   S_value[object.id] = shaderCard;
                   break;
@@ -907,7 +907,7 @@ function Diagram() {
                   else if (item.text) {
                      this.drawColor(item.color ?? color);
                      let j = item.justify ?? [.5,.5];
-                     this.setFont(item.size ?? (item.scale ?? .9)*s, 'Courier').text(item.text, mf(item.pos), j[0],j[1]);
+                     this.setFont(item.size ?? (item.scale ?? 1)*s, 'Courier').text(item.text, mf(item.pos), j[0],j[1]);
                   }
                   else if (item.color)
                      color = item.color;
@@ -915,7 +915,7 @@ function Diagram() {
 
                if (activationText) {
                   if (activationText == 'shader') {
-                     let shaderCard = new ShaderCard(octx);
+                     let shaderCard = new WebgpuCard(octx);
                      shaderCard.setShader('rgb = vec3(0.,0.,1.);');
                      S_value[object.id] = shaderCard;
                   }

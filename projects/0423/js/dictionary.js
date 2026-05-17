@@ -279,11 +279,14 @@ editor: function(state,t,p,hasFocus) {
       dirty = true;
    }
 
-   let s = state.cardSize, w = .036/s, h = 2 / Math.max(1, state.lines.length);
+   state.textSize = .0275;
+   let s = state.cardSize,
+       w = 1.2 * state.textSize / s,
+       h = 2 / Math.max(1, state.lines.length);
 
    let computeColRowIndex = p => {
-      state.row = Math.min((1 - p[1]) / h >> 0, state.lines.length-1);
-      state.col = Math.min((p[0] + 1) / w >> 0, state.lines[state.row].length);
+      state.row = Math.max(0, Math.min((1 - p[1]) / h >> 0, state.lines.length-1));
+      state.col = Math.max(0, Math.min((p[0] + 1) / w >> 0, state.lines[state.row].length));
       computeIndex();
    }
 
@@ -432,7 +435,7 @@ editor: function(state,t,p,hasFocus) {
    let i = 0;
    for (let row = 0 ; row < state.lines.length ; row++) {
       let text = state.lines[row];
-      S.push({text: text, pos: [-1,1-(row+.6)*h], justify: [0,1], size: .03});
+      S.push({text: text, pos: [-1,1-(row+.6)*h], justify: [0,1], size: state.textSize});
       for (let col = 0 ; col < text.length ; col++)
          if (i + col >= state.selectionStart && i + col <= state.selectionEnd) {
             let x = w * col - 1;

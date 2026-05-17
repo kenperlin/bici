@@ -1,4 +1,5 @@
 Presentation
 SRC js/shaderCard.js
+SRC js/webgpuCard.js
 SRC js/dictionary.js
 draw.js
