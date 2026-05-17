@@ -1,5 +1,16 @@
 let dictionary = {
 
+blob: state => {
+   if (! state.fileLoaded)
+      state.fileToLoad = 'b.wgsl';
+   return [];
+},
+planet: state => {
+   if (! state.fileLoaded)
+      state.fileToLoad = 'p.wgsl';
+   return [];
+},
+
 fish: (state,t,p,hasFocus) => {
    state.hideFrame = true;
    state.aspectRatio = 5;

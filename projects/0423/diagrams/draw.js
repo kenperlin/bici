@@ -626,6 +626,9 @@ function Diagram() {
       for (let n = 0 ; n < S.length ; n++) {
          let object = S[n];
 
+         if (n > 1)
+	      console.log(n==2 ? '----------------' : '===============', S[n]);
+
 	 // IF MARKED FOR REMOVAL, FADE OUT THE OBJECT BEFORE DELETING IT
 
          if (object.remove) {
@@ -699,7 +702,7 @@ function Diagram() {
 
          else {
 
-            if (S_value[object.id] && object.text == 'editor' && object.state && object.state.lines)
+            if (S_value[object.id] && object.card_type == 'editor' && object.state && object.state.lines)
                lo[1] = hi[1] - object.state.textSize * Math.max(1, object.state.lines.length);
 
             let isShader = object.card_type == 'shader';
@@ -832,6 +835,17 @@ function Diagram() {
 
                   state.dirty = false;
                   value = value(state, time, mi(pos), n == nm);
+		  if (state.fileToLoad) {
+                     getFile('projects/' + project + '/' + state.fileToLoad, text => {
+			object.card_type = 'editor';
+			object.state.lines = text.split('\n');
+	                lo[1] = hi[1] - object.state.textSize * Math.max(1, object.state.lines.length);
+		        object.state.newText = text;
+                        delete S_value[object.id];
+                     });
+		     delete state.fileToLoad;
+		     state.fileLoaded = true;
+		  }
 
 		  // ADJUST COORDINATE TRANSFORM MATH FOR NON-SQUARE CARDS
 
