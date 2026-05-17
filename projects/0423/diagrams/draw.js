@@ -202,7 +202,7 @@ function Diagram() {
 
    let cursorIds = { mouse:0, left:1, right:2 };
    let dirty, bgClick, state = -1, stroke = [], p = [], n = -1;
-   let isDragging = false, isResizing = false, sy, isLinking, srcId;
+   let isDragging = false, isResizing = false, sy;
    let np = isFirstPlayer() ? 0 : 1;
    let nm = -1;
    let pen = {};
@@ -344,7 +344,7 @@ function Diagram() {
 
                // IF NOT DRAGGING OR RESIZING OR LINKING, CHECK FOR MOUSE DOWN ON A MORPHED OBJECT
 
-               if (! isDragging && ! isResizing && ! isLinking)
+               if (! isDragging && ! isResizing)
                   for (nm = S.length - 1 ; nm >= 2 ; nm--)
                      if (S[nm].morphData && contains(nm, pos)) {
                         p = pos;
@@ -461,15 +461,6 @@ function Diagram() {
 
                else if (isResizing == cursorId)
                   isResizing = false;
-
-               else if (isLinking == cursorId) {
-                  isLinking = false;
-                  for (let n = S.length - 1 ; n >= 2 ; n--)
-                     if (S[n].morphData && contains(n, pos)) {
-                        S[n].srcId = srcId;
-                        break;
-                     }
-               }
 
                else if (nm < 2) {
 
