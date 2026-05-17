@@ -8,7 +8,8 @@ function WebgpuCard(ctx) {
    let format  = navigator.gpu.getPreferredCanvasFormat();
    let adapter, device, rP, uB, bG, okToDraw, startTime = Date.now() / 1000;
    let oldShader = 'rgb = vec3(0,0,1);', badShader;
-   let T = [ .5,.5,.5,.5,.5, .5,.5,.5,.5,.5 ];
+   //let T = [ .5,.5,.5,.5,.5, .5,.5,.5,.5,.5 ];
+   let T = [];
 
    this.setShader = newShader => {
       if (newShader == oldShader || newShader == badShader)
@@ -117,7 +118,10 @@ function WebgpuCard(ctx) {
          pE.setPipeline(rP);
          pE.setBindGroup(0, bG);
 	 let time = Date.now() / 1000 - startTime;
-         device.queue.writeBuffer(uB, 0, new Float32Array( [time,T].flat() ));
+	 let TT = [ time ];
+	 for (let n = 0 ; n < 10 ; n++)
+	    TT.push(T[n] ?? .5);
+         device.queue.writeBuffer(uB, 0, new Float32Array(TT));
          pE.draw(6,1,0,0);                                                 // DRAW 2 TRIANGLES == 6 VERTICES.
          pE.end();
          device.queue.submit([cE.finish()]);

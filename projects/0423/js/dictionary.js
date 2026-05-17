@@ -56,9 +56,11 @@ sliderX: (state,t,p,hasFocus) => {
    state.lineWidth = .008;
    state.noClipping = true;
 
-   if (hasFocus) state.T[0] = .5 + .5 * p[0];
+   if (! state.t) state.t = 0;
+   if (hasFocus) state.t = p[0];
+   state.T[0] = .5 + .5 * state.t;
 
-   let x = 2 * state.T[0] - 1;
+   let x = state.t;
    return [
       {draw: [ [ -1, 0 ], [ 1, 0 ] ]},
       {draw: [ [ x, -1 ], [ x, 1 ] ]},
@@ -72,9 +74,11 @@ sliderY: (state,t,p,hasFocus) => {
    state.lineWidth = .008;
    state.noClipping = true;
 
-   if (hasFocus) state.T[0] = .5 + .5 * p[1];
+   if (! state.t) state.t = 0;
+   if (hasFocus) state.t = p[1];
+   state.T[0] = .5 + .5 * state.t;
 
-   let y = 2 * state.T[0] - 1;
+   let y = state.t;
    return [
       {draw: [ [ 0, -1 ], [ 0, 1 ] ]},
       {draw: [ [ -1, y ], [ 1, y ] ]},
@@ -85,6 +89,8 @@ sliderY: (state,t,p,hasFocus) => {
 
 sliders: function(state,t,p,hasFocus) {
 
+   if (! state.T || state.T.length < 10)
+      state.T = [.5,.5,.5,.5,.5, .5,.5,.5,.5,.5];
    if (! state.p)
       state.p = [0,0];
    if (hasFocus)

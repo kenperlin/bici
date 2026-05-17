@@ -242,8 +242,10 @@ function Diagram() {
       let id = S[n].id;
       S.splice(n, 1);
       for (let n = 2 ; n < S.length ; n++)
-         if (S[n].srcId == id)
-            delete S[n].srcId;
+         if (S[n].srcId)
+	    for (let i = 0 ; i < S[n].srcId.length ; i++)
+               if (S[n].srcId[i] == id)
+                  S[n].srcId.splice(i--, 1);
    }
 
    let isSpeechKey, previousSpeech = '', thisSpeech = '';
@@ -440,7 +442,9 @@ function Diagram() {
                   case 4:
                      for (let nn = S.length - 1 ; nn >= 2 ; nn--)
                         if (S[nn].morphData && contains(nn, pos)) {
-                           S[nn].srcId = S[n].id;
+			   if (! S[nn].srcId)
+			      S[nn].srcId = [];
+                           S[nn].srcId.push(S[n].id);
                            break;
                         }
                      break;
@@ -539,7 +543,7 @@ function Diagram() {
 
       // RESPOND TO INPUT FROM PEN, IF PEN IS VISIBLE
 
-      if (pen.pos) {
+      if (pen.pos && false) {
          if (isPenDown && ! wasPenDown) {
             pen.state = 'press';
             pen.pressTime = time;
@@ -578,38 +582,37 @@ function Diagram() {
 
       this.lineWidth(.008);
       for (let n = 0 ; n < S.length ; n++)
-         if (S[n].srcId)
+         if (S[n].srcId && S[n].srcId.length > 0)
             for (let ns = 2 ; ns < S.length ; ns++)
-               if (S[ns].id == S[n].srcId) {
-                  let findEdge = (lo,hi,p) => {
-                     let [cx,cy] = mix(lo, hi, .5),
-                         [dx,dy] = subtract(p, [cx,cy]);
-                     if (dx > 0 && dx*dx > dy*dy) return [hi[0]+.004, cy + dy/dx * (hi[1]-cy)];
-                     if (dx < 0 && dx*dx > dy*dy) return [lo[0]-.004, cy - dy/dx * (hi[1]-cy)];
-                     if (dy > 0 && dy*dy > dx*dx) return [cx + dx/dy * (hi[0]-cx), hi[1]+.004];
-                                                  return [cx - dx/dy * (hi[0]-cx), lo[1]-.004];
+	       for (let i = 0 ; i < S[n].srcId.length ; i++)
+                  if (S[ns].id == S[n].srcId[i]) {
+                     let findEdge = (lo,hi,p) => {
+                        let [cx,cy] = mix(lo, hi, .5),
+                            [dx,dy] = subtract(p, [cx,cy]);
+                        if (dx > 0 && dx*dx > dy*dy) return [hi[0]+.004, cy + dy/dx * (hi[1]-cy)];
+                        if (dx < 0 && dx*dx > dy*dy) return [lo[0]-.004, cy - dy/dx * (hi[1]-cy)];
+                        if (dy > 0 && dy*dy > dx*dx) return [cx + dx/dy * (hi[0]-cx), hi[1]+.004];
+                                                     return [cx - dx/dy * (hi[0]-cx), lo[1]-.004];
+                     }
+                     let L0 = S[ns].lo, H0 = S[ns].hi,
+                         L1 = S[n ].lo, H1 = S[n ].hi,
+                         A = findEdge( L0, H0, mix(L1, H1, .5) ),
+                         B = findEdge( L1, H1, mix(L0, H0, .5) ),
+                         D = resize(normalize(subtract(B,A)),.02),
+                         E = resize(D,1/3);
+
+		     if (S[ns].remove || S[n].remove) {
+		        octx.save();
+		        octx.globalAlpha = ease(S[ns].remove ?? S[n].remove);
+		     }
+
+                     this.line(A,subtract(B,E));
+                     this.fillPolygon([ add(B,E), add(B, [-2*D[0] - D[1], -2*D[1] + D[0]]),
+                                                  add(B, [-2*D[0] + D[1], -2*D[1] - D[0]]) ]);
+
+		     if (S[ns].remove || S[n].remove)
+		        octx.restore();
                   }
-                  let L0 = S[ns].lo, H0 = S[ns].hi,
-                      L1 = S[n ].lo, H1 = S[n ].hi,
-                      A = findEdge( L0, H0, mix(L1, H1, .5) ),
-                      B = findEdge( L1, H1, mix(L0, H0, .5) ),
-                      D = resize(normalize(subtract(B,A)),.02),
-                      E = resize(D,1/3);
-
-		  if (S[ns].remove || S[n].remove) {
-		     octx.save();
-		     octx.globalAlpha = ease(S[ns].remove ?? S[n].remove);
-		  }
-
-                  this.line(A,subtract(B,E));
-                  this.fillPolygon([ add(B,E), add(B, [-2*D[0] - D[1], -2*D[1] + D[0]]),
-                                               add(B, [-2*D[0] + D[1], -2*D[1] - D[0]]) ]);
-
-		  if (S[ns].remove || S[n].remove)
-		     octx.restore();
-
-                  break;
-               }
 
 
       // DRAW ALL THE OBJECTS
@@ -746,24 +749,15 @@ function Diagram() {
                let shaderCard = S_value[object.id];
                if (object.srcId)
 
-                  // IF THERE IS AN IN-LINK, LINK SHADER CODE FROM THE SOURCE CARD
+                  // IF THERE IS AN IN-LINK, LINK SHADER CODE AND PARAMETERS FROM THE SOURCE CARD
 
                   for (let n = 2 ; n < S.length ; n++)
-                     if (S[n].id == object.srcId) {
+                     if (S[n].id == object.srcId[0]) {
                         shaderCard.setShader(replaceNumberSigns(S[n].state.text));
-
-                        // IF SRC CARD HAS AN IN-LINK, LINK SHADER T[] UNIFORMS FROM IT
-
-                        if (S[n].srcId)
-                           for (let nt = 2 ; nt < S.length ; nt++)
-                              if (S[nt].id == S[n].srcId) {
-                                 if (S[nt].state)
-                                    shaderCard.setT(S[nt].state.T);
-                                 break;
-                              }
-
-                        break;
+                        shaderCard.setT(S[n].state.T);
+		        break;
                      }
+
                lo[1] = hi[1] + lo[0] - hi[0];
                let L = this.mxp(lo);
                let H = this.mxp(hi);
@@ -794,9 +788,7 @@ function Diagram() {
                if (typeof value == 'function') {
 
                   if (object.state === undefined)
-                     object.state = {
-                        T: [.5,.5,.5,.5,.5,.5,.5,.5,.5,.5],
-                     };
+                     object.state = { T: [] };
                   let state = object.state;
 
                   // ON CONTROL KEY RELEASE, CONVERT CARD TO THE CARD TYPE PRINTED ON THE CARD.
@@ -809,15 +801,19 @@ function Diagram() {
                         activationText = text;
                   }
 
-                  // IF CARD HAS AN IN-LINK, SET ITS PARAMETERS TO THAT CARD'S PARAMETER VALUES.
+                  // IF CARD HAS IN-LINKS, SET ITS PARAMETERS TO THEIR PARAMETER VALUES.
 
-                  if (object.srcId)
-                     for (let n = 2 ; n < S.length ; n++)
-                        if (S[n].id == object.srcId) {
-                           if (S[n].state)
-                              state.T = S[n].state.T;
-                           break;
-                        }
+                  if (object.srcId) {
+		     let T = [];
+		     for (let i = 0 ; i < object.srcId.length ; i++)
+                        for (let n = 2 ; n < S.length ; n++)
+                           if (S[n].id == object.srcId[i]) {
+                              if (S[n].state)
+                                 T.push(S[n].state.T);
+                              break;
+                           }
+                     state.T = T.flat();
+                  }
 
                   // PROCEDURALLY EVALUATE THE CARD CONTENTS.
 
