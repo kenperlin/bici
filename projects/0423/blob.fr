@@ -1,9 +1,0 @@
-float r = 2.*(x*x + y*y);
-float f = #0 * 10.;
-float t = #1 * time;
-vec3 v = vec3(f*x, f*y, t);
-r += noise(v);
-if (r > 1.)
-   discard;
-vec3 c = vec3(#2,#3,#4);
-rgb = vec3(r) * c;

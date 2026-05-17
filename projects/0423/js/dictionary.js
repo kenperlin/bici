@@ -1,15 +1,7 @@
 let dictionary = {
 
-blob: state => {
-   if (! state.fileLoaded)
-      state.fileToLoad = 'b.wgsl';
-   return [];
-},
-planet: state => {
-   if (! state.fileLoaded)
-      state.fileToLoad = 'p.wgsl';
-   return [];
-},
+blob  : state => { if (! state.fileLoaded) state.fileToLoad = 'wgsl/blob.wgsl'  ; return []; },
+planet: state => { if (! state.fileLoaded) state.fileToLoad = 'wgsl/planet.wgsl'; return []; },
 
 fish: (state,t,p,hasFocus) => {
    state.hideFrame = true;
@@ -115,14 +107,10 @@ sliders: function(state,t,p,hasFocus) {
       S.push({fill: [[x,y-.1],[1,y-.1],[1,y+.1],[x,y+.1]], color:'#e0e0e0'});
    }
    for (let n = 0 ; n < 10 ; n++) {
-      let y = .9 - .2 * n;
-      S.push({draw: [[-1,y-.1],[1,y-.1]]});
-      S.push({text: '#' + n, pos: [-.86,y-.11]});
-      let s = '' + (100 * state.T[n] >> 0) / 100;
-      if (s.indexOf('.') == s.length - 2) s += '0';
-      if (s.indexOf('-') == 0) s += ' ';
-      if (s.length == 2) s = s.substring(0,1) + '.00';
-      S.push({text: s, pos: [0,y-.11]});
+      let y = .8 - .2 * n;
+      S.push({draw: [[-1,y],[1,y]]});
+      S.push({scale: .9, pos: [-.86 ,y-.02], text: '#' + n});
+      S.push({scale: .9, pos: [-.052,y-.02], text: round2(state.T[n])});
    }
    return S;
 },

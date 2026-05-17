@@ -626,9 +626,6 @@ function Diagram() {
       for (let n = 0 ; n < S.length ; n++) {
          let object = S[n];
 
-         if (n > 1)
-	      console.log(n==2 ? '----------------' : '===============', S[n]);
-
 	 // IF MARKED FOR REMOVAL, FADE OUT THE OBJECT BEFORE DELETING IT
 
          if (object.remove) {
