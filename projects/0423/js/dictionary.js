@@ -179,7 +179,8 @@ editor: function(state,t,p,hasFocus) {
       let r = Math.min(state.row, state.lines.length);
       for (let n = 0 ; n < r ; n++) 
          state.index += state.lines[n].length + 1; 
-      state.index += Math.min(state.col, state.lines[r].length);
+      if (r < state.lines.length)
+         state.index += Math.min(state.col, state.lines[r].length);
    }
 
    //////////////// HANDLE UNDO AND REDO ////////////////

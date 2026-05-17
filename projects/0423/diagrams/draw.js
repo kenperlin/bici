@@ -1,6 +1,6 @@
 function Diagram() {
    this.isFullScreen = true;
-   tracking_isDrawingShadowAvatar = false;
+   //tracking_isDrawingShadowAvatar = false;
 
    let penColor = '#000000';
 
@@ -838,6 +838,8 @@ function Diagram() {
 			object.state.lines = text.split('\n');
 	                lo[1] = hi[1] - object.state.textSize * Math.max(1, object.state.lines.length);
 		        object.state.newText = text;
+		        object.state.col = 0;
+		        object.state.row = 0;
                         delete S_value[object.id];
                      });
 		     delete state.fileToLoad;
