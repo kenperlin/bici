@@ -8,7 +8,6 @@ function WebgpuCard(ctx) {
    let format  = navigator.gpu.getPreferredCanvasFormat();
    let adapter, device, rP, uB, bG, okToDraw, startTime = Date.now() / 1000;
    let oldShader = 'rgb = vec3(0,0,1);', badShader;
-   //let T = [ .5,.5,.5,.5,.5, .5,.5,.5,.5,.5 ];
    let T = [];
 
    this.setShader = newShader => {
@@ -45,7 +44,7 @@ function WebgpuCard(ctx) {
 
             struct MyUniforms {
                time: f32,                                // PASS IN UNIFORM time.
-	       T: array<f32,10>,                         // PASS IN 10 UNIFORM T PARAMETERS.
+	       _T: array<f32,10>,                        // PASS IN 10 UNIFORM T PARAMETERS.
             };
             @group(0) @binding(0) var<uniform> uniforms: MyUniforms;
 
@@ -66,8 +65,8 @@ function WebgpuCard(ctx) {
 
             @fragment
             fn fs(in: VertexOutput) -> @location(0) vec4f {
-               let time = uniforms.time;
-	       let T = uniforms.T;
+	       let _T = uniforms._T;                     // PARAMETERS PASSED IN FROM THE CPU.
+               let time = uniforms.time;                 // ELAPSED TIME IN SECONDS.
                let x = 2 * in.xyzw.x / 500 - 1;          // CONVERT x,y FROM PIXELS TO -1 ... +1.
                let y = 2 * in.xyzw.y / 500 - 1;
                var rgb = vec3f(.5);

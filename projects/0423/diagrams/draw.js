@@ -23,10 +23,10 @@ function Diagram() {
          });
    }
 
-   let replaceNumberSigns = s => {
+   let replaceAtSigns = s => {
       let t = '';
       for (let n = 0 ; n < s.length ; n++)
-         t += s.charAt(n) == '#' ? 'T[' + s.charAt(++n) + ']' : s.charAt(n);
+         t += s.charAt(n) == '@' ? '_T[' + s.charAt(++n) + ']' : s.charAt(n);
       return t;
    }
 
@@ -206,7 +206,7 @@ function Diagram() {
    let np = isFirstPlayer() ? 0 : 1;
    let nm = -1;
    let pen = {};
-   let pos = [0,0], time, isPenDown, wasPenDown, hadFocus;
+   let pos = [0,0], time, isPenDown, wasPenDown;
 
    let S;
    this.init = () => {
@@ -734,7 +734,6 @@ function Diagram() {
                   S_value[object.id] = shaderCard;
                   break;
                default:
-	          console.log('creating a', object.card_type);
                   S_value[object.id] = dictionary[object.card_type];
                   break;
                }
@@ -753,7 +752,7 @@ function Diagram() {
 
                   for (let n = 2 ; n < S.length ; n++)
                      if (S[n].id == object.srcId[0]) {
-                        shaderCard.setShader(replaceNumberSigns(S[n].state.text));
+                        shaderCard.setShader(replaceAtSigns(S[n].state.text));
                         shaderCard.setT(S[n].state.T);
 		        break;
                      }
@@ -818,14 +817,14 @@ function Diagram() {
                   // PROCEDURALLY EVALUATE THE CARD CONTENTS.
 
 		  let hasFocus = n == nm;
-		  state.mouseState = ! hadFocus &&   hasFocus ? 'press'   :
-		                       hadFocus &&   hasFocus ? 'drag'    :
-		                       hadFocus && ! hasFocus ? 'release' :
+		  state.mouseState = ! state.hadFocus &&   hasFocus ? 'press'   :
+		                       state.hadFocus &&   hasFocus ? 'drag'    :
+		                       state.hadFocus && ! hasFocus ? 'release' :
 				                          'move'    ;
-                  hadFocus = hasFocus;
+                  state.hadFocus = hasFocus;
 
                   state.dirty = false;
-                  value = value(state, time, mi(pos), n == nm);
+                  value = value(state, time, mi(pos), hasFocus);
 
 		  if (state.fileToLoad) {
                      getFile('projects/' + project + '/' + state.fileToLoad, text => {
@@ -849,7 +848,7 @@ function Diagram() {
                      lo[1] = y - h/2;
                      hi[1] = y + h/2;
                      dp[1] = (hi[1] - lo[1]) / 2;
-                     value = S_value[object.id](state, time, mi(pos), n == nm);
+                     value = S_value[object.id](state, time, mi(pos), hasFocus);
 		     object.hasBeenAdjusted = true;
 		  }
 
@@ -861,14 +860,14 @@ function Diagram() {
 		     lo[0] = x - w / 2 * state.aspectRatio;
 		     hi[0] = x + w / 2 * state.aspectRatio;
 		     lo[1] = hi[1] - (hi[1] - lo[1]) * state.aspectRatio;
-                     value = S_value[object.id](state, time, mi(pos), n == nm);
+                     value = S_value[object.id](state, time, mi(pos), hasFocus);
 		     object.morphData = 2;
 		  }
 		  if (object.morphData == 1 && state.aspectRatio > 1) {
 		     let h = (hi[0] - lo[0]) / state.aspectRatio;
 		     hi[1] = this.input.mouse.pos[1] + h/2;
 		     lo[1] = hi[1] - h;
-                     value = S_value[object.id](state, time, mi(pos), n == nm);
+                     value = S_value[object.id](state, time, mi(pos), hasFocus);
 		     object.morphData = 2;
 		  }
 

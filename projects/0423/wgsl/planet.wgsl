@@ -15,7 +15,7 @@ if (d>0)
    {d=.1+.05*g+.6*(.1+g)*s*s;}
 else
    {d=max(0.,d+.1);}
-var f=sin(4.*P.x+8.*g+#0)-.2;
+var f=sin(4.*P.x+8.*g+@0)-.2;
 if (f > 0.)
    {f=1.;}
 else

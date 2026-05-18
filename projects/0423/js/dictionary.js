@@ -88,6 +88,7 @@ sliderY: (state,t,p,hasFocus) => {
 },
 
 sliders: function(state,t,p,hasFocus) {
+
    if (state.N === undefined) {
       state.T = [.5];
       state.N = 2;
@@ -111,7 +112,7 @@ sliders: function(state,t,p,hasFocus) {
       let x = Math.max(-1, Math.min(1, 2 * state.T[n] - 1));
       S.push({fill: [[-1,y],[x,y],[x,y-h],[-1,y-h],[-1,y]], color: '#e0e0e0'});
       S.push({draw: [[-1,y],[1,y],[1,y-h],[-1,y-h],[-1,y]], lineWidth: isIn && n==i ? .004 : .002});
-      S.push({text: '#' + n, pos: [-.98,y], justify: [0,1.75], scale: .9});
+      S.push({text: '@' + n, pos: [-.98,y], justify: [0,1.75], scale: .9});
       S.push({text: round2(state.T[n]), pos: [-.05,y-1.15*h], scale: .9});
    }
    
@@ -138,6 +139,7 @@ sliders: function(state,t,p,hasFocus) {
          state.T.pop();
          state.N--;
       }
+      state.dirty = true;
    }
 
    return S;
