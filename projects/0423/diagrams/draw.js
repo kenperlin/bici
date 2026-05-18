@@ -7,14 +7,10 @@ function Diagram() {
       try {
          eval('value = return ' + code);
       } catch (error) {
-        try {
-           value = eval(code);
-        }
-        catch {
-        }
+        try { value = eval(code); } catch { }
       }
       if (typeof value == 'function')
-         value = value();
+         try { value = value(); } catch { }
       if (value !== undefined && ! Array.isArray(value))
          value = [ value ];
       return value;
@@ -185,7 +181,7 @@ function Diagram() {
       // IGNORE ARROW KEYS THAT ARE NOT ON A CARD.
 
       if (key.indexOf('Arrow') == 0 && (n < 2 || S[n].type != 'card'))
-         return false;
+         return true;
 
       // SEND TEXT EVENTS TO THE CARD AT THE CURSOR.
 
@@ -960,9 +956,9 @@ function Diagram() {
                if (object.card_type == 'editor') {
 	          window._I = object.state._I;
 	          let value = evalCode(replaceAtSigns(object.state.text));
-		  console.log('value =', value);
 		  if (value !== undefined)
 	             object.state._O = value;
+	          delete window._I;
                }
             }
 
