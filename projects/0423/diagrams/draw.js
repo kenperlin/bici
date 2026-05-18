@@ -221,6 +221,7 @@ function Diagram() {
    let nm = -1;
    let pen = {};
    let pos = [0,0], time, isPenDown, wasPenDown;
+   let startTime = Date.now() / 1000;
 
    let S;
    this.init = () => {
@@ -954,11 +955,12 @@ function Diagram() {
                }
 
                if (object.card_type == 'editor') {
-                  let f = ( 'abs,ceil,cos,exp,floor,' +
+                  let f = ( 'PI,abs,ceil,cos,exp,floor,' +
 		            'log,max,min,mod,pow,random,' +
 			    'round,sign,sin,sqrt,trunc' ).split(',');
 
 	          window._I = object.state._I;
+	          window.time = time - startTime;
 		  for (let i = 0 ; i < f.length ; i++)
 	             window[f[i]] = Math[f[i]];
 

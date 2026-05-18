@@ -36,7 +36,12 @@ fish: (state,t,p,hasFocus) => {
 
 trackpad: (state,t,p,hasFocus) => {
    if (! state.p) state.p = [0,0];
-   if (hasFocus) state.p = p;
+   if (hasFocus)
+      state.p = p;
+   else {
+      if (state._I.length > 0) state.p[0] = state._I[0];
+      if (state._I.length > 1) state.p[1] = state._I[1];
+   }
    let x = state.p[0], y = state.p[1];
 
    state._O[0] = .5 + .5 * x;
@@ -51,22 +56,31 @@ trackpad: (state,t,p,hasFocus) => {
 },
 
 scope: (state,t,p,hasFocus) => {
-   let N = 120;
+   let N = 100;
 
    if (! state.signal)
       state.signal = [];
-   state.signal.push(state._I[0]);
-   if (state.signal.length > N)
-      state.signal.shift();
 
    let trace = [];
-   for (let n = 0 ; n < state.signal.length ; n++)
-      if (n==0 || n==state.signal.length-1 || state.signal[n] != state.signal[n-1])
-         trace.push([ n/(N/2-1) - 1, state.signal[n] ]);
+   switch (state._I.length) {
+   case 1:                              // TRACE A 1D SIGNAL OVER TIME
+      state.signal.push(state._I[0]);
+      if (state.signal.length > N)
+         state.signal.shift();
+      for (let n = 0 ; n < state.signal.length ; n++)
+         if (n==0 || n==state.signal.length-1 || state.signal[n] != state.signal[n-1])
+            trace.push([ n/(N/2-1) - 1, state.signal[n] ]);
+      break;
 
-   let S = [];
-   S.push({ draw: trace, lineWidth: .002 });
-   return S;
+   case 2:                              // TRACE A 2D SIGNAL OVER TIME
+      state.signal.push(state._I);
+      if (state.signal.length > N)
+         state.signal.shift();
+      trace = state.signal;
+      break;
+   }
+
+   return [ { draw: trace, lineWidth: .002 } ];
 },
 
 sliderX: (state,t,p,hasFocus) => {
