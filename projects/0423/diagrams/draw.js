@@ -2,6 +2,24 @@ function Diagram() {
    this.isFullScreen = true;
    //tracking_isDrawingShadowAvatar = false;
 
+   let evalCode = code => {
+      let value;
+      try {
+         eval('value = return ' + code);
+      } catch (error) {
+        try {
+           value = eval(code);
+        }
+        catch {
+        }
+      }
+      if (typeof value == 'function')
+         value = value();
+      if (value !== undefined && ! Array.isArray(value))
+         value = [ value ];
+      return value;
+   }
+
    let penColor = '#000000';
 
    let save = name => {
@@ -26,7 +44,7 @@ function Diagram() {
    let replaceAtSigns = s => {
       let t = '';
       for (let n = 0 ; n < s.length ; n++)
-         t += s.charAt(n) == '@' ? '_T[' + s.charAt(++n) + ']' : s.charAt(n);
+         t += s.charAt(n) == '@' ? '_I[' + s.charAt(++n) + ']' : s.charAt(n);
       return t;
    }
 
@@ -543,7 +561,7 @@ function Diagram() {
 
       // RESPOND TO INPUT FROM PEN, IF PEN IS VISIBLE
 
-      if (pen.pos && false) {
+      if (pen.pos) {
          if (isPenDown && ! wasPenDown) {
             pen.state = 'press';
             pen.pressTime = time;
@@ -746,16 +764,22 @@ function Diagram() {
 
             else if (isShader) {
                let shaderCard = S_value[object.id];
-               if (object.srcId)
+               if (object.srcId) {
 
-                  // IF THERE IS AN IN-LINK, LINK SHADER CODE AND PARAMETERS FROM THE SOURCE CARD
+                  // LINK ANY SHADER CODE AND PARAMETERS FROM SOURCE CARDS
 
-                  for (let n = 2 ; n < S.length ; n++)
-                     if (S[n].id == object.srcId[0]) {
-                        shaderCard.setShader(replaceAtSigns(S[n].state.text));
-                        shaderCard.setT(S[n].state.T);
-		        break;
-                     }
+                  let T = [];
+                  for (let i = 0 ; i < object.srcId.length ; i++)
+                     for (let n = 2 ; n < S.length ; n++)
+                        if (S[n].id == object.srcId[i]) {
+			   if (S[n].card_type == 'editor')
+                              shaderCard.setShader(replaceAtSigns(S[n].state.text));
+                           else if (S[n].state._O)
+			      T.push(S[n].state._O);
+		           break;
+                        }
+                  shaderCard.set_I(T.flat());
+               }
 
                lo[1] = hi[1] + lo[0] - hi[0];
                let L = this.mxp(lo);
@@ -787,7 +811,7 @@ function Diagram() {
                if (typeof value == 'function') {
 
                   if (object.state === undefined)
-                     object.state = { T: [] };
+                     object.state = { _I: [], _O: [] };
                   let state = object.state;
 
                   // ON CONTROL KEY RELEASE, CONVERT CARD TO THE CARD TYPE PRINTED ON THE CARD.
@@ -808,10 +832,10 @@ function Diagram() {
                         for (let n = 2 ; n < S.length ; n++)
                            if (S[n].id == object.srcId[i]) {
                               if (S[n].state)
-                                 T.push(S[n].state.T);
+                                 T.push(S[n].state._O);
                               break;
                            }
-                     state.T = T.flat();
+                     state._I = T.flat();
                   }
 
                   // PROCEDURALLY EVALUATE THE CARD CONTENTS.
@@ -931,6 +955,14 @@ function Diagram() {
                      activateCardFromText(n, activationText);
                   }
                   dirty = true;
+               }
+
+               if (object.card_type == 'editor') {
+	          window._I = object.state._I;
+	          let value = evalCode(replaceAtSigns(object.state.text));
+		  console.log('value =', value);
+		  if (value !== undefined)
+	             object.state._O = value;
                }
             }
 

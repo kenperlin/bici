@@ -39,14 +39,14 @@ trackpad: (state,t,p,hasFocus) => {
    if (hasFocus) state.p = p;
    let x = state.p[0], y = state.p[1];
 
-   state.T[0] = .5 + .5 * x;
-   state.T[1] = .5 + .5 * y;
+   state._O[0] = .5 + .5 * x;
+   state._O[1] = .5 + .5 * y;
 
    return [
       {draw: [ [ -1, y], [ 1, y] ]},         // If cursor is down,
       {draw: [ [ x, -1], [ x, 1] ]},         // draw large crosshairs.
-      {text: 'x=' + round2(state.T[0]), pos: [-.5,.5]},
-      {text: 'y=' + round2(state.T[1]), pos: [.5,.5]},
+      {text: 'x=' + round2(state._O[0]), pos: [-.5,.5]},
+      {text: 'y=' + round2(state._O[1]), pos: [.5,.5]},
    ];
 },
 
@@ -55,7 +55,7 @@ scope: (state,t,p,hasFocus) => {
 
    if (! state.signal)
       state.signal = [];
-   state.signal.push(state.T[0]);
+   state.signal.push(state._I[0]);
    if (state.signal.length > N)
       state.signal.shift();
 
@@ -77,13 +77,13 @@ sliderX: (state,t,p,hasFocus) => {
 
    if (! state.t) state.t = 0;
    if (hasFocus) state.t = p[0];
-   state.T[0] = .5 + .5 * state.t;
+   state._O[0] = .5 + .5 * state.t;
 
    let x = state.t;
    return [
       {draw: [ [ -1, 0 ], [ 1, 0 ] ]},
       {draw: [ [ x, -1 ], [ x, 1 ] ]},
-      {text: round2(state.T[0]), pos: [x-.05,.05], justify: [1,.5]},
+      {text: round2(state._O[0]), pos: [x-.05,.05], justify: [1,.5]},
    ];
 },
 
@@ -95,21 +95,21 @@ sliderY: (state,t,p,hasFocus) => {
 
    if (! state.t) state.t = 0;
    if (hasFocus) state.t = p[1];
-   state.T[0] = .5 + .5 * state.t;
+   state._O[0] = .5 + .5 * state.t;
 
    let y = state.t;
    return [
       {draw: [ [ 0, -1 ], [ 0, 1 ] ]},
       {draw: [ [ -1, y ], [ 1, y ] ]},
-      (y*y > 1 ? {text: round2(state.T[0]), scale: 5, pos: [0  ,y+.1], justify: [.5,1] }
-               : {text: round2(state.T[0]), scale: 5, pos: [-.2,y+.1], justify: [1 ,1] }),
+      (y*y > 1 ? {text: round2(state._O[0]), scale: 5, pos: [0  ,y+.1], justify: [.5,1] }
+               : {text: round2(state._O[0]), scale: 5, pos: [-.2,y+.1], justify: [1 ,1] }),
    ];
 },
 
 sliders: function(state,t,p,hasFocus) {
 
    if (state.N === undefined) {
-      state.T = [.5];
+      state._O = [.5];
       state.N = 2;
    }
    let N = state.N;
@@ -128,11 +128,11 @@ sliders: function(state,t,p,hasFocus) {
    for (let n = 0 ; n < N-1 ; n++) {
       let y = 1 - n*h;
       S.push({fill: [[-1,y],[1,y],[1,y-h],[-1,y-h],[-1,y]], color: '#b0b0b0'});
-      let x = Math.max(-1, Math.min(1, 2 * state.T[n] - 1));
+      let x = Math.max(-1, Math.min(1, 2 * state._O[n] - 1));
       S.push({fill: [[-1,y],[x,y],[x,y-h],[-1,y-h],[-1,y]], color: '#e0e0e0'});
       S.push({draw: [[-1,y],[1,y],[1,y-h],[-1,y-h],[-1,y]], lineWidth: isIn && n==i ? .004 : .002});
       S.push({text: '@' + n, pos: [-.98,y], justify: [0,1.75], scale: .9});
-      S.push({text: round2(state.T[n]), pos: [-.05,y-1.15*h], scale: .9});
+      S.push({text: round2(state._O[n]), pos: [-.05,y-1.15*h], scale: .9});
    }
    
    let y = 1 - (N-1)*h;
@@ -147,15 +147,15 @@ sliders: function(state,t,p,hasFocus) {
    S.push({draw: [[ 0,y],[1,y],[1,y-h],[ 0,y-h],[ 0,y]], lineWidth: isIn&&i==N-1&&p[0]>0      ? .004 : .002});
 
    if (i >= 0 && i < N-1 && (state.mouseState == 'press' || state.mouseState == 'drag'))
-      state.T[i] = .5 + .5 * p[0];
+      state._O[i] = .5 + .5 * p[0];
 
    if (i == N-1 && state.mouseState == 'release') {
       if (p[0] > 0) {
-         state.T.push(.5);
+         state._O.push(.5);
          state.N++;
       }
       else if (N > 2) {
-         state.T.pop();
+         state._O.pop();
          state.N--;
       }
       state.dirty = true;
@@ -186,12 +186,12 @@ timer: function(state,t,p,hasFocus) {
       S.push({ draw: [ [c,s], [.85*c,.85*s] ] });
    }
 
-   state.T[0] = t - state.t0;
+   state._O[0] = t - state.t0;
 
-   t = 2*Math.PI * state.T[0] / 60;
+   t = 2*Math.PI * state._O[0] / 60;
    S.push({ draw: [ [0,0],[.8*Math.sin(t),.8*Math.cos(t)] ] });
 
-   let text = '' + ((10*state.T[0]>>0)/10);
+   let text = '' + ((10*state._O[0]>>0)/10);
    if (text.indexOf('.') < 0) text += '.0';
    S.push({ text: text, pos: [0,.5] });
 

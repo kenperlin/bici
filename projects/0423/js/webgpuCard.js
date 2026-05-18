@@ -44,7 +44,7 @@ function WebgpuCard(ctx) {
 
             struct MyUniforms {
                time: f32,                                // PASS IN UNIFORM time.
-	       _T: array<f32,10>,                        // PASS IN 10 UNIFORM T PARAMETERS.
+	       _I: array<f32,10>,                        // PASS IN 10 UNIFORM T PARAMETERS.
             };
             @group(0) @binding(0) var<uniform> uniforms: MyUniforms;
 
@@ -65,7 +65,7 @@ function WebgpuCard(ctx) {
 
             @fragment
             fn fs(in: VertexOutput) -> @location(0) vec4f {
-	       let _T = uniforms._T;                     // PARAMETERS PASSED IN FROM THE CPU.
+	       let _I = uniforms._I;                     // PARAMETERS PASSED IN FROM THE CPU.
                let time = uniforms.time;                 // ELAPSED TIME IN SECONDS.
                let x = 2 * in.xyzw.x / 500 - 1;          // CONVERT x,y FROM PIXELS TO -1 ... +1.
                let y = 2 * in.xyzw.y / 500 - 1;
@@ -107,7 +107,7 @@ function WebgpuCard(ctx) {
       init(newShader);
    }
 
-   this.setT = src => T = src.slice();
+   this.set_I = src => T = src.slice();
 
    this.draw = (x,y,w) => {
       if (okToDraw) {
