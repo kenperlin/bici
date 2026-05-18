@@ -50,6 +50,25 @@ trackpad: (state,t,p,hasFocus) => {
    ];
 },
 
+scope: (state,t,p,hasFocus) => {
+   let N = 120;
+
+   if (! state.signal)
+      state.signal = [];
+   state.signal.push(state.T[0]);
+   if (state.signal.length > N)
+      state.signal.shift();
+
+   let trace = [];
+   for (let n = 0 ; n < state.signal.length ; n++)
+      if (n==0 || n==state.signal.length-1 || state.signal[n] != state.signal[n-1])
+         trace.push([ n/(N/2-1) - 1, state.signal[n] ]);
+
+   let S = [];
+   S.push({ draw: trace, lineWidth: .002 });
+   return S;
+},
+
 sliderX: (state,t,p,hasFocus) => {
    state.hideFrame = true;
    state.aspectRatio = 5;
@@ -187,8 +206,13 @@ cube: function(state,t,p,hasFocus) {
    if (! this.M) this.M = new M4();
    if (! state.p) state.p = [0,0];
    if (hasFocus) state.p = p;
-   let s = state.T ? 2 * state.T[0] : 1;
-   this.M.identity().perspective(0,0,10).rotateX(state.p[1]).rotateY(-state.p[0]).scale(.9*s);
+
+   this.M.identity();
+   this.M.perspective(0,0,10);
+   this.M.rotateX(state.p[1]);
+   this.M.rotateY(-state.p[0]);
+   this.M.scale(.9);
+
    let C = cubeVertices, P = [];
    for (let i = 0 ; i < C.length ; i++)
       P.push(this.M.transform(C[i]));
