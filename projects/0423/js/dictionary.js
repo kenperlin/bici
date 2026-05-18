@@ -88,13 +88,6 @@ sliderY: (state,t,p,hasFocus) => {
 },
 
 sliders: function(state,t,p,hasFocus) {
-
-   let event = ! state.hadFocus &&   hasFocus ? 'press'   :
-                 state.hadFocus &&   hasFocus ? 'drag'    :
-                 state.hadFocus && ! hasFocus ? 'release' :
-		                                'move'    ;
-   state.hadFocus = hasFocus;
-
    if (state.N === undefined) {
       state.T = [.5];
       state.N = 2;
@@ -124,18 +117,19 @@ sliders: function(state,t,p,hasFocus) {
    
    let y = 1 - (N-1)*h;
    S.push({fill: [[-1,y],[0,y],[0,y-h],[-1,y-h],[-1,y]],
-          color: i == N-1 && p[0]<0 && event == 'drag' ? '#c06060' : '#ffa0a0'});
+          color: i == N-1 && p[0]<0 && state.mouseState == 'drag' ? '#c06060' : '#ffa0a0'});
    S.push({fill: [[0,y],[1,y],[1,y-h],[0,y-h],[0,y]],
-          color: i == N-1 && p[0]>0 && event == 'drag' ? '#6080e0' : '#a0c0ff'});
-   S.push({text: 'del', pos: [-.5,y-h-.23/N], scale: .9});
+          color: i == N-1 && p[0]>0 && state.mouseState == 'drag' ? '#6080e0' : '#a0c0ff'});
+   if (N > 2)
+      S.push({text: 'del', pos: [-.5,y-h-.23/N], scale: .9});
    S.push({text: 'add', pos: [ .5,y-h-.23/N], scale: .9});
-   S.push({draw: [[-1,y],[0,y],[0,y-h],[-1,y-h],[-1,y]], lineWidth: isIn&&i==N-1&&p[0]<0 ? .004 : .002});
-   S.push({draw: [[ 0,y],[1,y],[1,y-h],[ 0,y-h],[ 0,y]], lineWidth: isIn&&i==N-1&&p[0]>0 ? .004 : .002});
+   S.push({draw: [[-1,y],[0,y],[0,y-h],[-1,y-h],[-1,y]], lineWidth: isIn&&i==N-1&&p[0]<0&&N>2 ? .004 : .002});
+   S.push({draw: [[ 0,y],[1,y],[1,y-h],[ 0,y-h],[ 0,y]], lineWidth: isIn&&i==N-1&&p[0]>0      ? .004 : .002});
 
-   if (i >= 0 && i < N-1 && (event == 'press' || event == 'drag'))
+   if (i >= 0 && i < N-1 && (state.mouseState == 'press' || state.mouseState == 'drag'))
       state.T[i] = .5 + .5 * p[0];
 
-   if (i == N-1 && event == 'release') {
+   if (i == N-1 && state.mouseState == 'release') {
       if (p[0] > 0) {
          state.T.push(.5);
          state.N++;
@@ -324,27 +318,46 @@ editor: function(state,t,p,hasFocus) {
       computeIndex();
    }
 
-   if (! state.hadFocus && hasFocus) {
+   switch (state.mouseState) {
+   case 'press':
       computeColRowIndex(p);
       state.selectionStart = state.selectionEnd = state.index;
       dirty = true;
-   }
+      break;
 
-   if (state.hadFocus && hasFocus) {
+   case 'drag':
       computeColRowIndex(p);
       state.selectionStart = Math.min(state.selectionStart, state.index);
       state.selectionEnd   = Math.max(state.selectionEnd  , state.index);
       dirty = true;
-   }
+      break;
 
-   if (state.hadFocus && ! hasFocus) {
-      if (state.selectionStart == state.selectionEnd) {
+   case 'release':
+      let isInWord = i => {
+         let ch = state.text[i];
+	 return ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z' ||
+	        ch >= '0' && ch <= '9' || ch == '_' || ch == "'" || ch == '-';
+      }
+
+      let isClick = state.selectionStart == state.selectionEnd;
+      let isDoubleClick = isClick && state.index == state.clickIndex;
+
+      // IF DOUBLE CLICK, SELECT AN ENTIRE WORD.
+
+      if (isDoubleClick) {
+         while (state.selectionStart > 0 && isInWord(state.selectionStart-1))
+            state.selectionStart--;
+         while (state.selectionEnd < state.text.length-1 && isInWord(state.selectionEnd+1))
+            state.selectionEnd++;
+         state.clickIndex = null;
+      }
+      else if (isClick) {
          state.selectionStart = -1;
          state.selectionEnd   = -1;
+         state.clickIndex = state.index;
       }
+      break;
    }
-
-   state.hadFocus = hasFocus;
 
    let process = () => {
       state.lines = state.text.split('\n');

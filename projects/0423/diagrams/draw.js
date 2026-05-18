@@ -206,7 +206,7 @@ function Diagram() {
    let np = isFirstPlayer() ? 0 : 1;
    let nm = -1;
    let pen = {};
-   let pos = [0,0], time, isPenDown, wasPenDown;
+   let pos = [0,0], time, isPenDown, wasPenDown, hadFocus;
 
    let S;
    this.init = () => {
@@ -817,8 +817,16 @@ function Diagram() {
 
                   // PROCEDURALLY EVALUATE THE CARD CONTENTS.
 
+		  let hasFocus = n == nm;
+		  state.mouseState = ! hadFocus &&   hasFocus ? 'press'   :
+		                       hadFocus &&   hasFocus ? 'drag'    :
+		                       hadFocus && ! hasFocus ? 'release' :
+				                          'move'    ;
+                  hadFocus = hasFocus;
+
                   state.dirty = false;
                   value = value(state, time, mi(pos), n == nm);
+
 		  if (state.fileToLoad) {
                      getFile('projects/' + project + '/' + state.fileToLoad, text => {
 			object.card_type = 'editor';
