@@ -89,35 +89,63 @@ sliderY: (state,t,p,hasFocus) => {
 
 sliders: function(state,t,p,hasFocus) {
 
-   if (! state.T || state.T.length < 10)
-      state.T = [.5,.5,.5,.5,.5, .5,.5,.5,.5,.5];
-   if (! state.p)
-      state.p = [0,0];
-   if (hasFocus)
-      state.p = p;
+   let event = ! state.hadFocus &&   hasFocus ? 'press'   :
+                 state.hadFocus &&   hasFocus ? 'drag'    :
+                 state.hadFocus && ! hasFocus ? 'release' :
+		                                'move'    ;
+   state.hadFocus = hasFocus;
 
-   let px = state.p[0], py = state.p[1];
-
-   if (hasFocus && state.n === undefined)
-      state.n = 5*(1-py)>>0;
-   if (! hasFocus)
-      delete state.n;
-
-   if (hasFocus)
-      state.T[state.n] = .5 + .5 * px;
-
-   let S = [];
-   for (let n = 0 ; n < 10 ; n++) {
-      let x = 2 * state.T[n] - 1;
-      let y = .9 - .2 * n;
-      S.push({fill: [[x,y-.1],[1,y-.1],[1,y+.1],[x,y+.1]], color:'#e0e0e0'});
+   if (state.N === undefined) {
+      state.T = [.5];
+      state.N = 2;
    }
-   for (let n = 0 ; n < 10 ; n++) {
-      let y = .8 - .2 * n;
-      S.push({draw: [[-1,y],[1,y]]});
-      S.push({scale: .9, pos: [-.86 ,y-.02], text: '#' + n});
-      S.push({scale: .9, pos: [-.052,y-.02], text: round2(state.T[n])});
+   let N = state.N;
+
+   let h = 2/N;
+
+   let i = p[1]*p[1] > 1 ? -1 : N/2 * (1 - p[1]) >> 0;
+
+   state.hideFrame = true;
+   state.noClipping = true;
+   state.aspectRatio = 10/N;
+
+   S = [];
+
+   let isIn = p[0]*p[0] < 1;
+   for (let n = 0 ; n < N-1 ; n++) {
+      let y = 1 - n*h;
+      S.push({fill: [[-1,y],[1,y],[1,y-h],[-1,y-h],[-1,y]], color: '#b0b0b0'});
+      let x = Math.max(-1, Math.min(1, 2 * state.T[n] - 1));
+      S.push({fill: [[-1,y],[x,y],[x,y-h],[-1,y-h],[-1,y]], color: '#e0e0e0'});
+      S.push({draw: [[-1,y],[1,y],[1,y-h],[-1,y-h],[-1,y]], lineWidth: isIn && n==i ? .004 : .002});
+      S.push({text: '#' + n, pos: [-.98,y], justify: [0,1.75], scale: .9});
+      S.push({text: round2(state.T[n]), pos: [-.05,y-1.15*h], scale: .9});
    }
+   
+   let y = 1 - (N-1)*h;
+   S.push({fill: [[-1,y],[0,y],[0,y-h],[-1,y-h],[-1,y]],
+          color: i == N-1 && p[0]<0 && event == 'drag' ? '#c06060' : '#ffa0a0'});
+   S.push({fill: [[0,y],[1,y],[1,y-h],[0,y-h],[0,y]],
+          color: i == N-1 && p[0]>0 && event == 'drag' ? '#6080e0' : '#a0c0ff'});
+   S.push({text: 'del', pos: [-.5,y-h-.23/N], scale: .9});
+   S.push({text: 'add', pos: [ .5,y-h-.23/N], scale: .9});
+   S.push({draw: [[-1,y],[0,y],[0,y-h],[-1,y-h],[-1,y]], lineWidth: isIn&&i==N-1&&p[0]<0 ? .004 : .002});
+   S.push({draw: [[ 0,y],[1,y],[1,y-h],[ 0,y-h],[ 0,y]], lineWidth: isIn&&i==N-1&&p[0]>0 ? .004 : .002});
+
+   if (i >= 0 && i < N-1 && (event == 'press' || event == 'drag'))
+      state.T[i] = .5 + .5 * p[0];
+
+   if (i == N-1 && event == 'release') {
+      if (p[0] > 0) {
+         state.T.push(.5);
+         state.N++;
+      }
+      else if (N > 2) {
+         state.T.pop();
+         state.N--;
+      }
+   }
+
    return S;
 },
 

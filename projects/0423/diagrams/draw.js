@@ -580,7 +580,7 @@ function Diagram() {
 
       // DRAW EVERY LINK AS A CONNECTING ARROW
 
-      this.lineWidth(.008);
+      this.lineWidth(.008).drawColor('#000000').fillColor('#000000');
       for (let n = 0 ; n < S.length ; n++)
          if (S[n].srcId && S[n].srcId.length > 0)
             for (let ns = 2 ; ns < S.length ; ns++)
