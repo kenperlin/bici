@@ -954,11 +954,20 @@ function Diagram() {
                }
 
                if (object.card_type == 'editor') {
+                  let f = ( 'abs,ceil,cos,exp,floor,' +
+		            'log,max,min,mod,pow,random,' +
+			    'round,sign,sin,sqrt,trunc' ).split(',');
+
 	          window._I = object.state._I;
+		  for (let i = 0 ; i < f.length ; i++)
+	             window[f[i]] = Math[f[i]];
+
 	          let value = evalCode(replaceAtSigns(object.state.text));
 		  if (value !== undefined)
 	             object.state._O = value;
-	          delete window._I;
+
+		  for (let i = 0 ; i < f.length ; i++)
+	             delete window[f[i]];
                }
             }
 
