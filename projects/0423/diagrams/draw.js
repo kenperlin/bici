@@ -83,6 +83,7 @@ function Diagram() {
       case 'c':
       case 'i':
       case 'l':
+      case 'p':
       case 's':
          isCommandKey = true;
          return true;
@@ -157,6 +158,9 @@ function Diagram() {
 	    load(textString);
             textString = '';
             break;
+         case 'p':
+	    usePen = ! usePen;
+	    break;
          case 's':
 	    save(textString);
             textString = '';
@@ -219,7 +223,7 @@ function Diagram() {
    let isDragging = false, isResizing = false, sy;
    let np = isFirstPlayer() ? 0 : 1;
    let nm = -1;
-   let pen = {};
+   let pen = {}, usePen = true;
    let pos = [0,0], time, isPenDown, wasPenDown;
    let startTime = Date.now() / 1000;
 
@@ -558,7 +562,7 @@ function Diagram() {
 
       // RESPOND TO INPUT FROM PEN, IF PEN IS VISIBLE
 
-      if (pen.pos) {
+      if (pen.pos && usePen) {
          if (isPenDown && ! wasPenDown) {
             pen.state = 'press';
             pen.pressTime = time;
@@ -990,5 +994,8 @@ function Diagram() {
 
       this.setFont(.02).drawColor('#00000060').text(textString, [-.993,-.625], 0);
       this.drawColor(penColor);
+
+      if (usePen)
+         this.fillColor('#00000080').fillRect([-1,-.625],[-.99,-.615]);
    }
 }
