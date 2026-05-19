@@ -992,10 +992,11 @@ function Diagram() {
 
       // SHOW THE TEXT STRING OR USER'S LATEST SPOKEN WORDS AT THE BOTTOM LEFT OF THE SCREEN
 
-      this.setFont(.02).drawColor('#00000060').text(textString, [-.993,-.625], 0);
-      this.drawColor(penColor);
+      this.setFont(.02).drawColor('#00000060').text(textString, [-.9807,-.63], 0);
 
       if (usePen)
-         this.fillColor('#00000080').fillRect([-1,-.625],[-.99,-.615]);
+         this.lineWidth(.0015).drawColor('#00000080').drawRect([-.995,-.62],[-.985,-.61]);
+
+      this.drawColor(penColor);
    }
 }
