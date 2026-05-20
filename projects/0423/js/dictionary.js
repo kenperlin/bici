@@ -2,6 +2,7 @@ let dictionary = {
 
 blob      : state => { if (! state.fileLoaded) state.fileToLoad = 'wgsl/blob.wgsl'   ; return []; },
 box       : state => { if (! state.fileLoaded) state.fileToLoad = 'cgi/box.js'       ; return []; },
+box2      : state => { if (! state.fileLoaded) state.fileToLoad = 'cgi/box2.js'      ; return []; },
 octahedron: state => { if (! state.fileLoaded) state.fileToLoad = 'cgi/octahedron.js'; return []; },
 planet    : state => { if (! state.fileLoaded) state.fileToLoad = 'wgsl/planet.wgsl' ; return []; },
 

@@ -1015,7 +1015,7 @@ function Diagram() {
 
 		  let code = replaceAtSigns(object.state.text);
 	          let value;
-                  try { value = (new Function(code))(); } catch (error) { }
+                  try { value = (new Function(code))(); } catch (error) {console.log(error)}
 
 		  // IF SUCCESSFUL, value BECOMES THE CARD'S OUTPUT PARAMETERS
 
