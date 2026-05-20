@@ -1,7 +1,9 @@
 M.identity().perspective(0,0,5)
-            .rotateX(1.4*time)
-            .rotateY(1.5*time)
-            .rotateZ(1.6*time)
+            //.rotateX(1.4*time)
+            //.rotateY(1.5*time)
+            //.rotateZ(1.6*time)
+            .rotateX(@0)
+            .rotateY(@1)
             .scale(.5);
 p = [[-1,-1,-1],[1,-1,-1],[-1,1,-1],[1,1,-1],
      [-1,-1, 1],[1,-1, 1],[-1,1, 1],[1,1, 1]];

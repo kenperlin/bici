@@ -52,6 +52,13 @@ function Diagram() {
       return t;
    }
 
+   let replaceAtSignsAndProvideDefaultOption = s => {
+      let t = '';
+      for (let n = 0 ; n < s.length ; n++)
+         t += s.charAt(n) == '@' ? '(_I[' + s.charAt(++n) + '] ?? .5)' : s.charAt(n);
+      return t;
+   }
+
    let activateCardFromText = (n, text) => {
       let words = text.toLowerCase().split(' ');
       for (let word in dictionary)
@@ -1013,7 +1020,7 @@ function Diagram() {
 
                   // TRY TO EVALUATE THE CARD'S TEXT AS JAVASCRIPT
 
-		  let code = replaceAtSigns(object.state.text);
+		  let code = replaceAtSignsAndProvideDefaultOption(object.state.text);
 	          let value;
                   try { value = (new Function(code))(); } catch (error) {console.log(error)}
 
