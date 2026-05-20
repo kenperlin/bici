@@ -2,19 +2,7 @@ function Diagram() {
    this.isFullScreen = true;
    //tracking_isDrawingShadowAvatar = false;
 
-   let evalCode = code => {
-      let value;
-      try {
-         eval('value = return ' + code);
-      } catch (error) {
-        try { value = eval(code); } catch { }
-      }
-      if (typeof value == 'function')
-         try { value = value(); } catch { }
-      if (value !== undefined && ! Array.isArray(value))
-         value = [ value ];
-      return value;
-   }
+   let M = new M4();
 
    let penColor = '#000000';
 
@@ -598,7 +586,7 @@ function Diagram() {
          }
          else if (! isPenDown && wasPenDown) {
             pen.state = 'release';
-            pen.isClick = time - pen.pressTime < .5 && pen.travel < .01;
+            pen.isClick = time - pen.pressTime < .5 && pen.travel < .05;
             respondToInput(pen, 'pen');
          }
          else {
@@ -1007,27 +995,39 @@ function Diagram() {
 		  else
                      this.clipToRect(lo, lo);
 
-		  // TEMPORARILY ADD USEFUL THINGS FROM THE Math LIBRARY TO THE GLOBAL SCOPE
+		  // TEMPORARILY ADD SOME USEFUL THINGS TO THE GLOBAL SCOPE
 
-                  let f = ( 'PI,abs,ceil,cos,exp,floor,' +
+                  let m = ( 'PI,abs,ceil,cos,exp,floor,' +
                             'log,max,min,mod,pow,random,' +
                             'round,sign,sin,sqrt,trunc' ).split(',');
+                  let v = [
+		     '_I'  , object.state._I,    // CARD'S INPUT PARAMETERS
+		     'M'   , M,                  // 4x4 MATRIX OBJECT
+		     'draw', this,               // THIS DRAWING OBJECT
+		     'time', time - startTime,   // TOTAL ELAPSED TIME
+		  ];
+                  for (let i = 0 ; i < m.length ; i++)
+                     window[m[i]] = Math[m[i]];
+                  for (let i = 0 ; i < v.length ; i += 2)
+		     window[v[i]] = v[i+1];
 
-                  window._I = object.state._I;
-                  window.time = time - startTime;
-                  for (let i = 0 ; i < f.length ; i++)
-                     window[f[i]] = Math[f[i]];
+                  // TRY TO EVALUATE THE CARD'S TEXT AS JAVASCRIPT
 
-                  // TRY TO EVALUATE THE TEXT AS JAVASCRIPT
+		  let code = replaceAtSigns(object.state.text);
+	          let value;
+                  try { value = (new Function(code))(); } catch (error) { }
 
-                  let value = evalCode(replaceAtSigns(object.state.text));
+		  // IF SUCCESSFUL, value BECOMES THE CARD'S OUTPUT PARAMETERS
+
                   if (value !== undefined)
-                     object.state._O = value;
+                     object.state._O = Array.isArray(value) ? value : [ value ];
 
-                  // REMOVE Math LIBRARY THINGS FROM THE GLOBAL SCOPE
+                  // REMOVE THINGS FROM THE GLOBAL SCOPE
 
-                  for (let i = 0 ; i < f.length ; i++)
-                     delete window[f[i]];
+                  for (let i = 0 ; i < m.length ; i++)
+                     delete window[m[i]];
+                  for (let i = 0 ; i < v.length ; i += 2)
+                     delete window[v[i]];
 
                   // RESTORE DISPLAY CONTEXT
 
