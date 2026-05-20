@@ -37,6 +37,16 @@ function Diagram() {
          });
    }
 
+   let getSrcCards = card => {
+      let srcCards = [];
+      if (card.srcId)
+         for (let i = 0 ; i < card.srcId.length ; i++)
+            for (let n = 2 ; n < S.length ; n++)
+               if (S[n].id == card.srcId[i])
+                  srcCards.push(S[n]);
+      return srcCards;
+   }
+
    let replaceAtSigns = s => {
       let t = '';
       for (let n = 0 ; n < s.length ; n++)
@@ -89,10 +99,10 @@ function Diagram() {
          return true;
       case 'Alt':
          isSpeechKey = true;
-	 previousSpeech = '';
-	 thisSpeech = '';
-	 speech = '';
-	 textString = '';
+         previousSpeech = '';
+         thisSpeech = '';
+         speech = '';
+         textString = '';
          return true;
       }
    }
@@ -106,17 +116,17 @@ function Diagram() {
 
       if (isTextString && key != 'Escape') {
          switch (key) {
-	 case 'Command':
-	 case 'Meta':
-	 case 'Shift':
-	    break;
-	 case 'Backspace':
-	    textString = textString.substring(0, textString.length-1);
-	    break;
-	 default:
+         case 'Command':
+         case 'Meta':
+         case 'Shift':
+            break;
+         case 'Backspace':
+            textString = textString.substring(0, textString.length-1);
+            break;
+         default:
             textString += key;
-	    break;
-	 }
+            break;
+         }
          return true;
       }
 
@@ -125,44 +135,44 @@ function Diagram() {
       if (isCommandKey) {
          switch (key) {
          case 'Escape':
-	    if (! isTextString) {
-	       previousSpeech = '';
-	       thisSpeech = '';
-	       speech = '';
-	       textString = '';
+            if (! isTextString) {
+               previousSpeech = '';
+               thisSpeech = '';
+               speech = '';
+               textString = '';
             }
             isTextString = false;
             break;
          case 'c':
-	    textString = textString.trim();
+            textString = textString.trim();
             if (dictionary[textString]) {
                let n = S.length;
-	       let p = this.input.mouse.pos;
+               let p = this.input.mouse.pos;
                S[n] = { type: 'card',
-	                text: textString,
-			card_type: textString,
-			morphData: 1,
-			strokes: [],
-			id: id++,
-			lo: [p[0]-.2,p[1]-.2],
-			hi: [p[0]+.2,p[1]+.2],
-		      };
+                        text: textString,
+                        card_type: textString,
+                        morphData: 1,
+                        strokes: [],
+                        id: id++,
+                        lo: [p[0]-.2,p[1]-.2],
+                        hi: [p[0]+.2,p[1]+.2],
+                      };
             }
             textString = '';
-	    break;
+            break;
          case 'i':
             isTextString = true;
             textString = '';
             break;
          case 'l':
-	    load(textString);
+            load(textString);
             textString = '';
             break;
          case 'p':
-	    usePen = ! usePen;
-	    break;
+            usePen = ! usePen;
+            break;
          case 's':
-	    save(textString);
+            save(textString);
             textString = '';
             break;
          }
@@ -262,7 +272,7 @@ function Diagram() {
       S.splice(n, 1);
       for (let n = 2 ; n < S.length ; n++)
          if (S[n].srcId)
-	    for (let i = 0 ; i < S[n].srcId.length ; i++)
+            for (let i = 0 ; i < S[n].srcId.length ; i++)
                if (S[n].srcId[i] == id)
                   S[n].srcId.splice(i--, 1);
    }
@@ -461,8 +471,8 @@ function Diagram() {
                   case 4:
                      for (let nn = S.length - 1 ; nn >= 2 ; nn--)
                         if (S[nn].morphData && contains(nn, pos)) {
-			   if (! S[nn].srcId)
-			      S[nn].srcId = [];
+                           if (! S[nn].srcId)
+                              S[nn].srcId = [];
                            S[nn].srcId.push(S[n].id);
                            break;
                         }
@@ -572,7 +582,7 @@ function Diagram() {
          }
          else if (isPenDown && wasPenDown) {
             pen.state = 'down';
-	    pen.travel += norm(subtract(pen.pos, pen.previousPos));
+            pen.travel += norm(subtract(pen.pos, pen.previousPos));
             pen.previousPos = pen.pos;
             respondToInput(pen, 'pen');
          }
@@ -600,55 +610,54 @@ function Diagram() {
       // DRAW EVERY LINK AS A CONNECTING ARROW
 
       this.lineWidth(.008).drawColor('#000000').fillColor('#000000');
-      for (let n = 0 ; n < S.length ; n++)
-         if (S[n].srcId && S[n].srcId.length > 0)
-            for (let ns = 2 ; ns < S.length ; ns++)
-	       for (let i = 0 ; i < S[n].srcId.length ; i++)
-                  if (S[ns].id == S[n].srcId[i]) {
-                     let findEdge = (lo,hi,p) => {
-                        let [cx,cy] = mix(lo, hi, .5),
-                            [dx,dy] = subtract(p, [cx,cy]);
-                        if (dx > 0 && dx*dx > dy*dy) return [hi[0]+.004, cy + dy/dx * (hi[1]-cy)];
-                        if (dx < 0 && dx*dx > dy*dy) return [lo[0]-.004, cy - dy/dx * (hi[1]-cy)];
-                        if (dy > 0 && dy*dy > dx*dx) return [cx + dx/dy * (hi[0]-cx), hi[1]+.004];
-                                                     return [cx - dx/dy * (hi[0]-cx), lo[1]-.004];
-                     }
-                     let L0 = S[ns].lo, H0 = S[ns].hi,
-                         L1 = S[n ].lo, H1 = S[n ].hi,
-                         A = findEdge( L0, H0, mix(L1, H1, .5) ),
-                         B = findEdge( L1, H1, mix(L0, H0, .5) ),
-                         D = resize(normalize(subtract(B,A)),.02),
-                         E = resize(D,1/3);
+      for (let n = 0 ; n < S.length ; n++) {
+         let srcCards = getSrcCards(S[n]);
+         for (let i = 0 ; i < srcCards.length ; i++) {
+            let src = srcCards[i];
+            let findEdge = (lo,hi,p) => {
+               let [cx,cy] = mix(lo, hi, .5),
+                   [dx,dy] = subtract(p, [cx,cy]);
+               if (dx > 0 && dx*dx > dy*dy) return [hi[0]+.004, cy + dy/dx * (hi[1]-cy)];
+               if (dx < 0 && dx*dx > dy*dy) return [lo[0]-.004, cy - dy/dx * (hi[1]-cy)];
+               if (dy > 0 && dy*dy > dx*dx) return [cx + dx/dy * (hi[0]-cx), hi[1]+.004];
+                                            return [cx - dx/dy * (hi[0]-cx), lo[1]-.004];
+            }
+            let L0 = src.lo , H0 = src.hi,
+                L1 = S[n].lo, H1 = S[n].hi,
+                A = findEdge( L0, H0, mix(L1, H1, .5) ),
+                B = findEdge( L1, H1, mix(L0, H0, .5) ),
+                D = resize(normalize(subtract(B,A)),.02),
+                E = resize(D,1/3);
 
-		     if (S[ns].remove || S[n].remove) {
-		        octx.save();
-		        octx.globalAlpha = ease(S[ns].remove ?? S[n].remove);
-		     }
+            if (src.remove || S[n].remove) {
+               octx.save();
+               octx.globalAlpha = ease(src.remove ?? S[n].remove);
+            }
 
-                     this.line(A,subtract(B,E));
-                     this.fillPolygon([ add(B,E), add(B, [-2*D[0] - D[1], -2*D[1] + D[0]]),
-                                                  add(B, [-2*D[0] + D[1], -2*D[1] - D[0]]) ]);
+            this.line(A,subtract(B,E));
+            this.fillPolygon([ add(B,E), add(B, [-2*D[0] - D[1], -2*D[1] + D[0]]),
+                                         add(B, [-2*D[0] + D[1], -2*D[1] - D[0]]) ]);
 
-		     if (S[ns].remove || S[n].remove)
-		        octx.restore();
-                  }
-
+            if (src.remove || S[n].remove)
+               octx.restore();
+         }
+      }
 
       // DRAW ALL THE OBJECTS
 
       for (let n = 0 ; n < S.length ; n++) {
          let object = S[n];
 
-	 // IF MARKED FOR REMOVAL, FADE OUT THE OBJECT BEFORE DELETING IT
+         // IF MARKED FOR REMOVAL, FADE OUT THE OBJECT BEFORE DELETING IT
 
          if (object.remove) {
             object.remove -= 2 * elapsed;
-	    if (object.remove <= 0) {
-	       deleteObject(n--);
-	       continue;
+            if (object.remove <= 0) {
+               deleteObject(n--);
+               continue;
             }
             octx.save();
-	    octx.globalAlpha = ease(object.remove);
+            octx.globalAlpha = ease(object.remove);
          }
 
          let strokes = object.strokes,
@@ -765,20 +774,19 @@ function Diagram() {
 
             else if (isShader) {
                let shaderCard = S_value[object.id];
+
+               // LINK ANY SHADER CODE AND PARAMETERS FROM SOURCE CARDS
+
                if (object.srcId) {
-
-                  // LINK ANY SHADER CODE AND PARAMETERS FROM SOURCE CARDS
-
                   let T = [];
-                  for (let i = 0 ; i < object.srcId.length ; i++)
-                     for (let n = 2 ; n < S.length ; n++)
-                        if (S[n].id == object.srcId[i]) {
-			   if (S[n].card_type == 'editor')
-                              shaderCard.setShader(replaceAtSigns(S[n].state.text));
-                           else if (S[n].state._O)
-			      T.push(S[n].state._O);
-		           break;
-                        }
+                  let srcCards = getSrcCards(object);
+                  for (let i = 0 ; i < srcCards.length ; i++) {
+                     let src = srcCards[i];
+                     if (src.card_type == 'editor')
+                        shaderCard.setShader(replaceAtSigns(src.state.text));
+                      else if (src.state._O)
+                        T.push(src.state._O);
+                  }
                   shaderCard.set_I(T.flat());
                }
 
@@ -828,75 +836,72 @@ function Diagram() {
                   // IF CARD HAS IN-LINKS, SET ITS PARAMETERS TO THEIR PARAMETER VALUES.
 
                   if (object.srcId) {
-		     let T = [];
-		     for (let i = 0 ; i < object.srcId.length ; i++)
-                        for (let n = 2 ; n < S.length ; n++)
-                           if (S[n].id == object.srcId[i]) {
-                              if (S[n].state)
-                                 T.push(S[n].state._O);
-                              break;
-                           }
+                     let T = [];
+		     let srcCards = getSrcCards(object);
+		     for (let i = 0 ; i < srcCards.length ; i++)
+		        if (srcCards[i].state)
+                           T.push(srcCards[i].state._O);
                      state._I = T.flat();
                   }
 
                   // PROCEDURALLY EVALUATE THE CARD CONTENTS.
 
-		  let hasFocus = n == nm;
-		  state.mouseState = ! state.hadFocus &&   hasFocus ? 'press'   :
-		                       state.hadFocus &&   hasFocus ? 'drag'    :
-		                       state.hadFocus && ! hasFocus ? 'release' :
-				                          'move'    ;
+                  let hasFocus = n == nm;
+                  state.mouseState = ! state.hadFocus &&   hasFocus ? 'press'   :
+                                       state.hadFocus &&   hasFocus ? 'drag'    :
+                                       state.hadFocus && ! hasFocus ? 'release' :
+                                                          'move'    ;
                   state.hadFocus = hasFocus;
 
                   state.dirty = false;
                   value = value(state, time, mi(pos), hasFocus);
 
-		  if (state.fileToLoad) {
+                  if (state.fileToLoad) {
                      getFile('projects/' + project + '/' + state.fileToLoad, text => {
-			object.card_type = 'editor';
-			object.state.lines = text.split('\n');
-	                lo[1] = hi[1] - object.state.textSize * Math.max(1, object.state.lines.length);
-		        object.state.newText = text;
-		        object.state.col = 0;
-		        object.state.row = 0;
+                        object.card_type = 'editor';
+                        object.state.lines = text.split('\n');
+                        lo[1] = hi[1] - object.state.textSize * Math.max(1, object.state.lines.length);
+                        object.state.newText = text;
+                        object.state.col = 0;
+                        object.state.row = 0;
                         delete S_value[object.id];
                      });
-		     delete state.fileToLoad;
-		     state.fileLoaded = true;
-		  }
+                     delete state.fileToLoad;
+                     state.fileLoaded = true;
+                  }
 
-		  // ADJUST COORDINATE TRANSFORM MATH FOR NON-SQUARE CARDS
+                  // ADJUST COORDINATE TRANSFORM MATH FOR NON-SQUARE CARDS
 
-		  if (state.aspectRatio && ! object.hasBeenAdjusted) {
-		     let y = (lo[1] + hi[1]) / 2;
-		     let h = (hi[0] - lo[0]) / object.state.aspectRatio;
+                  if (state.aspectRatio && ! object.hasBeenAdjusted) {
+                     let y = (lo[1] + hi[1]) / 2;
+                     let h = (hi[0] - lo[0]) / object.state.aspectRatio;
                      lo[1] = y - h/2;
                      hi[1] = y + h/2;
                      dp[1] = (hi[1] - lo[1]) / 2;
                      value = S_value[object.id](state, time, mi(pos), hasFocus);
-		     object.hasBeenAdjusted = true;
-		  }
+                     object.hasBeenAdjusted = true;
+                  }
 
-		  // AFTER THE FIRST TIME EVALUATING A NON-SQUARE CARD FROM A TEXTSTRING,
-		  // ADJUST ITS SIZE AND POSITION.
+                  // AFTER THE FIRST TIME EVALUATING A NON-SQUARE CARD FROM A TEXTSTRING,
+                  // ADJUST ITS SIZE AND POSITION.
 
-		  if (object.morphData == 1 && state.aspectRatio < 1) {
-		     let x = (lo[0] + hi[0]) / 2, w = hi[0] - lo[0];
-		     lo[0] = x - w / 2 * state.aspectRatio;
-		     hi[0] = x + w / 2 * state.aspectRatio;
-		     lo[1] = hi[1] - (hi[1] - lo[1]) * state.aspectRatio;
+                  if (object.morphData == 1 && state.aspectRatio < 1) {
+                     let x = (lo[0] + hi[0]) / 2, w = hi[0] - lo[0];
+                     lo[0] = x - w / 2 * state.aspectRatio;
+                     hi[0] = x + w / 2 * state.aspectRatio;
+                     lo[1] = hi[1] - (hi[1] - lo[1]) * state.aspectRatio;
                      value = S_value[object.id](state, time, mi(pos), hasFocus);
-		     object.morphData = 2;
-		  }
-		  if (object.morphData == 1 && state.aspectRatio > 1) {
-		     let h = (hi[0] - lo[0]) / state.aspectRatio;
-		     hi[1] = this.input.mouse.pos[1] + h/2;
-		     lo[1] = hi[1] - h;
+                     object.morphData = 2;
+                  }
+                  if (object.morphData == 1 && state.aspectRatio > 1) {
+                     let h = (hi[0] - lo[0]) / state.aspectRatio;
+                     hi[1] = this.input.mouse.pos[1] + h/2;
+                     lo[1] = hi[1] - h;
                      value = S_value[object.id](state, time, mi(pos), hasFocus);
-		     object.morphData = 2;
-		  }
+                     object.morphData = 2;
+                  }
 
-		  // GIVE THE OBJECT THE OPTION TO MOVE THE POSITION OF THE CARD.
+                  // GIVE THE OBJECT THE OPTION TO MOVE THE POSITION OF THE CARD.
 
                   if (state.move) {
                      lo[0] += state.move[0];
@@ -960,20 +965,20 @@ function Diagram() {
 
                if (object.card_type == 'editor') {
                   let f = ( 'PI,abs,ceil,cos,exp,floor,' +
-		            'log,max,min,mod,pow,random,' +
-			    'round,sign,sin,sqrt,trunc' ).split(',');
+                            'log,max,min,mod,pow,random,' +
+                            'round,sign,sin,sqrt,trunc' ).split(',');
 
-	          window._I = object.state._I;
-	          window.time = time - startTime;
-		  for (let i = 0 ; i < f.length ; i++)
-	             window[f[i]] = Math[f[i]];
+                  window._I = object.state._I;
+                  window.time = time - startTime;
+                  for (let i = 0 ; i < f.length ; i++)
+                     window[f[i]] = Math[f[i]];
 
-	          let value = evalCode(replaceAtSigns(object.state.text));
-		  if (value !== undefined)
-	             object.state._O = value;
+                  let value = evalCode(replaceAtSigns(object.state.text));
+                  if (value !== undefined)
+                     object.state._O = value;
 
-		  for (let i = 0 ; i < f.length ; i++)
-	             delete window[f[i]];
+                  for (let i = 0 ; i < f.length ; i++)
+                     delete window[f[i]];
                }
             }
 
@@ -981,8 +986,8 @@ function Diagram() {
                octx.restore();
          }
 
-	 if (object.remove)
-	    octx.restore();
+         if (object.remove)
+            octx.restore();
       }
 
       // IF USING A PEN, DISPLAY THE PEN TIP IN FRONT OF EVERYTHING ELSE
