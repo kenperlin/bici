@@ -47,6 +47,16 @@ function Diagram() {
       return srcCards;
    }
 
+   let getDstCards = card => {
+      let dstCards = [];
+      for (let n = 2 ; n < S.length ; n++)
+         if (S[n].srcId)
+            for (let i = 0 ; i < S[n].srcId.length ; i++)
+	       if (S[n].srcId[i] == card.id)
+	          dstCards.push(S[n]);
+      return dstCards;
+   }
+
    let replaceAtSigns = s => {
       let t = '';
       for (let n = 0 ; n < s.length ; n++)
@@ -185,19 +195,19 @@ function Diagram() {
          return true;
       }
 
-      // FIND OUT WHAT OBJECT, IF ANY, IS AT THE CURSOR.
+      // FIND OUT WHAT OBJECT, IF ANY, IS AT THE CURSOR
 
       let n;
       for (n = S.length - 1 ; n >= 2 ; n--)
          if (contains(n, pos))
             break;
 
-      // IGNORE ARROW KEYS THAT ARE NOT ON A CARD.
+      // IGNORE ARROW KEYS THAT ARE NOT ON A CARD
 
       if (key.indexOf('Arrow') == 0 && (n < 2 || S[n].type != 'card'))
          return true;
 
-      // SEND TEXT EVENTS TO THE CARD AT THE CURSOR.
+      // SEND TEXT EVENTS TO THE CARD AT THE CURSOR
 
       if (n >= 2 && S[n].type == 'card') {
          S[n].state.keyState = 'release';
@@ -206,7 +216,7 @@ function Diagram() {
          return true;
       }
 
-      // DELETE KEY ON BACKGROUND REMOVES OBJECT AT THE CURSOR.
+      // DELETE KEY ON BACKGROUND REMOVES OBJECT AT THE CURSOR
 
       switch (key) {
       case 'Backspace':
@@ -736,7 +746,7 @@ function Diagram() {
             if (showFrame)
                this.drawRect([lo[0]-.002,lo[1]-.002], [hi[0]+.002,hi[1]+.002]);
 
-            // TURN ON CLIPPING, SO THAT RENDERING IS CONFINED TO THE CARD.
+            // TURN ON CLIPPING, SO THAT RENDERING IS CONFINED TO THE CARD
 
             let isClipping = ! isShader && ! (object.state && object.state.noClipping);
 
@@ -748,11 +758,11 @@ function Diagram() {
             if (showFrame)
                this.fillColor('#ffffff').fillRect(lo, hi);
 
-            // TEXT HEIGHT AND LINE THICKNESS WILL SCALE WITH CARD SIZE.
+            // TEXT HEIGHT AND LINE THICKNESS WILL SCALE WITH CARD SIZE
 
             let s = .1 * (hi[0] - lo[0]);
 
-            // IF EVALUATION WAS TRIGGERED, SEE IF TEXT IS A VALID CARD TYPE NAME.
+            // IF EVALUATION WAS TRIGGERED, SEE IF TEXT IS A VALID CARD TYPE NAME
 
             if (object.card_type && ! S_value[object.id]) {
                switch (object.card_type) {
@@ -767,8 +777,11 @@ function Diagram() {
                }
             }
 
-            if (! S_value[object.id])
+            if (! S_value[object.id]) {
                this.setFont(.95 * s).text(object.text, [lo[0] + s/3, hi[1] - s], 0, 1);
+	       if (isClipping)
+	          octx.restore();
+            }
 
             // DRAW A SHADER CARD
 
@@ -796,7 +809,7 @@ function Diagram() {
                shaderCard.draw((L[0]+H[0])/2, (L[1]+H[1])/2, H[0]-L[0]);
             }
 
-            // IF THIS IS A VALID CARD TYPE, DO PROCEDURAL RENDERING.
+            // IF THIS IS A VALID CARD TYPE, DO PROCEDURAL RENDERING
 
             else {
 
@@ -805,14 +818,14 @@ function Diagram() {
                else if (object.card_type != 'editor')
                   lo[1] = hi[1] - (hi[0] - lo[0]);
 
-               // COORDINATE CONVERSIONS BETWEEN SCREEN AND INTERNAL CARD COORDS.
+               // COORDINATE CONVERSIONS BETWEEN SCREEN AND INTERNAL CARD COORDS
 
                let p0 = [ (lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2 ];
                let dp = [ (hi[0] - lo[0]) / 2, (hi[1] - lo[1]) / 2 ];
                let mf = p => [  p0[0] + p[0]  * dp[0],  p0[1] + p[1]  * dp[1] ];
                let mi = p => [ (p[0] - p0[0]) / dp[0], (p[1] - p0[1]) / dp[1] ];
 
-               // IF A PROCEDURE, GIVE OBJECT A PLACE TO MAINTAIN THE CURRENT STATE.
+               // IF A PROCEDURE, GIVE OBJECT A PLACE TO MAINTAIN THE CURRENT STATE
 
                let activationText = null;
 
@@ -823,7 +836,7 @@ function Diagram() {
                      object.state = { _I: [], _O: [] };
                   let state = object.state;
 
-                  // ON CONTROL KEY RELEASE, CONVERT CARD TO THE CARD TYPE PRINTED ON THE CARD.
+                  // ON CONTROL KEY RELEASE, CONVERT CARD TO THE CARD TYPE PRINTED ON THE CARD
 
                   if (object.text == 'editor' && state.key == 'Control' && state.keyState == 'release') {
                      let text = object.state.text;
@@ -833,7 +846,7 @@ function Diagram() {
                         activationText = text;
                   }
 
-                  // IF CARD HAS IN-LINKS, SET ITS PARAMETERS TO THEIR PARAMETER VALUES.
+                  // IF CARD HAS IN-LINKS, SET ITS PARAMETERS TO THEIR PARAMETER VALUES
 
                   if (object.srcId) {
                      let T = [];
@@ -844,7 +857,7 @@ function Diagram() {
                      state._I = T.flat();
                   }
 
-                  // PROCEDURALLY EVALUATE THE CARD CONTENTS.
+                  // PROCEDURALLY EVALUATE THE CARD CONTENTS
 
                   let hasFocus = n == nm;
                   state.mouseState = ! state.hadFocus &&   hasFocus ? 'press'   :
@@ -883,7 +896,7 @@ function Diagram() {
                   }
 
                   // AFTER THE FIRST TIME EVALUATING A NON-SQUARE CARD FROM A TEXTSTRING,
-                  // ADJUST ITS SIZE AND POSITION.
+                  // ADJUST ITS SIZE AND POSITION
 
                   if (object.morphData == 1 && state.aspectRatio < 1) {
                      let x = (lo[0] + hi[0]) / 2, w = hi[0] - lo[0];
@@ -901,7 +914,7 @@ function Diagram() {
                      object.morphData = 2;
                   }
 
-                  // GIVE THE OBJECT THE OPTION TO MOVE THE POSITION OF THE CARD.
+                  // GIVE THE OBJECT THE OPTION TO MOVE THE POSITION OF THE CARD
 
                   if (state.move) {
                      lo[0] += state.move[0];
@@ -915,7 +928,7 @@ function Diagram() {
                   if (state.keyState == 'release') state.keyState = 'up';
                }
 
-               // DRAW ALL THE LINES AND TEXT IN THE CARD OBJECT.
+               // DRAW ALL THE LINES AND TEXT IN THE CARD OBJECT
 
                let lineWidth = .1 * s;
                if (object.state && object.state.lineWidth)
@@ -963,7 +976,39 @@ function Diagram() {
                   dirty = true;
                }
 
+	       if (isClipping)
+	          octx.restore();
+
                if (object.card_type == 'editor') {
+
+                  // IF THERE IS AN OUT-LINK, DISPLAY ANY GRAPHICAL RESULT OF EVAL IN DESTINATION CARD
+
+                  let dstCards = getDstCards(object);
+		  let isDst = dstCards.length > 0;
+
+		  octx.save();
+		  if (isDst) {
+		     let dst = dstCards[0];
+		     let lo = dst.lo, hi = dst.hi;
+
+                     let p0 = [ (lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2 ];
+                     let dp = [ (hi[0] - lo[0]) / 2, (hi[1] - lo[1]) / 2 ];
+                     this.clipToRect([lo[0]-.002,lo[1]-.002], [hi[0]+.002,hi[1]+.002]);
+
+                     let s = (hi[0]-lo[0]) / 2;
+		     let x = screen.width /2 + screen.width/2 * lo[0];
+		     let y = screen.height/2 - screen.width/2 * (3 * lo[1] + 13 * hi[1]) / 16;
+
+		     octx.setTransform(s, 0, 0, s, x, y);
+		  }
+
+                  // OTHERWISE, DO NOT DISPLAY ANYTHING
+
+		  else
+                     this.clipToRect(lo, lo);
+
+		  // TEMPORARILY ADD USEFUL THINGS FROM THE Math LIBRARY TO THE GLOBAL SCOPE
+
                   let f = ( 'PI,abs,ceil,cos,exp,floor,' +
                             'log,max,min,mod,pow,random,' +
                             'round,sign,sin,sqrt,trunc' ).split(',');
@@ -973,17 +1018,22 @@ function Diagram() {
                   for (let i = 0 ; i < f.length ; i++)
                      window[f[i]] = Math[f[i]];
 
+                  // TRY TO EVALUATE THE TEXT AS JAVASCRIPT
+
                   let value = evalCode(replaceAtSigns(object.state.text));
                   if (value !== undefined)
                      object.state._O = value;
 
+                  // REMOVE Math LIBRARY THINGS FROM THE GLOBAL SCOPE
+
                   for (let i = 0 ; i < f.length ; i++)
                      delete window[f[i]];
+
+                  // RESTORE DISPLAY CONTEXT
+
+		  octx.restore();
                }
             }
-
-            if (isClipping)
-               octx.restore();
          }
 
          if (object.remove)

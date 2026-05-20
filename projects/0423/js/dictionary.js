@@ -1,5 +1,6 @@
 let dictionary = {
 
+test1 : state => { if (! state.fileLoaded) state.fileToLoad = 'js/test1.js'  ; return []; },
 blob  : state => { if (! state.fileLoaded) state.fileToLoad = 'wgsl/blob.wgsl'  ; return []; },
 planet: state => { if (! state.fileLoaded) state.fileToLoad = 'wgsl/planet.wgsl'; return []; },
 
