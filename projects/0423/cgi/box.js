@@ -2,7 +2,7 @@ M.identity().perspective(0,0,5)
             .rotateX(.5 + time)
             .rotateY(.5 + time)
             .scale(.5);
-let p = [[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],
+p = [[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],
      [-1,-1, 1],[1,-1, 1],[1,1, 1],[-1,1, 1]];
 for (i = 0 ; i < p.length ; i++)
    p[i] = M.transform(p[i]);
