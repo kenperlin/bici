@@ -22,9 +22,9 @@ for (let n = 0 ; n < 6 ; n++) {
                  subtract(f[1],f[0]));
    let c = .5 - .2 * (N[0]+N[1]+N[2]);
    let h = hex(255 * c >> 0);
-   sort.push({ z:z, f:f, c:'#'+h+h+h });
+   sort.push({z:z, f:f, c:'#'+h+h+h+'c0'});
 }
 sort.sort((a,b) => a.z - b.z);
 for (let n = 0 ; n < 6 ; n++)
-   draw.fillColor(sort[n].c)
+   draw.fillColor  (sort[n].c)
        .fillPolygon(sort[n].f);

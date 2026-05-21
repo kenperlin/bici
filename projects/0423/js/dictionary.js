@@ -164,7 +164,6 @@ sliders: function(state,t,p,hasFocus) {
       state.dirty = true;
    }
 
-
    S = [];
 
    let isIn = p[0]*p[0] < 1;
@@ -188,6 +187,68 @@ sliders: function(state,t,p,hasFocus) {
    S.push({text: 'add', pos: [ .5,y-h-.23/N], scale: .9});
    S.push({draw: [[-1,y],[0,y],[0,y-h],[-1,y-h],[-1,y]], lineWidth: isIn&&i==N-1&&p[0]<0&&N>2 ? .004 : .002});
    S.push({draw: [[ 0,y],[1,y],[1,y-h],[ 0,y-h],[ 0,y]], lineWidth: isIn&&i==N-1&&p[0]>0      ? .004 : .002});
+
+   return S;
+},
+
+sliders2: function(state,t,p,hasFocus) {
+
+   if (state.N === undefined) {
+      state._O = [.5];
+      state.N = 2;
+   }
+   let N = state.N;
+
+   let h = 2/N;
+
+   state.hideFrame = true;
+   state.noClipping = true;
+   state.aspectRatio = 10/N;
+
+   let i = p[1]*p[1] > 1 ? -2 : (N/2 * (1 - p[1]) >> 0) - 1;
+   if (state.mouseState == 'press')
+      state.i = i;
+   if (state.mouseState == 'drag')
+      i = state.i;
+
+   if (state.i >= 0 && (state.mouseState == 'press' || state.mouseState == 'drag'))
+      state._O[state.i] = .5 + .5 * p[0];
+
+   if (state.i == -1 && state.mouseState == 'release') {
+      if (p[0] > 0) {
+         state._O.push(.5);
+         state.N++;
+      }
+      else if (N > 2) {
+         state._O.pop();
+         state.N--;
+      }
+      state.dirty = true;
+   }
+
+   S = [];
+
+   let isIn = p[0]*p[0] < 1;
+   for (let n = 0 ; n < N-1 ; n++) {
+      let y = 1 - (n+1)*h;
+      S.push({fill: [[-1,y],[1,y],[1,y-h],[-1,y-h],[-1,y]], color: '#b0b0b0'});
+      let x = Math.max(-1, Math.min(1, 2 * state._O[n] - 1));
+      S.push({fill: [[-1,y],[x,y],[x,y-h],[-1,y-h],[-1,y]], color: '#e0e0e0'});
+      S.push({draw: [[-1,y],[1,y],[1,y-h],[-1,y-h],[-1,y]], lineWidth: isIn && n==i ? .004 : .002});
+      S.push({text: '@' + n, pos: [-.98,y], justify: [0,1.75], scale: .9});
+      S.push({text: round2(state._O[n]), pos: [-.05,y-1.15*h], scale: .9});
+   }
+   
+   let y = 1;
+   S.push({fill: [[-1,y],[0,y],[0,y-h],[-1,y-h],[-1,y]],
+          color: i == -1 && p[0]<0 && state.mouseState == 'drag' ? '#c06060' : '#ffa0a0'});
+   S.push({fill: [[0,y],[1,y],[1,y-h],[0,y-h],[0,y]],
+          color: i == -1 && p[0]>0 && state.mouseState == 'drag' ? '#6080e0' : '#a0c0ff'});
+   if (N > 2)
+      S.push({text: 'del', pos: [-.5,y-h-.23/N], scale: .9});
+   S.push({text: 'add', pos: [ .5,y-h-.23/N], scale: .9});
+   S.push({draw: [[-1,y],[0,y],[0,y-h],[-1,y-h],[-1,y]], lineWidth: isIn&&i==-1&&p[0]<0&&N>2 ? .004 : .002});
+   S.push({draw: [[ 0,y],[1,y],[1,y-h],[ 0,y-h],[ 0,y]], lineWidth: isIn&&i==-1&&p[0]>0      ? .004 : .002});
 
    return S;
 },
