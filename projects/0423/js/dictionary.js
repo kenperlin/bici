@@ -38,6 +38,7 @@ fish: (state,t,p,hasFocus) => {
 },
 
 trackpad: (state,t,p,hasFocus) => {
+   state.hideFrame = true;
    if (! state.p) state.p = [0,0];
    if (hasFocus)
       state.p = p;
@@ -50,12 +51,16 @@ trackpad: (state,t,p,hasFocus) => {
    state._O[0] = .5 + .5 * x;
    state._O[1] = .5 + .5 * y;
 
-   return [
-      {draw: [ [ -1, y], [ 1, y] ]},         // If cursor is down,
-      {draw: [ [ x, -1], [ x, 1] ]},         // draw large crosshairs.
-      {text: 'x=' + round2(state._O[0]), pos: [-.5,.5]},
-      {text: 'y=' + round2(state._O[1]), pos: [.5,.5]},
-   ];
+   state.draw.lineWidth(.01).drawRect([-1,-1],[1,1])
+             .fillColor('#ffffff40').fillRect([-1,-1],[1,1])
+             .lineWidth(.03)
+             .line([-1,y],[1,y])
+             .line([x,-1],[x,1])
+             .setFont(.2, 'Courier')
+	     .text('x=' + round2(state._O[0]), [-.5,.5])
+             .text('y=' + round2(state._O[1]), [ .5,.5]);
+
+   return [ ];
 },
 
 scope: (state,t,p,hasFocus) => {
@@ -241,6 +246,7 @@ cube: function(state,t,p,hasFocus) {
 },
 
 editor: function(state,t,p,hasFocus) {
+   state.bgColor = '#ffffff80';
    let dirty = false;
 
    let rowLength = row => row < 0 || row >= state.lines.length ? 0 : state.lines[row].length;
@@ -350,7 +356,7 @@ editor: function(state,t,p,hasFocus) {
       dirty = true;
    }
 
-   state.textSize = .0275;
+   state.textSize = .025;
    let s = state.cardSize,
        w = 1.2 * state.textSize / s,
        h = 2 / Math.max(1, state.lines.length);
@@ -433,7 +439,7 @@ editor: function(state,t,p,hasFocus) {
          let text = state.text.substring(state.selectionStart, state.selectionEnd+1);
          await navigator.clipboard.writeText(text);
          state.text = state.text.substring(0,state.selectionStart) + state.text.substring(state.selectionEnd+1);
-         state.col -= state.selectionEnd - state.selectionStart;
+         //state.col -= state.selectionEnd - state.selectionStart;
 	 state.selectionStart = state.selectionEnd = -1;
          process();
       } catch (err) {

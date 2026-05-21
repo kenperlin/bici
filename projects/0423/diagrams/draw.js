@@ -71,6 +71,13 @@ function Diagram() {
             }
    }
 
+   let intoCardCoords = (lo,hi) => {
+      let s = (hi[0]-lo[0]) / 2;
+      let x = screen.width /2 + screen.width/2 * lo[0];
+      let y = screen.height/2 - screen.width/2 * (3 * lo[1] + 13 * hi[1]) / 16;
+      octx.setTransform(s, 0, 0, s, x, y);
+   }
+
    let isCommandKey, isTextString, textString = '';
 
    this.keyDown = key => {
@@ -751,7 +758,7 @@ function Diagram() {
             }
 
             if (showFrame)
-               this.fillColor('#ffffff').fillRect(lo, hi);
+               this.fillColor(object.state.bgColor ?? '#ffffff').fillRect(lo, hi);
 
             // TEXT HEIGHT AND LINE THICKNESS WILL SCALE WITH CARD SIZE
 
@@ -862,7 +869,12 @@ function Diagram() {
                   state.hadFocus = hasFocus;
 
                   state.dirty = false;
+		  state.draw = this;
+
+		  octx.save();
+                  intoCardCoords(lo,hi);
                   value = value(state, time, mi(pos), hasFocus);
+		  octx.restore();
 
                   if (state.fileToLoad) {
                      getFile('projects/' + project + '/' + state.fileToLoad, text => {
@@ -989,12 +1001,7 @@ function Diagram() {
                      let p0 = [ (lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2 ];
                      let dp = [ (hi[0] - lo[0]) / 2, (hi[1] - lo[1]) / 2 ];
                      this.clipToRect([lo[0]-.002,lo[1]-.002], [hi[0]+.002,hi[1]+.002]);
-
-                     let s = (hi[0]-lo[0]) / 2;
-		     let x = screen.width /2 + screen.width/2 * lo[0];
-		     let y = screen.height/2 - screen.width/2 * (3 * lo[1] + 13 * hi[1]) / 16;
-
-		     octx.setTransform(s, 0, 0, s, x, y);
+                     intoCardCoords(lo, hi);
 		  }
 
                   // OTHERWISE, DO NOT DISPLAY ANYTHING
