@@ -19,6 +19,13 @@ let round2 = t => {
    return (t<0 ? '-' : '') + s.substring(0,n-2) + (n<2 ? '.0' : '.') + s.substring(n-2);
 }
 
+// CONVERT 0..255 TO HEX CODE
+
+let hex = n => {
+   let hexChar = n => String.fromCharCode((n < 10 ? 48 : 87) + n);
+   return hexChar(n >> 4) + hexChar(n & 15);
+}
+
 // BASE 64
 
 const base64Characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz#';

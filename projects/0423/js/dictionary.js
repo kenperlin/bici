@@ -1,8 +1,9 @@
 let dictionary = {
 
 blob      : state => { if (! state.fileLoaded) state.fileToLoad = 'wgsl/blob.wgsl'   ; return []; },
-box       : state => { if (! state.fileLoaded) state.fileToLoad = 'cgi/box.js'       ; return []; },
+box1      : state => { if (! state.fileLoaded) state.fileToLoad = 'cgi/box1.js'      ; return []; },
 box2      : state => { if (! state.fileLoaded) state.fileToLoad = 'cgi/box2.js'      ; return []; },
+box3      : state => { if (! state.fileLoaded) state.fileToLoad = 'cgi/box3.js'      ; return []; },
 octahedron: state => { if (! state.fileLoaded) state.fileToLoad = 'cgi/octahedron.js'; return []; },
 planet    : state => { if (! state.fileLoaded) state.fileToLoad = 'wgsl/planet.wgsl' ; return []; },
 
@@ -138,11 +139,31 @@ sliders: function(state,t,p,hasFocus) {
 
    let h = 2/N;
 
-   let i = p[1]*p[1] > 1 ? -1 : N/2 * (1 - p[1]) >> 0;
-
    state.hideFrame = true;
    state.noClipping = true;
    state.aspectRatio = 10/N;
+
+   let i = p[1]*p[1] > 1 ? -1 : N/2 * (1 - p[1]) >> 0;
+   if (state.mouseState == 'press')
+      state.i = i;
+   if (state.mouseState == 'drag')
+      i = state.i;
+
+   if (state.i >= 0 && state.i < N-1 && (state.mouseState == 'press' || state.mouseState == 'drag'))
+      state._O[state.i] = .5 + .5 * p[0];
+
+   if (state.i == N-1 && state.mouseState == 'release') {
+      if (p[0] > 0) {
+         state._O.push(.5);
+         state.N++;
+      }
+      else if (N > 2) {
+         state._O.pop();
+         state.N--;
+      }
+      state.dirty = true;
+   }
+
 
    S = [];
 
@@ -167,21 +188,6 @@ sliders: function(state,t,p,hasFocus) {
    S.push({text: 'add', pos: [ .5,y-h-.23/N], scale: .9});
    S.push({draw: [[-1,y],[0,y],[0,y-h],[-1,y-h],[-1,y]], lineWidth: isIn&&i==N-1&&p[0]<0&&N>2 ? .004 : .002});
    S.push({draw: [[ 0,y],[1,y],[1,y-h],[ 0,y-h],[ 0,y]], lineWidth: isIn&&i==N-1&&p[0]>0      ? .004 : .002});
-
-   if (i >= 0 && i < N-1 && (state.mouseState == 'press' || state.mouseState == 'drag'))
-      state._O[i] = .5 + .5 * p[0];
-
-   if (i == N-1 && state.mouseState == 'release') {
-      if (p[0] > 0) {
-         state._O.push(.5);
-         state.N++;
-      }
-      else if (N > 2) {
-         state._O.pop();
-         state.N--;
-      }
-      state.dirty = true;
-   }
 
    return S;
 },
@@ -307,12 +313,8 @@ editor: function(state,t,p,hasFocus) {
          state.row++;
          state.col = 0;
       }
-      else {
-         state.col++;                                     // AFTER INSERT: IF THE LINE ENDS
-         let i = state.text.indexOf('\n', state.index);   // WITH A SPACE, THEN REMOVE IT.
-         if (i >= 0 && state.text.charAt(i-1) == ' ')
-            state.text = state.text.substring(0, i-1) + state.text.substring(i, state.text.length);
-      }
+      else
+         state.col++;
       dirty = true;
    }
 
@@ -356,7 +358,7 @@ editor: function(state,t,p,hasFocus) {
       dirty = true;
    }
 
-   state.textSize = .025;
+   state.textSize = .0275;
    let s = state.cardSize,
        w = 1.2 * state.textSize / s,
        h = 2 / Math.max(1, state.lines.length);

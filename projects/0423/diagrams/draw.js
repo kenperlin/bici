@@ -1,4 +1,7 @@
 function Diagram() {
+
+   window.cross = cross;
+
    this.isFullScreen = true;
    //tracking_isDrawingShadowAvatar = false;
 
@@ -331,8 +334,13 @@ function Diagram() {
             for (let i = 0 ; i < strokes.length ; i++)
                for (let j = 0 ; j < strokes[i].length ; j++)
                   strokes[i][j] = resize(strokes[i][j]);
+            let hiY = S[n].hi[1];
             S[n].lo = resize(S[n].lo);
             S[n].hi = resize(S[n].hi);
+	    if (S[n].card_type == 'editor') {
+	       S[n].lo[1] += hiY - S[n].hi[1];
+	       S[n].hi[1] = hiY;
+	    }
             sy = pos[1];
             dirty = true;
          }
@@ -1011,6 +1019,8 @@ function Diagram() {
 
 		  // TEMPORARILY ADD SOME USEFUL THINGS TO THE GLOBAL SCOPE
 
+                  let b = ( 'add,cross,dot,ease,evalBezier,hex,mix,norm,' +
+		            'normalize,resize,round,subtract,round2' ).split(',');
                   let m = ( 'PI,abs,ceil,cos,exp,floor,' +
                             'log,max,min,mod,pow,random,' +
                             'round,sign,sin,sqrt,trunc' ).split(',');
@@ -1020,10 +1030,9 @@ function Diagram() {
 		     'draw', this,               // THIS DRAWING OBJECT
 		     'time', time - startTime,   // TOTAL ELAPSED TIME
 		  ];
-                  for (let i = 0 ; i < m.length ; i++)
-                     window[m[i]] = Math[m[i]];
-                  for (let i = 0 ; i < v.length ; i += 2)
-		     window[v[i]] = v[i+1];
+                  for (let i = 0 ; i < b.length ; i++ ) window[b[i]] = b[i];
+                  for (let i = 0 ; i < m.length ; i++ ) window[m[i]] = Math[m[i]];
+                  for (let i = 0 ; i < v.length ; i+=2) window[v[i]] = v[i+1];
 
                   // TRY TO EVALUATE THE CARD'S TEXT AS JAVASCRIPT
 
@@ -1038,10 +1047,9 @@ function Diagram() {
 
                   // REMOVE THINGS FROM THE GLOBAL SCOPE
 
-                  for (let i = 0 ; i < m.length ; i++)
-                     delete window[m[i]];
-                  for (let i = 0 ; i < v.length ; i += 2)
-                     delete window[v[i]];
+                  for (let i = 0 ; i < b.length ; i++ ) delete window[b[i]];
+                  for (let i = 0 ; i < m.length ; i++ ) delete window[m[i]];
+                  for (let i = 0 ; i < v.length ; i+=2) delete window[v[i]];
 
                   // RESTORE DISPLAY CONTEXT
 
