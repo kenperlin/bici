@@ -151,7 +151,7 @@ let space  = [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,-1];
 
 // NOISE FUNCTION
 
-let noise = (x,y,z) => {
+let noise = (x,y=.5,z=.5) => {
    let normalize = v => (s => v.map(a => a/s))(Math.sqrt(dot(v,v))), c = Math.cos;
    let f=Math.floor,i=f(x),j=f(y),k=f(z),dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
    let r = (x,y,z) => c(5 * (x + 5 * c(5 * (y + 5 * c(5 * (z + 5 * c(5 * x)))))));

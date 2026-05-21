@@ -42,7 +42,7 @@ curveEditor: (state,t,p,hasFocus) => {
    state.hideFrame = true;
    state.noClipping = true;
 
-   state.draw.lineWidth(.01).drawRect([-1,-1],[1,1])
+   state.draw.lineWidth(.005).drawRect([-1,-1],[1,1])
              .fillColor('#ffffff40').fillRect([-1,-1],[1,1])
 
    if (! state.data) {
@@ -50,22 +50,22 @@ curveEditor: (state,t,p,hasFocus) => {
       state.i = -1;
    }
 
+   let X = [state.data[0][0],state.data[1][0],state.data[2][0],state.data[3][0]];
+   let Y = [state.data[0][1],state.data[1][1],state.data[2][1],state.data[3][1]];
+
+   let u = (state._I[0] + 1000) % 1;
+   state._O[0] = evalBezier(X, u);
+   state._O[1] = evalBezier(Y, u);
+
    switch (state.mouseState) {
    case 'press':
-      state.i = -1;
-      let dMin = 1;
-      for (let i = 0 ; i < state.data.length ; i++) {
-         let d = norm(subtract(state.data[i], p));
-	 if (d < .1 && d < dMin) {
-	    state.i = i;
-	    dMin = d;
-	 }
-      }
+      for (state.i = state.data.length - 1 ; state.i >= 0 ; state.i--)
+         if (norm(subtract(state.data[state.i], p)) < .1)
+	    break;
    case 'drag':
       if (state.i >= 0) {
          state.data[state.i][1] = Math.max(-1,Math.min(1,p[1]));
-	 if (state.i >= 1 && state.i <= 2)
-            state.data[state.i][0] = Math.max(-.9,Math.min(.9,p[0]));
+         state.data[state.i][0] = Math.max(-1,Math.min(1,p[0]));
       }
       break;
    case 'release':
@@ -73,16 +73,18 @@ curveEditor: (state,t,p,hasFocus) => {
       break;
    }
 
-   state.draw.lineWidth(.005).path(state.data);
+   state.draw.lineWidth(.01).path(state.data);
+
+   let curve = [];
+   for (let t = 0 ; t <= 1 ; t += 1/30)
+      curve.push([evalBezier(X, t), evalBezier(Y, t)]);
+   state.draw.lineWidth(.02).path(curve);
 
    for (let i = 0 ; i < state.data.length ; i++)
-      state.draw.dot(state.data[i], i==state.i ? .05 : .03);
+      state.draw.fillColor('white').fillArc(state.data[i], .1)
+                .drawColor('black').lineWidth(.005).arc(state.data[i], .1)
+		.setFont(.15,'Helvetica').text(''+(i+1), state.data[i], .5, 1.2);
 
-   let B = [state.data[0][1],state.data[1][1],state.data[2][1],state.data[3][1]];
-   let curve = [];
-   for (let x = -1 ; x <= 1 ; x += 1/15)
-      curve.push([x, evalBezier(B, .5+.5*x)]);
-   state.draw.lineWidth(.015).path(curve);
 
    return [];
 },
