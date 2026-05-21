@@ -38,6 +38,55 @@ fish: (state,t,p,hasFocus) => {
    return S;
 },
 
+curveEditor: (state,t,p,hasFocus) => {
+   state.hideFrame = true;
+   state.noClipping = true;
+
+   state.draw.lineWidth(.01).drawRect([-1,-1],[1,1])
+             .fillColor('#ffffff40').fillRect([-1,-1],[1,1])
+
+   if (! state.data) {
+      state.data = [[-1,0],[-1/3,0],[1/3,0],[1,0]];
+      state.i = -1;
+   }
+
+   switch (state.mouseState) {
+   case 'press':
+      state.i = -1;
+      let dMin = 1;
+      for (let i = 0 ; i < state.data.length ; i++) {
+         let d = norm(subtract(state.data[i], p));
+	 if (d < .1 && d < dMin) {
+	    state.i = i;
+	    dMin = d;
+	 }
+      }
+   case 'drag':
+      if (state.i >= 0) {
+         state.data[state.i][1] = Math.max(-1,Math.min(1,p[1]));
+	 if (state.i >= 1 && state.i <= 2)
+            state.data[state.i][0] = Math.max(-.9,Math.min(.9,p[0]));
+      }
+      break;
+   case 'release':
+      state.i = -1;
+      break;
+   }
+
+   state.draw.lineWidth(.005).path(state.data);
+
+   for (let i = 0 ; i < state.data.length ; i++)
+      state.draw.dot(state.data[i], i==state.i ? .05 : .03);
+
+   let B = [state.data[0][1],state.data[1][1],state.data[2][1],state.data[3][1]];
+   let curve = [];
+   for (let x = -1 ; x <= 1 ; x += 1/15)
+      curve.push([x, evalBezier(B, .5+.5*x)]);
+   state.draw.lineWidth(.015).path(curve);
+
+   return [];
+},
+
 trackpad: (state,t,p,hasFocus) => {
    state.hideFrame = true;
    if (! state.p) state.p = [0,0];

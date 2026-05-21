@@ -875,6 +875,10 @@ function Diagram() {
                                        state.hadFocus && ! hasFocus ? 'release' :
                                                           'move'    ;
                   state.hadFocus = hasFocus;
+		  if (state.mouseState == 'press')
+		     state.mousePressTime = time;
+		  if (state.mouseState == 'release')
+		     state.mouseClick = time - state.mousePressTime < .25;
 
                   state.dirty = false;
 		  state.draw = this;
