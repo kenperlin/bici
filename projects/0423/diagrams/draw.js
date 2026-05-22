@@ -1080,8 +1080,15 @@ function Diagram() {
 
       this.setFont(.02).drawColor('#00000060').text(textString, [-.9807,-.63], 0);
 
+      // INDICATE WHETHER THE PEN IS BEING TRACKED
+
       if (usePen)
          this.lineWidth(.0015).drawColor('#00000080').drawRect([-.995,-.62],[-.985,-.61]);
+
+      // INDICATE WHETHER CURSOR INPUT IS CURRENTLY IN "CLICKED ON BACKGROUND" MODE
+
+      if (bgClick)
+         this.fillColor('#00000080').fillRect([.985,-.66],[1,-.61]);
 
       this.drawColor(penColor);
    }
