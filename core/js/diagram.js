@@ -3,7 +3,7 @@ let addDiagramProperties = (diagram, ctx) => {
    let h  = diagram.height;
    let xp = x => (.5     + x * .5) * w;
    let yp = y => (.5*h/w - y * .5) * w;
-   let M = new M4();
+   let M = new Matrix();
 
    diagram.getState = () => window.SS;
    diagram.setState = state => {
@@ -38,9 +38,9 @@ let addDiagramProperties = (diagram, ctx) => {
    diagram.pop       = ()      => { M.restore  ()     ; return diagram; }
    diagram.push      = ()      => { M.save     ()     ; return diagram; }
    diagram.scale     = (x,y,z) => { M.scale    (x,y,z); return diagram; }
-   diagram.turnX     = a       => { M.rotateX  (a)    ; return diagram; }
-   diagram.turnY     = a       => { M.rotateY  (a)    ; return diagram; }
-   diagram.turnZ     = a       => { M.rotateZ  (a)    ; return diagram; }
+   diagram.turnX     = a       => { M.turnX    (a)    ; return diagram; }
+   diagram.turnY     = a       => { M.turnY    (a)    ; return diagram; }
+   diagram.turnZ     = a       => { M.turnZ    (a)    ; return diagram; }
    diagram.getMatrix = () => M.m();
 
    diagram.lineWidth = lw => { ctx.lineWidth = lw * w/2; return diagram; }

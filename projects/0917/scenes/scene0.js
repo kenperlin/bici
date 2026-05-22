@@ -129,7 +129,7 @@ void main() {
 
 gotoFigure('matrices');
 
-let M = new M4();
+let M = new Matrix();
 let t0 = Date.now() / 1000;
 this.update = viewPoint => {
    let time = Date.now() / 1000 - t0;

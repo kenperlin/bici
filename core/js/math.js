@@ -23,7 +23,7 @@ let round2 = t => {
 
 let hex = n => {
    let hexChar = n => String.fromCharCode((n < 10 ? 48 : 87) + n);
-   return hexChar(n >> 4) + hexChar(n & 15);
+   return hexChar(n >> 4) + hexChar((n >> 0) & 15);
 }
 
 // BASE 64
@@ -54,7 +54,13 @@ let mxm = (a,b) => {
 }
 
 let transform = (m,p) => {
-   let x = p[0], y = p[1], z = p[2], w = p[3] ?? 1;
+   let x = p[0], y = p[1], z = p[2], w = p[3];
+   if (w === undefined)
+      return [
+         m[0] * x + m[4] * y + m[ 8] * z + m[12],
+         m[1] * x + m[5] * y + m[ 9] * z + m[13],
+         m[2] * x + m[6] * y + m[10] * z + m[14]
+      ];
    return [
       m[0] * x + m[4] * y + m[ 8] * z + m[12] * w,
       m[1] * x + m[5] * y + m[ 9] * z + m[13] * w,
@@ -102,7 +108,7 @@ function Matrix() {
    this.push        = ()      => { m[top+1] = m[top].slice(); top++; return this; }
    this.scale       = (x,y,z) => { m[top] = mxm(m[top], scale(x,y,z)); return this; }
    this.set         = matrix  => { m[top] = matrix; return this; }
-   this.transform   = p       => { m[top] = transform(m[top],p); return this; }
+   this.transform   = p       => transform(m[top],p);
    this.transpose   = ()      => { m[top] = transpose(m[top]); return this; }
    this.turnX       = a       => { m[top] = mxm(m[top], turnX(a)); return this; }
    this.turnY       = a       => { m[top] = mxm(m[top], turnY(a)); return this; }

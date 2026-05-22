@@ -5,7 +5,7 @@ function Diagram() {
    this.isFullScreen = true;
    //tracking_isDrawingShadowAvatar = false;
 
-   let M = new M4();
+   let M = new Matrix();
 
    let penColor = '#000000';
 
@@ -334,11 +334,13 @@ function Diagram() {
             for (let i = 0 ; i < strokes.length ; i++)
                for (let j = 0 ; j < strokes[i].length ; j++)
                   strokes[i][j] = resize(strokes[i][j]);
-            let hiY = S[n].hi[1];
+            let loX = S[n].lo[0], hiY = S[n].hi[1];
             S[n].lo = resize(S[n].lo);
             S[n].hi = resize(S[n].hi);
 	    if (S[n].card_type == 'editor') {
+	       S[n].hi[0] += loX - S[n].lo[0];
 	       S[n].lo[1] += hiY - S[n].hi[1];
+	       S[n].lo[0] = loX;
 	       S[n].hi[1] = hiY;
 	    }
             sy = pos[1];
@@ -1023,8 +1025,10 @@ function Diagram() {
 
 		  // TEMPORARILY ADD SOME USEFUL THINGS TO THE GLOBAL SCOPE
 
-                  let b = ( 'add,cross,dot,ease,evalBezier,hex,mix,norm,' +
-		            'normalize,resize,round,subtract,round2' ).split(',');
+                  let b = ( 'add,cross,dot,ease,evalBezier,hex,mix,norm,'
+		          + 'normalize,resize,round,subtract,round2,'
+			  + 'transform'
+			  ).split(',');
                   let m = ( 'PI,abs,ceil,cos,exp,floor,' +
                             'log,max,min,mod,pow,random,' +
                             'round,sign,sin,sqrt,trunc' ).split(',');

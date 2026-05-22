@@ -155,7 +155,7 @@ mc.addGlyph('sliderY',function() {
 });
 
 mc.glyph3D = function(obj,update) {
-   let M = new M4(), theta = 0, phi = 0, cx, cy;
+   let M = new Matrix(), theta = 0, phi = 0, cx, cy;
    obj.move = (x,y) => { cx = cy = undefined; }
    obj.drag = (x,y) => {
       if (cx !== undefined) {
@@ -171,8 +171,8 @@ mc.glyph3D = function(obj,update) {
       M.identity();
       let t = Math.min(1,2*time);
       M.perspective(0,0,10*Math.max(1,1/(t*t*(3-t-t))));
-      M.rotateX(phi);
-      M.rotateY(theta);
+      M.turnX(phi);
+      M.turnY(theta);
       let A = update(time), B = [];
       for (let i = 0 ; i < A.length ; i++) {
          B[i] = [];

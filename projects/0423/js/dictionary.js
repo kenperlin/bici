@@ -343,14 +343,14 @@ cube: function(state,t,p,hasFocus) {
    state.lineWidth = .008;
    state.noClipping = true;
 
-   if (! this.M) this.M = new M4();
+   if (! this.M) this.M = new Matrix();
    if (! state.p) state.p = [0,0];
    if (hasFocus) state.p = p;
 
    this.M.identity();
    this.M.perspective(0,0,10);
-   this.M.rotateX(state.p[1]);
-   this.M.rotateY(-state.p[0]);
+   this.M.turnX(state.p[1]);
+   this.M.turnY(-state.p[0]);
    this.M.scale(.9);
 
    let C = cubeVertices, P = [];
