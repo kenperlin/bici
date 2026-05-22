@@ -744,7 +744,7 @@ function Diagram() {
          else {
 
             if (S_value[object.id] && object.card_type == 'editor' && object.state && object.state.lines)
-               lo[1] = hi[1] - object.state.textSize * Math.max(1, object.state.lines.length);
+               lo[1] = hi[1] - object.state.textSize * Math.max(1, object.state.nLines);
 
             let isShader = object.card_type == 'shader';
 

@@ -84,7 +84,7 @@ webcam.update = () => {
       }
    }
 
-   let isGreen = (r,g,b) => g > 30 && g > 1.2 * Math.max(r,b);
+   let isGreen = (r,g,b) => g > 127 && g > 1.2 * Math.max(r,b);
 
    // FOLLOW THE POSITION OF A GREEN MARKER PEN
 

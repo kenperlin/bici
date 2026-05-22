@@ -623,9 +623,11 @@ editor: function(state,t,p,hasFocus) {
          state.isControlDown = false;
 	 break;
       case 'Alt':
-      case 'Escape':
       case 'Shift':
       case 'Tab':
+         break;
+      case 'Escape':
+         state.isClosed = ! state.isClosed;
          break;
       }
    }
@@ -641,11 +643,14 @@ editor: function(state,t,p,hasFocus) {
 
    // CREATE DISPLAY LIST TO SHOW THE TEXT.
 
+   state.nLines = state.isClosed ? 1 : state.lines.length;
+
    S = [];
    let i = 0;
-   for (let row = 0 ; row < state.lines.length ; row++) {
+   for (let row = 0 ; row < state.nLines ; row++) {
       let text = state.lines[row];
-      S.push({text: text, pos: [-1,1-(row+.6)*h], justify: [0,1], size: state.textSize});
+      let justify = state.isClosed ? [0, 1.55 + state.lines.length/800] : [0,1];
+      S.push({text: text, pos: [-1,1-(row+.6)*h], justify: justify, size: state.textSize});
       for (let col = 0 ; col < text.length ; col++)
          if (i + col >= state.selectionStart && i + col <= state.selectionEnd) {
             let x = w * col - 1;
@@ -657,11 +662,12 @@ editor: function(state,t,p,hasFocus) {
 
    // CREATE DISPLAY LIST TO SHOW THE SELECTED REGION, IF ANY.
 
-   if (state.selectionStart == state.selectionEnd) {
+   if (! state.isClosed && state.selectionStart == state.selectionEnd) {
       let col = Math.min(state.col, state.lines[state.row].length);
       let x = w * col - 1;
       S.push({fill: [[x,y-h], [x+w,y-h], [x+w,y], [x,y]], color: '#00000040'});
    }
+
    return S;
 },
 
