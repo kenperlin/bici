@@ -1005,10 +1005,10 @@ function Diagram() {
                   // IF THERE IS AN OUT-LINK, DISPLAY ANY GRAPHICAL RESULT OF EVAL IN DESTINATION CARD
 
                   let dstCards = getDstCards(object);
-		  let isDst = dstCards.length > 0;
+		  let hasOutLink = dstCards.length > 0;
 
 		  octx.save();
-		  if (isDst) {
+		  if (hasOutLink) {
 		     let dst = dstCards[0];
 		     let lo = dst.lo, hi = dst.hi;
 
@@ -1033,10 +1033,11 @@ function Diagram() {
                             'log,max,min,mod,pow,random,' +
                             'round,sign,sin,sqrt,trunc' ).split(',');
                   let v = [
-		     '_I'  , object.state._I,    // CARD'S INPUT PARAMETERS
-		     'M'   , M,                  // 4x4 MATRIX OBJECT
-		     'draw', this,               // THIS DRAWING OBJECT
-		     'time', time - startTime,   // TOTAL ELAPSED TIME
+		     '_I'        , object.state._I,    // CARD'S INPUT PARAMETERS
+		     'hasOutLink', hasOutLink,         // IS THERE A DESTINATION CARD?
+		     'M'         , M,                  // 4x4 MATRIX OBJECT
+		     'draw'      , this,               // THIS DRAWING OBJECT
+		     'time'      , time - startTime,   // TOTAL ELAPSED TIME
 		  ];
                   for (let i = 0 ; i < b.length ; i++ ) window[b[i]] = b[i];
                   for (let i = 0 ; i < m.length ; i++ ) window[m[i]] = Math[m[i]];
