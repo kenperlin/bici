@@ -348,10 +348,10 @@ cube: function(state,t,p,hasFocus) {
    if (hasFocus) state.p = p;
 
    this.M.identity();
-   this.M.perspective(0,0,10);
+   this.M.perspective(0,0,-5);
    this.M.turnX(state.p[1]);
    this.M.turnY(-state.p[0]);
-   this.M.scale(.9);
+   //this.M.scale(.9);
 
    let C = cubeVertices, P = [];
    for (let i = 0 ; i < C.length ; i++)

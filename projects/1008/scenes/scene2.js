@@ -46,7 +46,7 @@ let startTime = Date.now()/1000;
 this.update = () => {
    vertexMap(['aPos', 3, 'aNor', 3]);
    let time = Date.now() / 1000 - startTime;
-   let m = mxm(perspective(0,0,-.5),
+   let m = mxm(perspective(0,0,-5),
            mxm(turnY(time),
 	       scale(.5)));
    setUniform('Matrix4fv', 'uMF', false, m);

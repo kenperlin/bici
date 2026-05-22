@@ -99,7 +99,7 @@ let startTime = Date.now() / 1000;
 this.update = () => {
    vertexMap(['aPos', 3, 'aNor', 3]);
    let time = Date.now() / 1000;
-   let m = mxm(perspective(0,0,-.5), turnY(0 * time));
+   let m = mxm(perspective(0,0,-5), turnY(0 * time));
    drawMeshAt(mesh, m);
 }
 

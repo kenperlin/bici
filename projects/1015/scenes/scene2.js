@@ -120,7 +120,7 @@ let drawMeshAt = (mesh, m, n) => {
 
 this.update = () => {
    vertexMap(['aPos', 3, 'aNor', 3]);
-   let m = mxm(perspective(0,0,-.05),
+   let m = mxm(perspective(0,0,-5),
            mxm(scale(.25),
            mxm(move(0,-2.4,0),
            mxm(turnX(-Math.PI/2),

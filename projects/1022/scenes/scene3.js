@@ -13,7 +13,7 @@ autodraw = false;
 let M = new Matrix();
 
 let draw = (mesh, matrix, color) => {
-   let m = mxm(perspective(0,0,-.5),
+   let m = mxm(perspective(0,0,-5),
            mxm(turnY(1),
                matrix ?? M.get()));
    setUniform('Matrix4fv', 'uMF', false, m);

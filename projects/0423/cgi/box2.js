@@ -1,4 +1,4 @@
-M.identity().perspective(0,0,5)
+M.identity().perspective(0,0,-5)
             .turnY(@0)
             .turnX(@1)
             .scale(.5);

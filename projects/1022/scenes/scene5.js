@@ -13,7 +13,7 @@ autodraw = false;
 let M = new Matrix();
 
 let draw = (mesh, matrix, color) => {
-   let m = mxm(perspective(0,0,-.5),
+   let m = mxm(perspective(0,0,-5),
            mxm(turnY(.5 * Math.sin(time)),
 	   mxm(scale(.7),
                matrix ?? M.get())));

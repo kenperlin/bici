@@ -82,7 +82,7 @@ let startTime = Date.now()/1000;
 
 let drawMeshAt = (mesh, color, m) => {
    setUniform('3fv', 'uColor', color);
-   m = mxm(perspective(0,0,-.1), m);
+   m = mxm(perspective(0,0,-5), m);
    setUniform('Matrix4fv', 'uMF', false, m);
    setUniform('Matrix4fv', 'uMI', false, inverse(m));
    drawMesh(mesh);

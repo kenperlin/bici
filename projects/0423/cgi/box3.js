@@ -1,4 +1,4 @@
-let box = (M,C) => {
+box = (M,C) => {
    let V = [[-1,-1,-1],[1,-1,-1],
             [-1, 1,-1],[1, 1,-1],
             [-1,-1, 1],[1,-1, 1],
@@ -29,8 +29,9 @@ let box = (M,C) => {
       draw.fillColor  (sort[n].c)
           .fillPolygon(sort[n].f);
 }
-M.identity().perspective(0,0,5)
+M.identity().perspective(0,0,-5)
             .turnY(2*@0-1)
             .turnX(1-2*@1)
             .scale(.5);
+console.log(M.get());
 box(M,[1,.5,.2]);

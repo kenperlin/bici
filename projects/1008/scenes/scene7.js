@@ -106,7 +106,7 @@ let startTime = Date.now()/1000;
 
 let drawMyMesh = (mesh, color) => {
    setUniform('3fv', 'uColor', color);
-   let m = mxm(perspective(0,0,-.1), matrix.get());
+   let m = mxm(perspective(0,0,-5), matrix.get());
    setUniform('Matrix4fv', 'uMF', false, m);
    setUniform('Matrix4fv', 'uMI', false, inverse(m));
    drawMesh(mesh);

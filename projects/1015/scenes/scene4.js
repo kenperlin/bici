@@ -93,7 +93,7 @@ this.update = () => {
    vertexMap(['aPos', 3, 'aNor', 3]);
    let time = Date.now() / 1000;
    let p = evalBezier(time/2 % 1, _.BX, _.BY);
-   let m = mxm(perspective(0,0,-.5),
+   let m = mxm(perspective(0,0,-5),
            mxm(move(p[0],p[1],0),
 	       scale(.2)));
    setUniform('Matrix4fv', 'uMF', false, m);

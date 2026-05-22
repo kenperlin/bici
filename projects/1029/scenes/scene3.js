@@ -88,7 +88,7 @@ autodraw = false;
 let M = new Matrix();
 
 let draw = (mesh, matrix, color) => {
-   let m = mxm(perspective(0,0,-.5),matrix??M.get());
+   let m = mxm(perspective(0,0,-5),matrix??M.get());
    setUniform('Matrix4fv', 'uMF', false, m);
    setUniform('Matrix4fv', 'uMI', false, inverse(m));
    setUniform('3fv', 'uColor', color ?? [1,1,1]);

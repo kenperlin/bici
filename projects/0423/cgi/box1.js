@@ -1,4 +1,4 @@
-M.identity().perspective(0,0,5)
+M.identity().perspective(0,0,-5)
             .turnX(.5 + time)
             .turnY(.5 + time)
             .scale(.5);
