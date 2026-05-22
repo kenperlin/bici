@@ -3,7 +3,8 @@ let dictionary = {
 blob      : state => { if (! state.fileLoaded) state.fileToLoad = 'wgsl/blob.wgsl'   ; return []; },
 box1      : state => { if (! state.fileLoaded) state.fileToLoad = 'cgi/box1.js'      ; return []; },
 box2      : state => { if (! state.fileLoaded) state.fileToLoad = 'cgi/box2.js'      ; return []; },
-box3      : state => { if (! state.fileLoaded) state.fileToLoad = 'cgi/box3.js'      ; return []; },
+box       : state => { if (! state.fileLoaded) state.fileToLoad = 'cgi/box.js'       ; return []; },
+boxes     : state => { if (! state.fileLoaded) state.fileToLoad = 'cgi/boxes.js'     ; return []; },
 octahedron: state => { if (! state.fileLoaded) state.fileToLoad = 'cgi/octahedron.js'; return []; },
 planet    : state => { if (! state.fileLoaded) state.fileToLoad = 'wgsl/planet.wgsl' ; return []; },
 
