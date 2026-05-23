@@ -1,13 +1,5 @@
 let dictionary = {
 
-blob      : state => { if (! state.fileLoaded) state.fileToLoad = 'wgsl/blob.wgsl'   ; return []; },
-box1      : state => { if (! state.fileLoaded) state.fileToLoad = 'cgi/box1.js'      ; return []; },
-box2      : state => { if (! state.fileLoaded) state.fileToLoad = 'cgi/box2.js'      ; return []; },
-box       : state => { if (! state.fileLoaded) state.fileToLoad = 'cgi/box.js'       ; return []; },
-boxes     : state => { if (! state.fileLoaded) state.fileToLoad = 'cgi/boxes.js'     ; return []; },
-octahedron: state => { if (! state.fileLoaded) state.fileToLoad = 'cgi/octahedron.js'; return []; },
-planet    : state => { if (! state.fileLoaded) state.fileToLoad = 'wgsl/planet.wgsl' ; return []; },
-
 fish: (state,t,p,hasFocus) => {
    state.hideFrame = true;
    state.aspectRatio = 5;
@@ -483,7 +475,13 @@ editor: function(state,t,p,hasFocus) {
    }
 
    switch (state.mouseState) {
+   case 'move':
+      if (Date.now() / 1000 - state.clickTime > .5)
+         state.clickCount = 0;
+      break;
+
    case 'press':
+      console.log('PRESS');
       computeColRowIndex(p);
       state.selectionStart = state.selectionEnd = state.index;
       dirty = true;
@@ -497,28 +495,51 @@ editor: function(state,t,p,hasFocus) {
       break;
 
    case 'release':
+      console.log('RELEASE', state.mouseClick);
+      if (state.clickCount === undefined)
+         state.clickCount = 0;
+      if (state.mouseClick) {
+         state.clickCount++;
+         state.clickTime = Date.now() / 1000;
+      }
+      else
+         state.clickCount = 0;
+
       let isInWord = i => {
          let ch = state.text[i];
 	 return ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z' ||
 	        ch >= '0' && ch <= '9' || ch == '_' || ch == "'" || ch == '-';
       }
 
-      let isClick = state.selectionStart == state.selectionEnd;
-      let isDoubleClick = isClick && state.index == state.clickIndex;
+      switch (state.clickCount) {
+
+      // IF TRIPLE CLICK, SELECT AN ENTIRE LINE.
+
+      case 3:
+         while (state.selectionStart > 0 && state.text[state.selectionStart-1] != '\n')
+            state.selectionStart--;
+         while (state.selectionEnd < state.text.length-1 && state.text[state.selectionEnd] != '\n')
+            state.selectionEnd++;
+	 break;
 
       // IF DOUBLE CLICK, SELECT AN ENTIRE WORD.
 
-      if (isDoubleClick) {
+      case 2:
+	 state.selectionStart = state.selectionEnd = state.clickIndex;
          while (state.selectionStart > 0 && isInWord(state.selectionStart-1))
             state.selectionStart--;
          while (state.selectionEnd < state.text.length-1 && isInWord(state.selectionEnd+1))
             state.selectionEnd++;
          state.clickIndex = null;
-      }
-      else if (isClick) {
+	 break;
+
+      // IF SINGLE CLICK, SET THE CURSOR POSITION.
+
+      case 1:
          state.selectionStart = -1;
          state.selectionEnd   = -1;
          state.clickIndex = state.index;
+	 break;
       }
       break;
    }
@@ -653,7 +674,9 @@ editor: function(state,t,p,hasFocus) {
       let nLines = state.lines.length;
       let justify = state.isClosed ? [0, 1.56 + nLines/800] : [0,1];
       S.push({text: text, pos: [-1,1-(row+.6)*h], justify: justify, size: state.textSize});
-      for (let col = 0 ; col < text.length ; col++)
+      let nChars = text.length + (i + text.length >= state.selectionStart &&
+                                  i + text.length <= state.selectionEnd ? 1 : 0);
+      for (let col = 0 ; col < nChars ; col++)
          if (i + col >= state.selectionStart && i + col <= state.selectionEnd) {
             let x = w * col - 1;
             let y = 1 - row * h;
