@@ -64,6 +64,9 @@ function Diagram() {
 
    let activateCardFromText = (n, text) => {
       let words = text.toLowerCase().split(' ');
+
+      // FIRST SEE IF WORD IS IN THE DICTIONARY
+
       for (let word in dictionary)
          for (let i = 0 ; i < words.length ; i++)
             if (word == words[i]) {
@@ -719,6 +722,11 @@ function Diagram() {
                   object.card_type = 'shader';
                }
 
+               else if (object.type == 'webgl') {
+                  object.type = 'card';
+                  object.card_type = 'webgl';
+               }
+
                // CONVERT DRAWING TO A CARD IF THERE IS A MATCHING CARD TYPE
 
                else
@@ -747,10 +755,11 @@ function Diagram() {
                lo[1] = hi[1] - object.state.textSize * Math.max(1, object.state.nLines);
 
             let isShader = object.card_type == 'shader';
+            let isWebgl  = object.card_type == 'webgl';
 
             this.lineWidth(.004);
 
-            let showFrame = ! isShader && object.state;
+            let showFrame = ! isShader && ! isWebgl && object.state;
 
             if (object.state && object.state.hideFrame)
                showFrame = false;
@@ -760,7 +769,7 @@ function Diagram() {
 
             // TURN ON CLIPPING, SO THAT RENDERING IS CONFINED TO THE CARD
 
-            let isClipping = ! isShader && ! (object.state && object.state.noClipping);
+            let isClipping = ! isShader && ! isWebgl && ! (object.state && object.state.noClipping);
 
             if (isClipping) {
                octx.save();
@@ -783,6 +792,10 @@ function Diagram() {
                   shaderCard.setShader('rgb = vec3(0.,0.,1.);');
                   S_value[object.id] = shaderCard;
                   break;
+               case 'webgl':
+                  let webglCard = new WebglCard(octx);
+                  S_value[object.id] = webglCard;
+		  break;
                default:
                   S_value[object.id] = dictionary[object.card_type];
                   break;
@@ -803,16 +816,16 @@ function Diagram() {
                // LINK ANY SHADER CODE AND PARAMETERS FROM SOURCE CARDS
 
                if (object.srcId) {
-                  let T = [];
+                  let I = [];
                   let srcCards = getSrcCards(object);
                   for (let i = 0 ; i < srcCards.length ; i++) {
                      let src = srcCards[i];
                      if (src.card_type == 'editor')
                         shaderCard.setShader(replaceAtSigns(src.state.text));
                       else if (src.state._O)
-                        T.push(src.state._O);
+                        I.push(src.state._O);
                   }
-                  shaderCard.set_I(T.flat());
+                  shaderCard.set_I(I.flat());
                }
 
                lo[1] = hi[1] + lo[0] - hi[0];
@@ -820,6 +833,28 @@ function Diagram() {
                let H = this.mxp(hi);
                shaderCard.draw((L[0]+H[0])/2, (L[1]+H[1])/2, H[0]-L[0]);
             }
+
+            else if (isWebgl) {
+               let webglCard = S_value[object.id];
+
+               if (object.srcId) {
+                  let I = [];
+                  let srcCards = getSrcCards(object);
+                  for (let i = 0 ; i < srcCards.length ; i++) {
+                     let src = srcCards[i];
+                     if (src.card_type == 'editor')
+                        webglCard.setScene(replaceAtSigns(src.state.text));
+                      else if (src.state._O)
+                        I.push(src.state._O);
+                  }
+                  webglCard.set_I(I.flat());
+               }  
+
+               lo[1] = hi[1] + lo[0] - hi[0];
+               let L = this.mxp(lo);
+               let H = this.mxp(hi);
+               webglCard.draw((L[0]+H[0])/2, (L[1]+H[1])/2, H[0]-L[0]);
+	    }
 
             // IF THIS IS A VALID CARD TYPE, DO PROCEDURAL RENDERING
 
@@ -853,7 +888,7 @@ function Diagram() {
                   if (object.text == 'editor' && state.key == 'Control' && state.keyState == 'release') {
                      let text = object.state.text;
                      if (text.indexOf('.') > 0)
-                        getFile('projects/' + project + '/' + text, text => object.state.newText = text);
+                        getFile('projects/' + project + '/src/' + text, text => object.state.newText = text);
                      else
                         activationText = text;
                   }
@@ -1047,11 +1082,15 @@ function Diagram() {
 
 		  let code = replaceAtSignsAndProvideDefaultOption(object.state.text);
 	          let value;
-                  try { value = (new Function(code))(); } catch (error) {console.log(error)}
+                  try {
+		     value = (new Function(code))();
+		  } catch {
+		     error => console.log(error);
+		  }
 
 		  // IF SUCCESSFUL, value BECOMES THE CARD'S OUTPUT PARAMETERS
 
-                  if (value !== undefined)
+                  if (value)
                      object.state._O = Array.isArray(value) ? value : [ value ];
 
                   // REMOVE THINGS FROM THE GLOBAL SCOPE

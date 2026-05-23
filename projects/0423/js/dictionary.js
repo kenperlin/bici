@@ -650,7 +650,8 @@ editor: function(state,t,p,hasFocus) {
    let i = 0;
    for (let row = 0 ; row < state.nLines ; row++) {
       let text = state.lines[row];
-      let justify = state.isClosed ? [0, 1.55 + state.lines.length/800] : [0,1];
+      let nLines = state.lines.length;
+      let justify = state.isClosed ? [0, 1.56 + nLines/800] : [0,1];
       S.push({text: text, pos: [-1,1-(row+.6)*h], justify: justify, size: state.textSize});
       for (let col = 0 ; col < text.length ; col++)
          if (i + col >= state.selectionStart && i + col <= state.selectionEnd) {

@@ -79,6 +79,20 @@ tubeData: (n,other) => Shape.parametric((u,v) => {
    return [c,s,2*v-1, c,s,0];
 },n,2),
 
+diskData: (n,z) => Shape.parametric((u,v) => {
+   let theta = 2 * Math.PI * u;
+   let c = Math.cos(theta);
+   let s = Math.sin(theta);
+   return [v*c, v*s, z??0, 0, 0, z??1];
+},n,2),
+
+diskMesh: (n,z) => {
+   return {
+      triangle_strip: true,
+      data: new Float32Array(Shape.diskData(n,z))
+   };
+},
+
 squareMesh: () => {
    return {
       triangle_strip: true,

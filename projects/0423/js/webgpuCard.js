@@ -43,6 +43,7 @@ function WebgpuCard(ctx) {
             }
 
             struct MyUniforms {
+  	       matrix: array<f32,16>,
                time: f32,                                // PASS IN UNIFORM time.
 	       _I: array<f32,10>,                        // PASS IN 10 UNIFORM T PARAMETERS.
             };
@@ -54,17 +55,18 @@ function WebgpuCard(ctx) {
 
             @vertex
             fn vs(@builtin(vertex_index) VertexIndex : u32) -> VertexOutput {
-               let pos = array<vec2f, 6>(
-                  vec2f(-1,-1), vec2f(-1,1), vec2f(1,1), // FILL THE SQUARE CANVAS WITH 2 TRIANGLES.
-                  vec2f(-1,-1), vec2f(1,-1), vec2f(1,1),
+               let pos = array<vec3f, 6>(
+                  vec3f(-1,-1,0), vec3f(-1,1,0), vec3f(1,1,0), // FILL THE SQUARE CANVAS WITH 2 TRIANGLES.
+                  vec3f(-1,-1,0), vec3f(1,-1,0), vec3f(1,1,0),
                );
                var out: VertexOutput;
-               out.xyzw = vec4f(pos[VertexIndex],0,1);
+               out.xyzw = vec4f(pos[VertexIndex],1);
                return out;
             }
 
             @fragment
             fn fs(in: VertexOutput) -> @location(0) vec4f {
+  	       let m = uniforms.matrix;
 	       let _I = uniforms._I;                     // PARAMETERS PASSED IN FROM THE CPU.
                let time = uniforms.time;                 // ELAPSED TIME IN SECONDS.
                let x = 2 * in.xyzw.x / 500 - 1;          // CONVERT x,y FROM PIXELS TO -1 ... +1.
@@ -97,7 +99,7 @@ function WebgpuCard(ctx) {
             vertex   : { module: sM, entryPoint: 'vs', },
             fragment : { module: sM, entryPoint: 'fs', targets: [{ format }], },
          });
-         uB = device.createBuffer({ size: 44, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
+         uB = device.createBuffer({ size: (16+1+10)*4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
          bG = device.createBindGroup({layout:rP.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:uB}}]});
 
          oldShader = shader;
@@ -109,6 +111,8 @@ function WebgpuCard(ctx) {
 
    this.set_I = src => T = src.slice();
 
+   let myM = new Matrix();
+
    this.draw = (x,y,w) => {
       if (okToDraw) {
          const cE = device.createCommandEncoder();
@@ -117,9 +121,12 @@ function WebgpuCard(ctx) {
          pE.setPipeline(rP);
          pE.setBindGroup(0, bG);
 	 let time = Date.now() / 1000 - startTime;
-	 let TT = [ time ];
+
+	 let TT = myM.get().slice();
+	 TT.push(time);
 	 for (let n = 0 ; n < 10 ; n++)
 	    TT.push(T[n] ?? .5);
+
          device.queue.writeBuffer(uB, 0, new Float32Array(TT));
          pE.draw(6,1,0,0);                                                 // DRAW 2 TRIANGLES == 6 VERTICES.
          pE.end();
