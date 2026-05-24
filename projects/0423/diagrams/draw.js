@@ -432,8 +432,8 @@ function Diagram() {
                ; // DRAGGING AFTER A CLICK ON THE BACKGROUND
             }
             else {
-               if (nm < 2)
-                  S[np].strokes[0].push(pos);
+               if (nm < 2)                       // CONTINUING TO DRAW
+                  S[np].strokes[0].push(pos);    // A FREE-HAND STROKE
             }
             dirty = true;
             break;
@@ -672,6 +672,30 @@ function Diagram() {
             this.line(A,subtract(B,E));
             this.fillPolygon([ add(B,E), add(B, [-2*D[0] - D[1], -2*D[1] + D[0]]),
                                          add(B, [-2*D[0] + D[1], -2*D[1] - D[0]]) ]);
+
+            // IF THE USER HAS CLICKED ON A LINK, DELETE THE LINK
+
+	    let dsqFromLine = (p, a, b) => {
+               let ax = a[0] - p[0], ay = a[1] - p[1];
+               let bx = b[0] - p[0], by = b[1] - p[1];
+               let dx = bx - ax, dy = by - ay;
+               if (ax * dx + ay * dy > 0 || bx * dx + by * dy < 0)
+                  return Math.min(ax * ax + ay * ay, bx * bx + by * by);
+               let aa = ax * ax + ay * ay;
+               let ad = ax * dx + ay * dy;
+               let dd = dx * dx + dy * dy;
+               return aa - ad * ad / dd;
+            }
+
+	    // IF THE USER CLICKS ON A LINK, REMOVE THE LINK.
+
+            if (bgClick && dsqFromLine(bgClick,A,B) < .01)
+	       for (let j = 0 ; j < S[n].srcId.length ; j++)
+	          if (S[n].srcId[j] == src.id) {
+		     S[n].srcId.splice(j,1);
+	             bgClick = undefined;
+		     break;
+	          }
 
             if (src.remove || S[n].remove)
                octx.restore();
