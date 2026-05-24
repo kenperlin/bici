@@ -1,9 +1,10 @@
 function WebglCard(ctx) {
 
-   this.mousePress   = pos => console.log('webglCard mousePress');
-   this.mouseDrag    = pos => console.log('webglCard mouseDrag');
-   this.mouseClick   = pos => console.log('webglCard mouseClick');
-   this.mouseRelease = pos => console.log('webglCard mouseRelease');
+   let xy = [0,0], event = '';
+   this.mousePress   = pos => { xy = pos; console.log('press'  , xy[0], xy[1]); event = 'press'   };
+   this.mouseDrag    = pos => { xy = pos; event = 'drag'    };
+   this.mouseClick   = pos => { xy = pos; event = 'click'   };
+   this.mouseRelease = pos => { xy = pos; event = 'release' };
 
    let ball = Shape.sphereMesh(20,10);
    let tube = Shape.glue(Shape.diskMesh(20,-1),
@@ -67,6 +68,9 @@ function WebglCard(ctx) {
                    'log,max,min,mod,pow,random,' +
                    'round,sign,sin,sqrt,trunc' ).split(',');
          let v = [
+            '_X'   , xy[0],
+            '_Y'   , xy[1],
+            'event', event,
             '_I'   , _I,
             'cg'   , cg,
             'ball' , ball,
@@ -98,6 +102,9 @@ function WebglCard(ctx) {
          for (let i = 0 ; i < v.length ; i+=2) delete window[v[i]];
 
          ctx.drawImage(canvas, x-w/2, y-w/2, w, w);
+
+         if (event == 'release' || event == 'click')
+	    event = 'up';
       }
       else {
          ctx.fillStyle = '#00a0ff';

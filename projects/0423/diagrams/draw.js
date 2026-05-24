@@ -98,6 +98,12 @@ function Diagram() {
       octx.setTransform(s, 0, 0, s, x, y);
    }
 
+   let transformToCardCoords = (n,p) => {
+      let lo = S[n].lo, hi = S[n].hi;
+      return [ 2 * (p[0] - lo[0]) / (hi[0] - lo[0]) - 1,
+               2 * (p[1] - lo[1]) / (hi[1] - lo[1]) - 1 ];
+   }
+
    let isCommandKey, isTextString, textString = '';
 
    this.keyDown = key => {
@@ -427,7 +433,7 @@ function Diagram() {
                   S[np].strokes[0] = [ pos ];
 
                else if (S_value[S[nm].id] && typeof S_value[S[nm].id].mousePress == 'function')
-	          S_value[S[nm].id].mousePress(pos);
+	          S_value[S[nm].id].mousePress(transformToCardCoords(nm, pos));
             }
 
             dirty = true;
@@ -443,7 +449,7 @@ function Diagram() {
                   S[np].strokes[0].push(pos);    // A FREE-HAND STROKE
 
                else if (S_value[S[nm].id] && typeof S_value[S[nm].id].mouseDrag == 'function')
-                  S_value[S[nm].id].mouseDrag(pos);
+                  S_value[S[nm].id].mouseDrag(transformToCardCoords(nm, pos));
             }
             dirty = true;
             break;
@@ -577,8 +583,8 @@ function Diagram() {
 
                else if (S_value[S[nm].id] && typeof S_value[S[nm].id].mouseClick == 'function') {
                   if (typeof S_value[S[nm].id].mouseRelease == 'function')
-                     S_value[S[nm].id].mouseRelease(pos);
-                  S_value[S[nm].id].mouseClick(pos);
+                     S_value[S[nm].id].mouseRelease(transformToCardCoords(nm, pos));
+                  S_value[S[nm].id].mouseClick(transformToCardCoords(nm, pos));
                }
             }
 
@@ -614,7 +620,7 @@ function Diagram() {
             }
 
             else if (S_value[S[nm].id] && typeof S_value[S[nm].id].mouseRelease == 'function')
-               S_value[S[nm].id].mouseRelease(pos);
+               S_value[S[nm].id].mouseRelease(transformToCardCoords(nm, pos));
 
             // AFTER MOUSE RELEASE, REMOVE THE TEMPORARY STROKE
 
