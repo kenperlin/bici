@@ -509,6 +509,22 @@ function Diagram() {
                            if (! S[nn].srcId)
                               S[nn].srcId = [];
                            S[nn].srcId.push(S[n].id);
+
+			   // IF LINKING TO A SHADER OR WEBGL CARD, UPDATE THE CARD TYPE
+
+			   if (S[nn].srcId.length == 1) {
+			      let src = S[n];
+			      let dst = S[nn];
+			      if (isCgCard(src) && dst.card_type == 'shader') {
+			         dst.card_type = 'webgl';
+				 S_value[dst.id] = new WebglCard(octx);
+			      }
+			      if (isFsCard(src) && dst.card_type == 'webgl') {
+			         dst.card_type = 'shader';
+				 S_value[dst.id] = new WebgpuCard(octx);
+			      }
+			   }
+
                            break;
                         }
                      break;
@@ -820,13 +836,10 @@ function Diagram() {
             if (object.card_type && ! S_value[object.id]) {
                switch (object.card_type) {
                case 'shader':
-                  let shaderCard = new WebgpuCard(octx);
-                  shaderCard.setShader('rgb = vec3(0.,0.,1.);');
-                  S_value[object.id] = shaderCard;
+                  S_value[object.id] = new WebgpuCard(octx);
                   break;
                case 'webgl':
-                  let webglCard = new WebglCard(octx);
-                  S_value[object.id] = webglCard;
+                  S_value[object.id] = new WebglCard(octx);
 		  break;
                default:
                   S_value[object.id] = dictionary[object.card_type];

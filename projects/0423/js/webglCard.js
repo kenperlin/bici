@@ -95,7 +95,7 @@ function WebglCard(ctx) {
          ctx.drawImage(canvas, x-w/2, y-w/2, w, w);
       }
       else {
-         ctx.fillStyle = '#00a0ff40';
+         ctx.fillStyle = '#00a0ff';
 	 ctx.fillRect(x-w/2, y-w/2, w, w);
       }
    }

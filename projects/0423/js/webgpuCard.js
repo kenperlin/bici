@@ -134,5 +134,7 @@ function WebgpuCard(ctx) {
          ctx.drawImage(canvas, x-w/2, y-w/2, w, w);
       }
    }
+
+   this.setShader('rgb = vec3(0,.625,1);');
 }
 
