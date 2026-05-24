@@ -9,6 +9,16 @@ function Diagram() {
 
    let penColor = '#000000';
 
+   let isCgCard = object => object.card_type == 'editor' && 
+                            object.state && object.state.text &&
+                            object.state.text.indexOf('cg.') >= 0;
+
+   let isFsCard = object => object.card_type == 'editor' && 
+                            object.state && object.state.text &&
+                            ( object.state.text.indexOf('vec2(') >= 0 ||
+                              object.state.text.indexOf('vec3(') >= 0 ||
+                              object.state.text.indexOf('vec4(') >= 0 );
+
    let save = name => {
       localStorage.setItem('saved_' + name, JSON.stringify(S));
       fetch('/api/save/' + name, {
@@ -838,16 +848,10 @@ function Diagram() {
                let webglCard = S_value[object.id];
 
                if (object.srcId) {
-                  let I = [];
                   let srcCards = getSrcCards(object);
-                  for (let i = 0 ; i < srcCards.length ; i++) {
-                     let src = srcCards[i];
-                     if (src.card_type == 'editor')
-                        webglCard.setScene(replaceAtSigns(src.state.text));
-                      else if (src.state._O)
-                        I.push(src.state._O);
-                  }
-                  webglCard.set_I(I.flat());
+                  for (let i = 0 ; i < srcCards.length ; i++)
+                     if (isCgCard(srcCards[i]))
+                        webglCard.setScene(replaceAtSigns(srcCards[i].state.text));
                }  
 
                lo[1] = hi[1] + lo[0] - hi[0];
@@ -902,6 +906,18 @@ function Diagram() {
 		        if (srcCards[i].state)
                            T.push(srcCards[i].state._O);
                      state._I = T.flat();
+                  }
+
+		  // A cg CARD JUST SENDS ITS INPUT PARAMETERS ON TO A webgl CARD
+
+		  if (isCgCard(object)) {
+                     let dstCards = getDstCards(object);
+		     if (dstCards.length > 0 && dstCards[0].card_type == 'webgl') {
+		        let I = [];
+		        for (let i = 0 ; i < 10 ; i++)
+		           I.push(state._I[i] ?? .5);
+		        S_value[dstCards[0].id].set_I(I);
+                     }
                   }
 
                   // PROCEDURALLY EVALUATE THE CARD CONTENTS

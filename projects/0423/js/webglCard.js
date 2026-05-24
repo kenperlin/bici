@@ -15,15 +15,15 @@ function WebglCard(ctx) {
    canvas.width = canvas.height = 500;
    document.body.appendChild(canvas);
 
-   let M = new Matrix();
+   let cg = new Matrix();
 
-   M.draw = (mesh, color) => {
-      let m = mxm(perspective(0,0,-5), M.get());
+   cg.draw = (mesh, color) => {
+      let m = mxm(perspective(0,0,-5), cg.get());
       setUniform('Matrix4fv', 'uMF', false, m);
       setUniform('Matrix4fv', 'uMI', false, inverse(m));
       setUniform('3fv', 'uColor', color ?? [1,1,1]);
       drawMesh(mesh);
-      return M;
+      return cg;
    }
 
    gl_start(canvas, this);
@@ -33,7 +33,7 @@ function WebglCard(ctx) {
    this.setScene = src => {
       let newScene;
       try {
-         newScene = new Function('M.identity();' + src);
+         newScene = new Function('cg.identity();' + src);
       } catch {
          error => console.log('webgl compile error:', error);
          return;
@@ -43,11 +43,14 @@ function WebglCard(ctx) {
 
    let startTime = Date.now()/1000;
 
-   this.setScene('M.turnY(time).scale(.6).draw(cube,[0,.8,1]);');
+   //this.setScene('cg.turnY(time).scale(.6).draw(cube,[0,.8,1]);');
 
    let _I = [];
 
-   this.set_I = src => _I = src;
+   this.set_I = src => {
+      console.log('setting _I to', src);
+      _I = src;
+   }
 
    this.draw = (x,y,w) => {
 
@@ -60,7 +63,7 @@ function WebglCard(ctx) {
                    'round,sign,sin,sqrt,trunc' ).split(',');
          let v = [
             '_I'   , _I,
-            'M'    , M,
+            'cg'   , cg,
             'ball' , ball,
             'cube' , cube,
             'tube' , tube,
@@ -88,9 +91,13 @@ function WebglCard(ctx) {
          for (let i = 0 ; i < b.length ; i++ ) delete window[b[i]];
          for (let i = 0 ; i < m.length ; i++ ) delete window[m[i]];
          for (let i = 0 ; i < v.length ; i+=2) delete window[v[i]];
-      }
 
-      ctx.drawImage(canvas, x-w/2, y-w/2, w, w);
+         ctx.drawImage(canvas, x-w/2, y-w/2, w, w);
+      }
+      else {
+         ctx.fillStyle = '#00a0ff40';
+	 ctx.fillRect(x-w/2, y-w/2, w, w);
+      }
    }
 }
 
