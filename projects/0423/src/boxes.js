@@ -5,7 +5,7 @@ for (let n = 0 ; n < 6 ; n++) {
                .turnY(time+(n<4?PI*n/2:0))
                .turnZ(n<4?0:PI*(n-4.5))
                .move(.6,0,0)
-               .scale(.25);
+               .scale(.5 * @0);
    sort.push({ m: M.get(),
                c: [ease(.5+.5*cos(3*n)),
                    ease(.5+.5*cos(4*n)),

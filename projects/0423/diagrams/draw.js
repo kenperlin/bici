@@ -61,14 +61,18 @@ function Diagram() {
    let replaceAtSigns = s => {
       let t = '';
       for (let n = 0 ; n < s.length ; n++)
-         t += s.charAt(n) == '@' ? '_I[' + s.charAt(++n) + ']' : s.charAt(n);
+         t += s[n  ] != '@' ? s[n] :
+	      s[n+1] == 'x' ? (++n, '_X') :
+	      s[n+1] == 'y' ? (++n, '_Y') : '_I[' + s[++n] + ']';
       return t;
    }
 
    let replaceAtSignsAndProvideDefaultOption = s => {
       let t = '';
       for (let n = 0 ; n < s.length ; n++)
-         t += s.charAt(n) == '@' ? '(_I[' + s.charAt(++n) + '] ?? .5)' : s.charAt(n);
+         t += s[n  ] != '@' ? s[n] :
+	      s[n+1] == 'x' ? (++n, '_X') :
+	      s[n+1] == 'y' ? (++n, '_Y') : '(_I[' + s[++n] + '] ?? .5)';
       return t;
    }
 
@@ -108,7 +112,7 @@ function Diagram() {
          if (contains(n, pos))
             break;
 
-      if (n >= 2 && S[n].type == 'card') {
+      if (n >= 2 && S[n].type == 'card' && S[n].state) {
          S[n].state.keyState = 'press';
          S[n].state.key = key;
          return true;
@@ -227,7 +231,7 @@ function Diagram() {
 
       // SEND TEXT EVENTS TO THE CARD AT THE CURSOR
 
-      if (n >= 2 && S[n].type == 'card') {
+      if (n >= 2 && S[n].type == 'card' && S[n].state) {
          S[n].state.keyState = 'release';
          S[n].state.key = key;
          dirty = true;
@@ -421,6 +425,9 @@ function Diagram() {
 
                if (nm < 2)
                   S[np].strokes[0] = [ pos ];
+
+               else if (S_value[S[nm].id] && typeof S_value[S[nm].id].mousePress == 'function')
+	          S_value[S[nm].id].mousePress(pos);
             }
 
             dirty = true;
@@ -434,6 +441,9 @@ function Diagram() {
             else {
                if (nm < 2)                       // CONTINUING TO DRAW
                   S[np].strokes[0].push(pos);    // A FREE-HAND STROKE
+
+               else if (S_value[S[nm].id] && typeof S_value[S[nm].id].mouseDrag == 'function')
+                  S_value[S[nm].id].mouseDrag(pos);
             }
             dirty = true;
             break;
@@ -564,6 +574,12 @@ function Diagram() {
                      n = -1;
                   }
                }
+
+               else if (S_value[S[nm].id] && typeof S_value[S[nm].id].mouseClick == 'function') {
+                  if (typeof S_value[S[nm].id].mouseRelease == 'function')
+                     S_value[S[nm].id].mouseRelease(pos);
+                  S_value[S[nm].id].mouseClick(pos);
+               }
             }
 
             // IF THIS IS A STROKE, NOT A CLICK
@@ -596,6 +612,9 @@ function Diagram() {
 
                extendBounds(n, stroke);
             }
+
+            else if (S_value[S[nm].id] && typeof S_value[S[nm].id].mouseRelease == 'function')
+               S_value[S[nm].id].mouseRelease(pos);
 
             // AFTER MOUSE RELEASE, REMOVE THE TEMPORARY STROKE
 

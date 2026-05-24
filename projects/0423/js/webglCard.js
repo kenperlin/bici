@@ -1,5 +1,10 @@
 function WebglCard(ctx) {
 
+   this.mousePress   = pos => console.log('webglCard mousePress');
+   this.mouseDrag    = pos => console.log('webglCard mouseDrag');
+   this.mouseClick   = pos => console.log('webglCard mouseClick');
+   this.mouseRelease = pos => console.log('webglCard mouseRelease');
+
    let ball = Shape.sphereMesh(20,10);
    let tube = Shape.glue(Shape.diskMesh(20,-1),
               Shape.glue(Shape.tubeMesh(20),
