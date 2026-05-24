@@ -34,10 +34,10 @@ let _ = {};
 
 // Core scripts - loaded once at startup (includes WebRTC)
 let coreFiles = `pca,loadImage,webgl,webcam,trackHead,help,cardDeck,
-	        midi,numberString,pen,aiScriptPanel,keyEvent,matchCurves,
+	        midi,numberString,pen,aiScriptPanel,matchCurves,
 	        glyphs,chalktalk,codeArea,math,shape,shader,
 	        diagram,sliders,widgets,webrtc-client,video-ui,implicit,
-		mediapipe,gesture,shadowHand,tracking,handPose,main,
+		mediapipe,gesture,shadowHand,tracking,handPose,main,keyEvent,
 		game,fetchWikipediaArticle,playingCards`.split(',');
 
 let project, slideData;
