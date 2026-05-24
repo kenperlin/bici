@@ -1083,7 +1083,7 @@ function Diagram() {
 	       if (isClipping)
 	          octx.restore();
 
-               if (object.card_type == 'editor') {
+               if (object.card_type == 'editor' && ! isCgCard(object) && ! isFsCard(object)) {
 
                   // IF THERE IS AN OUT-LINK, DISPLAY ANY GRAPHICAL RESULT OF EVAL IN DESTINATION CARD
 
