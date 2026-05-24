@@ -673,9 +673,9 @@ function Diagram() {
             this.fillPolygon([ add(B,E), add(B, [-2*D[0] - D[1], -2*D[1] + D[0]]),
                                          add(B, [-2*D[0] + D[1], -2*D[1] - D[0]]) ]);
 
-            // IF THE USER HAS CLICKED ON A LINK, DELETE THE LINK
+            // IF THE USER HAS CLICKED ON A LINK, REMOVE THE LINK
 
-	    let dsqFromLine = (p, a, b) => {
+	    let pointToLineDistanceSquared = (p, a, b) => {
                let ax = a[0] - p[0], ay = a[1] - p[1];
                let bx = b[0] - p[0], by = b[1] - p[1];
                let dx = bx - ax, dy = by - ay;
@@ -687,9 +687,7 @@ function Diagram() {
                return aa - ad * ad / dd;
             }
 
-	    // IF THE USER CLICKS ON A LINK, REMOVE THE LINK.
-
-            if (bgClick && dsqFromLine(bgClick,A,B) < .01)
+            if (bgClick && pointToLineDistanceSquared(bgClick,A,B) < .0001)
 	       for (let j = 0 ; j < S[n].srcId.length ; j++)
 	          if (S[n].srcId[j] == src.id) {
 		     S[n].srcId.splice(j,1);
