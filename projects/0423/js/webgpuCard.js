@@ -1,5 +1,11 @@
 function WebgpuCard(ctx) {
 
+   let xy = [0,0], mouseDown = false;
+   this.mousePress   = pos => { xy = pos; mouseDown = true; };
+   this.mouseDrag    = pos => { xy = pos; };
+   this.mouseRelease = pos => { xy = pos; mouseDown = false; };
+   this.mouseClick   = pos => { xy = pos; };
+
    let canvas = document.createElement('canvas');
    canvas.width = canvas.height = 500;
    document.body.appendChild(canvas);
@@ -45,6 +51,8 @@ function WebgpuCard(ctx) {
             struct MyUniforms {
   	       matrix: array<f32,16>,
                time: f32,                                // PASS IN UNIFORM time.
+               _X: f32,                                  // PASS IN UNIFORM x MOUSE POSITION.
+               _Y: f32,                                  // PASS IN UNIFORM y MOUSE POSITION.
 	       _I: array<f32,10>,                        // PASS IN 10 UNIFORM T PARAMETERS.
             };
             @group(0) @binding(0) var<uniform> uniforms: MyUniforms;
@@ -69,6 +77,8 @@ function WebgpuCard(ctx) {
   	       let m = uniforms.matrix;
 	       let _I = uniforms._I;                     // PARAMETERS PASSED IN FROM THE CPU.
                let time = uniforms.time;                 // ELAPSED TIME IN SECONDS.
+               let _X = uniforms._X;
+               let _Y = uniforms._Y;
                let x = 2 * in.xyzw.x / 500 - 1;          // CONVERT x,y FROM PIXELS TO -1 ... +1.
                let y = 2 * in.xyzw.y / 500 - 1;
                var rgb = vec3f(.5);
@@ -99,7 +109,7 @@ function WebgpuCard(ctx) {
             vertex   : { module: sM, entryPoint: 'vs', },
             fragment : { module: sM, entryPoint: 'fs', targets: [{ format }], },
          });
-         uB = device.createBuffer({ size: (16+1+10)*4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
+         uB = device.createBuffer({ size: (16+1+1+1+10)*4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
          bG = device.createBindGroup({layout:rP.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:uB}}]});
 
          oldShader = shader;
@@ -124,6 +134,8 @@ function WebgpuCard(ctx) {
 
 	 let TT = myM.get().slice();
 	 TT.push(time);
+	 TT.push(xy[0]);
+	 TT.push(xy[1]);
 	 for (let n = 0 ; n < 10 ; n++)
 	    TT.push(T[n] ?? .5);
 
