@@ -14,7 +14,7 @@ document.addEventListener('keydown', e => {
 
 document.addEventListener('keyup', e => {
    help.isSplash = false;
-   if (document.activeElement == codeArea.getElement())
+   if (codeArea && document.activeElement == codeArea.getElement())
       return;
 
    let scriptTextarea = document.getElementById('scriptInput');
@@ -57,9 +57,9 @@ abcdefghijklmnopqrstuvwxyz\
 ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 let keyDown = key => {
-   if ( slides[slideIndex].isFullScreen &&
-        slides[slideIndex].keyDown &&
-        slides[slideIndex].keyDown(key) )
+   if ( slides && slides[slideIndex] && slides[slideIndex].isFullScreen &&
+                                        slides[slideIndex].keyDown &&
+                                        slides[slideIndex].keyDown(key) )
       return;
 
    switch (key) {
