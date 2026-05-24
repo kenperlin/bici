@@ -823,19 +823,13 @@ function Diagram() {
             else if (isShader) {
                let shaderCard = S_value[object.id];
 
-               // LINK ANY SHADER CODE AND PARAMETERS FROM SOURCE CARDS
+               // LINK ANY .fs SHADER CODE FROM SOURCE CARD
 
                if (object.srcId) {
-                  let I = [];
                   let srcCards = getSrcCards(object);
-                  for (let i = 0 ; i < srcCards.length ; i++) {
-                     let src = srcCards[i];
-                     if (src.card_type == 'editor')
-                        shaderCard.setShader(replaceAtSigns(src.state.text));
-                      else if (src.state._O)
-                        I.push(src.state._O);
-                  }
-                  shaderCard.set_I(I.flat());
+                  for (let i = 0 ; i < srcCards.length ; i++)
+                     if (isFsCard(srcCards[i]))
+                        shaderCard.setShader(replaceAtSigns(srcCards[i].state.text));
                }
 
                lo[1] = hi[1] + lo[0] - hi[0];
@@ -846,6 +840,8 @@ function Diagram() {
 
             else if (isWebgl) {
                let webglCard = S_value[object.id];
+
+               // LINK ANY .cg SHADER CODE FROM SOURCE CARD
 
                if (object.srcId) {
                   let srcCards = getSrcCards(object);
@@ -907,6 +903,18 @@ function Diagram() {
                            T.push(srcCards[i].state._O);
                      state._I = T.flat();
                   }
+
+		  // An fs CARD JUST SENDS ITS INPUT PARAMETERS ON TO A shader CARD
+
+		  if (isFsCard(object)) {
+                     let dstCards = getDstCards(object);
+		     if (dstCards.length > 0 && dstCards[0].card_type == 'shader') {
+		        let I = [];
+		        for (let i = 0 ; i < 10 ; i++)
+		           I.push(state._I[i] ?? .5);
+		        S_value[dstCards[0].id].set_I(I);
+                     }
+		  }
 
 		  // A cg CARD JUST SENDS ITS INPUT PARAMETERS ON TO A webgl CARD
 
