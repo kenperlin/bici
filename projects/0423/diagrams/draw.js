@@ -1023,21 +1023,7 @@ function Diagram() {
                   intoCardCoords(lo,hi);
                   value = value(state, time, mi(pos), hasFocus);
 		  octx.restore();
-/*
-                  if (state.fileToLoad) {
-                     getFile('projects/' + project + '/' + state.fileToLoad, text => {
-                        object.card_type = 'editor';
-                        object.state.lines = text.split('\n');
-                        lo[1] = hi[1] - object.state.textSize * Math.max(1, object.state.lines.length);
-                        object.state.newText = text;
-                        object.state.col = 0;
-                        object.state.row = 0;
-                        delete S_value[object.id];
-                     });
-                     delete state.fileToLoad;
-                     state.fileLoaded = true;
-                  }
-*/
+
                   // ADJUST COORDINATE TRANSFORM MATH FOR NON-SQUARE CARDS
 
                   if (state.aspectRatio && ! object.hasBeenAdjusted) {

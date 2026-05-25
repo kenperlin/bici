@@ -110,6 +110,8 @@ function WebglCard(ctx) {
          ctx.fillStyle = '#00a0ff';
 	 ctx.fillRect(x-w/2, y-w/2, w, w);
       }
+      //ctx.strokeStyle = '#000000';
+      //ctx.strokeRect(x-w/2, y-w/2, w, w);
    }
 }
 
