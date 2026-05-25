@@ -29,6 +29,17 @@ function Diagram() {
    }
 
    let load = name => {
+
+      // LOAD WITH NULL STRING TO CLEAR THE SCENE
+
+      if (name == '') {
+         S = [];
+	 dirty = true;
+	 return;
+      }
+
+      // OTHERWISE FETCH A SAVED SCENE
+
       fetch('/api/load/' + name)
          .then(r => r.ok ? r.json() : Promise.reject(r.status))
          .then(data => { S = data; dirty = true; })
@@ -36,6 +47,11 @@ function Diagram() {
             const local = localStorage.getItem('saved_' + name);
             if (local) { S = JSON.parse(local); dirty = true; }
          });
+   }
+
+   let loadSrcFile = (object, text) => {
+      object.state.srcFile = text;
+      getFile('projects/' + project + '/src/' + text, text => object.state.newText = text);
    }
 
    let getSrcCards = card => {
@@ -943,15 +959,14 @@ function Diagram() {
                      object.state = { _I: [], _O: [] };
                   let state = object.state;
 
-                  // ON CONTROL KEY RELEASE, CONVERT CARD TO THE CARD TYPE PRINTED ON THE CARD
+		  // ON CONTROL KEY RELEASE, EITHER CONVERT CARD TO THE CARD TYPE PRINTED ON THE CARD,
+                  // OR LOAD A FILE IF TEXT CONTAINS '.'. IF FILE HAS ALREADY BEEN LOADED, RELOAD IT.
 
-                  if (object.text == 'editor' && state.key == 'Control' && state.keyState == 'release') {
-                     let text = object.state.text;
-                     if (text.indexOf('.') > 0)
-                        getFile('projects/' + project + '/src/' + text, text => object.state.newText = text);
+                  if (object.text == 'editor' && state.key == 'Control' && state.keyState == 'release')
+                     if (object.state.text.indexOf('.') > 0 || object.state.srcFile)
+		        loadSrcFile(object, object.state.srcFile ?? object.state.text);
                      else
-                        activationText = text;
-                  }
+                        activationText = object.state.text;
 
                   // IF CARD HAS IN-LINKS, SET ITS PARAMETERS TO THEIR PARAMETER VALUES
 
@@ -1008,7 +1023,7 @@ function Diagram() {
                   intoCardCoords(lo,hi);
                   value = value(state, time, mi(pos), hasFocus);
 		  octx.restore();
-
+/*
                   if (state.fileToLoad) {
                      getFile('projects/' + project + '/' + state.fileToLoad, text => {
                         object.card_type = 'editor';
@@ -1022,7 +1037,7 @@ function Diagram() {
                      delete state.fileToLoad;
                      state.fileLoaded = true;
                   }
-
+*/
                   // ADJUST COORDINATE TRANSFORM MATH FOR NON-SQUARE CARDS
 
                   if (state.aspectRatio && ! object.hasBeenAdjusted) {

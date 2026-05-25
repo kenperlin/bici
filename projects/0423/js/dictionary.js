@@ -481,7 +481,6 @@ editor: function(state,t,p,hasFocus) {
       break;
 
    case 'press':
-      console.log('PRESS');
       computeColRowIndex(p);
       state.selectionStart = state.selectionEnd = state.index;
       dirty = true;
@@ -495,7 +494,6 @@ editor: function(state,t,p,hasFocus) {
       break;
 
    case 'release':
-      console.log('RELEASE', state.mouseClick);
       if (state.clickCount === undefined)
          state.clickCount = 0;
       if (state.mouseClick) {
@@ -588,6 +586,9 @@ editor: function(state,t,p,hasFocus) {
          state.isMetaDown = true;
       else if (state.isMetaDown)
          switch (state.key) {
+         case 'a': state.selectionStart = 0;
+	           state.selectionEnd = state.text.length-1;
+	           break;
          case 'c': saveForUndo(); copy() ; break;
          case 'v': saveForUndo(); paste(); break;
          case 'x': saveForUndo(); cut()  ; break;
@@ -687,11 +688,12 @@ editor: function(state,t,p,hasFocus) {
 
    // CREATE DISPLAY LIST TO SHOW THE SELECTED REGION, IF ANY.
 
-   if (! state.isClosed && state.selectionStart == state.selectionEnd) {
-      let col = Math.min(state.col, state.lines[state.row].length);
-      let x = w * col - 1;
-      S.push({fill: [[x,y-h], [x+w,y-h], [x+w,y], [x,y]], color: '#00000040'});
-   }
+   if (! state.isClosed && state.selectionStart == state.selectionEnd)
+      if (state.lines[state.row]) {
+         let col = Math.min(state.col, state.lines[state.row].length);
+         let x = w * col - 1;
+         S.push({fill: [[x,y-h], [x+w,y-h], [x+w,y], [x,y]], color: '#00000040'});
+      }
 
    return S;
 },
