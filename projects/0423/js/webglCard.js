@@ -49,8 +49,6 @@ function WebglCard(ctx) {
 
    let startTime = Date.now()/1000;
 
-   //this.setScene('cg.turnY(time).scale(.6).draw(cube,[0,.8,1]);');
-
    let _I = [];
 
    this.set_I = src => {

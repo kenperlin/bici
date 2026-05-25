@@ -31,7 +31,7 @@ fish: (state,t,p,hasFocus) => {
    return S;
 },
 
-curveEditor: (state,t,p,hasFocus) => {
+spline: (state,t,p,hasFocus) => {
    state.hideFrame = true;
    state.noClipping = true;
 
@@ -82,6 +82,69 @@ curveEditor: (state,t,p,hasFocus) => {
    return [];
 },
 
+curve: (state,t,p,hasFocus) => {
+   state.hideFrame = true;
+   state.aspectRatio = 5;
+   if (state.keys === undefined) {
+      state.keys = [[-1,.5],[1,.5]];
+      state.n = -1;
+   }
+
+   if (state.mouseState == 'press') {
+      for (state.n = state.keys.length - 1 ; state.n >= 0 ; state.n--)
+	 if (Math.abs(p[0] - state.keys[state.n][0]) < .1)
+	    break;
+   }
+
+   let y = t => Math.max(.3, Math.min(.7, .5 + t / 5));
+
+   if (state.mouseState == 'drag')
+      if (state.n >= 0) {
+         state.keys[state.n][1] = y(p[1]);
+         if (state.n > 0 && state.n < state.keys.length-1) {
+            state.keys[state.n][0] = Math.max(-1, Math.min(1, p[0]));
+            state.keys.sort((a,b) => a[0] - b[0]);
+            for (state.n = state.keys.length - 1 ; state.n >= 0 ; state.n--)
+               if (state.keys[state.n][0] == p[0])
+                  break;
+         }
+      }
+
+   if (state.mouseState == 'release') {
+      if (state.n < 0) {
+         state.keys.push([p[0], y(p[1])]);
+         state.keys.sort((a,b) => a[0] - b[0]);
+      }
+      else if (state.mouseClick || state.n > 0 && state.n < state.keys.length-1 && p[0]*p[0] > 1)
+         state.keys.splice(state.n, 1);
+      state.n = -1;
+   }
+
+   if (state._I.length > 0) {
+      let x = state._I[0];
+      for (let n = 0 ; n < state.keys.length - 1 ; n++) {
+         let x0 = state.keys[n][0], x1 = state.keys[n+1][0];
+         if (x >= x0 && x < x1) {
+            let y0 = 5 * (state.keys[n  ][1] - .5),
+	        y1 = 5 * (state.keys[n+1][1] - .5);
+	    let f = (x - x0) / (x1 - x0);
+	    state._O[0] = y0 + f * (y1 - y0);
+	    break;
+	 }
+      }
+   }
+
+   state.draw.fillColor('#ffffff40').fillRect([-1,-1 ],[1,1 ])
+             .lineWidth(.003).drawColor('#000000'  ).drawRect([-1,.3],[1,.7]);
+   state.draw.lineWidth(.012).path(state.keys);
+   state.draw.lineWidth(.003);
+   for (let n = 0 ; n < state.keys.length ; n++) {
+      let x = state.keys[n][0];
+      state.draw.line([x,.3],[x,.7]);
+   }
+   return [];
+},
+
 trackpad: (state,t,p,hasFocus) => {
    state.hideFrame = true;
    if (! state.p) state.p = [0,0];
@@ -93,8 +156,8 @@ trackpad: (state,t,p,hasFocus) => {
    }
    let x = state.p[0], y = state.p[1];
 
-   state._O[0] = .5 + .5 * x;
-   state._O[1] = .5 + .5 * y;
+   state._O[0] = x;
+   state._O[1] = y;
 
    state.draw.lineWidth(.01).drawRect([-1,-1],[1,1])
              .fillColor('#ffffff40').fillRect([-1,-1],[1,1])
@@ -105,7 +168,7 @@ trackpad: (state,t,p,hasFocus) => {
 	     .text('x=' + round2(state._O[0]), [-.5,.5])
              .text('y=' + round2(state._O[1]), [ .5,.5]);
 
-   return [ ];
+   return [];
 },
 
 scope: (state,t,p,hasFocus) => {
@@ -144,7 +207,7 @@ sliderX: (state,t,p,hasFocus) => {
 
    if (! state.t) state.t = 0;
    if (hasFocus) state.t = p[0];
-   state._O[0] = .5 + .5 * state.t;
+   state._O[0] = state.t;
 
    let x = state.t;
    return [
@@ -162,7 +225,7 @@ sliderY: (state,t,p,hasFocus) => {
 
    if (! state.t) state.t = 0;
    if (hasFocus) state.t = p[1];
-   state._O[0] = .5 + .5 * state.t;
+   state._O[0] = state.t;
 
    let y = state.t;
    return [
@@ -176,7 +239,7 @@ sliderY: (state,t,p,hasFocus) => {
 sliders: function(state,t,p,hasFocus) {
 
    if (state.N === undefined) {
-      state._O = [.5];
+      state._O = [0];
       state.N = 2;
       state.flip = 1;
    }
@@ -197,14 +260,14 @@ sliders: function(state,t,p,hasFocus) {
       i = state.i;
 
    if (state.i >= 0 && (state.mouseState == 'press' || state.mouseState == 'drag'))
-      state._O[state.i] = .5 + .5 * p[0];
+      state._O[state.i] = p[0];
 
    if (state.i == (state.flip ? -1 : N-1) && state.mouseState == 'release') {
       let dx = p[0] - state.p_press[0], dy = p[1] - state.p_press[1];
       if (dy*dy > h*h && dy*dy > dx*dx)
          state.flip = 1 - state.flip;
       else if (p[0] > 0) {
-         state._O.push(.5);
+         state._O.push(0);
          state.N++;
       }
       else if (N > 2) {
@@ -220,7 +283,7 @@ sliders: function(state,t,p,hasFocus) {
    for (let n = 0 ; n < N-1 ; n++) {
       let y = 1 - (n+state.flip)*h;
       S.push({fill: [[-1,y],[1,y],[1,y-h],[-1,y-h],[-1,y]], color: '#b0b0b0'});
-      let x = Math.max(-1, Math.min(1, 2 * state._O[n] - 1));
+      let x = Math.max(-1, Math.min(1, state._O[n]));
       S.push({fill: [[-1,y],[x,y],[x,y-h],[-1,y-h],[-1,y]], color: '#e0e0e0'});
       S.push({draw: [[-1,y],[1,y],[1,y-h],[-1,y-h],[-1,y]], lineWidth: isIn && n==i ? .004 : .002});
       S.push({text: '@' + n, pos: [-.98,y], justify: [0,1.75], scale: .9});

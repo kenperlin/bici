@@ -137,7 +137,7 @@ function WebgpuCard(ctx) {
 	 TT.push(xy[0]);
 	 TT.push(xy[1]);
 	 for (let n = 0 ; n < 10 ; n++)
-	    TT.push(T[n] ?? .5);
+	    TT.push(T[n] ?? 0);
 
          device.queue.writeBuffer(uB, 0, new Float32Array(TT));
          pE.draw(6,1,0,0);                                                 // DRAW 2 TRIANGLES == 6 VERTICES.

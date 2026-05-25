@@ -88,7 +88,7 @@ function Diagram() {
       for (let n = 0 ; n < s.length ; n++)
          t += s[n  ] != '@' ? s[n] :
 	      s[n+1] == 'x' ? (++n, '_X') :
-	      s[n+1] == 'y' ? (++n, '_Y') : '(_I[' + s[++n] + '] ?? .5)';
+	      s[n+1] == 'y' ? (++n, '_Y') : '(_I[' + s[++n] + '] ?? 0)';
       return t;
    }
 
@@ -979,14 +979,14 @@ function Diagram() {
                      state._I = T.flat();
                   }
 
-		  // An fs CARD JUST SENDS ITS INPUT PARAMETERS ON TO A shader CARD
+		  // AN fs CARD JUST SENDS ITS INPUT PARAMETERS ON TO A shader CARD
 
 		  if (isFsCard(object)) {
                      let dstCards = getDstCards(object);
 		     if (dstCards.length > 0 && dstCards[0].card_type == 'shader') {
 		        let I = [];
 		        for (let i = 0 ; i < 10 ; i++)
-		           I.push(state._I[i] ?? .5);
+		           I.push(state._I[i] ?? 0);
 		        S_value[dstCards[0].id].set_I(I);
                      }
 		  }
@@ -998,7 +998,7 @@ function Diagram() {
 		     if (dstCards.length > 0 && dstCards[0].card_type == 'webgl') {
 		        let I = [];
 		        for (let i = 0 ; i < 10 ; i++)
-		           I.push(state._I[i] ?? .5);
+		           I.push(state._I[i] ?? 0);
 		        S_value[dstCards[0].id].set_I(I);
                      }
                   }

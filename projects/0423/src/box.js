@@ -31,8 +31,7 @@ box = (M,C) => {
 }
 if (hasOutLink) {
    M.identity().perspective(0,0,-5)
-               .turnY(2*@0-1)
-               .turnX(1-2*@1)
+               .turnY(@0).turnX(-@1)
                .scale(.5);
    box(M, [1,.5,.2]);
 }
