@@ -671,6 +671,14 @@ editor: function(state,t,p,hasFocus) {
       return [ -1 + w * col, 1 - row*h ];
    }
 
+   // FIND OUT WHAT INPUT PARAMETERS HAVE CHANGED SINCE THE PREVIOUS ANIMATION FRAME.
+
+   if (! state._I_changed)
+      state._I_changed = [0,0,0,0,0, 0,0,0,0,0];
+   for (let n = 0 ; n < 10 ; n++)
+      if (state._I[n] != state._I_prev[n])
+         state._I_changed[n] = 31;
+
    // CREATE DISPLAY LIST TO SHOW THE TEXT.
 
    state.nLines = state.isClosed ? 1 : state.lines.length;
@@ -684,16 +692,42 @@ editor: function(state,t,p,hasFocus) {
       S.push({text: text, pos: [-1,1-(row+.6)*h], justify: justify, size: state.textSize});
       let nChars = text.length + (i + text.length >= state.selectionStart &&
                                   i + text.length <= state.selectionEnd ? 1 : 0);
+
+      // HIGHLIGHT ANY INPUT PARAMETERS THAT ARE CURRENTLY CHANGING.
+
+      let isDigit = c => c >= '0' && c <= '9';
+
+      for (let col = 0 ; col < nChars ; col++)
+         if (text[col] == '@' && isDigit(text[col+1])) {
+	    let ascii = text.charCodeAt(col+1);
+	    let c = state._I_changed[ascii - 48];
+	    if (c > 0) {
+               let x = w * col - 1;
+               let y = 1 - row * h;
+               S.push({draw: [ [x-w/2  ,y-h*5/4],
+	                       [x+w*5/2,y-h*5/4],
+			       [x+w*5/2,y+h*.4 ],
+			       [x-w/2  ,y+h*.4 ],
+			       [x-w/2  ,y-h*5/4] ], color: '#ff0000' + hex(c<<3) });
+	    }
+	 }
+
+      // HIGHLIGHT CHARACTERS THAT ARE IN THE SELECTED REGION.
+
       for (let col = 0 ; col < nChars ; col++)
          if (i + col >= state.selectionStart && i + col <= state.selectionEnd) {
             let x = w * col - 1;
             let y = 1 - row * h;
             S.push({fill: [[x,y-h], [x+w,y-h], [x+w,y], [x,y]], color: '#00000040'});
          }
+
       i += text.length + 1;
    }
 
-   // CREATE DISPLAY LIST TO SHOW THE SELECTED REGION, IF ANY.
+   for (let n = 0 ; n < 10 ; n++)
+      state._I_changed[n]--;
+
+   // HIGHLIGHT THE CURSOR POSITION.
 
    if (! state.isClosed && state.selectionStart == state.selectionEnd)
       if (state.lines[state.row]) {

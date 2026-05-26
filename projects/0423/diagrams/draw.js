@@ -957,7 +957,7 @@ function Diagram() {
                if (typeof value == 'function') {
 
                   if (object.state === undefined)
-                     object.state = { _I: [], _O: [] };
+                     object.state = { _I_prev: [], _I: [], _O: [] };
                   let state = object.state;
 
 		  // ON CONTROL KEY RELEASE, EITHER CONVERT CARD TO THE CARD TYPE PRINTED ON THE CARD,
@@ -972,6 +972,7 @@ function Diagram() {
                   // IF CARD HAS IN-LINKS, SET ITS PARAMETERS TO THEIR PARAMETER VALUES
 
                   if (object.srcId) {
+		     state._I_prev = state._I.slice();
                      let T = [];
 		     let srcCards = getSrcCards(object);
 		     for (let i = 0 ; i < srcCards.length ; i++)
