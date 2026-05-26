@@ -199,6 +199,39 @@ scope: (state,t,p,hasFocus) => {
    return [ { draw: trace, lineWidth: .002 } ];
 },
 
+button: (state,t,p,hasFocus) => {
+   state.hideFrame = true;
+   state.aspectRatio = 2;
+   state.lineWidth = .008;
+
+   if (state.mouseState == 'press')
+      state.isPressed = true;
+
+   if (state.mouseState == 'release') {
+      state.isOn = ! state.isOn;
+      state.isPressed = false;
+   }
+
+   if (state._I.length == 0)
+      state._O[0] = state.isOn ? 1 : -1;
+   else
+      for (let n = 0 ; n < state._I.length ; n++)
+         state._O[n] = state.isOn ? state._I[n] : 0;
+
+   let d = .2, y = .3, h = .5;
+   let path = [[1-d,y+h],[1-d/3,y+h-d/3],[1,y+h-d],
+               [1,y-h+d],[1-d/3,y-h+d/3],[1-d,y-h],
+	       [d-1,y-h],[d/3-1,y-h+d/3],[-1,y-h+d],
+	       [-1,y+h-d],[d/3-1,y+h-d/3],[d-1,y+h],
+	       [1-d,y+h]];
+   state.draw.fillColor(state.isPressed ? '#909090' : state.isOn ? '#ffffff' : '#c8c8c8').fillPolygon(path)
+             .lineWidth(.03).path(path)
+             .setFont(.8)
+	     .text(state.isOn ? 'ON' : 'OFF', [0,0], .5, .85);
+
+   return [];
+},
+
 sliderX: (state,t,p,hasFocus) => {
    state.hideFrame = true;
    state.aspectRatio = 5;

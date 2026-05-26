@@ -98,6 +98,7 @@ let addDiagramProperties = (diagram, ctx) => {
       ctx.lineTo(hi[0],hi[1]);
       ctx.lineTo(lo[0],hi[1]);
       ctx.clip();
+      return diagram;
    }
    diagram.fillRect = (lo,hi,r) => {
       lo = mxp(lo);
@@ -135,6 +136,7 @@ let addDiagramProperties = (diagram, ctx) => {
          ctx.lineTo(x, y);
       }
       ctx.stroke();
+      return diagram;
    }
    diagram.line = (a,b,arrowHead) => {
       let A = mxp(a), B = mxp(b);
@@ -184,16 +186,19 @@ let addDiagramProperties = (diagram, ctx) => {
    diagram.curve = (n, f) => {
       curve(n, f);
       ctx.stroke();
+      return diagram;
    }
    diagram.fillCurve = (n, f) => {
       curve(n, f);
       ctx.fill();
+      return diagram;
    }
    diagram._images = {};
    diagram.drawImage = (image, sx,sy,sw,sh, dx,dy,dw,dh) => {
       let lo = mxp([dx,dy]);
       let hi = mxp([dx+dw,dy+dh]);
       ctx.drawImage(image, sx,sy,sw,sh, lo[0],lo[1],hi[0]-lo[0],hi[1]-lo[1]);
+      return diagram;
    }
    diagram.image = (image, a, scale) => {
       if (typeof image == 'string')
@@ -209,6 +214,7 @@ let addDiagramProperties = (diagram, ctx) => {
 	 let height = width * image.height / image.width;
 	 ctx.drawImage(image, A[0]-width/2, A[1]-height/2, width, height);
       }
+      return diagram;
    }
    diagram.text = (text, a, h_justify = .5, v_justify = .5) => {
       let A = mxp(a);
