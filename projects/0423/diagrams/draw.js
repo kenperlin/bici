@@ -34,6 +34,7 @@ function Diagram() {
 
       if (name == '') {
          S = [];
+	 S_value = {};
 	 dirty = true;
 	 return;
       }
@@ -45,7 +46,7 @@ function Diagram() {
          .then(data => { S = data; dirty = true; })
          .catch(() => {
             const local = localStorage.getItem('saved_' + name);
-            if (local) { S = JSON.parse(local); dirty = true; }
+            if (local) { S = JSON.parse(local); S_value = {}; dirty = true; }
          });
    }
 
@@ -983,7 +984,7 @@ function Diagram() {
 
 		  if (isFsCard(object)) {
                      let dstCards = getDstCards(object);
-		     if (dstCards.length > 0 && dstCards[0].card_type == 'shader') {
+		     if (dstCards.length > 0 && dstCards[0].card_type == 'shader' && S_value[dstCards[0].id]) {
 		        let I = [];
 		        for (let i = 0 ; i < 10 ; i++)
 		           I.push(state._I[i] ?? 0);
@@ -995,7 +996,7 @@ function Diagram() {
 
 		  if (isCgCard(object)) {
                      let dstCards = getDstCards(object);
-		     if (dstCards.length > 0 && dstCards[0].card_type == 'webgl') {
+		     if (dstCards.length > 0 && dstCards[0].card_type == 'webgl' && S_value[dstCards[0].id]) {
 		        let I = [];
 		        for (let i = 0 ; i < 10 ; i++)
 		           I.push(state._I[i] ?? 0);
@@ -1076,7 +1077,8 @@ function Diagram() {
                   lineWidth = object.state.lineWidth;
 
                let color = penColor;
-               object.state.cardSize = hi[0] - lo[0];
+	       if (object.state)
+                  object.state.cardSize = hi[0] - lo[0];
                for (let i = 0 ; i < value.length ; i++) {
                   this.lineWidth(lineWidth);
                   let item = value[i];
@@ -1120,7 +1122,7 @@ function Diagram() {
 	       if (isClipping)
 	          octx.restore();
 
-               if (object.card_type == 'editor' && ! isCgCard(object) && ! isFsCard(object)) {
+               if (object.card_type == 'editor' && ! isCgCard(object) && ! isFsCard(object) && object.state) {
 
                   // IF THERE IS AN OUT-LINK, DISPLAY ANY GRAPHICAL RESULT OF EVAL IN DESTINATION CARD
 
