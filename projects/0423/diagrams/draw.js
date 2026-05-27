@@ -19,28 +19,25 @@ function Diagram() {
                               object.state.text.indexOf('vec3(') >= 0 ||
                               object.state.text.indexOf('vec4(') >= 0 );
 
-   let save = name => {
-      localStorage.setItem('saved_' + name, JSON.stringify(S));
-      fetch('/api/save/' + name, {
-         method: 'POST',
-         headers: { 'Content-Type': 'application/json' },
-         body: JSON.stringify(S)
-      }).catch(err => console.error('server save failed:', err));
+   let save = (name, str) => {
+      if (str) {
+         fetch('/api/save/' + name, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify([ { src: str } ])
+         }).catch(err => console.error('server save str failed:', err));
+      }
+      else {
+         localStorage.setItem('saved_' + name, JSON.stringify(S));
+         fetch('/api/save/' + name, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(S)
+         }).catch(err => console.error('server save failed:', err));
+      }
    }
 
    let load = name => {
-
-      // LOAD WITH NULL STRING TO CLEAR THE SCENE
-
-      if (name == '') {
-         S = [];
-	 S_value = {};
-	 dirty = true;
-	 return;
-      }
-
-      // OTHERWISE FETCH A SAVED SCENE
-
       fetch('/api/load/' + name)
          .then(r => r.ok ? r.json() : Promise.reject(r.status))
          .then(data => { S = data; dirty = true; })
@@ -173,8 +170,7 @@ function Diagram() {
          switch (key) {
          case 'Command':
          case 'Meta':
-         case 'Shift':
-            break;
+	    break;
          case 'Backspace':
             textString = textString.substring(0, textString.length-1);
             break;
@@ -220,8 +216,12 @@ function Diagram() {
             textString = '';
             break;
          case 'l':
-            load(textString);
-            textString = '';
+	    if (textString == '')
+	       this.init();
+	    else {
+               load(textString);
+               textString = '';
+            }
             break;
          case 'p':
             usePen = ! usePen;
@@ -292,13 +292,16 @@ function Diagram() {
    let pos = [0,0], time, isPenDown, wasPenDown;
    let startTime = Date.now() / 1000;
 
-   let S;
+   let S, id, S_value;
+
    this.init = () => {
+      id = 0;
       S = [ { strokes:[[]], id: id++ }, { strokes:[[]], id: id++ } ];
+      S_value = {};
       dirty = true;
    };
 
-   let id = 0, S_value = {};
+   this.init();
 
    let contains = (n, p) => S[n].lo[0] - .02 < p[0] && S[n].hi[0] + .02 > p[0] &&
                             S[n].lo[1] - .02 < p[1] && S[n].hi[1] + .02 > p[1] ;
@@ -960,14 +963,25 @@ function Diagram() {
                      object.state = { _I_prev: [], _I: [], _O: [] };
                   let state = object.state;
 
-		  // ON CONTROL KEY RELEASE, EITHER CONVERT CARD TO THE CARD TYPE PRINTED ON THE CARD,
-                  // OR LOAD A FILE IF TEXT CONTAINS '.'. IF FILE HAS ALREADY BEEN LOADED, RELOAD IT.
+                  if (object.text == 'editor' && state.key == 'Control' && state.keyState == 'release') {
 
-                  if (object.text == 'editor' && state.key == 'Control' && state.keyState == 'release')
-                     if (object.state.text.indexOf('.') > 0 || object.state.srcFile)
-		        loadSrcFile(object, object.state.srcFile ?? object.state.text);
-                     else
-                        activationText = object.state.text;
+                     if (state.isShiftDown) {
+                        if (object.state.srcFile)
+		           save(object.state.srcFile, object.state.text);
+                     }
+		     else {
+
+		        // ON CONTROL KEY RELEASE, EITHER CONVERT CARD TO THE CARD TYPE PRINTED ON THE CARD,
+                        // OR LOAD A FILE IF TEXT CONTAINS '.'. IF FILE HAS ALREADY BEEN LOADED, RELOAD IT.
+
+                        if (object.state.text.indexOf('.') > 0 || object.state.srcFile)
+		           loadSrcFile(object, object.state.srcFile ?? object.state.text);
+                        else
+                           activationText = object.state.text;
+                     }
+
+		     state.key = ''; // SO WE DO NOT KEEP LOADING OR SAVING THE FILE!
+                  }
 
                   // IF CARD HAS IN-LINKS, SET ITS PARAMETERS TO THEIR PARAMETER VALUES
 

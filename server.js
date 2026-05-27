@@ -53,10 +53,13 @@ app.post('/api/gemini', async (req, res) => {
   }
 });
 
+const SRC_DIR = path.join(__dirname, 'projects/0423/src');
+if (!fs.existsSync(SRC_DIR)) fs.mkdirSync(SRC_DIR, { recursive: true });
 
 // Save / load named scene snapshots to disk (used by projects/0423 draw.js)
-const SAVES_DIR = path.join(__dirname, 'saved');
-if (!fs.existsSync(SAVES_DIR)) fs.mkdirSync(SAVES_DIR, { recursive: true });
+
+const SAVED_DIR = path.join(__dirname, 'saved');
+if (!fs.existsSync(SAVED_DIR)) fs.mkdirSync(SAVED_DIR, { recursive: true });
 
 function safeName(name) {
   return String(name).replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 64);
@@ -64,8 +67,18 @@ function safeName(name) {
 
 app.post('/api/save/:name', (req, res) => {
   try {
-    const file = path.join(SAVES_DIR, safeName(req.params.name) + '.json');
-    fs.writeFileSync(file, JSON.stringify(req.body));
+    if (req.params.name.indexOf('.cg') > 0) {
+       let file = path.join(SRC_DIR, safeName(req.params.name) + '.json');
+       file = '/Users/ken/Dropbox/Ken/2026/may/bici/projects/0423/src/robot.cg';
+       let str = JSON.stringify(req.body);
+       str = str.substring(9, str.length-3);
+       str = str.replaceAll("\\n", "\n");
+       fs.writeFileSync(file, str);
+    }
+    else {
+       const file = path.join(SAVED_DIR, safeName(req.params.name) + '.json');
+       fs.writeFileSync(file, JSON.stringify(req.body));
+    }
     res.json({ ok: true });
   } catch (err) {
     console.error('save error:', err);
@@ -75,7 +88,7 @@ app.post('/api/save/:name', (req, res) => {
 
 app.get('/api/load/:name', (req, res) => {
   try {
-    const file = path.join(SAVES_DIR, safeName(req.params.name) + '.json');
+    const file = path.join(SAVED_DIR, safeName(req.params.name) + '.json');
     if (!fs.existsSync(file)) return res.status(404).json({ error: 'not found' });
     res.json(JSON.parse(fs.readFileSync(file, 'utf8')));
   } catch (err) {
@@ -86,7 +99,7 @@ app.get('/api/load/:name', (req, res) => {
 
 app.get('/api/saves', (req, res) => {
   try {
-    const names = fs.readdirSync(SAVES_DIR)
+    const names = fs.readdirSync(SAVED_DIR)
       .filter(f => f.endsWith('.json'))
       .map(f => f.slice(0, -5));
     res.json({ saves: names });

@@ -624,6 +624,8 @@ editor: function(state,t,p,hasFocus) {
    if (state.keyState == 'press')
       if (state.key == 'Meta')
          state.isMetaDown = true;
+      else if (state.key == 'Shift')
+         state.isShiftDown = true;
       else if (state.isMetaDown)
          switch (state.key) {
          case 'a': state.selectionStart = 0;
@@ -685,8 +687,10 @@ editor: function(state,t,p,hasFocus) {
       case 'Control':
          state.isControlDown = false;
 	 break;
-      case 'Alt':
       case 'Shift':
+         state.isShiftDown = false;
+	 break;
+      case 'Alt':
       case 'Tab':
          break;
       case 'Escape':
