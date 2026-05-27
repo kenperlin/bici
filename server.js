@@ -67,9 +67,11 @@ function safeName(name) {
 
 app.post('/api/save/:name', (req, res) => {
   try {
-    if (req.params.name.indexOf('.cg') > 0) {
-       let file = path.join(SRC_DIR, safeName(req.params.name) + '.json');
-       file = '/Users/ken/Dropbox/Ken/2026/may/bici/projects/0423/src/robot.cg';
+    let fileName = req.params.name;
+    if ( fileName.indexOf('.js') > 0 ||
+         fileName.indexOf('.cg') > 0 ||
+         fileName.indexOf('.fs') > 0 ) {
+       let file = path.join(SRC_DIR, fileName);
        let str = JSON.stringify(req.body);
        str = str.substring(9, str.length-3);
        str = str.replaceAll("\\n", "\n");
