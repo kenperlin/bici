@@ -321,7 +321,7 @@ wss.on('connection', (ws, req) => {
           // Broadcast state updates to clients in the same room only
           const senderRoomId = clientRooms.get(clientId);
           if (senderRoomId) {
-            console.log('Broadcasting state update from:', clientId, 'in room:', senderRoomId);
+            //console.log('Broadcasting state update from:', clientId, 'in room:', senderRoomId);
             const roomClients = getRoomClients(senderRoomId);
             roomClients.forEach((id) => {
               if (id !== clientId) {
