@@ -337,6 +337,58 @@ sliders: function(state,t,p,hasFocus) {
    return S;
 },
 
+timeline: function(state,t,p,hasFocus) {
+   state.hideFrame = true;
+   state.noClipping = true;
+   state.aspectRatio = 5;
+
+   let time = Date.now() / 1000;
+   let y = p[1];
+
+   if (state.mode == undefined) {
+      state.mode = 0;
+      state.duration = 60;
+   }
+
+   if (state.mouseState == 'press')
+      state.y = p[1];
+
+   if (state.mouseState == 'drag') {
+      state.duration = Math.max(1, state.duration + 10 * (p[1] - state.y));
+      state.y = p[1];
+   }
+
+   if (state.mouseState == 'release')
+      if (state.mouseClick)
+         state.mode = (state.mode + 1) % 2;
+
+   switch (state.mode) {
+   case 0:
+      state.t = 0;
+      break;
+   case 1:
+      state.t = Math.min(1, state.t + (time - state.time) / (state.duration >> 0));
+      break;
+   }
+
+   state.time = time;
+
+   let x = 2 * state.t - 1;
+   state._O[0] = x;
+
+   let a = '' + (state.t * state.duration >> 0);
+   let b = '' + (state.duration >> 0);
+   if (a.length < b.length)
+      a = ' ' + a;
+   state.draw.lineWidth(.03)
+             .line([-1,.5],[1,.5])
+             .line([x,.5-.2],[x,.5+.2])
+	     .setFont(.2, 'Courier')
+	     .text(a + ' secs', [0,.5], .5, .6)
+	     .text(b + ' secs', [0,.5], .5, 1.7);
+   return [];
+},
+
 timer: function(state,t,p,hasFocus) {
    state.hideFrame = true;
    state.lineWidth = .008;
