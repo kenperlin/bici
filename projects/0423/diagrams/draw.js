@@ -1049,6 +1049,7 @@ function Diagram() {
 
                   state.dirty = false;
                   state.draw = this;
+                  state.custom = object.custom;
 
                   octx.save();
                   intoCardCoords(lo,hi);

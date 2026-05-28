@@ -242,25 +242,23 @@ scope: (state,t,p,hasFocus) => {
    return [ { draw: trace, lineWidth: .002 } ];
 },
 
-/*
-    To do: Create custom buttons.
-    	Make sure to migrate object.custom to object.state.custom in draw.js.
-	If state.custom is a string, use it as the text label.
-	If custom is an array, then make this an n-state button.
-		If n > 3, then color should always be white when not pressed.
-	Modify text size using String.width, so that the custom label fits horizontally.
-*/
-
 button: (state,t,p,hasFocus) => {
    state.hideFrame = true;
    state.aspectRatio = 2;
    state.lineWidth = .008;
 
+   if (state.choice === undefined) {
+      state.choice = 0;
+      state.labels = ['OFF','ON'];
+   }
+   if (state.custom)
+      state.labels = Array.isArray(state.custom) ? state.custom : [ state.custom ];;
+
    if (state.mouseState == 'press')
       state.isPressed = true;
 
    if (state.mouseState == 'release') {
-      state.isOn = ! state.isOn;
+      state.choice = (state.choice + 1) % Math.max(2, state.labels.length);
       state.isPressed = false;
    }
 
@@ -270,16 +268,27 @@ button: (state,t,p,hasFocus) => {
       for (let n = 0 ; n < state._I.length ; n++)
          state._O[n] = state.isOn ? state._I[n] : 0;
 
+   let label = state.labels[Math.min(state.labels.length-1, state.choice)];
+   let nChars = 4;
+   for (let i = 0 ; i < state.labels.length ; i++)
+      nChars = Math.max(nChars, state.labels[i].length);
+
+   let J = n => n>7 ? 0 : n>2 ? .88 - .11 * n : .8 - .085 * n;
+   let text = state.isOn ? 'ON' : 'OFF';
    let d = .2, y = .3, h = .5;
    let path = [[1-d,y+h],[1-d/3,y+h-d/3],[1,y+h-d],
                [1,y-h+d],[1-d/3,y-h+d/3],[1-d,y-h],
 	       [d-1,y-h],[d/3-1,y-h+d/3],[-1,y-h+d],
 	       [-1,y+h-d],[d/3-1,y+h-d/3],[d-1,y+h],
 	       [1-d,y+h]];
-   state.draw.fillColor(state.isPressed ? '#909090' : state.isOn ? '#ffffff' : '#c8c8c8').fillPolygon(path)
+   state.draw.fillColor(state.isPressed
+                        ? '#909090'
+                        : state.choice > 0 || state.labels.length > 2
+			  ? '#ffffff'
+                          : '#c8c8c8').fillPolygon(path)
              .lineWidth(.03).path(path)
-             .setFont(.8)
-	     .text(state.isOn ? 'ON' : 'OFF', [0,0], .5, .85);
+             .setFont(3 / nChars, 'Courier')
+	     .text(label, [0,.03], .5, J(nChars-4));
 
    return [];
 },
