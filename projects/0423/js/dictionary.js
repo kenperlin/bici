@@ -253,6 +253,8 @@ button: (state,t,p,hasFocus) => {
    }
    if (state.custom)
       state.labels = Array.isArray(state.custom) ? state.custom : [ state.custom ];;
+   if (state.labels.length == 1)
+      state.labels = [ state.labels[0], state.labels[0] ];
 
    if (state.mouseState == 'press')
       state.isPressed = true;
@@ -263,10 +265,9 @@ button: (state,t,p,hasFocus) => {
    }
 
    if (state._I.length == 0)
-      state._O[0] = state.isOn ? 1 : -1;
+      state._O[0] = 2 * state.choice / (state.labels.length - 1) - 1;
    else
-      for (let n = 0 ; n < state._I.length ; n++)
-         state._O[n] = state.isOn ? state._I[n] : 0;
+      state._O[0] = state.choice < state._I.length ? state._I[state.choice] : 0;
 
    let label = state.labels[Math.min(state.labels.length-1, state.choice)];
    let nChars = 4;
