@@ -67,8 +67,8 @@ function Diagram() {
       for (let n = 2 ; n < S.length ; n++)
          if (S[n].srcId)
             for (let i = 0 ; i < S[n].srcId.length ; i++)
-	       if (S[n].srcId[i] == card.id)
-	          dstCards.push(S[n]);
+               if (S[n].srcId[i] == card.id)
+                  dstCards.push(S[n]);
       return dstCards;
    }
 
@@ -76,8 +76,8 @@ function Diagram() {
       let t = '';
       for (let n = 0 ; n < s.length ; n++)
          t += s[n  ] != '@' ? s[n] :
-	      s[n+1] == 'x' ? (++n, '_X') :
-	      s[n+1] == 'y' ? (++n, '_Y') : '_I[' + s[++n] + ']';
+              s[n+1] == 'x' ? (++n, '_X') :
+              s[n+1] == 'y' ? (++n, '_Y') : '_I[' + s[++n] + ']';
       return t;
    }
 
@@ -85,8 +85,8 @@ function Diagram() {
       let t = '';
       for (let n = 0 ; n < s.length ; n++)
          t += s[n  ] != '@' ? s[n] :
-	      s[n+1] == 'x' ? (++n, '_X') :
-	      s[n+1] == 'y' ? (++n, '_Y') : '(_I[' + s[++n] + '] ?? 0)';
+              s[n+1] == 'x' ? (++n, '_X') :
+              s[n+1] == 'y' ? (++n, '_Y') : '(_I[' + s[++n] + '] ?? 0)';
       return t;
    }
 
@@ -116,6 +116,33 @@ function Diagram() {
       let lo = S[n].lo, hi = S[n].hi;
       return [ 2 * (p[0] - lo[0]) / (hi[0] - lo[0]) - 1,
                2 * (p[1] - lo[1]) / (hi[1] - lo[1]) - 1 ];
+   }
+
+   let createCard = (card_type, pos, size) => {
+      if (! dictionary[card_type])
+         return -1;
+      S.push({
+         type: 'card',
+         text: card_type,
+         card_type: card_type,
+         morphData: 1,
+         strokes: [],
+         id: ++id,
+         lo: [ pos[0]-size/2, pos[1]-size/2 ],
+         hi: [ pos[0]+size/2, pos[1]+size/2 ],
+      });
+      dirty = true;
+      return id;
+   }
+
+   let deleteCard = id => {
+      for (let n = 2 ; n < S.length ; n++)
+         if (S[n].id == id) {
+	    S.splice(n, 1);
+	    delete S_value[id];
+	    dirty = true;
+	    return;
+	 }
    }
 
    let isCommandKey, isTextString, textString = '';
@@ -170,7 +197,7 @@ function Diagram() {
          switch (key) {
          case 'Command':
          case 'Meta':
-	    break;
+            break;
          case 'Backspace':
             textString = textString.substring(0, textString.length-1);
             break;
@@ -195,20 +222,7 @@ function Diagram() {
             isTextString = false;
             break;
          case 'c':
-            textString = textString.trim();
-            if (dictionary[textString]) {
-               let n = S.length;
-               let p = this.input.mouse.pos;
-               S[n] = { type: 'card',
-                        text: textString,
-                        card_type: textString,
-                        morphData: 1,
-                        strokes: [],
-                        id: id++,
-                        lo: [p[0]-.2,p[1]-.2],
-                        hi: [p[0]+.2,p[1]+.2],
-                      };
-            }
+            createCard(textString.trim(), this.input.mouse.pos, .4);
             textString = '';
             break;
          case 'i':
@@ -216,9 +230,9 @@ function Diagram() {
             textString = '';
             break;
          case 'l':
-	    if (textString == '')
-	       this.init();
-	    else {
+            if (textString == '')
+               this.init();
+            else {
                load(textString);
                textString = '';
             }
@@ -296,7 +310,7 @@ function Diagram() {
 
    this.init = () => {
       id = 0;
-      S = [ { strokes:[[]], id: id++ }, { strokes:[[]], id: id++ } ];
+      S = [ { strokes:[[]], id: ++id }, { strokes:[[]], id: ++id } ];
       S_value = {};
       dirty = true;
    };
@@ -380,12 +394,12 @@ function Diagram() {
             let loX = S[n].lo[0], hiY = S[n].hi[1];
             S[n].lo = resize(S[n].lo);
             S[n].hi = resize(S[n].hi);
-	    if (S[n].card_type == 'editor') {
-	       S[n].hi[0] += loX - S[n].lo[0];
-	       S[n].lo[1] += hiY - S[n].hi[1];
-	       S[n].lo[0] = loX;
-	       S[n].hi[1] = hiY;
-	    }
+            if (S[n].card_type == 'editor') {
+               S[n].hi[0] += loX - S[n].lo[0];
+               S[n].lo[1] += hiY - S[n].hi[1];
+               S[n].lo[0] = loX;
+               S[n].hi[1] = hiY;
+            }
             sy = pos[1];
             dirty = true;
          }
@@ -453,7 +467,7 @@ function Diagram() {
                   S[np].strokes[0] = [ pos ];
 
                else if (S_value[S[nm].id] && typeof S_value[S[nm].id].mousePress == 'function')
-	          S_value[S[nm].id].mousePress(transformToCardCoords(nm, pos));
+                  S_value[S[nm].id].mousePress(transformToCardCoords(nm, pos));
             }
 
             dirty = true;
@@ -546,20 +560,20 @@ function Diagram() {
                               S[nn].srcId = [];
                            S[nn].srcId.push(S[n].id);
 
-			   // IF LINKING TO A SHADER OR WEBGL CARD, UPDATE THE CARD TYPE
+                           // IF LINKING TO A SHADER OR WEBGL CARD, UPDATE THE CARD TYPE
 
-			   if (S[nn].srcId.length == 1) {
-			      let src = S[n];
-			      let dst = S[nn];
-			      if (isCgCard(src) && dst.card_type == 'shader') {
-			         dst.card_type = 'webgl';
-				 S_value[dst.id] = new WebglCard(octx);
-			      }
-			      if (isFsCard(src) && dst.card_type == 'webgl') {
-			         dst.card_type = 'shader';
-				 S_value[dst.id] = new WebgpuCard(octx);
-			      }
-			   }
+                           if (S[nn].srcId.length == 1) {
+                              let src = S[n];
+                              let dst = S[nn];
+                              if (isCgCard(src) && dst.card_type == 'shader') {
+                                 dst.card_type = 'webgl';
+                                 S_value[dst.id] = new WebglCard(octx);
+                              }
+                              if (isFsCard(src) && dst.card_type == 'webgl') {
+                                 dst.card_type = 'shader';
+                                 S_value[dst.id] = new WebgpuCard(octx);
+                              }
+                           }
 
                            break;
                         }
@@ -630,7 +644,7 @@ function Diagram() {
 
                if (n < 2) {
                   n = S.length;
-                  S[n] = { strokes: [ stroke ], id: id++ };
+                  S[n] = { strokes: [ stroke ], id: ++id };
                   clearBounds(n);
                }
 
@@ -736,7 +750,7 @@ function Diagram() {
 
             // IF THE USER HAS CLICKED ON A LINK, REMOVE THE LINK
 
-	    let pointToLineDistanceSquared = (p, a, b) => {
+            let pointToLineDistanceSquared = (p, a, b) => {
                let ax = a[0] - p[0], ay = a[1] - p[1];
                let bx = b[0] - p[0], by = b[1] - p[1];
                let dx = bx - ax, dy = by - ay;
@@ -749,12 +763,12 @@ function Diagram() {
             }
 
             if (bgClick && pointToLineDistanceSquared(bgClick,A,B) < .0001)
-	       for (let j = 0 ; j < S[n].srcId.length ; j++)
-	          if (S[n].srcId[j] == src.id) {
-		     S[n].srcId.splice(j,1);
-	             bgClick = undefined;
-		     break;
-	          }
+               for (let j = 0 ; j < S[n].srcId.length ; j++)
+                  if (S[n].srcId[j] == src.id) {
+                     S[n].srcId.splice(j,1);
+                     bgClick = undefined;
+                     break;
+                  }
 
             if (src.remove || S[n].remove)
                octx.restore();
@@ -885,7 +899,7 @@ function Diagram() {
                   break;
                case 'webgl':
                   S_value[object.id] = new WebglCard(octx);
-		  break;
+                  break;
                default:
                   S_value[object.id] = dictionary[object.card_type];
                   break;
@@ -894,8 +908,8 @@ function Diagram() {
 
             if (! S_value[object.id]) {
                this.setFont(.95 * s).text(object.text, [lo[0] + s/3, hi[1] - s], 0, 1);
-	       if (isClipping)
-	          octx.restore();
+               if (isClipping)
+                  octx.restore();
             }
 
             // DRAW A SHADER CARD
@@ -934,7 +948,7 @@ function Diagram() {
                let L = this.mxp(lo);
                let H = this.mxp(hi);
                webglCard.draw((L[0]+H[0])/2, (L[1]+H[1])/2, H[0]-L[0]);
-	    }
+            }
 
             // IF THIS IS A VALID CARD TYPE, DO PROCEDURAL RENDERING
 
@@ -967,55 +981,55 @@ function Diagram() {
 
                      if (state.isShiftDown) {
                         if (object.state.srcFile)
-		           save(object.state.srcFile, object.state.text);
+                           save(object.state.srcFile, object.state.text);
                      }
-		     else {
+                     else {
 
-		        // ON CONTROL KEY RELEASE, EITHER CONVERT CARD TO THE CARD TYPE PRINTED ON THE CARD,
+                        // ON CONTROL KEY RELEASE, EITHER CONVERT CARD TO THE CARD TYPE PRINTED ON THE CARD,
                         // OR LOAD A FILE IF TEXT CONTAINS '.'. IF FILE HAS ALREADY BEEN LOADED, RELOAD IT.
 
                         if (object.state.text.indexOf('.') > 0 || object.state.srcFile)
-		           loadSrcFile(object, object.state.srcFile ?? object.state.text);
+                           loadSrcFile(object, object.state.srcFile ?? object.state.text);
                         else
                            activationText = object.state.text;
                      }
 
-		     state.key = ''; // SO WE DO NOT KEEP LOADING OR SAVING THE FILE!
+                     state.key = ''; // SO WE DO NOT KEEP LOADING OR SAVING THE FILE!
                   }
 
                   // IF CARD HAS IN-LINKS, SET ITS PARAMETERS TO THEIR PARAMETER VALUES
 
                   if (object.srcId) {
-		     state._I_prev = state._I.slice();
+                     state._I_prev = state._I.slice();
                      let T = [];
-		     let srcCards = getSrcCards(object);
-		     for (let i = 0 ; i < srcCards.length ; i++)
-		        if (srcCards[i].state)
+                     let srcCards = getSrcCards(object);
+                     for (let i = 0 ; i < srcCards.length ; i++)
+                        if (srcCards[i].state)
                            T.push(srcCards[i].state._O);
                      state._I = T.flat();
                   }
 
-		  // AN fs CARD JUST SENDS ITS INPUT PARAMETERS ON TO A shader CARD
+                  // AN fs CARD JUST SENDS ITS INPUT PARAMETERS ON TO A shader CARD
 
-		  if (isFsCard(object)) {
+                  if (isFsCard(object)) {
                      let dstCards = getDstCards(object);
-		     if (dstCards.length > 0 && dstCards[0].card_type == 'shader' && S_value[dstCards[0].id]) {
-		        let I = [];
-		        for (let i = 0 ; i < 10 ; i++)
-		           I.push(state._I[i] ?? 0);
-		        S_value[dstCards[0].id].set_I(I);
+                     if (dstCards.length > 0 && dstCards[0].card_type == 'shader' && S_value[dstCards[0].id]) {
+                        let I = [];
+                        for (let i = 0 ; i < 10 ; i++)
+                           I.push(state._I[i] ?? 0);
+                        S_value[dstCards[0].id].set_I(I);
                      }
-		  }
+                  }
 
-		  // A cg CARD JUST SENDS ITS INPUT PARAMETERS ON TO A webgl CARD
+                  // A cg CARD JUST SENDS ITS INPUT PARAMETERS ON TO A webgl CARD
 
-		  if (isCgCard(object)) {
+                  if (isCgCard(object)) {
                      let dstCards = getDstCards(object);
-		     if (dstCards.length > 0 && dstCards[0].card_type == 'webgl' && S_value[dstCards[0].id]) {
-		        let I = [];
-		        for (let i = 0 ; i < 10 ; i++)
-		           I.push(state._I[i] ?? 0);
-		        S_value[dstCards[0].id].set_I(I);
+                     if (dstCards.length > 0 && dstCards[0].card_type == 'webgl' && S_value[dstCards[0].id]) {
+                        let I = [];
+                        for (let i = 0 ; i < 10 ; i++)
+                           I.push(state._I[i] ?? 0);
+                        S_value[dstCards[0].id].set_I(I);
                      }
                   }
 
@@ -1027,18 +1041,18 @@ function Diagram() {
                                        state.hadFocus && ! hasFocus ? 'release' :
                                                           'move'    ;
                   state.hadFocus = hasFocus;
-		  if (state.mouseState == 'press')
-		     state.mousePressTime = time;
-		  if (state.mouseState == 'release')
-		     state.mouseClick = time - state.mousePressTime < .25;
+                  if (state.mouseState == 'press')
+                     state.mousePressTime = time;
+                  if (state.mouseState == 'release')
+                     state.mouseClick = time - state.mousePressTime < .25;
 
                   state.dirty = false;
-		  state.draw = this;
+                  state.draw = this;
 
-		  octx.save();
+                  octx.save();
                   intoCardCoords(lo,hi);
                   value = value(state, time, mi(pos), hasFocus);
-		  octx.restore();
+                  octx.restore();
 
                   // ADJUST COORDINATE TRANSFORM MATH FOR NON-SQUARE CARDS
 
@@ -1092,7 +1106,7 @@ function Diagram() {
                   lineWidth = object.state.lineWidth;
 
                let color = penColor;
-	       if (object.state)
+               if (object.state)
                   object.state.cardSize = hi[0] - lo[0];
                for (let i = 0 ; i < value.length ; i++) {
                   this.lineWidth(lineWidth);
@@ -1134,63 +1148,63 @@ function Diagram() {
                   dirty = true;
                }
 
-	       if (isClipping)
-	          octx.restore();
+               if (isClipping)
+                  octx.restore();
 
                if (object.card_type == 'editor' && ! isCgCard(object) && ! isFsCard(object) && object.state) {
 
                   // IF THERE IS AN OUT-LINK, DISPLAY ANY GRAPHICAL RESULT OF EVAL IN DESTINATION CARD
 
                   let dstCards = getDstCards(object);
-		  let hasOutLink = dstCards.length > 0;
+                  let hasOutLink = dstCards.length > 0;
 
-		  octx.save();
-		  if (hasOutLink) {
-		     let dst = dstCards[0];
-		     let lo = dst.lo, hi = dst.hi;
+                  octx.save();
+                  if (hasOutLink) {
+                     let dst = dstCards[0];
+                     let lo = dst.lo, hi = dst.hi;
 
                      let p0 = [ (lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2 ];
                      let dp = [ (hi[0] - lo[0]) / 2, (hi[1] - lo[1]) / 2 ];
                      this.clipToRect([lo[0]-.002,lo[1]-.002], [hi[0]+.002,hi[1]+.002]);
                      intoCardCoords(lo, hi);
-		  }
+                  }
 
                   // OTHERWISE, DO NOT DISPLAY ANYTHING
 
-		  else
+                  else
                      this.clipToRect(lo, lo);
 
-		  // TEMPORARILY ADD SOME USEFUL THINGS TO THE GLOBAL SCOPE
+                  // TEMPORARILY ADD SOME USEFUL THINGS TO THE GLOBAL SCOPE
 
                   let b = ( 'add,cross,dot,ease,evalBezier,hex,mix,norm,'
-		          + 'normalize,resize,round,subtract,round2,'
-			  + 'transform'
-			  ).split(',');
+                          + 'normalize,resize,round,subtract,round2,'
+                          + 'transform'
+                          ).split(',');
                   let m = ( 'PI,abs,ceil,cos,exp,floor,' +
                             'log,max,min,mod,pow,random,' +
                             'round,sign,sin,sqrt,trunc' ).split(',');
                   let v = [
-		     '_I'        , object.state._I,    // CARD'S INPUT PARAMETERS
-		     'hasOutLink', hasOutLink,         // IS THERE A DESTINATION CARD?
-		     'M'         , M,                  // 4x4 MATRIX OBJECT
-		     'draw'      , this,               // THIS DRAWING OBJECT
-		     'time'      , time - startTime,   // TOTAL ELAPSED TIME
-		  ];
+                     '_I'        , object.state._I,    // CARD'S INPUT PARAMETERS
+                     'hasOutLink', hasOutLink,         // IS THERE A DESTINATION CARD?
+                     'M'         , M,                  // 4x4 MATRIX OBJECT
+                     'draw'      , this,               // THIS DRAWING OBJECT
+                     'time'      , time - startTime,   // TOTAL ELAPSED TIME
+                  ];
                   for (let i = 0 ; i < b.length ; i++ ) window[b[i]] = b[i];
                   for (let i = 0 ; i < m.length ; i++ ) window[m[i]] = Math[m[i]];
                   for (let i = 0 ; i < v.length ; i+=2) window[v[i]] = v[i+1];
 
                   // TRY TO EVALUATE THE CARD'S TEXT AS JAVASCRIPT
 
-		  let code = replaceAtSignsAndProvideDefaultOption(object.state.text);
-	          let value;
+                  let code = replaceAtSignsAndProvideDefaultOption(object.state.text);
+                  let value;
                   try {
-		     value = (new Function(code))();
-		  } catch {
-		     error => console.log(error);
-		  }
+                     value = (new Function(code))();
+                  } catch {
+                     error => console.log(error);
+                  }
 
-		  // IF SUCCESSFUL, value BECOMES THE CARD'S OUTPUT PARAMETERS
+                  // IF SUCCESSFUL, value BECOMES THE CARD'S OUTPUT PARAMETERS
 
                   if (value)
                      object.state._O = Array.isArray(value) ? value : [ value ];
@@ -1203,7 +1217,7 @@ function Diagram() {
 
                   // RESTORE DISPLAY CONTEXT
 
-		  octx.restore();
+                  octx.restore();
                }
             }
          }
