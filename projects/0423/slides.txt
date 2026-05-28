@@ -1,4 +1,4 @@
-Presentation
+Type the\nright arrow key
 SRC js/webgpuCard.js
 SRC js/webglCard.js
 SRC js/dictionary.js

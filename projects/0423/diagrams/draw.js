@@ -118,7 +118,7 @@ function Diagram() {
                2 * (p[1] - lo[1]) / (hi[1] - lo[1]) - 1 ];
    }
 
-   let createCard = (card_type, pos, size) => {
+   let createCard = (card_type, pos, size, custom) => {
       if (! dictionary[card_type])
          return -1;
       S.push({
@@ -130,6 +130,7 @@ function Diagram() {
          id: ++id,
          lo: [ pos[0]-size/2, pos[1]-size/2 ],
          hi: [ pos[0]+size/2, pos[1]+size/2 ],
+         custom: custom,
       });
       dirty = true;
       return id;

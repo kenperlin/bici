@@ -242,6 +242,15 @@ scope: (state,t,p,hasFocus) => {
    return [ { draw: trace, lineWidth: .002 } ];
 },
 
+/*
+    To do: Create custom buttons.
+    	Make sure to migrate object.custom to object.state.custom in draw.js.
+	If state.custom is a string, use it as the text label.
+	If custom is an array, then make this an n-state button.
+		If n > 3, then color should always be white when not pressed.
+	Modify text size using String.width, so that the custom label fits horizontally.
+*/
+
 button: (state,t,p,hasFocus) => {
    state.hideFrame = true;
    state.aspectRatio = 2;
