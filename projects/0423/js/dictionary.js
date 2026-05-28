@@ -85,22 +85,28 @@ spline: (state,t,p,hasFocus) => {
 curve: (state,t,p,hasFocus) => {
    state.hideFrame = true;
    state.aspectRatio = 5;
+   state.noClipping = true;
    if (state.keys === undefined) {
-      state.keys = [[-1,.5],[1,.5]];
+      state.keys = [[-1,.5,0],[1,.5,0]];
       state.n = -1;
    }
 
    if (state.mouseState == 'press') {
+      state.mode = 'adjust';
       for (state.n = state.keys.length - 1 ; state.n >= 0 ; state.n--)
-	 if (Math.abs(p[0] - state.keys[state.n][0]) < .1)
+	 if (Math.abs(p[0] - state.keys[state.n][0]) < .1) {
+	    if (p[1] > 1)
+	       state.mode = 'toggle';
 	    break;
+         }
    }
 
    let y = t => Math.max(.3, Math.min(.7, .5 + t / 5));
 
    if (state.mouseState == 'drag')
       if (state.n >= 0) {
-         state.keys[state.n][1] = y(p[1]);
+         if (state.mode == 'adjust')
+            state.keys[state.n][1] = y(p[1]);
          if (state.n > 0 && state.n < state.keys.length-1) {
             state.keys[state.n][0] = Math.max(-1, Math.min(1, p[0]));
             state.keys.sort((a,b) => a[0] - b[0]);
@@ -112,11 +118,14 @@ curve: (state,t,p,hasFocus) => {
 
    if (state.mouseState == 'release') {
       if (state.n < 0) {
-         state.keys.push([p[0], y(p[1])]);
+         state.keys.push([p[0], y(p[1]), 0]);
          state.keys.sort((a,b) => a[0] - b[0]);
       }
       else if (state.mouseClick || state.n > 0 && state.n < state.keys.length-1 && p[0]*p[0] > 1)
-         state.keys.splice(state.n, 1);
+         if (p[1] < 1)
+            state.keys.splice(state.n, 1);
+         else
+	    state.keys[state.n][2] = 1 - state.keys[state.n][2];
       state.n = -1;
    }
 
@@ -134,14 +143,48 @@ curve: (state,t,p,hasFocus) => {
       }
    }
 
-   state.draw.fillColor('#ffffff40').fillRect([-1,-1 ],[1,1 ])
-             .lineWidth(.003).drawColor('#000000'  ).drawRect([-1,.3],[1,.7]);
-   state.draw.lineWidth(.012).path(state.keys);
+   state.draw.fillColor('#ffffff40').fillRect([-1,.3 ],[1,.7 ])
+             .lineWidth(.003).drawColor('#000000').drawRect([-1,.3],[1,.7]);
    state.draw.lineWidth(.003);
    for (let n = 0 ; n < state.keys.length ; n++) {
       let x = state.keys[n][0];
       state.draw.line([x,.3],[x,.7]);
+      if (n == 0 || n == state.keys.length-1 || state.keys[n][2] == 0)
+         state.draw.fillColor('#000000').fillPolygon([[x,.7],[x-.035,.735],[x,.77],[x+.035,.735]]);
+      else
+         state.draw.dot([x,.73],.03);
    }
+
+   state.draw.lineWidth(.012);
+
+   if (state.keys.length == 2)
+      state.draw.line([state.keys[0][0],state.keys[1][1]],
+                      [state.keys[1][0],state.keys[1][1]]);
+   else {
+      let keys = state.keys, nk = keys.length;
+      for (let k = 0 ; k < nk - 1 ; k++) {
+         let x0 = keys[k  ][0];
+         let y0 = keys[k  ][1];
+         let x1 = keys[k+1][0];
+         let y1 = keys[k+1][1];
+	 let c0 = k > 0      && keys[k ][2];
+	 let c1 = k < nk - 2 && keys[k+1][2];
+	 if (! c0 && ! c1)
+            state.draw.line([x0,y0],[x1,y1]);
+         else {
+	    let C = [];
+	    for (let t = 0 ; t <= 1.001 ; t += 1/20) {
+	       let x = x0 + t * (x1 - x0);
+	       let d = t * (y1 - y0);
+	       C.push(c0 && ! c1 ? [x, y0 + d * t]
+                    : ! c0 && c1 ? [x, y0 + d * (2 - t)]
+                                 : [x, y0 + d * t * (3 - 2 * t)]);
+            }
+	    state.draw.path(C);
+	 }
+      }
+   }
+
    return [];
 },
 
