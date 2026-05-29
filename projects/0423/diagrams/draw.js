@@ -305,7 +305,7 @@ function Diagram() {
    let np = isFirstPlayer() ? 0 : 1;
    let nm = -1;
    let pen = {}, usePen = true;
-   let pos = [0,0], time, isPenDown, wasPenDown;
+   let pos = [0,0], pressPos, time, isPenDown, wasPenDown;
    let startTime = Date.now() / 1000;
 
    let S, id, S_value;
@@ -432,6 +432,7 @@ function Diagram() {
             break;
 
          case 'press':
+	    pressPos = pos.slice();
 
             // A MOUSE PRESS RESETS STATE
 
@@ -560,12 +561,14 @@ function Diagram() {
 
                   switch (state) {
 
-                  // IF BACKGROUND CLICK WAS NORTH OR SOUTH OF THE CARD, COPY THE CARD
+                  // IF BACKGROUND CLICK WAS NORTH OR SOUTH OF A CARD, COPY THE CARD
 
                   case 2:
                   case 6:
 
-                     if (n >= 2) {
+                     // COPY A MORPHED CARD
+
+                     if (n >= 2 && S[n].morphData) {
 		        createCard(S[n].card_type, pos, S[n].hi[0]-S[n].lo[0], S[n].custom);
 			let src = S[n].state;
 			let dst = S[S.length-1].state;
@@ -579,6 +582,30 @@ function Diagram() {
 			      dst[item] = src[item];
                         }
 		     }
+
+                     // COPY A SKETCH
+
+                     else if (n >= 2 && ! S[n].morphData) {
+		         let dx = pos[0] - pressPos[0];
+		         let dy = pos[1] - pressPos[1];
+		         let strokes = [];
+			 for (let i = 0 ; i < S[n].strokes.length ; i++) {
+			    strokes.push([]);
+			    for (let j = 0 ; j < S[n].strokes[i].length ; j++) {
+			       let x = S[n].strokes[i][j][0] + dx;
+			       let y = S[n].strokes[i][j][1] + dy;
+			       strokes[i].push([x,y]);
+                            }
+			 }
+
+			 let nc = S.length;
+			 S.push({ strokes: strokes, id: ++id });
+                         clearBounds(nc);
+			 for (let i = 0 ; i < strokes.length ; i++)
+                            extendBounds(nc, strokes[i]);
+
+		     }
+
 		     break;
 
                   // IF BACKGROUND CLICK WAS WEST OF THE CARD, CREATE A LINK
