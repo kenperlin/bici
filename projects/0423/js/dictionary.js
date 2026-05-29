@@ -185,6 +185,11 @@ curve: (state,t,p,hasFocus) => {
       }
    }
 
+   if (state._I.length > 0) {
+      let x = state._I[0];
+      state.draw.drawColor('#ff0000').line([x,.3],[x,.7]);
+   }
+
    return [];
 },
 
