@@ -526,7 +526,7 @@ function Diagram() {
          case 'down':
 
             if (bgClick) {
-               if (n >= 2) {
+               if (n >= 2 && state == 2 || state == 6) {
                   if (! isDraggingCopy && norm(subtract(pos, pressPos)) > .05) {
 		     copyCard(n);
 		     n = S.length - 1;
@@ -613,10 +613,6 @@ function Diagram() {
 
                   case 2:
                   case 6:
-
-                     if (n >= 2)
-                        ;//copyCard(n);
-
                      break;
 
                   // IF BACKGROUND CLICK WAS WEST OF THE CARD, CREATE A LINK
