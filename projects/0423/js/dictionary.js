@@ -270,12 +270,11 @@ button: (state,t,p,hasFocus) => {
       state._O[0] = state.choice < state._I.length ? state._I[state.choice] : 0;
 
    let label = state.labels[Math.min(state.labels.length-1, state.choice)];
-   let nChars = 4;
+   let nChars = 5;
    for (let i = 0 ; i < state.labels.length ; i++)
-      nChars = Math.max(nChars, state.labels[i].length);
+      nChars = Math.max(nChars, state.labels[i].length + 2);
 
    let J = n => n>7 ? 0 : n>2 ? .88 - .11 * n : .8 - .085 * n;
-   let text = state.isOn ? 'ON' : 'OFF';
    let d = .2, y = .3, h = .5;
    let path = [[1-d,y+h],[1-d/3,y+h-d/3],[1,y+h-d],
                [1,y-h+d],[1-d/3,y-h+d/3],[1-d,y-h],
@@ -289,7 +288,7 @@ button: (state,t,p,hasFocus) => {
                           : '#c8c8c8').fillPolygon(path)
              .lineWidth(.03).path(path)
              .setFont(3 / nChars, 'Courier')
-	     .text(label, [0,.03], .5, J(nChars-4));
+	     .text(' ' + label + ' ', [0,.03], .5, J(nChars-4));
 
    return [];
 },
