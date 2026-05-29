@@ -7,17 +7,17 @@ function Diagram() {
 
    let M = new Matrix();
 
-   let penColor = '#000000';
+   let penColor = '#808080';
 
-   let isCgCard = object => object.card_type == 'editor' && 
-                            object.state && object.state.text &&
-                            object.state.text.indexOf('cg.') >= 0;
+   let isCgCard = card => card.card_type == 'editor' && 
+                          card.state && card.state.text &&
+                          card.state.text.indexOf('cg.') >= 0;
 
-   let isFsCard = object => object.card_type == 'editor' && 
-                            object.state && object.state.text &&
-                            ( object.state.text.indexOf('vec2(') >= 0 ||
-                              object.state.text.indexOf('vec3(') >= 0 ||
-                              object.state.text.indexOf('vec4(') >= 0 );
+   let isFsCard = card => card.card_type == 'editor' && 
+                          card.state && card.state.text &&
+                          ( card.state.text.indexOf('vec2(') >= 0 ||
+                            card.state.text.indexOf('vec3(') >= 0 ||
+                            card.state.text.indexOf('vec4(') >= 0 );
 
    let save = (name, str) => {
       if (str) {
@@ -47,9 +47,9 @@ function Diagram() {
          });
    }
 
-   let loadSrcFile = (object, text) => {
-      object.state.srcFile = text;
-      getFile('projects/' + project + '/src/' + text, text => object.state.newText = text);
+   let loadSrcFile = (card, text) => {
+      card.state.srcFile = text;
+      getFile('projects/' + project + '/src/' + text, text => card.state.newText = text);
    }
 
    let getSrcCards = card => {
@@ -255,7 +255,7 @@ function Diagram() {
          return true;
       }
 
-      // FIND OUT WHAT OBJECT, IF ANY, IS AT THE CURSOR
+      // FIND OUT WHAT CARD, IF ANY, IS AT THE CURSOR
 
       let n;
       for (n = S.length - 1 ; n >= 2 ; n--)
@@ -276,7 +276,7 @@ function Diagram() {
          return true;
       }
 
-      // DELETE KEY ON BACKGROUND REMOVES OBJECT AT THE CURSOR
+      // DELETE KEY ON BACKGROUND REMOVES CARD AT THE CURSOR
 
       switch (key) {
       case 'Backspace':
@@ -299,7 +299,7 @@ function Diagram() {
    glyphs(matchCurves);
 
    let cursorIds = { mouse:0, left:1, right:2 };
-   let dirty, bgClick, state = -1, stroke = [], p = [], n = -1;
+   let dirty, bgClick, state = -1, stroke = [], p = [], n = -1, nAtCursor = -1;
    let isDragging = false, isResizing = false, sy;
    let np = isFirstPlayer() ? 0 : 1;
    let nm = -1;
@@ -415,6 +415,13 @@ function Diagram() {
 
          case 'up':
 
+            nAtCursor = -1;
+            for (let n = S.length - 1 ; n >= 2 ; n--)
+               if (contains(n, pos)) {
+	          nAtCursor = n;
+                  break;
+               }
+
             if (isDragging == cursorId)
                dragItem();
 
@@ -435,7 +442,7 @@ function Diagram() {
 
             if (bgClick) {
 
-               // FIND OUT WHAT OBJECT, IF ANY, THE MOUSE DOWN IS IN
+               // FIND OUT WHAT CARD, IF ANY, THE MOUSE DOWN IS IN
 
                for (n = S.length - 1 ; n >= 2 ; n--)
                   if (contains(n, pos)) {
@@ -443,7 +450,7 @@ function Diagram() {
                      break;
                   }
 
-               // IF IN AN OBJECT, COMPUTE STATE AS A 0...7 PIE CHART DIRECTION WRT THE PREVIOUS CLICK
+               // IF IN A CARD, COMPUTE STATE AS A 0...7 PIE CHART DIRECTION WRT THE PREVIOUS CLICK
 
                if (n >= 2)
                   state = (8.5 - 4 * Math.atan2(pos[1] - bgClick[1], bgClick[0] - pos[0]) / Math.PI) % 8 >> 0;
@@ -453,7 +460,7 @@ function Diagram() {
 
             else {
 
-               // IF NOT DRAGGING OR RESIZING OR LINKING, CHECK FOR MOUSE DOWN ON A MORPHED OBJECT
+               // IF NOT DRAGGING OR RESIZING OR LINKING, CHECK FOR MOUSE DOWN ON A MORPHED CARD
 
                if (! isDragging && ! isResizing)
                   for (nm = S.length - 1 ; nm >= 2 ; nm--)
@@ -500,7 +507,7 @@ function Diagram() {
 
                if (cursor.isClick) {
 
-                  // FIND OUT WHAT OBJECT, IF ANY, THIS CLICK IS IN
+                  // FIND OUT WHAT CARD, IF ANY, THIS CLICK IS IN
 
                   for (n = S.length - 1 ; n >= 2 ; n--)
                      if (contains(n, pos))
@@ -512,7 +519,7 @@ function Diagram() {
 
                   case 0:
 
-                     // AND THIS CLICK IS IN AN OBJECT, DELETE THE OBJECT
+                     // AND THIS CLICK IS IN A CARD, DELETE THE CARD
 
                      if (n >= 2)
                         removeObject(n);
@@ -524,7 +531,7 @@ function Diagram() {
                   case 2:
                   case 6:
 
-                     // AND THIS CLICK IS IN AN OBJECT, BEGIN DRAGGING THE OBJECT
+                     // AND THIS CLICK IS IN A CARD, BEGIN DRAGGING THE CARD
 
                      if (n >= 2)
                         isDragging = cursorId;
@@ -535,7 +542,7 @@ function Diagram() {
 
                   case 4:
 
-                     // AND THIS CLICK IS IN AN OBJECT, BEGIN RESIZING THE OBJECT
+                     // AND THIS CLICK IS IN A CARD, BEGIN RESIZING THE CARD
 
                      if (n >= 2) {
                         isResizing = cursorId;
@@ -587,19 +594,19 @@ function Diagram() {
 
             else if (cursor.isClick) {
 
-               // IF AFTER DRAGGING AN OBJECT, JUST TURN OFF DRAGGING MODE
+               // IF AFTER DRAGGING A CARD, JUST TURN OFF DRAGGING MODE
 
                if (isDragging == cursorId)
                   isDragging = false;
 
-               // IF AFTER RESIZING AN OBJECT, JUST TURN OFF RESIZING MODE
+               // IF AFTER RESIZING A CARD, JUST TURN OFF RESIZING MODE
 
                else if (isResizing == cursorId)
                   isResizing = false;
 
                else if (nm < 2) {
 
-                  // IF THE CLICK IS IN AN OBJECT, CONVERT THE OBJECT
+                  // IF THE CLICK IS IN A CARD, CONVERT THE CARD
 
                   for (n = S.length - 1 ; n >= 2 ; n--)
                      if (S[n].morphData === undefined && contains(n, pos)) {
@@ -629,8 +636,8 @@ function Diagram() {
 
                let stroke = S[np].strokes[0];
 
-               // IF THE STROKE INTERSECTS WITH AN EXISTING OBJECT
-               // ADD THE STROKE TO THE OBJECT
+               // IF THE STROKE INTERSECTS WITH AN EXISTING CARD
+               // ADD THE STROKE TO THE CARD
 
                loop:
                for (n = S.length - 1 ; n >= 2 ; n--)
@@ -640,8 +647,8 @@ function Diagram() {
                         break loop;
                      }
 
-               // IF THE STROKE DOESN'T INTERSECT WITH ANY EXISTING OBJECT
-               // THEN CREATE A NEW OBJECT WITH JUST THIS STROKE
+               // IF THE STROKE DOESN'T INTERSECT WITH ANY EXISTING CARD
+               // THEN CREATE A NEW CARD WITH JUST THIS STROKE
 
                if (n < 2) {
                   n = S.length;
@@ -649,7 +656,7 @@ function Diagram() {
                   clearBounds(n);
                }
 
-               // IN EITHER CASE, UPDATE THE OBJECT'S BOUNDING BOX
+               // IN EITHER CASE, UPDATE THE CARD'S BOUNDING BOX
 
                extendBounds(n, stroke);
             }
@@ -720,7 +727,7 @@ function Diagram() {
 
       // DRAW EVERY LINK AS A CONNECTING ARROW
 
-      this.lineWidth(.008).drawColor('#000000').fillColor('#000000');
+      this.lineWidth(.008).drawColor(penColor).fillColor(penColor);
       for (let n = 0 ; n < S.length ; n++) {
          let srcCards = getSrcCards(S[n]);
          for (let i = 0 ; i < srcCards.length ; i++) {
@@ -776,28 +783,28 @@ function Diagram() {
          }
       }
 
-      // DRAW ALL THE OBJECTS
+      // DRAW ALL THE CARDS
 
       for (let n = 0 ; n < S.length ; n++) {
-         let object = S[n];
+         let card = S[n];
 
-         // IF MARKED FOR REMOVAL, FADE OUT THE OBJECT BEFORE DELETING IT
+         // IF MARKED FOR REMOVAL, FADE OUT THE CARD BEFORE DELETING IT
 
-         if (object.remove) {
-            object.remove -= 2 * elapsed;
-            if (object.remove <= 0) {
+         if (card.remove) {
+            card.remove -= 2 * elapsed;
+            if (card.remove <= 0) {
                deleteObject(n--);
                continue;
             }
             octx.save();
-            octx.globalAlpha = ease(object.remove);
+            octx.globalAlpha = ease(card.remove);
          }
 
-         let strokes = object.strokes,
-             lo = object.lo,
-             hi = object.hi;
+         let strokes = card.strokes,
+             lo = card.lo,
+             hi = card.hi;
 
-         // REMOVE ANY OBJECT THAT HAS WANDERED OFF THE SCREEN
+         // REMOVE ANY CARD THAT HAS WANDERED OFF THE SCREEN
 
          if (hi && (hi[0] < -1 || hi[1] < -screen.height/screen.width) ||
              lo && (lo[0] >  1 || lo[1] >  screen.height/screen.width))
@@ -805,19 +812,19 @@ function Diagram() {
 
          // HANDLE MORPHING A DRAWING TO A KNOWN DRAWING OR TO A CARD
 
-         if (object.morphData && object.morphData[5] < 1) {
-            object.morphData[5] += 2 * elapsed;
-            strokes = matchCurves.update(object.morphData, object.morphData[5]);
-            if (object.morphData[5] >= 1) {
-               object.strokes = strokes;
+         if (card.morphData && card.morphData[5] < 1) {
+            card.morphData[5] += 2 * elapsed;
+            strokes = matchCurves.update(card.morphData, card.morphData[5]);
+            if (card.morphData[5] >= 1) {
+               card.strokes = strokes;
                clearBounds(n);
                for (let i = 0 ; i < strokes.length ; i++)
                   extendBounds(n, strokes[i]);
-               object.type = matchCurves.glyph(object.morphData[2]).name;
+               card.type = matchCurves.glyph(card.morphData[2]).name;
 
                // ACTIVATE A CARD FROM ITS TEXT OR FROM SPEECH
 
-               if (object.type == 'card')
+               if (card.type == 'card')
                   if (activateCardFromText(n, textString))
                      textString = '';
                   else
@@ -825,51 +832,51 @@ function Diagram() {
 
                // CONVERT DRAWING TO A SHADER CARD
 
-               else if (object.type == 'shader') {
-                  object.type = 'card';
-                  object.card_type = 'shader';
+               else if (card.type == 'shader') {
+                  card.type = 'card';
+                  card.card_type = 'shader';
                }
 
-               else if (object.type == 'webgl') {
-                  object.type = 'card';
-                  object.card_type = 'webgl';
+               else if (card.type == 'webgl') {
+                  card.type = 'card';
+                  card.card_type = 'webgl';
                }
 
                // CONVERT DRAWING TO A CARD IF THERE IS A MATCHING CARD TYPE
 
                else
                   for (let word in dictionary)
-                     if (object.type == word) {
-                        object.type = 'card';
-                        object.card_type = word;
+                     if (card.type == word) {
+                        card.type = 'card';
+                        card.card_type = word;
                         break;
                      }
             }
          }
 
-         // DRAW AN OBJECT THAT CONSISTS OF A SEQUENCE OF STROKES
+         // DRAW A CARD THAT CONSISTS OF A SEQUENCE OF STROKES
 
-         if (object.type != 'card') {
+         if (card.type != 'card') {
             this.lineWidth(.008);
             for (let i = 0 ; i < strokes.length ; i++)
                this.path(strokes[i]);
          }
 
-         // HANDLE INTERPRETATION AND RENDERING OF A CARD OBJECT
+         // HANDLE INTERPRETATION AND RENDERING OF A CARD
 
          else {
 
-            if (S_value[object.id] && object.card_type == 'editor' && object.state && object.state.lines)
-               lo[1] = hi[1] - object.state.textSize * Math.max(1, object.state.nLines);
+            if (S_value[card.id] && card.card_type == 'editor' && card.state && card.state.lines)
+               lo[1] = hi[1] - card.state.textSize * Math.max(1, card.state.nLines);
 
-            let isShader = object.card_type == 'shader';
-            let isWebgl  = object.card_type == 'webgl';
+            let isShader = card.card_type == 'shader';
+            let isWebgl  = card.card_type == 'webgl';
 
             this.lineWidth(.004);
 
-            let showFrame = ! isShader && ! isWebgl && object.state;
+            let showFrame = ! isShader && ! isWebgl && card.state;
 
-            if (object.state && object.state.hideFrame)
+            if (card.state && card.state.hideFrame)
                showFrame = false;
 
             if (showFrame)
@@ -877,7 +884,7 @@ function Diagram() {
 
             // TURN ON CLIPPING, SO THAT RENDERING IS CONFINED TO THE CARD
 
-            let isClipping = ! isShader && ! isWebgl && ! (object.state && object.state.noClipping);
+            let isClipping = ! isShader && ! isWebgl && ! (card.state && card.state.noClipping);
 
             if (isClipping) {
                octx.save();
@@ -885,7 +892,7 @@ function Diagram() {
             }
 
             if (showFrame)
-               this.fillColor(object.state.bgColor ?? '#ffffff').fillRect(lo, hi);
+               this.fillColor(card.state.bgColor ?? '#ffffff').fillRect(lo, hi);
 
             // TEXT HEIGHT AND LINE THICKNESS WILL SCALE WITH CARD SIZE
 
@@ -893,22 +900,22 @@ function Diagram() {
 
             // IF EVALUATION WAS TRIGGERED, SEE IF TEXT IS A VALID CARD TYPE NAME
 
-            if (object.card_type && ! S_value[object.id]) {
-               switch (object.card_type) {
+            if (card.card_type && ! S_value[card.id]) {
+               switch (card.card_type) {
                case 'shader':
-                  S_value[object.id] = new WebgpuCard(octx);
+                  S_value[card.id] = new WebgpuCard(octx);
                   break;
                case 'webgl':
-                  S_value[object.id] = new WebglCard(octx);
+                  S_value[card.id] = new WebglCard(octx);
                   break;
                default:
-                  S_value[object.id] = dictionary[object.card_type];
+                  S_value[card.id] = dictionary[card.card_type];
                   break;
                }
             }
 
-            if (! S_value[object.id]) {
-               this.setFont(.95 * s).text(object.text, [lo[0] + s/3, hi[1] - s], 0, 1);
+            if (! S_value[card.id]) {
+               this.setFont(.95 * s).text(card.text, [lo[0] + s/3, hi[1] - s], 0, 1);
                if (isClipping)
                   octx.restore();
             }
@@ -916,12 +923,12 @@ function Diagram() {
             // DRAW A SHADER CARD
 
             else if (isShader) {
-               let shaderCard = S_value[object.id];
+               let shaderCard = S_value[card.id];
 
                // LINK ANY .fs SHADER CODE FROM SOURCE CARD
 
-               if (object.srcId) {
-                  let srcCards = getSrcCards(object);
+               if (card.srcId) {
+                  let srcCards = getSrcCards(card);
                   for (let i = 0 ; i < srcCards.length ; i++)
                      if (isFsCard(srcCards[i]))
                         shaderCard.setShader(replaceAtSigns(srcCards[i].state.text));
@@ -934,12 +941,12 @@ function Diagram() {
             }
 
             else if (isWebgl) {
-               let webglCard = S_value[object.id];
+               let webglCard = S_value[card.id];
 
                // LINK ANY .cg SHADER CODE FROM SOURCE CARD
 
-               if (object.srcId) {
-                  let srcCards = getSrcCards(object);
+               if (card.srcId) {
+                  let srcCards = getSrcCards(card);
                   for (let i = 0 ; i < srcCards.length ; i++)
                      if (isCgCard(srcCards[i]))
                         webglCard.setScene(replaceAtSigns(srcCards[i].state.text));
@@ -955,9 +962,9 @@ function Diagram() {
 
             else {
 
-               if (object.state && object.state.aspectRatio)
-                  lo[1] = hi[1] - (hi[0] - lo[0]) / object.state.aspectRatio;
-               else if (object.card_type != 'editor')
+               if (card.state && card.state.aspectRatio)
+                  lo[1] = hi[1] - (hi[0] - lo[0]) / card.state.aspectRatio;
+               else if (card.card_type != 'editor')
                   lo[1] = hi[1] - (hi[0] - lo[0]);
 
                // COORDINATE CONVERSIONS BETWEEN SCREEN AND INTERNAL CARD COORDS
@@ -967,32 +974,32 @@ function Diagram() {
                let mf = p => [  p0[0] + p[0]  * dp[0],  p0[1] + p[1]  * dp[1] ];
                let mi = p => [ (p[0] - p0[0]) / dp[0], (p[1] - p0[1]) / dp[1] ];
 
-               // IF A PROCEDURE, GIVE OBJECT A PLACE TO MAINTAIN THE CURRENT STATE
+               // IF A PROCEDURE, GIVE CARD A PLACE TO MAINTAIN THE CURRENT STATE
 
                let activationText = null;
 
-               let value = S_value[object.id];
+               let value = S_value[card.id];
                if (typeof value == 'function') {
 
-                  if (object.state === undefined)
-                     object.state = { _I_prev: [], _I: [], _O: [] };
-                  let state = object.state;
+                  if (card.state === undefined)
+                     card.state = { _I_prev: [], _I: [], _O: [] };
+                  let state = card.state;
 
-                  if (object.text == 'editor' && state.key == 'Control' && state.keyState == 'release') {
+                  if (card.text == 'editor' && state.key == 'Control' && state.keyState == 'release') {
 
                      if (state.isShiftDown) {
-                        if (object.state.srcFile)
-                           save(object.state.srcFile, object.state.text);
+                        if (card.state.srcFile)
+                           save(card.state.srcFile, card.state.text);
                      }
                      else {
 
                         // ON CONTROL KEY RELEASE, EITHER CONVERT CARD TO THE CARD TYPE PRINTED ON THE CARD,
                         // OR LOAD A FILE IF TEXT CONTAINS '.'. IF FILE HAS ALREADY BEEN LOADED, RELOAD IT.
 
-                        if (object.state.text.indexOf('.') > 0 || object.state.srcFile)
-                           loadSrcFile(object, object.state.srcFile ?? object.state.text);
+                        if (card.state.text.indexOf('.') > 0 || card.state.srcFile)
+                           loadSrcFile(card, card.state.srcFile ?? card.state.text);
                         else
-                           activationText = object.state.text;
+                           activationText = card.state.text;
                      }
 
                      state.key = ''; // SO WE DO NOT KEEP LOADING OR SAVING THE FILE!
@@ -1000,10 +1007,10 @@ function Diagram() {
 
                   // IF CARD HAS IN-LINKS, SET ITS PARAMETERS TO THEIR PARAMETER VALUES
 
-                  if (object.srcId) {
+                  if (card.srcId) {
                      state._I_prev = state._I.slice();
                      let T = [];
-                     let srcCards = getSrcCards(object);
+                     let srcCards = getSrcCards(card);
                      for (let i = 0 ; i < srcCards.length ; i++)
                         if (srcCards[i].state)
                            T.push(srcCards[i].state._O);
@@ -1012,8 +1019,8 @@ function Diagram() {
 
                   // AN fs CARD JUST SENDS ITS INPUT PARAMETERS ON TO A shader CARD
 
-                  if (isFsCard(object)) {
-                     let dstCards = getDstCards(object);
+                  if (isFsCard(card)) {
+                     let dstCards = getDstCards(card);
                      if (dstCards.length > 0 && dstCards[0].card_type == 'shader' && S_value[dstCards[0].id]) {
                         let I = [];
                         for (let i = 0 ; i < 10 ; i++)
@@ -1024,8 +1031,8 @@ function Diagram() {
 
                   // A cg CARD JUST SENDS ITS INPUT PARAMETERS ON TO A webgl CARD
 
-                  if (isCgCard(object)) {
-                     let dstCards = getDstCards(object);
+                  if (isCgCard(card)) {
+                     let dstCards = getDstCards(card);
                      if (dstCards.length > 0 && dstCards[0].card_type == 'webgl' && S_value[dstCards[0].id]) {
                         let I = [];
                         for (let i = 0 ; i < 10 ; i++)
@@ -1040,7 +1047,7 @@ function Diagram() {
                   state.mouseState = ! state.hadFocus &&   hasFocus ? 'press'   :
                                        state.hadFocus &&   hasFocus ? 'drag'    :
                                        state.hadFocus && ! hasFocus ? 'release' :
-                                                          'move'    ;
+                                                                      'move'    ;
                   state.hadFocus = hasFocus;
                   if (state.mouseState == 'press')
                      state.mousePressTime = time;
@@ -1049,7 +1056,8 @@ function Diagram() {
 
                   state.dirty = false;
                   state.draw = this;
-                  state.custom = object.custom;
+                  state.custom = card.custom;
+                  state.hasFocus = n == nAtCursor;
 
                   octx.save();
                   intoCardCoords(lo,hi);
@@ -1058,36 +1066,36 @@ function Diagram() {
 
                   // ADJUST COORDINATE TRANSFORM MATH FOR NON-SQUARE CARDS
 
-                  if (state.aspectRatio && ! object.hasBeenAdjusted) {
+                  if (state.aspectRatio && ! card.hasBeenAdjusted) {
                      let y = (lo[1] + hi[1]) / 2;
-                     let h = (hi[0] - lo[0]) / object.state.aspectRatio;
+                     let h = (hi[0] - lo[0]) / card.state.aspectRatio;
                      lo[1] = y - h/2;
                      hi[1] = y + h/2;
                      dp[1] = (hi[1] - lo[1]) / 2;
-                     value = S_value[object.id](state, time, mi(pos), hasFocus);
-                     object.hasBeenAdjusted = true;
+                     value = S_value[card.id](state, time, mi(pos), hasFocus);
+                     card.hasBeenAdjusted = true;
                   }
 
                   // AFTER THE FIRST TIME EVALUATING A NON-SQUARE CARD FROM A TEXTSTRING,
                   // ADJUST ITS SIZE AND POSITION
 
-                  if (object.morphData == 1 && state.aspectRatio < 1) {
+                  if (card.morphData == 1 && state.aspectRatio < 1) {
                      let x = (lo[0] + hi[0]) / 2, w = hi[0] - lo[0];
                      lo[0] = x - w / 2 * state.aspectRatio;
                      hi[0] = x + w / 2 * state.aspectRatio;
                      lo[1] = hi[1] - (hi[1] - lo[1]) * state.aspectRatio;
-                     value = S_value[object.id](state, time, mi(pos), hasFocus);
-                     object.morphData = 2;
+                     value = S_value[card.id](state, time, mi(pos), hasFocus);
+                     card.morphData = 2;
                   }
-                  if (object.morphData == 1 && state.aspectRatio > 1) {
+                  if (card.morphData == 1 && state.aspectRatio > 1) {
                      let h = (hi[0] - lo[0]) / state.aspectRatio;
                      hi[1] = this.input.mouse.pos[1] + h/2;
                      lo[1] = hi[1] - h;
-                     value = S_value[object.id](state, time, mi(pos), hasFocus);
-                     object.morphData = 2;
+                     value = S_value[card.id](state, time, mi(pos), hasFocus);
+                     card.morphData = 2;
                   }
 
-                  // GIVE THE OBJECT THE OPTION TO MOVE THE POSITION OF THE CARD
+                  // GIVE THE CARD THE OPTION TO MOVE ITS OWN POSITION
 
                   if (state.move) {
                      lo[0] += state.move[0];
@@ -1101,15 +1109,15 @@ function Diagram() {
                   if (state.keyState == 'release') state.keyState = 'up';
                }
 
-               // DRAW ALL THE LINES AND TEXT IN THE CARD OBJECT
+               // DRAW ALL THE LINES AND TEXT IN THE CARD
 
                let lineWidth = .1 * s;
-               if (object.state && object.state.lineWidth)
-                  lineWidth = object.state.lineWidth;
+               if (card.state && card.state.lineWidth)
+                  lineWidth = card.state.lineWidth;
 
                let color = penColor;
-               if (object.state)
-                  object.state.cardSize = hi[0] - lo[0];
+               if (card.state)
+                  card.state.cardSize = hi[0] - lo[0];
                for (let i = 0 ; i < value.length ; i++) {
                   this.lineWidth(lineWidth);
                   let item = value[i];
@@ -1141,10 +1149,10 @@ function Diagram() {
                   if (activationText == 'shader') {
                      let shaderCard = new WebgpuCard(octx);
                      shaderCard.setShader('rgb = vec3(0.,0.,1.);');
-                     S_value[object.id] = shaderCard;
+                     S_value[card.id] = shaderCard;
                   }
                   else {
-                     delete S_value[object.id];
+                     delete S_value[card.id];
                      activateCardFromText(n, activationText);
                   }
                   dirty = true;
@@ -1153,11 +1161,11 @@ function Diagram() {
                if (isClipping)
                   octx.restore();
 
-               if (object.card_type == 'editor' && ! isCgCard(object) && ! isFsCard(object) && object.state) {
+               if (card.card_type == 'editor' && ! isCgCard(card) && ! isFsCard(card) && card.state) {
 
                   // IF THERE IS AN OUT-LINK, DISPLAY ANY GRAPHICAL RESULT OF EVAL IN DESTINATION CARD
 
-                  let dstCards = getDstCards(object);
+                  let dstCards = getDstCards(card);
                   let hasOutLink = dstCards.length > 0;
 
                   octx.save();
@@ -1186,10 +1194,10 @@ function Diagram() {
                             'log,max,min,mod,pow,random,' +
                             'round,sign,sin,sqrt,trunc' ).split(',');
                   let v = [
-                     '_I'        , object.state._I,    // CARD'S INPUT PARAMETERS
+                     '_I'        , card.state._I,    // CARD'S INPUT PARAMETERS
                      'hasOutLink', hasOutLink,         // IS THERE A DESTINATION CARD?
                      'M'         , M,                  // 4x4 MATRIX OBJECT
-                     'draw'      , this,               // THIS DRAWING OBJECT
+                     'draw'      , this,               // THIS DRAWING CARD
                      'time'      , time - startTime,   // TOTAL ELAPSED TIME
                   ];
                   for (let i = 0 ; i < b.length ; i++ ) window[b[i]] = b[i];
@@ -1198,7 +1206,7 @@ function Diagram() {
 
                   // TRY TO EVALUATE THE CARD'S TEXT AS JAVASCRIPT
 
-                  let code = replaceAtSignsAndProvideDefaultOption(object.state.text);
+                  let code = replaceAtSignsAndProvideDefaultOption(card.state.text);
                   let value;
                   try {
                      value = (new Function(code))();
@@ -1209,7 +1217,7 @@ function Diagram() {
                   // IF SUCCESSFUL, value BECOMES THE CARD'S OUTPUT PARAMETERS
 
                   if (value)
-                     object.state._O = Array.isArray(value) ? value : [ value ];
+                     card.state._O = Array.isArray(value) ? value : [ value ];
 
                   // REMOVE THINGS FROM THE GLOBAL SCOPE
 
@@ -1224,28 +1232,28 @@ function Diagram() {
             }
          }
 
-         if (object.remove)
+         if (card.remove)
             octx.restore();
       }
 
       // IF USING A PEN, DISPLAY THE PEN TIP IN FRONT OF EVERYTHING ELSE
 
       if (penSize > 0)
-         this.drawColor('#00000040').dot(pen.pos, .002 * penSize);
+         this.drawColor(penColor + '40').dot(pen.pos, .002 * penSize);
 
       // SHOW THE TEXT STRING OR USER'S LATEST SPOKEN WORDS AT THE BOTTOM LEFT OF THE SCREEN
 
-      this.setFont(.02).drawColor('#00000060').text(textString, [-.9807,-.63], 0);
+      this.setFont(.02).drawColor(penColor + '60').text(textString, [-.9807,-.63], 0);
 
       // INDICATE WHETHER THE PEN IS BEING TRACKED
 
       if (usePen)
-         this.lineWidth(.0015).drawColor('#00000080').drawRect([-.995,-.62],[-.985,-.61]);
+         this.lineWidth(.0015).drawColor(penColor + '80').drawRect([-.995,-.62],[-.985,-.61]);
 
       // INDICATE WHETHER CURSOR INPUT IS CURRENTLY IN "CLICKED ON BACKGROUND" MODE
 
       if (bgClick)
-         this.fillColor('#00000080').fillRect([.985,-.66],[1,-.61]);
+         this.fillColor(penColor + '80').fillRect([.985,-.66],[1,-.61]);
 
       this.drawColor(penColor);
    }

@@ -726,7 +726,6 @@ editor: function(state,t,p,hasFocus) {
          let text = state.text.substring(state.selectionStart, state.selectionEnd+1);
          await navigator.clipboard.writeText(text);
          state.text = state.text.substring(0,state.selectionStart) + state.text.substring(state.selectionEnd+1);
-         //state.col -= state.selectionEnd - state.selectionStart;
 	 state.selectionStart = state.selectionEnd = -1;
          process();
       } catch (err) {
@@ -839,7 +838,7 @@ editor: function(state,t,p,hasFocus) {
       let text = state.lines[row];
       let nLines = state.lines.length;
       let justify = state.isClosed ? [0, 1.56 + nLines/800] : [0,1];
-      S.push({text: text, pos: [-1,1-(row+.6)*h], justify: justify, size: state.textSize});
+      S.push({text: text, pos: [-1,1-(row+.6)*h], justify: justify, size: state.textSize, color: '#000000'});
       let nChars = text.length + (i + text.length >= state.selectionStart &&
                                   i + text.length <= state.selectionEnd ? 1 : 0);
 
@@ -885,6 +884,11 @@ editor: function(state,t,p,hasFocus) {
          let x = w * col - 1;
          S.push({fill: [[x,y-h], [x+w,y-h], [x+w,y], [x,y]], color: '#00000040'});
       }
+
+   // IF THE CARD HAS INPUT FOCUS, HIGHLIGHT THE CARD.
+
+   if (state.hasFocus)
+      S.push({draw:[[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]], color: '#0060cc', lineWidth: .005});
 
    return S;
 },
