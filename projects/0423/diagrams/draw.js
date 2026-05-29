@@ -19,22 +19,28 @@ function Diagram() {
                             card.state.text.indexOf('vec3(') >= 0 ||
                             card.state.text.indexOf('vec4(') >= 0 );
 
-   let save = (name, str) => {
-      if (str) {
-         fetch('/api/save/' + name, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify([ { src: str } ])
-         }).catch(err => console.error('server save str failed:', err));
-      }
-      else {
-         localStorage.setItem('saved_' + name, JSON.stringify(S));
-         fetch('/api/save/' + name, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(S)
-         }).catch(err => console.error('server save failed:', err));
-      }
+   let saveSrcFile = (name, str) => {
+      fetch('/api/save/' + name, {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify([ { src: str } ])
+      }).catch(err => console.error('server save str failed:', err));
+   }
+
+   let previousSaveName = '';
+
+   let save = name => {
+      if (name.length == 0)
+         name = previousSaveName;
+      else
+         previousSaveName = name;
+
+      localStorage.setItem('saved_' + name, JSON.stringify(S));
+      fetch('/api/save/' + name, {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify(S)
+      }).catch(err => console.error('server save failed:', err));
    }
 
    let load = name => {
@@ -1045,7 +1051,7 @@ function Diagram() {
 
                      if (state.isShiftDown) {
                         if (card.state.srcFile)
-                           save(card.state.srcFile, card.state.text);
+                           saveSrcFile(card.state.srcFile, card.state.text);
                      }
                      else {
 
