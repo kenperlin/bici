@@ -137,14 +137,14 @@ function Diagram() {
       return id;
    }
 
-   let deleteCard = id => {
+   let deleteCardWithId = id => {
       for (let n = 2 ; n < S.length ; n++)
          if (S[n].id == id) {
-	    S.splice(n, 1);
-	    delete S_value[id];
-	    dirty = true;
-	    return;
-	 }
+            S.splice(n, 1);
+            delete S_value[id];
+            dirty = true;
+            return;
+         }
    }
 
    let isCommandKey, isTextString, textString = '';
@@ -282,11 +282,11 @@ function Diagram() {
       switch (key) {
       case 'Backspace':
          if (S.length == 3) {
-            removeObject(2);
+            removeCard(2);
             dirty = true;
          }
          else if (n >= 2) {
-            removeObject(n);
+            removeCard(n);
             dirty = true;
          }
          break;
@@ -301,7 +301,7 @@ function Diagram() {
 
    let cursorIds = { mouse:0, left:1, right:2 };
    let dirty, bgClick, state = -1, stroke = [], p = [], n = -1, nAtCursor = -1;
-   let isDragging = false, isResizing = false, sy;
+   let isDragging = false, isResizing = false, sy, isDraggingCopy;
    let np = isFirstPlayer() ? 0 : 1;
    let nm = -1;
    let pen = {}, usePen = true;
@@ -336,12 +336,16 @@ function Diagram() {
       }
    }
 
-   let removeObject = n => {
+   // START THE PROCESS OF FADING A CARD AND THEN DELETING IT
+
+   let removeCard = n => {
       if (S[n].remove === undefined)
          S[n].remove = 1;
    }
 
-   let deleteObject = n => {
+   // IMMEDIATELY DELETE A CARD
+
+   let deleteCard = n => {
       let id = S[n].id;
       S.splice(n, 1);
       for (let n = 2 ; n < S.length ; n++)
@@ -349,6 +353,41 @@ function Diagram() {
             for (let i = 0 ; i < S[n].srcId.length ; i++)
                if (S[n].srcId[i] == id)
                   S[n].srcId.splice(i--, 1);
+   }
+
+   let copyCard = n => {
+
+      // COPY A MORPHED CARD
+
+      if (n >= 2 && S[n].morphData) {
+         createCard(S[n].card_type, pos, S[n].hi[0]-S[n].lo[0], S[n].custom);
+	 let nc = S.length-1;
+         let src = S[n].state;
+         let dst = S[nc].state;
+         for (let item in src) {
+            if (Array.isArray(src[item])) {
+               dst[item] = [];
+               for (let i = 0 ; i < src[item].length ; i++)
+                  dst[item].push(Array.isArray(src[item][i]) ? src[item][i].slice() : src[item][i]);
+            }
+            else
+               dst[item] = src[item];
+         }
+	 S[nc].lo = S[n].lo.slice();
+	 S[nc].hi = S[n].hi.slice();
+      }
+
+      // COPY A SKETCH
+
+      else if (n >= 2 && ! S[n].morphData) {
+          let strokes = [];
+          for (let i = 0 ; i < S[n].strokes.length ; i++)
+             strokes.push(S[n].strokes[i].slice());
+          let nc = S.length;
+          S.push({ strokes: strokes, id: ++id });
+	  S[nc].lo = S[n].lo.slice();
+	  S[nc].hi = S[n].hi.slice();
+      }
    }
 
    let isSpeechKey, previousSpeech = '', thisSpeech = '';
@@ -371,7 +410,7 @@ function Diagram() {
       if (window.penXYN)
          penSize = Math.sqrt(penXYN.n);
 
-      let dragItem = () => {
+      let dragCard = () => {
          if (n >= 2) {
             let strokes = S[n].strokes;
             let drag = pt => [ pt[0] + pos[0] - p[0] , pt[1] + pos[1] - p[1] ];
@@ -385,7 +424,7 @@ function Diagram() {
          }
       }
 
-      let resizeItem = () => {
+      let resizeCard = () => {
          if (n >= 2) {
             let strokes = S[n].strokes;
             let s = 1 + 2 * (pos[1] - sy);
@@ -419,26 +458,27 @@ function Diagram() {
             nAtCursor = -1;
             for (let n = S.length - 1 ; n >= 2 ; n--)
                if (contains(n, pos)) {
-	          nAtCursor = n;
+                  nAtCursor = n;
                   break;
                }
 
             if (isDragging == cursorId)
-               dragItem();
+               dragCard();
 
             else if (isResizing == cursorId)
-               resizeItem();
+               resizeCard();
 
             break;
 
          case 'press':
-	    pressPos = pos.slice();
+            pressPos = pos.slice();
 
             // A MOUSE PRESS RESETS STATE
 
             n = -1;
             nm = -1;
             state = -1;
+	    isDraggingCopy = false;
 
             // IF MOUSE DOWN AFTER A PREVIOUS CLICK ON THE BACKGROUND
 
@@ -486,7 +526,15 @@ function Diagram() {
          case 'down':
 
             if (bgClick) {
-               ; // DRAGGING AFTER A CLICK ON THE BACKGROUND
+               if (n >= 2) {
+                  if (! isDraggingCopy && norm(subtract(pos, pressPos)) > .05) {
+		     copyCard(n);
+		     n = S.length - 1;
+		     isDraggingCopy = cursorId;
+                  }
+		  else if (isDraggingCopy == cursorId)
+		     dragCard(n);
+               }
             }
             else {
                if (nm < 2)                       // CONTINUING TO DRAW
@@ -507,7 +555,7 @@ function Diagram() {
 
                // IF THIS IS A CLICK
 
-               if (cursor.isClick) {
+               if (cursor.isClick && ! isDragging) {
 
                   // FIND OUT WHAT CARD, IF ANY, THIS CLICK IS IN
 
@@ -524,7 +572,7 @@ function Diagram() {
                      // AND THIS CLICK IS IN A CARD, DELETE THE CARD
 
                      if (n >= 2)
-                        removeObject(n);
+                        removeCard(n);
 
                      break;
 
@@ -566,47 +614,10 @@ function Diagram() {
                   case 2:
                   case 6:
 
-                     // COPY A MORPHED CARD
+                     if (n >= 2)
+                        ;//copyCard(n);
 
-                     if (n >= 2 && S[n].morphData) {
-		        createCard(S[n].card_type, pos, S[n].hi[0]-S[n].lo[0], S[n].custom);
-			let src = S[n].state;
-			let dst = S[S.length-1].state;
-			for (let item in src) {
-			   if (Array.isArray(src[item])) {
-			      dst[item] = [];
-			      for (let i = 0 ; i < src[item].length ; i++)
-			         dst[item].push(Array.isArray(src[item][i]) ? src[item][i].slice() : src[item][i]);
-                           }
-                           else
-			      dst[item] = src[item];
-                        }
-		     }
-
-                     // COPY A SKETCH
-
-                     else if (n >= 2 && ! S[n].morphData) {
-		         let dx = pos[0] - pressPos[0];
-		         let dy = pos[1] - pressPos[1];
-		         let strokes = [];
-			 for (let i = 0 ; i < S[n].strokes.length ; i++) {
-			    strokes.push([]);
-			    for (let j = 0 ; j < S[n].strokes[i].length ; j++) {
-			       let x = S[n].strokes[i][j][0] + dx;
-			       let y = S[n].strokes[i][j][1] + dy;
-			       strokes[i].push([x,y]);
-                            }
-			 }
-
-			 let nc = S.length;
-			 S.push({ strokes: strokes, id: ++id });
-                         clearBounds(nc);
-			 for (let i = 0 ; i < strokes.length ; i++)
-                            extendBounds(nc, strokes[i]);
-
-		     }
-
-		     break;
+                     break;
 
                   // IF BACKGROUND CLICK WAS WEST OF THE CARD, CREATE A LINK
 
@@ -842,7 +853,7 @@ function Diagram() {
          if (card.remove) {
             card.remove -= 2 * elapsed;
             if (card.remove <= 0) {
-               deleteObject(n--);
+               deleteCard(n--);
                continue;
             }
             octx.save();
@@ -857,7 +868,7 @@ function Diagram() {
 
          if (hi && (hi[0] < -1 || hi[1] < -screen.height/screen.width) ||
              lo && (lo[0] >  1 || lo[1] >  screen.height/screen.width))
-            removeObject(n);
+            removeCard(n);
 
          // HANDLE MORPHING A DRAWING TO A KNOWN DRAWING OR TO A CARD
 
