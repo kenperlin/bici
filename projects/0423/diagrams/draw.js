@@ -7,7 +7,7 @@ function Diagram() {
 
    let M = new Matrix();
 
-   let penColor = '#808080';
+   let penColor = '#000000';
 
    let isCgCard = card => card.card_type == 'editor' && 
                           card.state && card.state.text &&
@@ -130,6 +130,7 @@ function Diagram() {
          id: ++id,
          lo: [ pos[0]-size/2, pos[1]-size/2 ],
          hi: [ pos[0]+size/2, pos[1]+size/2 ],
+         state: { _I_prev: [], _I: [], _O: [] },
          custom: custom,
       });
       dirty = true;
@@ -515,7 +516,7 @@ function Diagram() {
 
                   switch (state) {
 
-                  // IF THE PREVIOUS CLICK WAS EAST OF THIS CLICK
+                  // IF BACKGROUND CLICK WAS EAST OF THIS CLICK
 
                   case 0:
 
@@ -526,7 +527,7 @@ function Diagram() {
 
                      break;
 
-                  // IF THE PREVIOUS CLICK WAS NORTH OR SOUTH OF THIS CLICK
+                  // IF BACKGROUND WAS NORTH OR SOUTH OF THIS CLICK
 
                   case 2:
                   case 6:
@@ -538,7 +539,7 @@ function Diagram() {
 
                      break;
 
-                  // IF THE PREVIOUS CLICK WAS WEST OF THIS CLICK
+                  // IF BACKGROUND CLICK WAS WEST OF THIS CLICK
 
                   case 4:
 
@@ -559,7 +560,28 @@ function Diagram() {
 
                   switch (state) {
 
-                  // IF DRAG STARTED EAST OF THE BACKGROUND CLICK, CREATE A LINK
+                  // IF BACKGROUND CLICK WAS NORTH OR SOUTH OF THE CARD, COPY THE CARD
+
+                  case 2:
+                  case 6:
+
+                     if (n >= 2) {
+		        createCard(S[n].card_type, pos, S[n].hi[0]-S[n].lo[0], S[n].custom);
+			let src = S[n].state;
+			let dst = S[S.length-1].state;
+			for (let item in src) {
+			   if (Array.isArray(src[item])) {
+			      dst[item] = [];
+			      for (let i = 0 ; i < src[item].length ; i++)
+			         dst[item].push(Array.isArray(src[item][i]) ? src[item][i].slice() : src[item][i]);
+                           }
+                           else
+			      dst[item] = src[item];
+                        }
+		     }
+		     break;
+
+                  // IF BACKGROUND CLICK WAS WEST OF THE CARD, CREATE A LINK
 
                   case 4:
                      for (let nn = S.length - 1 ; nn >= 2 ; nn--)
