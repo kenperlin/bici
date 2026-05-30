@@ -19,6 +19,15 @@ function Diagram() {
                             card.state.text.indexOf('vec3(') >= 0 ||
                             card.state.text.indexOf('vec4(') >= 0 );
 
+   // LOAD A SRC FILE FROM THE SERVER
+
+   let loadSrcFile = (card, text) => {
+      card.state.srcFile = text;
+      getFile('projects/' + project + '/src/' + text, text => card.state.newText = text);
+   }
+
+   // SAVE A SRC FILE TO THE SERVER
+
    let saveSrcFile = (name, str) => {
       fetch('/api/save/' + name, {
          method: 'POST',
@@ -26,6 +35,29 @@ function Diagram() {
          body: JSON.stringify([ { src: str } ])
       }).catch(err => console.error('server save str failed:', err));
    }
+
+   // CREATE A NEW WEBRTC CHANNEL AND WRITE ITS CHANNEL ID TO A FILE ON THE SERVER.
+
+   let channel = new Channel();
+   setTimeout(() => {
+      let id = channel.id();
+      console.log('channel id =', id);
+      saveSrcFile('webrtc_id.cg', id);
+   }, 2000);
+
+   // LOAD A SCENE FROM THE SERVER
+
+   let load = name => {
+      fetch('/api/load/' + name)
+         .then(r => r.ok ? r.json() : Promise.reject(r.status))
+         .then(data => { S = data; dirty = true; })
+         .catch(() => {
+            const local = localStorage.getItem('saved_' + name);
+            if (local) { S = JSON.parse(local); S_value = {}; dirty = true; }
+         });
+   }
+
+   // SAVE THE CURRENT SCENE TO THE SERVER
 
    let previousSaveName = '';
 
@@ -43,20 +75,7 @@ function Diagram() {
       }).catch(err => console.error('server save failed:', err));
    }
 
-   let load = name => {
-      fetch('/api/load/' + name)
-         .then(r => r.ok ? r.json() : Promise.reject(r.status))
-         .then(data => { S = data; dirty = true; })
-         .catch(() => {
-            const local = localStorage.getItem('saved_' + name);
-            if (local) { S = JSON.parse(local); S_value = {}; dirty = true; }
-         });
-   }
-
-   let loadSrcFile = (card, text) => {
-      card.state.srcFile = text;
-      getFile('projects/' + project + '/src/' + text, text => card.state.newText = text);
-   }
+   // GET ALL OF THE INPUT LINK CARDS FOR THIS CARD
 
    let getSrcCards = card => {
       let srcCards = [];
@@ -68,6 +87,8 @@ function Diagram() {
       return srcCards;
    }
 
+   // GET ALL OF THE OUTPUT LINK CARDS FOR THIS CARD
+
    let getDstCards = card => {
       let dstCards = [];
       for (let n = 2 ; n < S.length ; n++)
@@ -78,6 +99,9 @@ function Diagram() {
       return dstCards;
    }
 
+   // REPLACE ALL OCCURANCES OF '@#' BY '_I[#]'
+   // REPLACE ALL OCCURANCES OF '@x' AND '@y' BY '_X' AND '_Y'
+
    let replaceAtSigns = s => {
       let t = '';
       for (let n = 0 ; n < s.length ; n++)
@@ -87,6 +111,8 @@ function Diagram() {
       return t;
    }
 
+   // SAME AS ABOVE, BUT ALSO DEFAULT UNDEFINED VALUES TO ZERO
+
    let replaceAtSignsAndProvideDefaultOption = s => {
       let t = '';
       for (let n = 0 ; n < s.length ; n++)
@@ -95,6 +121,8 @@ function Diagram() {
               s[n+1] == 'y' ? (++n, '_Y') : '(_I[' + s[++n] + '] ?? 0)';
       return t;
    }
+
+   // CONVERT A CARD INTO AN ACTIVE CARD, GIVEN A card_type NAME
 
    let activateCardFromText = (n, text) => {
       let words = text.toLowerCase().split(' ');
@@ -111,6 +139,8 @@ function Diagram() {
             }
    }
 
+   // TRANSFORM THE CANVAS 2D DRAWING CONTEXT INTO A CARD'S COORDINATE SYSTEM.
+
    let intoCardCoords = (lo,hi) => {
       let s = (hi[0]-lo[0]) / 2;
       let x = screen.width /2 + screen.width/2 * lo[0];
@@ -118,11 +148,15 @@ function Diagram() {
       octx.setTransform(s, 0, 0, s, x, y);
    }
 
+   // TRANSFORM A POINT INTO A CARD'S COORDINATE SYSTEM.
+
    let transformToCardCoords = (n,p) => {
       let lo = S[n].lo, hi = S[n].hi;
       return [ 2 * (p[0] - lo[0]) / (hi[0] - lo[0]) - 1,
                2 * (p[1] - lo[1]) / (hi[1] - lo[1]) - 1 ];
    }
+
+   // CREATE A NEW CARD.
 
    let createCard = (card_type, pos, size, custom) => {
       if (! dictionary[card_type])
@@ -142,6 +176,8 @@ function Diagram() {
       dirty = true;
       return id;
    }
+
+   // DELETE A CARD, GIVEN ITS ID.
 
    let deleteCardWithId = id => {
       for (let n = 2 ; n < S.length ; n++)
@@ -310,7 +346,7 @@ function Diagram() {
    let isDragging = false, isResizing = false, sy, isDraggingCopy;
    let np = isFirstPlayer() ? 0 : 1;
    let nm = -1;
-   let pen = {}, usePen = true;
+   let pen = {}, usePen = false;
    let pos = [0,0], pressPos, time, isPenDown, wasPenDown;
    let startTime = Date.now() / 1000;
 
@@ -398,7 +434,10 @@ function Diagram() {
 
    let isSpeechKey, previousSpeech = '', thisSpeech = '';
 
+   let frame = 0;
+
    this.update = () => {
+      frame++;
 
       if (isSpeechKey) {
          thisSpeech = speech;
@@ -1101,6 +1140,15 @@ function Diagram() {
                            I.push(state._I[i] ?? 0);
                         S_value[dstCards[0].id].set_I(I);
                      }
+
+		     if (state._I.length > 0 && state.srcFile && frame++ % 3 == 0) {
+		        let dataFile = state.srcFile.replace(/.cg/,'_data.cg');
+			let str = '';
+			for (let i = 0 ; i < state._I.length ; i++)
+			   str += (100*state._I[i]>>0) + (i < state._I.length - 1 ? ',' : '\n');
+		        saveSrcFile(dataFile, str);
+		        //channel.send(str);
+		     }
                   }
 
                   // PROCEDURALLY EVALUATE THE CARD CONTENTS
