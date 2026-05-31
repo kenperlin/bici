@@ -121,11 +121,11 @@ curve: (state,t,p,hasFocus) => {
          state.keys.push([p[0], y(p[1]), 0]);
          state.keys.sort((a,b) => a[0] - b[0]);
       }
-      else if (state.mouseClick || state.n > 0 && state.n < state.keys.length-1 && p[0]*p[0] > 1)
-         if (p[1] < 1)
-            state.keys.splice(state.n, 1);
-         else
+      else if (state.mouseClick)
+         if (p[1] >= 1)
 	    state.keys[state.n][2] = 1 - state.keys[state.n][2];
+         else if (state.n > 0 && state.n < state.keys.length - 1)
+            state.keys.splice(state.n, 1);
       state.n = -1;
    }
 
@@ -149,7 +149,7 @@ curve: (state,t,p,hasFocus) => {
    for (let n = 0 ; n < state.keys.length ; n++) {
       let x = state.keys[n][0];
       state.draw.line([x,.3],[x,.7]);
-      if (n == 0 || n == state.keys.length-1 || state.keys[n][2] == 0)
+      if (state.keys[n][2] == 0)
          state.draw.fillColor('#000000').fillPolygon([[x,.7],[x-.035,.735],[x,.77],[x+.035,.735]]);
       else
          state.draw.dot([x,.73],.03);
@@ -167,8 +167,8 @@ curve: (state,t,p,hasFocus) => {
          let y0 = keys[k  ][1];
          let x1 = keys[k+1][0];
          let y1 = keys[k+1][1];
-	 let c0 = k > 0      && keys[k ][2];
-	 let c1 = k < nk - 2 && keys[k+1][2];
+	 let c0 = keys[k  ][2];
+	 let c1 = keys[k+1][2];
 	 if (! c0 && ! c1)
             state.draw.line([x0,y0],[x1,y1]);
          else {
