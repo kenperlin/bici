@@ -426,14 +426,20 @@ timeline: function(state,t,p,hasFocus) {
 
    if (state.mouseState == 'release')
       if (state.mouseClick)
-         state.mode = (state.mode + 1) % 2;
+         if (p[0] > .95)
+	    state.isLoop = ! state.isLoop;
+         else
+            state.mode = (state.mode + 1) % 2;
 
    switch (state.mode) {
    case 0:
       state.t = 0;
       break;
    case 1:
-      state.t = Math.min(1, state.t + (time - state.time) / (state.duration >> 0));
+      if (state.isLoop)
+         state.t = (state.t + (time - state.time) / (state.duration >> 0)) % 1;
+      else
+         state.t = Math.min(1, state.t + (time - state.time) / (state.duration >> 0));
       break;
    }
 
@@ -447,11 +453,16 @@ timeline: function(state,t,p,hasFocus) {
    if (a.length < b.length)
       a = ' ' + a;
    state.draw.lineWidth(.03)
-             .line([-1,.5],[1,.5])
+             .line([-1,.5],[state.isLoop ? .93 : 1,.5])
              .line([x,.5-.2],[x,.5+.2])
 	     .setFont(.2, 'Courier')
 	     .text(a + ' secs', [0,.5], .5, .6)
 	     .text(b + ' secs', [0,.5], .5, 1.7);
+   if (state.isLoop)
+         //state.draw.drawColor('#000000').dot([1,.5],.06);
+         state.draw.drawColor('#000000').arc([1,.5],.05);
+      else
+         state.draw.fillColor('#000000').fillRect([.94,.44],[1.06,.56]);
    return [];
 },
 
