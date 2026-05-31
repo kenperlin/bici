@@ -54,7 +54,7 @@ spline: (state,t,p,hasFocus) => {
    case 'press':
       for (state.i = state.data.length - 1 ; state.i >= 0 ; state.i--)
          if (norm(subtract(state.data[state.i], p)) < .1)
-	    break;
+            break;
    case 'drag':
       if (state.i >= 0) {
          state.data[state.i][1] = Math.max(-1,Math.min(1,p[1]));
@@ -76,7 +76,7 @@ spline: (state,t,p,hasFocus) => {
    for (let i = 0 ; i < state.data.length ; i++)
       state.draw.fillColor('white').fillArc(state.data[i], .1)
                 .drawColor('black').lineWidth(.005).arc(state.data[i], .1)
-		.setFont(.15,'Helvetica').text(''+(i+1), state.data[i], .5, 1.2);
+                .setFont(.15,'Helvetica').text(''+(i+1), state.data[i], .5, 1.2);
 
 
    return [];
@@ -86,6 +86,21 @@ curve: (state,t,p,hasFocus) => {
    state.hideFrame = true;
    state.aspectRatio = 5;
    state.noClipping = true;
+
+   let evalSpline = (k,t) => {
+      let keys = state.keys;
+      let y0 = keys[k  ][1];
+      let y1 = keys[k+1][1];
+      let c0 = keys[k  ][2];
+      let c1 = keys[k+1][2];
+      if (! c0 && ! c1)
+         return y0 + t * (y1 - y0);
+      let d = t * (y1 - y0);
+      return c0 && ! c1 ? y0 + d * t
+           : ! c0 && c1 ? y0 + d * (2 - t)
+                        : y0 + d * t * (3 - 2 * t);
+   }
+
    if (state.keys === undefined) {
       state.keys = [[-1,.5,0],[1,.5,0]];
       state.n = -1;
@@ -94,10 +109,10 @@ curve: (state,t,p,hasFocus) => {
    if (state.mouseState == 'press') {
       state.mode = 'adjust';
       for (state.n = state.keys.length - 1 ; state.n >= 0 ; state.n--)
-	 if (Math.abs(p[0] - state.keys[state.n][0]) < .1) {
-	    if (p[1] > 1)
-	       state.mode = 'toggle';
-	    break;
+         if (Math.abs(p[0] - state.keys[state.n][0]) < .1) {
+            if (p[1] > 1)
+               state.mode = 'toggle';
+            break;
          }
    }
 
@@ -123,7 +138,7 @@ curve: (state,t,p,hasFocus) => {
       }
       else if (state.mouseClick)
          if (p[1] >= 1)
-	    state.keys[state.n][2] = 1 - state.keys[state.n][2];
+            state.keys[state.n][2] = 1 - state.keys[state.n][2];
          else if (state.n > 0 && state.n < state.keys.length - 1)
             state.keys.splice(state.n, 1);
       state.n = -1;
@@ -131,15 +146,14 @@ curve: (state,t,p,hasFocus) => {
 
    if (state._I.length > 0) {
       let x = state._I[0];
-      for (let n = 0 ; n < state.keys.length - 1 ; n++) {
-         let x0 = state.keys[n][0], x1 = state.keys[n+1][0];
+      for (let k = 0 ; k < state.keys.length - 1 ; k++) {
+         let x0 = state.keys[k  ][0],
+	     x1 = state.keys[k+1][0];
          if (x >= x0 && x < x1) {
-            let y0 = 5 * (state.keys[n  ][1] - .5),
-	        y1 = 5 * (state.keys[n+1][1] - .5);
-	    let f = (x - x0) / (x1 - x0);
-	    state._O[0] = y0 + f * (y1 - y0);
-	    break;
-	 }
+            let t = (x - x0) / (x1 - x0);
+            state._O[0] = 5 * (evalSpline(k, t) - .5);
+            break;
+         }
       }
    }
 
@@ -164,24 +178,11 @@ curve: (state,t,p,hasFocus) => {
       let keys = state.keys, nk = keys.length;
       for (let k = 0 ; k < nk - 1 ; k++) {
          let x0 = keys[k  ][0];
-         let y0 = keys[k  ][1];
          let x1 = keys[k+1][0];
-         let y1 = keys[k+1][1];
-	 let c0 = keys[k  ][2];
-	 let c1 = keys[k+1][2];
-	 if (! c0 && ! c1)
-            state.draw.line([x0,y0],[x1,y1]);
-         else {
-	    let C = [];
-	    for (let t = 0 ; t <= 1.001 ; t += 1/20) {
-	       let x = x0 + t * (x1 - x0);
-	       let d = t * (y1 - y0);
-	       C.push(c0 && ! c1 ? [x, y0 + d * t]
-                    : ! c0 && c1 ? [x, y0 + d * (2 - t)]
-                                 : [x, y0 + d * t * (3 - 2 * t)]);
-            }
-	    state.draw.path(C);
-	 }
+         let C = [];
+         for (let t = 0 ; t <= 1.001 ; t += 1/20)
+	    C.push([x0 + t * (x1 - x0), evalSpline(k, t)]);
+         state.draw.path(C);
       }
    }
 
@@ -213,7 +214,7 @@ trackpad: (state,t,p,hasFocus) => {
              .line([-1,y],[1,y])
              .line([x,-1],[x,1])
              .setFont(.2, 'Courier')
-	     .text('x=' + round2(state._O[0]), [-.5,.5])
+             .text('x=' + round2(state._O[0]), [-.5,.5])
              .text('y=' + round2(state._O[1]), [ .5,.5]);
 
    return [];
@@ -283,17 +284,17 @@ button: (state,t,p,hasFocus) => {
    let d = .2, y = .3, h = .5;
    let path = [[1-d,y+h],[1-d/3,y+h-d/3],[1,y+h-d],
                [1,y-h+d],[1-d/3,y-h+d/3],[1-d,y-h],
-	       [d-1,y-h],[d/3-1,y-h+d/3],[-1,y-h+d],
-	       [-1,y+h-d],[d/3-1,y+h-d/3],[d-1,y+h],
-	       [1-d,y+h]];
+               [d-1,y-h],[d/3-1,y-h+d/3],[-1,y-h+d],
+               [-1,y+h-d],[d/3-1,y+h-d/3],[d-1,y+h],
+               [1-d,y+h]];
    state.draw.fillColor(state.isPressed
                         ? '#909090'
                         : state.choice > 0 || state.labels.length > 2
-			  ? '#ffffff'
+                          ? '#ffffff'
                           : '#c8c8c8').fillPolygon(path)
              .lineWidth(.03).path(path)
              .setFont(3 / nChars, 'Courier')
-	     .text(' ' + label + ' ', [0,.03], .5, J(nChars-4));
+             .text(' ' + label + ' ', [0,.03], .5, J(nChars-4));
 
    return [];
 },
@@ -427,7 +428,7 @@ timeline: function(state,t,p,hasFocus) {
    if (state.mouseState == 'release')
       if (state.mouseClick)
          if (p[0] > .95)
-	    state.isLoop = ! state.isLoop;
+            state.isLoop = ! state.isLoop;
          else
             state.mode = (state.mode + 1) % 2;
 
@@ -455,9 +456,9 @@ timeline: function(state,t,p,hasFocus) {
    state.draw.lineWidth(.03)
              .line([-1,.5],[state.isLoop ? .93 : 1,.5])
              .line([x,.5-.2],[x,.5+.2])
-	     .setFont(.2, 'Courier')
-	     .text(a + ' secs', [0,.5], .5, .6)
-	     .text(b + ' secs', [0,.5], .5, 1.7);
+             .setFont(.2, 'Courier')
+             .text(a + ' secs', [0,.5], .5, .6)
+             .text(b + ' secs', [0,.5], .5, 1.7);
    if (state.isLoop)
          state.draw.drawColor('#000000').arc([1,.5],.05);
       else
@@ -673,8 +674,8 @@ editor: function(state,t,p,hasFocus) {
 
       let isInWord = i => {
          let ch = state.text[i];
-	 return ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z' ||
-	        ch >= '0' && ch <= '9' || ch == '_' || ch == "'" || ch == '-';
+         return ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z' ||
+                ch >= '0' && ch <= '9' || ch == '_' || ch == "'" || ch == '-';
       }
 
       switch (state.clickCount) {
@@ -686,18 +687,18 @@ editor: function(state,t,p,hasFocus) {
             state.selectionStart--;
          while (state.selectionEnd < state.text.length-1 && state.text[state.selectionEnd] != '\n')
             state.selectionEnd++;
-	 break;
+         break;
 
       // IF DOUBLE CLICK, SELECT AN ENTIRE WORD.
 
       case 2:
-	 state.selectionStart = state.selectionEnd = state.clickIndex;
+         state.selectionStart = state.selectionEnd = state.clickIndex;
          while (state.selectionStart > 0 && isInWord(state.selectionStart-1))
             state.selectionStart--;
          while (state.selectionEnd < state.text.length-1 && isInWord(state.selectionEnd+1))
             state.selectionEnd++;
          state.clickIndex = null;
-	 break;
+         break;
 
       // IF SINGLE CLICK, SET THE CURSOR POSITION.
 
@@ -705,7 +706,7 @@ editor: function(state,t,p,hasFocus) {
          state.selectionStart = -1;
          state.selectionEnd   = -1;
          state.clickIndex = state.index;
-	 break;
+         break;
       }
       break;
    }
@@ -720,7 +721,7 @@ editor: function(state,t,p,hasFocus) {
       try {
           let text = state.text.substring(state.selectionStart, state.selectionEnd+1);
           await navigator.clipboard.writeText(text);
-	  process();
+          process();
       } catch (err) {
           console.error('Copy failed:', err);
       }
@@ -730,7 +731,7 @@ editor: function(state,t,p,hasFocus) {
       try {
           let text = await navigator.clipboard.readText();
           state.text = state.text.substring(0,state.index) + text + state.text.substring(state.index);
-	  process();
+          process();
        } catch (err) {
           console.error('Paste failed:', err);
        }
@@ -741,7 +742,7 @@ editor: function(state,t,p,hasFocus) {
          let text = state.text.substring(state.selectionStart, state.selectionEnd+1);
          await navigator.clipboard.writeText(text);
          state.text = state.text.substring(0,state.selectionStart) + state.text.substring(state.selectionEnd+1);
-	 state.selectionStart = state.selectionEnd = -1;
+         state.selectionStart = state.selectionEnd = -1;
          process();
       } catch (err) {
          console.error('Cut failed:', err);
@@ -756,8 +757,8 @@ editor: function(state,t,p,hasFocus) {
       else if (state.isMetaDown)
          switch (state.key) {
          case 'a': state.selectionStart = 0;
-	           state.selectionEnd = state.text.length-1;
-	           break;
+                   state.selectionEnd = state.text.length-1;
+                   break;
          case 'c': saveForUndo(); copy() ; break;
          case 'v': saveForUndo(); paste(); break;
          case 'x': saveForUndo(); cut()  ; break;
@@ -793,11 +794,11 @@ editor: function(state,t,p,hasFocus) {
          break;
       case 'ArrowUp':
          state.row = Math.max(state.row-1, 0);
-	 dirty = true;
+         dirty = true;
          break;
       case 'ArrowDown':
          state.row = Math.min(state.row+1, state.lines.length-1);
-	 dirty = true;
+         dirty = true;
          break;
       case 'Backspace':
          deleteChar();
@@ -813,10 +814,10 @@ editor: function(state,t,p,hasFocus) {
          break;
       case 'Control':
          state.isControlDown = false;
-	 break;
+         break;
       case 'Shift':
          state.isShiftDown = false;
-	 break;
+         break;
       case 'Alt':
       case 'Tab':
          break;
@@ -863,18 +864,18 @@ editor: function(state,t,p,hasFocus) {
 
       for (let col = 0 ; col < nChars ; col++)
          if (text[col] == '@' && isDigit(text[col+1])) {
-	    let ascii = text.charCodeAt(col+1);
-	    let c = state._I_changed[ascii - 48];
-	    if (c > 0) {
+            let ascii = text.charCodeAt(col+1);
+            let c = state._I_changed[ascii - 48];
+            if (c > 0) {
                let x = w * col - 1;
                let y = 1 - row * h;
                S.push({draw: [ [x-w/2  ,y-h*5/4],
-	                       [x+w*5/2,y-h*5/4],
-			       [x+w*5/2,y+h*.4 ],
-			       [x-w/2  ,y+h*.4 ],
-			       [x-w/2  ,y-h*5/4] ], color: '#ff0000' + hex(c<<3) });
-	    }
-	 }
+                               [x+w*5/2,y-h*5/4],
+                               [x+w*5/2,y+h*.4 ],
+                               [x-w/2  ,y+h*.4 ],
+                               [x-w/2  ,y-h*5/4] ], color: '#ff0000' + hex(c<<3) });
+            }
+         }
 
       // HIGHLIGHT CHARACTERS THAT ARE IN THE SELECTED REGION.
 
