@@ -448,7 +448,7 @@ timeline: function(state,t,p,hasFocus) {
    let x = 2 * state.t - 1;
    state._O[0] = x;
 
-   let a = '' + (state.t * state.duration >> 0);
+   let a = '' + (state.t * (state.duration >> 0) >> 0);
    let b = '' + (state.duration >> 0);
    if (a.length < b.length)
       a = ' ' + a;
@@ -459,7 +459,6 @@ timeline: function(state,t,p,hasFocus) {
 	     .text(a + ' secs', [0,.5], .5, .6)
 	     .text(b + ' secs', [0,.5], .5, 1.7);
    if (state.isLoop)
-         //state.draw.drawColor('#000000').dot([1,.5],.06);
          state.draw.drawColor('#000000').arc([1,.5],.05);
       else
          state.draw.fillColor('#000000').fillRect([.94,.44],[1.06,.56]);
