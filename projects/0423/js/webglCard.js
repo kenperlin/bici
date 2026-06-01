@@ -52,7 +52,7 @@ function WebglCard(ctx) {
    let _I = [];
 
    this.set_I = src => {
-      console.log('setting _I to', src);
+      //console.log('setting _I to', src);
       _I = src;
    }
 
