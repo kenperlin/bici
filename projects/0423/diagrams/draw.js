@@ -1152,7 +1152,7 @@ function Diagram() {
 		        saveSrcFile(dataFile, str + ',' + str + ',' + str);
                      }
 */
-		     if (state._I.length > 0 && state.srcFile) {
+		     if (isFirstPlayer() && state._I.length > 0 && state.srcFile) {
                         if (frame % 3 == 0) {
 			   let dataStr = '';
 			   for (let i = 0 ; i < 3 ; i++)

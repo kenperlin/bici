@@ -24,7 +24,10 @@ function WebglCard(ctx) {
    let cg = new Matrix();
 
    cg.draw = (mesh, color) => {
-      let m = mxm(perspective(0,0,-5), cg.get());
+      let matrix = perspective(0,0,-5);
+      if (! isFirstPlayer())
+         matrix = mxm(matrix, scale(1,1,-1));
+      let m = mxm(matrix, cg.get());
       setUniform('Matrix4fv', 'uMF', false, m);
       setUniform('Matrix4fv', 'uMI', false, inverse(m));
       setUniform('3fv', 'uColor', color ?? [1,1,1]);
