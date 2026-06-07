@@ -1,0 +1,26 @@
+let L1 = .65, L2 = .8;
+
+let t = 2*time;
+let [a,b,c] = IK(L1,L2,[.5+.2*cos(t),.4+.1*sin(5*t),.3*sin(t)]);
+
+cg.move(0,-.6,0)
+ 
+  .push().move(0,-.24,0).turnX(PI/2).scale(.2,.2,.1).draw(tube).pop()
+
+  .turnY(a)
+
+  .push().scale(.14).draw(tube,[0,.5,1]).pop()
+
+  .turnZ(b)
+
+  .push().move(0,.35,0).scale(.04,.22,.04).draw(cube,[.5,.5,.5]).pop()
+
+  .move(0,L1,0).turnZ(c)
+
+  .push().scale(.13).draw(tube,[0,.5,.2]).pop()
+  .push().move(0,.4,0).scale(.04,.4,.04).draw(cube,[.5,.5,.5]).pop()
+
+  .move(0,L2,0)
+
+  .push().scale(.12).draw(ball,[1,0,0]).pop()
+;

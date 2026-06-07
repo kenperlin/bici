@@ -1309,13 +1309,14 @@ function Diagram() {
 
                   // TEMPORARILY ADD SOME USEFUL THINGS TO THE GLOBAL SCOPE
 
-                  let b = ( 'add,cross,dot,ease,evalBezier,hex,mix,norm,'
-                          + 'normalize,resize,round,subtract,round2,'
-                          + 'transform'
+                  let b = ( 'add,cross,dot,ease,evalBezier,hex,'
+                          + 'ik,mix,norm,normalize,resize,round,'
+                          + 'round2,subtract,transform'
                           ).split(',');
-                  let m = ( 'PI,abs,ceil,cos,exp,floor,' +
-                            'log,max,min,mod,pow,random,' +
-                            'round,sign,sin,sqrt,trunc' ).split(',');
+                  let m = ( 'PI,abs,acos,asin,atan,atan2,ceil,cos,'
+                          + 'exp,floor,log,max,min,mod,pow,random,'
+                          + 'round,sign,sin,sqrt,trunc'
+			  ).split(',');
                   let v = [
                      '_I'        , card.state._I,    // CARD'S INPUT PARAMETERS
                      'hasOutLink', hasOutLink,         // IS THERE A DESTINATION CARD?

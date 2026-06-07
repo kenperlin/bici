@@ -62,10 +62,10 @@ function WebglCard(ctx) {
    this.draw = (x,y,w) => {
 
       if (scene) {
-         let b = ( 'add,cross,dot,ease,evalBezier,hex,mix,norm,'
-                 + 'normalize,resize,round,subtract,round2,'
-                 + 'transform' ).split(',');
-         let m = ( 'PI,abs,ceil,cos,exp,floor,' +
+         let b = ( 'add,cross,dot,ease,evalBezier,'
+                 + 'hex,ik,mix,norm,normalize,resize,round,'
+                 + 'subtract,round2,transform' ).split(',');
+         let m = ( 'PI,abs,acos,asin,atan2,ceil,cos,exp,floor,' +
                    'log,max,min,mod,pow,random,' +
                    'round,sign,sin,sqrt,trunc' ).split(',');
          let v = [
@@ -82,6 +82,15 @@ function WebglCard(ctx) {
          for (let i = 0 ; i < b.length ; i++ ) window[b[i]] = b[i];
          for (let i = 0 ; i < m.length ; i++ ) window[m[i]] = Math[m[i]];
          for (let i = 0 ; i < v.length ; i+=2) window[v[i]] = v[i+1];
+
+         window.IK = (L1,L2,C) => {
+           let B = ik([0,0,0],L1,L2,C,[0,1,0]);
+           let AB = subtract(B,[0,0,0]);
+           let BC = subtract(C,B);
+           return [ atan2(C[2],C[0]),
+                   -acos(AB[1]/norm(AB)),
+                    acos(dot(AB,BC)/(norm(AB)*norm(BC))) ];
+         }
 
          let isError = false;
          try {
@@ -105,11 +114,11 @@ function WebglCard(ctx) {
          ctx.drawImage(canvas, x-w/2, y-w/2, w, w);
 
          if (event == 'release' || event == 'click')
-	    event = 'up';
+            event = 'up';
       }
       else {
          ctx.fillStyle = '#00a0ff';
-	 ctx.fillRect(x-w/2, y-w/2, w, w);
+         ctx.fillRect(x-w/2, y-w/2, w, w);
       }
       //ctx.strokeStyle = '#000000';
       //ctx.strokeRect(x-w/2, y-w/2, w, w);
