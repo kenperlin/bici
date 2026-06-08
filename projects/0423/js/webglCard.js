@@ -12,6 +12,11 @@ function WebglCard(ctx) {
                          Shape.diskMesh(20,1)));
    let cube = Shape.cubeMesh();
 
+   let tubex = { triangle_strip: true, data: new Float32Array(tube.data) };
+   let tubey = { triangle_strip: true, data: new Float32Array(tube.data) };
+   Shape.transform(tubex, turnY(Math.PI/2));
+   Shape.transform(tubey, turnX(Math.PI/2));
+
    this.vertexShader = Shader.defaultVertexShader;
    this.fragmentShader = Shader.shinyFragmentShader;
 
@@ -23,11 +28,13 @@ function WebglCard(ctx) {
 
    let cg = new Matrix();
 
-   cg.draw = (mesh, color) => {
-      let matrix = perspective(0,0,-5);
+   cg.draw = (mesh, color, s) => {
+      let m = perspective(0,0,-5);
       if (! isFirstPlayer())
-         matrix = mxm(matrix, scale(1,1,-1));
-      let m = mxm(matrix, cg.get());
+         m = mxm(m, scale(1,1,-1));
+      m = mxm(m, cg.get());
+      if (s !== undefined)
+         m = mxm(m, scale(s));
       setUniform('Matrix4fv', 'uMF', false, m);
       setUniform('Matrix4fv', 'uMI', false, inverse(m));
       setUniform('3fv', 'uColor', color ?? [1,1,1]);
@@ -77,6 +84,7 @@ function WebglCard(ctx) {
             'ball' , ball,
             'cube' , cube,
             'tube' , tube,
+            'tubey', tubey,
             'time' , Date.now()/1000 - startTime,
          ];
          for (let i = 0 ; i < b.length ; i++ ) window[b[i]] = b[i];

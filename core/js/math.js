@@ -43,7 +43,10 @@ let perspective = (x,y,z) => {
    let r = x * x + y * y + z * z;
    return [1,0,0,x/r, 0,1,0,y/r, 0,0,1,z/r, 0,0,0,1];
 }
-let scale = (x,y,z) => [x,0,0,0, 0,y??x,0,0, 0,0,z??x,0, 0,0,0,1];
+let scale = (x,y,z) => {
+   if (Array.isArray(x)) { z = x[2]; y = x[1]; x = x[0]; }
+   return [x,0,0,0, 0,y??x,0,0, 0,0,z??x,0, 0,0,0,1];
+}
 let turnX = t => [1,0,0,0, 0,c(t),s(t),0, 0,-s(t),c(t),0, 0,0,0,1];
 let turnY = t => [c(t),0,-s(t),0, 0,1,0,0, s(t),0,c(t),0, 0,0,0,1];
 let turnZ = t => [c(t),s(t),0,0, -s(t),c(t),0,0, 0,0,1,0, 0,0,0,1];
