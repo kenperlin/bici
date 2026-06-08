@@ -41,11 +41,10 @@ function Diagram() {
    // CREATE A NEW WEBRTC CHANNEL AND WRITE ITS CHANNEL ID TO A FILE ON THE SERVER.
 
    let channel = new Channel();
-   setTimeout(() => {
-      let id = channel.id();
+   channel.onOpen(id => {
       console.log('channel id =', id);
       saveSrcFile('webrtc_id.cg', id);
-   }, 2000);
+   });
 
    // LOAD A SCENE FROM THE SERVER
 
