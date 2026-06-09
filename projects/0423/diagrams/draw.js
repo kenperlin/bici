@@ -1142,24 +1142,13 @@ function Diagram() {
                         S_value[dstCards[0].id].set_I(I);
                      }
 
-/*
-		     if (state._I.length > 0 && state.srcFile && frame++ % 3 == 0) {
-		        let dataFile = state.srcFile.replace(/.cg/,'_data.cg');
-			let str = '';
-			for (let i = 0 ; i < state._I.length ; i++)
-			   str += (100*state._I[i]>>0) + (i < state._I.length - 1 ? ',' : '\n');
-		        saveSrcFile(dataFile, str + ',' + str + ',' + str);
-                     }
-*/
+		     // SEND PARAMETER VALUES TO VR VIA WEBRTC
+
 		     if (isFirstPlayer() && state._I.length > 0 && state.srcFile) {
-                        if (frame % 3 == 0) {
-			   let dataStr = '';
-			   for (let i = 0 ; i < 3 ; i++)
-			      dataStr += (100*(.5+.5*state._I[i])>>0) + ',';
-		           let dataFile = state.srcFile.replace(/.cg/,'_data.cg');
-		           saveSrcFile(dataFile, dataStr);
-                        }
-		        //channel.send(str);
+			let dataStr = '';
+			for (let i = 0 ; i < 3 ; i++)
+			   dataStr += (100*(.5+.5*state._I[i])>>0) + ',';
+		        channel.send(dataStr);
 		     }
                   }
 
