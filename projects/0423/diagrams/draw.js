@@ -1146,7 +1146,7 @@ function Diagram() {
 			let dataStr = '';
 			for (let i = 0 ; i < 3 ; i++)
 			   dataStr += (100*(.5+.5*state._I[i])>>0) + ',';
-			if (dataStr != state.sentDataStr) {
+			if (dataStr != state.sentDataStr || frame % 90 == 0) {
 		           channel.send({ type: 'I', data: dataStr });
 			   state.sentDataStr = dataStr;
 			}
