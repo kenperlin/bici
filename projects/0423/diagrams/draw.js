@@ -1142,11 +1142,14 @@ function Diagram() {
 
 		     // SEND PARAMETER VALUES TO VR VIA WEBRTC
 
-		     if (isFirstPlayer() && state._I.length > 0 && state.srcFile) {
+		     if (isFirstPlayer() && state._I.length > 0 && state.srcFile && frame % 3 == 0) {
 			let dataStr = '';
 			for (let i = 0 ; i < 3 ; i++)
 			   dataStr += (100*(.5+.5*state._I[i])>>0) + ',';
-		        channel.send({ type: 'I', data: dataStr });
+			if (dataStr != state.sentDataStr) {
+		           channel.send({ type: 'I', data: dataStr });
+			   state.sentDataStr = dataStr;
+			}
 		     }
                   }
 
