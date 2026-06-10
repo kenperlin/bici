@@ -1,7 +1,5 @@
 function Diagram() {
 
-   let dataStr = '';
-
    window.cross = cross;
 
    this.isFullScreen = true;
@@ -435,7 +433,7 @@ function Diagram() {
 
    let isSpeechKey, previousSpeech = '', thisSpeech = '';
 
-   let frame = 0, counter = 0;
+   let frame = 0;
 
    this.update = () => {
       frame++;
