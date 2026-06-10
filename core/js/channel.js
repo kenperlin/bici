@@ -1,10 +1,32 @@
 function Channel() {                             // DIRECT DATA CHANNEL BETWEEN WEB CLIENTS.
-    let peer = new Peer(), conn, id, data, onReceive, onOpen, remoteId, nSkipped = 0;
-    peer.on('open', i => { id = i; if (onOpen) onOpen(i); });
-    peer.on('disconnected', () => {              // If the socket to the broker drops (e.g.
-       console.log('BROKER DISCONNECTED');       // the page was hidden for a while), restore
-       peer.reconnect();                         // it, since reconnecting to a remote peer
-    });                                          // requires a live broker connection.
+    let peer, conn, id, data, onReceive, onOpen, remoteId, nSkipped = 0, nFails = 0;
+
+    let relayConfig = {                          // Same servers PeerJS 1.5.2 uses by
+       config: {                                 // default, but restricted to the TURN
+          iceServers: [                          // relays, for wifi networks that cannot
+             { urls: "stun:stun.l.google.com:19302" },          // sustain direct
+             { urls: [ "turn:us-0.turn.peerjs.com:3478",        // peer-to-peer UDP
+                       "turn:eu-0.turn.peerjs.com:3478" ],      // between clients.
+               username: "peerjs", credential: "peerjsp" } ],
+          iceTransportPolicy: 'relay'
+       }
+    };
+    let setupPeer = useRelay => {
+       id = undefined;
+       peer = useRelay ? new Peer(relayConfig) : new Peer();
+       peer.on('open', i => { id = i; if (onOpen) onOpen(i); });
+       let p = peer;
+       peer.on('disconnected', () => {           // If the socket to the broker drops (e.g.
+          console.log('BROKER DISCONNECTED');    // the page was hidden for a while), restore
+          if (! p.destroyed)                     // it, since reconnecting to a remote peer
+             p.reconnect();                      // requires a live broker connection.
+       });
+       peer.on('connection', c => {              // When I receive an invite from a remote
+          console.log('RECEIVED CONNECTION INVITE');
+          conn = c;                              // the channel object needs to initialize
+          initConn(conn);                        // some things internally.
+       });
+    }
     let reconnect = () => {                      // Only the inviting side knows the remote
        if (! remoteId)                           // peer id, so only it can re-establish a
           return;                                // connection whose network path has died.
@@ -12,6 +34,11 @@ function Channel() {                             // DIRECT DATA CHANNEL BETWEEN 
        let old = conn;                           // invite to arrive.
        conn = null;
        if (old) try { old.close(); } catch (e) {}
+       if (++nFails == 2) {                      // If a freshly opened connection has died
+          console.log('SWITCHING TO RELAY');     // more than once, the direct network path
+          peer.destroy();                        // is unusable, so route all further
+          setupPeer(true);                       // traffic through the TURN relay instead.
+       }
        setTimeout(() => this.open(remoteId), 1000);
     }
     let initConn = c => {
@@ -22,17 +49,19 @@ function Channel() {                             // DIRECT DATA CHANNEL BETWEEN 
           let pc = c.peerConnection;             // when the network path dies (e.g. a wifi
           pc.oniceconnectionstatechange = () => {// hiccup on a standalone headset), so on
              console.log('ICE STATE:', pc.iceConnectionState);     // failure the inviting
-             if (conn == c && (pc.iceConnectionState == 'failed'   // side opens a fresh
-                            || pc.iceConnectionState == 'closed')) // connection.
+             if (conn != c)                                        // side opens a fresh
+                return;                                            // connection.
+             if (pc.iceConnectionState == 'failed' || pc.iceConnectionState == 'closed')
                 reconnect();
+             if (pc.iceConnectionState == 'disconnected')          // 'disconnected' often
+                setTimeout(() => {                                 // never progresses to
+                   if (conn == c && pc.iceConnectionState == 'disconnected')   // 'failed',
+                      reconnect();                                 // so treat 3 seconds of
+                }, 3000);                                          // it as dead.
           };
        });
     }
-    peer.on('connection', c => {                 // When I receive an invite from a remote
-       console.log('RECEIVED CONNECTION INVITE');
-       conn = c;                                 // the channel object needs to initialize
-       initConn(conn);                           // some things internally.
-    });
+    setupPeer(false);
     this.open = peerId => {                      // INVITE A CHANNEL OBJECT WITHIN A REMOTE
        remoteId = peerId;                        // CLIENT TO INITIATE A ONE-TO-ONE TWO-WAY
        let connect = () => {                     // CONNECTION. PeerJS requires a local peer
