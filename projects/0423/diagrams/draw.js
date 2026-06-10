@@ -1148,7 +1148,7 @@ function Diagram() {
 			let dataStr = '';
 			for (let i = 0 ; i < 3 ; i++)
 			   dataStr += (100*(.5+.5*state._I[i])>>0) + ',';
-		        channel.send(dataStr);
+		        channel.send({ type: 'I', data: dataStr });
 		     }
                   }
 
