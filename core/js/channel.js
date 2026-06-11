@@ -102,18 +102,20 @@ function Channel() {                             // DIRECT DATA CHANNEL BETWEEN 
        }
     }
     setupPeer();
-    setInterval(() => {                          // Once per second, each side sends a tiny
-       if (conns.length == 0)                    // heartbeat, which both keeps the network
-          return;                                // path warm and proves to the other side
-       sendStr(JSON.stringify({ type: '_hb' })); // (visibly, on its console) that messages
-       let silent = Date.now() - lastHeard;      // are actually getting through.
-       if (silent > 5000 && Date.now() - lastWarn > 5000) {
+    let pad = 'x'.repeat(300);                   // Four times per second, each side sends a
+    setInterval(() => {                          // padded heartbeat. Standalone headsets put
+       if (conns.length == 0)                    // their wifi radio to sleep between sparse
+          return;                                // small packets, which kills the connection
+       sendStr(JSON.stringify({ type: '_hb', pad })); // seconds after each handshake burst,
+       let silent = Date.now() - lastHeard;      // so keep the link busy enough to stay
+       if (silent > 5000 && Date.now() - lastWarn > 5000) {  // awake. It also proves to the
+          // other side (visibly, on its console) that messages are getting through.
           lastWarn = Date.now();
           log('NO HEARTBEAT FROM REMOTE FOR', silent/1000>>0, 'SECONDS');
           if (remoteId)                          // A channel that says it is open but is
              reconnect();                        // silent is dead: get a fresh connection.
        }
-    }, 1000);
+    }, 250);
     this.open = peerId => {                      // INVITE A CHANNEL OBJECT WITHIN A REMOTE
        remoteId = peerId;                        // CLIENT TO INITIATE A ONE-TO-ONE TWO-WAY
        let connect = () => {                     // CONNECTION. PeerJS requires a local peer
