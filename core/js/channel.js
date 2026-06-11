@@ -1,46 +1,56 @@
 function Channel() {                             // DIRECT DATA CHANNEL BETWEEN WEB CLIENTS.
     let peer, conns = [], id, data, onReceive, onOpen, remoteId;
-    let nSkipped = 0, nFails = 0, lastHeard = 0, lastWarn = 0;
+    let nSkipped = 0, lastHeard = 0, lastWarn = 0, logLines = [];
 
-    let relayConfig = {                          // Same relay servers PeerJS 1.5.2 uses by
-       config: {                                 // default, but as the only route, for wifi
-          iceServers: [                          // networks that cannot sustain direct
-             { urls: "stun:stun.l.google.com:19302" },          // peer-to-peer traffic
-             { urls: [ "turn:us-0.turn.peerjs.com:3478",        // between clients. The
-                       "turn:us-0.turn.peerjs.com:3478?transport=tcp",  // tcp variants
-                       "turn:eu-0.turn.peerjs.com:3478",        // survive networks that
-                       "turn:eu-0.turn.peerjs.com:3478?transport=tcp" ],// drop long-lived
-               username: "peerjs", credential: "peerjsp" } ],   // UDP flows entirely.
-          iceTransportPolicy: 'relay'
-       }
-    };
-    let setupPeer = useRelay => {
+    let log = (...args) => {                     // Everything the channel logs is also
+       console.log(...args);                     // mirrored to the inviting side's web
+       logLines.push(args.join(' '));            // server (the /log route), so that what
+    }                                            // happens inside a headset shows up in
+    setInterval(() => {                          // the terminal running its server. The
+       if (logLines.length == 0 || ! remoteId)   // receiving side (bici) does not report:
+          return;                                // its own console is already visible.
+       let form = new FormData();
+       form.append('log', 'CHANNEL: ' + logLines.join('\nCHANNEL: '));
+       logLines = [];
+       fetch('/log', { method: 'POST', body: form }).catch(() => {});
+    }, 3000);
+
+    let reportPath = pc => {                     // Report which kind of network route ICE
+       pc.getStats().then(stats => {             // actually picked (host = direct on the
+          let S = {};                            // local network, srflx = direct through
+          stats.forEach(s => S[s.id] = s);       // NAT, relay = TURN server), since that
+          stats.forEach(s => {                   // is the first thing to know when a path
+             if (s.type == 'candidate-pair' && s.nominated && s.state == 'succeeded') {
+                let l = S[s.localCandidateId], r = S[s.remoteCandidateId];
+                if (l && r)
+                   log('PATH:', l.candidateType + '/' + l.protocol, '->', r.candidateType);
+             }                                   // works briefly and then dies.
+          });
+       }).catch(() => {});
+    }
+    let setupPeer = () => {
        id = undefined;
-       peer = useRelay ? new Peer(relayConfig) : new Peer();
+       peer = new Peer();
        peer.on('open', i => { id = i; if (onOpen) onOpen(i); });
        let p = peer;
+       peer.on('error', err => log('PEER ERROR:', err.type));
        peer.on('disconnected', () => {           // If the socket to the broker drops (e.g.
-          console.log('BROKER DISCONNECTED');    // the page was hidden for a while), restore
+          log('BROKER DISCONNECTED');            // the page was hidden for a while), restore
           if (! p.destroyed)                     // it, since reconnecting to a remote peer
              p.reconnect();                      // requires a live broker connection.
        });
        peer.on('connection', c => {              // When I receive an invite from a remote
-          console.log('RECEIVED CONNECTION INVITE');
-          addConn(c);                            // the channel object needs to initialize
-       });                                       // some things internally.
+          log('RECEIVED CONNECTION INVITE');     // the channel object needs to initialize
+          addConn(c);                            // some things internally.
+       });
     }
     let reconnect = () => {                      // Only the inviting side knows the remote
        if (! remoteId)                           // peer id, so only it can re-establish a
           return;                                // connection whose network path has died.
-       console.log('RECONNECTING TO', remoteId); // The receiving side just waits for a new
+       log('RECONNECTING TO', remoteId);         // The receiving side just waits for a new
        let old = conns;                          // invite to arrive.
        conns = [];
        for (let c of old) try { c.close(); } catch (e) {}
-       if (++nFails == 2) {                      // If a freshly opened connection has died
-          console.log('SWITCHING TO RELAY');     // more than once, the direct network path
-          peer.destroy();                        // is unusable, so route all further
-          setupPeer(true);                       // traffic through the relay instead.
-       }
        setTimeout(() => this.open(remoteId), 1000);
     }
     let addConn = c => {                         // A channel can serve several remote
@@ -55,18 +65,20 @@ function Channel() {                             // DIRECT DATA CHANNEL BETWEEN 
           if (onReceive) onReceive(msg);
        });
        c.on('close', () => {
-          console.log('CHANNEL CLOSED');
+          log('CHANNEL CLOSED');
           if (! conns.includes(c))               // Already replaced by a reconnect, which
              return;                             // is what closed it in the first place.
           conns = conns.filter(x => x != c);
           if (conns.length == 0) reconnect();
        });
-       c.on('error', err => console.log('CHANNEL ERROR', err));
+       c.on('error', err => log('CHANNEL ERROR', err));
        c.on('open', () => {                      // The browser will not recover on its own
-          lastHeard = Date.now();                // when the network path dies (e.g. a wifi
-          let pc = c.peerConnection;             // hiccup on a standalone headset), so on
-          pc.oniceconnectionstatechange = () => {// failure the inviting side opens a fresh
-             console.log('ICE STATE:', pc.iceConnectionState);     // connection.
+          log('CHANNEL OPEN');                   // when the network path dies (e.g. a wifi
+          lastHeard = Date.now();                // hiccup on a standalone headset), so on
+          let pc = c.peerConnection;             // failure the inviting side opens a fresh
+          reportPath(pc);                        // connection.
+          pc.oniceconnectionstatechange = () => {
+             log('ICE STATE:', pc.iceConnectionState);
              if (! conns.includes(c))
                 return;
              if (pc.iceConnectionState == 'failed' || pc.iceConnectionState == 'closed')
@@ -86,10 +98,10 @@ function Channel() {                             // DIRECT DATA CHANNEL BETWEEN 
           if (c.dataChannel.bufferedAmount == 0)
              c.send(str);
           else if (++nSkipped % 100 == 1)        // A backlog that never drains means the
-             console.log('SEND SKIPPED: bufferedAmount =', c.dataChannel.bufferedAmount);
+             log('SEND SKIPPED: bufferedAmount =', c.dataChannel.bufferedAmount);
        }
     }
-    setupPeer(false);
+    setupPeer();
     setInterval(() => {                          // Once per second, each side sends a tiny
        if (conns.length == 0)                    // heartbeat, which both keeps the network
           return;                                // path warm and proves to the other side
@@ -97,7 +109,7 @@ function Channel() {                             // DIRECT DATA CHANNEL BETWEEN 
        let silent = Date.now() - lastHeard;      // are actually getting through.
        if (silent > 5000 && Date.now() - lastWarn > 5000) {
           lastWarn = Date.now();
-          console.log('NO HEARTBEAT FROM REMOTE FOR', silent/1000>>0, 'SECONDS');
+          log('NO HEARTBEAT FROM REMOTE FOR', silent/1000>>0, 'SECONDS');
           if (remoteId)                          // A channel that says it is open but is
              reconnect();                        // silent is dead: get a fresh connection.
        }
