@@ -1,7 +1,8 @@
 let L1 = .65, L2 = .8;
 
-let t = 2*time;
-let [a,b,c] = IK(L1,L2,[.5+.2*cos(t),.5+.1*sin(5*t),.2*sin(t)]);
+let [a,b,c] = [@0,@1,@2];
+
+if (isIK) [a,b,c] = IK(L1,L2,[a,b,c]);
 
 cg.move(0,-.6,0)
  

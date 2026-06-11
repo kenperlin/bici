@@ -91,13 +91,15 @@ function WebglCard(ctx) {
          for (let i = 0 ; i < m.length ; i++ ) window[m[i]] = Math[m[i]];
          for (let i = 0 ; i < v.length ; i+=2) window[v[i]] = v[i+1];
 
+	 window.isIK = false;
+
          window.IK = (L1,L2,C) => {
-           let B = ik([0,0,0],L1,L2,C,[0,1,0]);
-           let AB = subtract(B,[0,0,0]);
+           let B = ik([0,0,0],L1,L2,C,[-1,0,0]);
            let BC = subtract(C,B);
-           return [ atan2(C[2],C[0]),
-                   -acos(AB[1]/norm(AB)),
-                    acos(dot(AB,BC)/(norm(AB)*norm(BC))) ];
+	   let s = Math.sign(dot([B[0],0,B[2]],[C[0],0,C[2]]));
+           return [ Math.PI-atan2(C[2],C[0]),
+                    s * acos(B[1]/norm(B)),
+                    -s * acos(dot(B,BC)/(norm(B)*norm(BC))) ];
          }
 
          let isError = false;
