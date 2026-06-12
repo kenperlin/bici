@@ -22,8 +22,12 @@ function Channel() {                             // DIRECT DATA CHANNEL BETWEEN 
           stats.forEach(s => {                   // is the first thing to know when a path
              if (s.type == 'candidate-pair' && s.nominated && s.state == 'succeeded') {
                 let l = S[s.localCandidateId], r = S[s.remoteCandidateId];
-                if (l && r)
-                   log('PATH:', l.candidateType + '/' + l.protocol, '->', r.candidateType);
+                if (l && r)                      // The addresses matter as much as the
+                   log('PATH:',                  // type: they reveal when ICE picked an
+                       l.candidateType + '/' + l.protocol,                // odd interface
+                       (l.address || l.ip || '?') + ':' + l.port, '->',  // (IPv6, VPN,
+                       r.candidateType,                                  // AWDL) for one
+                       (r.address || r.ip || '?') + ':' + r.port);       // peer pairing.
              }                                   // works briefly and then dies.
           });
        }).catch(() => {});
@@ -79,6 +83,8 @@ function Channel() {                             // DIRECT DATA CHANNEL BETWEEN 
           reportPath(pc);                        // connection.
           pc.oniceconnectionstatechange = () => {
              log('ICE STATE:', pc.iceConnectionState);
+             if (pc.iceConnectionState == 'disconnected')
+                reportPath(pc);                  // Show which route was active at death.
              if (! conns.includes(c))
                 return;
              if (pc.iceConnectionState == 'failed' || pc.iceConnectionState == 'closed')
