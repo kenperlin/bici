@@ -45,12 +45,12 @@
    let host = () => {
       role = 'HOST';
       let t = setInterval(() => {                // Wait for the broker to assign an id,
-         if (! channel.id()) return;             // then publish it on the server for the
-         clearInterval(t);                       // JOIN side to find.
-         fetch('/api/save/channel_test_id.cg', {
+         if (! channel.address()) return;        // then publish my address (peer id plus
+         clearInterval(t);                       // relay urls) on the server for the JOIN
+         fetch('/api/save/channel_test_id.cg', { // side to find.
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify([ { src: channel.id() } ])
+            body: JSON.stringify([ { src: channel.address() } ])
          });
       }, 250);
    }

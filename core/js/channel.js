@@ -1,6 +1,7 @@
 function Channel() {                             // DIRECT DATA CHANNEL BETWEEN WEB CLIENTS.
-    let peer, conns = [], id, data, onReceive, onOpen, remoteId;
-    let nSkipped = 0, lastHeard = 0, lastWarn = 0, logLines = [];
+    let peer, conns = [], id, address, data, onReceive, onOpen, remoteId;
+    let relay = null, relayAlive = false, relayStarted = false, transport = '';
+    let nSkipped = 0, lastHeard = 0, rtcLastHeard = 0, lastWarn = 0, logLines = [];
 
     let log = (...args) => {                     // Everything the channel logs is also
        console.log(...args);                     // mirrored to the inviting side's web
@@ -15,6 +16,16 @@ function Channel() {                             // DIRECT DATA CHANNEL BETWEEN 
        fetch('/log', { method: 'POST', body: form }).catch(() => {});
     }, 3000);
 
+    let receive = (str, viaRtc) => {             // Messages arrive over whichever transport
+       lastHeard = Date.now();                   // is currently working: the WebRTC data
+       if (viaRtc)                               // channel, or the websocket relay through
+          rtcLastHeard = Date.now();             // the server.
+       let msg = JSON.parse(str);
+       if (msg.type == '_hb')                    // Heartbeats are consumed here: they only
+          return;                                // exist to prove the other side is alive
+       data = str;                               // and to keep the network path warm.
+       if (onReceive) onReceive(msg);
+    }
     let reportPath = pc => {                     // Report which kind of network route ICE
        pc.getStats().then(stats => {             // actually picked (host = direct on the
           let S = {};                            // local network, srflx = direct through
@@ -32,10 +43,49 @@ function Channel() {                             // DIRECT DATA CHANNEL BETWEEN 
           });
        }).catch(() => {});
     }
+
+    // THE WEBSOCKET RELAY: A TCP PATH THROUGH THE SERVER, FOR WHEN WEBRTC CANNOT
+    // STAY ALIVE. BOTH SIDES KEEP IT CONNECTED, SO FAILOVER IS IMMEDIATE.
+
+    let openRelay = (urls, room) => {
+       if (relayStarted) return;
+       relayStarted = true;
+       let n = 0;
+       let tryNext = () => {
+          if (relayAlive) return;
+          let url = urls[n++ % urls.length], ws;
+          try { ws = new WebSocket(url + '?room=' + room); }
+          catch (e) { setTimeout(tryNext, 3000); return; }
+          let opened = false;
+          ws.onopen = () => { opened = true; relayAlive = true; relay = ws; log('RELAY CONNECTED:', url); };
+          ws.onmessage = e => receive(e.data, false);
+          ws.onerror = () => {};                 // A close event always follows an error.
+          ws.onclose = () => {
+             if (relay == ws) { relayAlive = false; relay = null; log('RELAY CLOSED'); }
+             setTimeout(tryNext, opened ? 1000 : 500);
+          };
+       };
+       tryNext();
+    }
     let setupPeer = () => {
        id = undefined;
        peer = new Peer();
-       peer.on('open', i => { id = i; if (onOpen) onOpen(i); });
+       peer.on('open', i => {
+          id = i;
+          fetch('/api/netinfo')                  // My address is my peer id plus, if my
+             .then(r => r.ok ? r.json() : null)  // own server offers the relay, the relay
+             .catch(() => null)                  // urls a peer on another device can reach
+             .then(info => {                     // it at.
+                address = id;
+                if (info && info.ips) {
+                   for (let ip of info.ips)
+                      address += '|ws://' + ip + ':' + info.port + '/relay';
+                   openRelay([(location.protocol == 'https:' ? 'wss://' : 'ws://')
+                              + location.host + '/relay'], id);
+                }
+                if (onOpen) onOpen(address);
+             });
+       });
        let p = peer;
        peer.on('error', err => log('PEER ERROR:', err.type));
        peer.on('disconnected', () => {           // If the socket to the broker drops (e.g.
@@ -59,17 +109,9 @@ function Channel() {                             // DIRECT DATA CHANNEL BETWEEN 
     }
     let addConn = c => {                         // A channel can serve several remote
        conns.push(c);                            // clients at once (e.g. a VR client on a
-       c.on('data', d => {                       // desktop and another in a headset), so
-          let msg = JSON.parse(d);               // keep every open connection, and remove
-          if (msg.type == '_hb') {               // a connection when it closes. Heartbeats
-             lastHeard = Date.now();             // are consumed here: they only exist to
-             return;                             // prove that the other side is alive and
-          }                                      // to keep the network path warm.
-          data = d;
-          if (onReceive) onReceive(msg);
-       });
-       c.on('close', () => {
-          log('CHANNEL CLOSED');
+       c.on('data', d => receive(d, true));      // desktop and another in a headset), so
+       c.on('close', () => {                     // keep every open connection, and remove
+          log('CHANNEL CLOSED');                 // a connection when it closes.
           if (! conns.includes(c))               // Already replaced by a reconnect, which
              return;                             // is what closed it in the first place.
           conns = conns.filter(x => x != c);
@@ -78,7 +120,7 @@ function Channel() {                             // DIRECT DATA CHANNEL BETWEEN 
        c.on('error', err => log('CHANNEL ERROR', err));
        c.on('open', () => {                      // The browser will not recover on its own
           log('CHANNEL OPEN');                   // when the network path dies (e.g. a wifi
-          lastHeard = Date.now();                // hiccup on a standalone headset), so on
+          lastHeard = rtcLastHeard = Date.now(); // hiccup on a standalone headset), so on
           let pc = c.peerConnection;             // failure the inviting side opens a fresh
           reportPath(pc);                        // connection.
           pc.oniceconnectionstatechange = () => {
@@ -97,44 +139,55 @@ function Channel() {                             // DIRECT DATA CHANNEL BETWEEN 
           };
        });
     }
-    let sendStr = str => {                       // Only the latest state matters, so if the
-       for (let c of conns) {                    // remote peer has not yet drained earlier
-          if (! c.open)                          // messages, drop this one rather than let
-             continue;                           // the queue (and latency) grow unboundedly.
-          if (c.dataChannel.bufferedAmount == 0)
+    let sendStr = str => {                       // Send over WebRTC when it is open and
+       let sent = false;                         // drained; otherwise fall back to the
+       for (let c of conns) {                    // relay. Only the latest state matters,
+          if (! c.open)                          // so a message that cannot go out right
+             continue;                           // now is dropped rather than queued.
+          if (c.dataChannel.bufferedAmount == 0) {
              c.send(str);
-          else if (++nSkipped % 100 == 1)        // A backlog that never drains means the
+             sent = true;
+          }
+          else if (++nSkipped % 100 == 1)
              log('SEND SKIPPED: bufferedAmount =', c.dataChannel.bufferedAmount);
        }
+       let t = sent ? 'webrtc' : relayAlive ? 'relay' : '';
+       if (! sent && relayAlive)
+          relay.send(str);
+       if (t && t != transport)                  // Make transitions between the fast path
+          log('SENDING VIA', (transport = t).toUpperCase());       // and the relay visible.
     }
     setupPeer();
     let pad = 'x'.repeat(300);                   // Four times per second, each side sends a
     setInterval(() => {                          // padded heartbeat. Standalone headsets put
-       if (conns.length == 0) {                  // their wifi radio to sleep between sparse
-          lastHeard = Date.now();                // small packets, which kills the connection
-          return;                                // (while there is no connection, silence
-       }                                         // is expected, so keep the clock fresh).
-       sendStr(JSON.stringify({ type: '_hb', pad })); // seconds after each handshake burst,
-       let silent = Date.now() - lastHeard;      // so keep the link busy enough to stay
-       if (silent > 5000 && Date.now() - lastWarn > 5000) {  // awake. It also proves to the
-          // other side (visibly, on its console) that messages are getting through.
-          lastWarn = Date.now();
-          log('NO HEARTBEAT FROM REMOTE FOR', silent/1000>>0, 'SECONDS');
-          if (remoteId)                          // A channel that says it is open but is
-             reconnect();                        // silent is dead: get a fresh connection.
+       if (conns.length == 0 && ! relayAlive) {  // their wifi radio to sleep between sparse
+          lastHeard = rtcLastHeard = Date.now(); // small packets, which kills the connection
+          return;                                // seconds after each handshake burst, so
+       }                                         // keep the link busy enough to stay awake.
+       sendStr(JSON.stringify({ type: '_hb', pad }));
+       if (conns.length > 0 && remoteId &&       // A WebRTC connection that says it is open
+           Date.now() - rtcLastHeard > 5000 &&   // but is silent is dead: get a fresh one.
+           Date.now() - lastWarn > 5000) {       // Data may still be flowing over the
+          lastWarn = Date.now();                 // relay; this only revives the fast path.
+          log('NO HEARTBEAT OVER WEBRTC FOR', (Date.now() - rtcLastHeard)/1000>>0, 'SECONDS');
+          reconnect();
        }
     }, 250);
-    this.open = peerId => {                      // INVITE A CHANNEL OBJECT WITHIN A REMOTE
-       remoteId = peerId;                        // CLIENT TO INITIATE A ONE-TO-ONE TWO-WAY
-       let connect = () => {                     // CONNECTION. PeerJS requires a local peer
-          addConn(peer.connect(peerId));         // before connect(); then need to wait for
-       };                                        // 'open'.
-       if (id) connect();                        // Need to register with the broker before
-       else peer.on('open', connect);            // connect(); then need to wait for 'open'.
+    this.open = arg => {                         // INVITE A CHANNEL OBJECT WITHIN A REMOTE
+       let parts = arg.trim().split('|');        // CLIENT TO INITIATE A ONE-TO-ONE TWO-WAY
+       remoteId = parts[0];                      // CONNECTION. THE REMOTE ADDRESS IS ITS
+       if (parts.length > 1)                     // PEER ID, OPTIONALLY FOLLOWED BY RELAY
+          openRelay(parts.slice(1), remoteId);   // URLS ON WHICH ITS SERVER CAN BE REACHED.
+       let connect = () => {
+          addConn(peer.connect(remoteId));       // PeerJS requires a local peer before
+       };                                        // connect(); then need to wait for 'open'.
+       if (id) connect();
+       else peer.on('open', connect);
     }
     this.send = data => sendStr(JSON.stringify(data));
     this.onReceive = callback => onReceive = callback;
-    this.onOpen = callback => { onOpen = callback; if (id) callback(id); };
+    this.onOpen = callback => { onOpen = callback; if (address) callback(address); };
     this.data = () => data;
-    this.id = () => id;                          // MY ID TELLS THE OTHER CHANNEL WHERE TO
-}                                                // SEND THE INVITE TO OPEN A CONNECTION.
+    this.id = () => id;
+    this.address = () => address;                // MY ADDRESS TELLS THE OTHER CHANNEL WHERE
+}                                                // TO SEND THE INVITE, AND WHERE MY RELAY IS.
