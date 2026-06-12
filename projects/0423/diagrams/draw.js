@@ -1,5 +1,7 @@
 function Diagram() {
 
+   let useWebRTC = false;
+
    window.cross = cross;
 
    this.isFullScreen = true;
@@ -1146,9 +1148,16 @@ function Diagram() {
 			let dataStr = '';
 			for (let i = 0 ; i < 3 ; i++)
 			   dataStr += (100*(.5+.5*state._I[i])>>0) + ',';
+
 			if (dataStr != state.sentDataStr || frame % 90 == 0) {
-		           channel.send({ type: 'I', data: dataStr });
 			   state.sentDataStr = dataStr;
+
+			   if (useWebRTC)
+		              channel.send({ type: 'I', data: dataStr });
+			   else {
+			      let dataFile = state.srcFile.replace(/.cg/,'_data.cg');
+			      saveSrcFile(dataFile, dataStr);
+                           }
 			}
 		     }
                   }
