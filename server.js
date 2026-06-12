@@ -3,6 +3,7 @@ import { WebSocketServer } from 'ws';
 import { createServer } from 'http';
 import path from 'path';
 import fs from 'fs';
+import os from 'os';
 import { fileURLToPath } from 'url';
 import * as Y from 'yjs';
 import { docs, setupWSConnection } from 'y-websocket/bin/utils';
@@ -97,6 +98,18 @@ app.get('/api/load/:name', (req, res) => {
     console.error('load error:', err);
     res.status(500).json({ error: 'load failed' });
   }
+});
+
+// Report this machine's LAN addresses, so a web page served from here can tell
+// a peer on another device how to reach this server (e.g. for the channel relay).
+app.get('/api/netinfo', (req, res) => {
+  const ips = [];
+  const interfaces = os.networkInterfaces();
+  for (const name in interfaces)
+    for (const i of interfaces[name])
+      if (i.family === 'IPv4' && !i.internal)
+        ips.push(i.address);
+  res.json({ ips, port: PORT });
 });
 
 app.get('/api/saves', (req, res) => {
@@ -236,10 +249,36 @@ function getRoomClients(roomId) {
   return room ? Array.from(room.clients) : [];
 }
 
+// Channel relay rooms: every message from a client is forwarded verbatim to the
+// other clients in its room. This is the TCP fallback for the WebRTC channel,
+// for device pairs whose peer-to-peer UDP path cannot stay alive.
+const relayRooms = new Map();
+
 wss.on('connection', (ws, req) => {
   // Check if this is a y-websocket connection (has docName in URL)
   const url = new URL(req.url, `http://${req.headers.host}`);
   const docName = url.pathname.slice(1); // Remove leading '/'
+
+  if (url.pathname === '/relay') {
+    const room = url.searchParams.get('room') || '';
+    if (!relayRooms.has(room))
+      relayRooms.set(room, new Set());
+    const peers = relayRooms.get(room);
+    peers.add(ws);
+    console.log(`Relay client joined room ${room} (${peers.size} in room)`);
+    ws.on('message', (message) => {
+      for (const other of peers)
+        if (other !== ws && other.readyState === 1)
+          other.send(message.toString());
+    });
+    ws.on('close', () => {
+      peers.delete(ws);
+      if (peers.size === 0)
+        relayRooms.delete(room);
+    });
+    ws.on('error', () => {});
+    return;
+  }
 
   if (docName) {
     console.log(`Yjs client connected to document: ${docName}`);
