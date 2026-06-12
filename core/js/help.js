@@ -3,7 +3,7 @@ let help = {
 
 display : ctx => {
 
-   let fs = fontSize * 1.19;
+   let fs = fontSize * 1.11;
 
    if (help.isSplash) {
       ctx.fillStyle = '#ffffff80';
@@ -45,6 +45,7 @@ e (+ key) Show src code in text editor.
 f Toggle floaters behind me.
 F Toggle frame hands.
 g Grab bg (enables transparency).
+G Toggle green screen.
 h Toggle this help menu.
 H Toggle separate hand avatars.
 i Toggle show/hide slides.

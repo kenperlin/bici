@@ -21,7 +21,7 @@ let isZoomed = false;
 webcam.isPen = true;
 webcam.opacity = 1;
 
-let blueglass, brick, shapes, landscape, ufo;
+let blueglass, brick, shapes, landscape, ufo, isGreenScreen;
 loadImage('core/images/blueglass.jpg', image => blueglass = image);
 loadImage('core/images/brick.png',     image => brick = image);
 loadImage('core/images/shapes.jpg',    image => shapes = image);
@@ -35,6 +35,13 @@ webcam._grabImageTime = -1;
 webcam.grabImage = () => webcam._grabImageTime = webcam._time;
 
 webcam.update = () => {
+
+   if (isGreenScreen) {
+      wctx.fillStyle = '#00ff00';
+      wctx.fillRect(0,0,640,480);
+      return;
+   }
+
    let time = (Date.now() - webcam.T) / 1000;
    let deltaTime = time - (webcam._time ?? time);
    webcam._time = time;

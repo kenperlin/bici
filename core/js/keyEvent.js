@@ -166,6 +166,7 @@ window.keyUp = key => {
    case 'f' : webcam.isFloaters = ! webcam.isFloaters; break;
    case 'F' : tracking_frameHands = ! tracking_frameHands; break;
    case 'g' : webcam.grabImage(); break;
+   case 'G' : isGreenScreen = ! isGreenScreen; break;
    case 'h' : help.isHelp = ! help.isHelp; break;
    case 'H' : isSeparateHandAvatars = ! isSeparateHandAvatars; break;
    case 'i' : isInfo = ! isInfo; break;
