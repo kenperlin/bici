@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name=viewport content="width=device-width, initial-scale=1">
+<title>Channel Test</title>
+<script src=https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js></script>
+<script src=core/js/channel.js></script>
+<style>
+   body { font-family: monospace; margin: 20px; background: #111; color: #eee; }
+   button { font-size: 24px; padding: 16px 32px; margin-right: 16px; }
+   #status { font-size: 30px; margin: 24px 0; }
+   #stats { font-size: 18px; line-height: 1.6; white-space: pre-line; }
+   #log { font-size: 13px; white-space: pre-wrap; color: #9c9; margin-top: 20px; }
+</style>
+</head>
+<body>
+<h2>WebRTC channel test</h2>
+<p>Click HOST on the first device. Then click JOIN on the second device.</p>
+<button onclick=host()>HOST</button>
+<button onclick=join()>JOIN</button>
+<div id=status>waiting: choose HOST or JOIN</div>
+<div id=stats></div>
+<div id=log></div>
+<script>
+   let logLines = [];
+   let rawLog = console.log.bind(console);
+   console.log = (...args) => {                  // Mirror everything the channel logs
+      rawLog(...args);                           // onto the page itself, so no console
+      logLines.push(args.join(' '));             // access is needed on a phone or in a
+      logLines = logLines.slice(-12);            // headset.
+      document.getElementById('log').textContent = logLines.join('\n');
+   }
+
+   let channel = new Channel();
+   let role = '', nSent = 0, nReceived = 0, lastReceived = 0, firstReceived = 0;
+
+   channel.onReceive(msg => {
+      if (msg.type == 'test') {
+         nReceived++;
+         lastReceived = Date.now();
+         if (! firstReceived) firstReceived = Date.now();
+      }
+   });
+
+   let host = () => {
+      role = 'HOST';
+      let t = setInterval(() => {                // Wait for the broker to assign an id,
+         if (! channel.id()) return;             // then publish it on the server for the
+         clearInterval(t);                       // JOIN side to find.
+         fetch('/api/save/channel_test_id.cg', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify([ { src: channel.id() } ])
+         });
+      }, 250);
+   }
+   let join = () => {
+      role = 'JOIN';
+      fetch('/projects/0423/src/channel_test_id.cg')
+         .then(r => r.ok ? r.text() : null)
+         .then(id => {
+            if (id) channel.open(id.trim());
+            else role = 'JOIN FAILED: no host id saved. Click HOST on the other device first.';
+         });
+   }
+
+   setInterval(() => channel.send({ type: 'test', n: ++nSent }), 100);
+
+   setInterval(() => {
+      if (! role) return;
+      let status = document.getElementById('status');
+      if (! nReceived) {
+         status.textContent = 'no messages received yet';
+         status.style.color = '#fff';
+      } else {
+         let age = (Date.now() - lastReceived) / 1000;
+         status.textContent = age < 2 ? 'RECEIVING (last message ' + age.toFixed(1) + 's ago)'
+                                      : 'SILENT for ' + age.toFixed(1) + 's';
+         status.style.color = age < 2 ? '#6e6' : '#e66';
+      }
+      document.getElementById('stats').textContent =
+         'role: ' + role + '\n' +
+         'my id: ' + (channel.id() || '(registering...)') + '\n' +
+         'messages sent: ' + nSent + ', received: ' + nReceived + '\n' +
+         (firstReceived ? 'receiving since: ' + ((Date.now() - firstReceived)/1000).toFixed(0) + 's ago' : '');
+   }, 250);
+</script>
+</body>
+</html>
