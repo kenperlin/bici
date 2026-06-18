@@ -215,6 +215,7 @@ function Diagram() {
       switch (key) {
       case 'Escape':
       case 'c':
+      case 'g':
       case 'i':
       case 'l':
       case 'p':
@@ -270,6 +271,9 @@ function Diagram() {
             createCard(textString.trim(), this.input.mouse.pos, .4);
             textString = '';
             break;
+         case 'g':
+	    isGreenScreen = ! isGreenScreen;
+	    break;
          case 'i':
             isTextString = true;
             textString = '';
@@ -1359,10 +1363,10 @@ function Diagram() {
       }
 
       // IF USING A PEN, DISPLAY THE PEN TIP IN FRONT OF EVERYTHING ELSE
-
+/*
       if (penSize > 0)
          this.drawColor(penColor + '40').dot(pen.pos, .002 * penSize);
-
+*/
       // SHOW THE TEXT STRING OR USER'S LATEST SPOKEN WORDS AT THE BOTTOM LEFT OF THE SCREEN
 
       this.setFont(.02).drawColor(penColor + '60').text(textString, [-.9807,-.63], 0);

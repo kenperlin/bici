@@ -36,12 +36,6 @@ webcam.grabImage = () => webcam._grabImageTime = webcam._time;
 
 webcam.update = () => {
 
-   if (isGreenScreen) {
-      wctx.fillStyle = '#00ff00';
-      wctx.fillRect(0,0,640,480);
-      return;
-   }
-
    let time = (Date.now() - webcam.T) / 1000;
    let deltaTime = time - (webcam._time ?? time);
    webcam._time = time;
@@ -222,7 +216,7 @@ webcam.update = () => {
    }
 
    // SHOW THE MARKER PEN AS BLACK
-
+/*
    if (webcam.isPen)
       for (let row = 0, n = 0 ; row < 480 ; row++)
       for (let col = 0 ; col < 640 ; col++, n += 4)
@@ -232,8 +226,13 @@ webcam.update = () => {
    if (! webcam.isWebcam)
       for (let n = 0 ; n < data.length ; n++)
          data[n] = 255;
-
-   wctx.putImageData(imgData, 0,0);
+*/
+   if (isGreenScreen) {
+      wctx.fillStyle = '#00ff00';
+      wctx.fillRect(0,0,640,480);
+   }
+   else
+      wctx.putImageData(imgData, 0,0);
 
    return ns > 20 ? {x: xs/ns, y: ys/ns, n: ns} : null;
 }

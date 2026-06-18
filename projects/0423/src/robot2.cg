@@ -6,7 +6,7 @@ if (isIK) [a,b,c] = IK(L1,L2,[a,b,c]);
 
 cg.move(0,-.6,0)
  
-  .push().move(0,-.24,0).draw(tubey,[1,1,1],[.2,.1,.2]).pop()
+  .push().move(0,-.24,0).draw(tubeY,[1,1,1],[.2,.1,.2]).pop()
 
   .turnY(a)                              //////////
 

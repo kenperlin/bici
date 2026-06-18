@@ -14,7 +14,7 @@ Tube X         y*y + z*z - 1 <= 0
 Tube Y         x*x + z*z - 1 <= 0
 Tube Z         x*x + y*y - 1 <= 0
 
-All space      -1 <= 0
+All Space      -1 <= 0
 
 **********************************/
 
@@ -184,8 +184,8 @@ this.update = viewPoint => {
    let m1 = mxm(turnY(time),scale(.2));
    let m2 = mxm(move(0,0,.5),m1);
    setUniform('Matrix4fv', 'uQ', false,
-      [ qxm(slabX,m1), qxm(slabY,m1), qxm(slabZ,m1),
-//      qxm(slabX,m2), qxm(tubeX,m2), qxm(space,m2)
+      [ qxm(SlabX,m1), qxm(SlabY,m1), qxm(SlabZ,m1),
+//      qxm(SlabX,m2), qxm(TubeX,m2), qxm(Space,m2)
       ].flat());
 }
 

@@ -14,7 +14,7 @@ Tube X         y*y + z*z - 1 <= 0
 Tube Y         x*x + z*z - 1 <= 0
 Tube Z         x*x + y*y - 1 <= 0
 
-All space      -1 <= 0
+All Space      -1 <= 0
 
 **********************************/
 
@@ -158,7 +158,7 @@ this.update = viewPoint => {
    let time = Date.now()/1000 - startTime;
    setUniform('1f', 'uTime', time);
    setUniform('3fv', 'uViewPoint', viewPoint);
-   setUniform('Matrix4fv', 'uQ', false, qxm(tubeX,scale(.1,.1,.1)));
+   setUniform('Matrix4fv', 'uQ', false, qxm(TubeX,scale(.1,.1,.1)));
 }
 
 }
