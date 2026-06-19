@@ -11,6 +11,8 @@ function Diagram() {
 
    let penColor = '#000000';
 
+   let isShowingArrows = true;
+
    let isCgCard = card => card.card_type == 'editor' && 
                           card.state && card.state.text &&
                           card.state.text.indexOf('cg.') >= 0;
@@ -214,6 +216,7 @@ function Diagram() {
 
       switch (key) {
       case 'Escape':
+      case 'a':
       case 'c':
       case 'g':
       case 'i':
@@ -267,13 +270,16 @@ function Diagram() {
             }
             isTextString = false;
             break;
+         case 'a':
+            isShowingArrows = ! isShowingArrows;
+            break;
          case 'c':
             createCard(textString.trim(), this.input.mouse.pos, .4);
             textString = '';
             break;
          case 'g':
-	    isGreenScreen = ! isGreenScreen;
-	    break;
+            isGreenScreen = ! isGreenScreen;
+            break;
          case 'i':
             isTextString = true;
             textString = '';
@@ -408,7 +414,7 @@ function Diagram() {
 
       if (n >= 2 && S[n].morphData) {
          createCard(S[n].card_type, pos, S[n].hi[0]-S[n].lo[0], S[n].custom);
-	 let nc = S.length-1;
+         let nc = S.length-1;
          let src = S[n].state;
          let dst = S[nc].state;
          for (let item in src) {
@@ -420,8 +426,8 @@ function Diagram() {
             else
                dst[item] = src[item];
          }
-	 S[nc].lo = S[n].lo.slice();
-	 S[nc].hi = S[n].hi.slice();
+         S[nc].lo = S[n].lo.slice();
+         S[nc].hi = S[n].hi.slice();
       }
 
       // COPY A SKETCH
@@ -432,8 +438,8 @@ function Diagram() {
              strokes.push(S[n].strokes[i].slice());
           let nc = S.length;
           S.push({ strokes: strokes, id: ++id });
-	  S[nc].lo = S[n].lo.slice();
-	  S[nc].hi = S[n].hi.slice();
+          S[nc].lo = S[n].lo.slice();
+          S[nc].hi = S[n].hi.slice();
       }
    }
 
@@ -528,7 +534,7 @@ function Diagram() {
             n = -1;
             nm = -1;
             state = -1;
-	    isDraggingCopy = false;
+            isDraggingCopy = false;
 
             // IF MOUSE DOWN AFTER A PREVIOUS CLICK ON THE BACKGROUND
 
@@ -578,12 +584,12 @@ function Diagram() {
             if (bgClick) {
                if (n >= 2 && state == 2 || state == 6) {
                   if (! isDraggingCopy && norm(subtract(pos, pressPos)) > .05) {
-		     copyCard(n);
-		     n = S.length - 1;
-		     isDraggingCopy = cursorId;
+                     copyCard(n);
+                     n = S.length - 1;
+                     isDraggingCopy = cursorId;
                   }
-		  else if (isDraggingCopy == cursorId)
-		     dragCard(n);
+                  else if (isDraggingCopy == cursorId)
+                     dragCard(n);
                }
             }
             else {
@@ -833,59 +839,61 @@ function Diagram() {
 
       // DRAW EVERY LINK AS A CONNECTING ARROW
 
-      this.lineWidth(.008).drawColor(penColor).fillColor(penColor);
-      for (let n = 0 ; n < S.length ; n++) {
-         let srcCards = getSrcCards(S[n]);
-         for (let i = 0 ; i < srcCards.length ; i++) {
-            let src = srcCards[i];
-            let findEdge = (lo,hi,p) => {
-               let [cx,cy] = mix(lo, hi, .5),
-                   [dx,dy] = subtract(p, [cx,cy]);
-               if (dx > 0 && dx*dx > dy*dy) return [hi[0]+.004, cy + dy/dx * (hi[1]-cy)];
-               if (dx < 0 && dx*dx > dy*dy) return [lo[0]-.004, cy - dy/dx * (hi[1]-cy)];
-               if (dy > 0 && dy*dy > dx*dx) return [cx + dx/dy * (hi[0]-cx), hi[1]+.004];
-                                            return [cx - dx/dy * (hi[0]-cx), lo[1]-.004];
-            }
-            let L0 = src.lo , H0 = src.hi,
-                L1 = S[n].lo, H1 = S[n].hi,
-                A = findEdge( L0, H0, mix(L1, H1, .5) ),
-                B = findEdge( L1, H1, mix(L0, H0, .5) ),
-                D = resize(normalize(subtract(B,A)),.02),
-                E = resize(D,1/3);
+      if (isShowingArrows) {
+         this.lineWidth(.008).drawColor(penColor).fillColor(penColor);
+         for (let n = 0 ; n < S.length ; n++) {
+            let srcCards = getSrcCards(S[n]);
+            for (let i = 0 ; i < srcCards.length ; i++) {
+               let src = srcCards[i];
+               let findEdge = (lo,hi,p) => {
+                  let [cx,cy] = mix(lo, hi, .5),
+                      [dx,dy] = subtract(p, [cx,cy]);
+                  if (dx > 0 && dx*dx > dy*dy) return [hi[0]+.004, cy + dy/dx * (hi[1]-cy)];
+                  if (dx < 0 && dx*dx > dy*dy) return [lo[0]-.004, cy - dy/dx * (hi[1]-cy)];
+                  if (dy > 0 && dy*dy > dx*dx) return [cx + dx/dy * (hi[0]-cx), hi[1]+.004];
+                                               return [cx - dx/dy * (hi[0]-cx), lo[1]-.004];
+               }
+               let L0 = src.lo , H0 = src.hi,
+                   L1 = S[n].lo, H1 = S[n].hi,
+                   A = findEdge( L0, H0, mix(L1, H1, .5) ),
+                   B = findEdge( L1, H1, mix(L0, H0, .5) ),
+                   D = resize(normalize(subtract(B,A)),.02),
+                   E = resize(D,1/3);
 
-            if (src.remove || S[n].remove) {
-               octx.save();
-               octx.globalAlpha = ease(src.remove ?? S[n].remove);
-            }
+               if (src.remove || S[n].remove) {
+                  octx.save();
+                  octx.globalAlpha = ease(src.remove ?? S[n].remove);
+               }
 
-            this.line(A,subtract(B,E));
-            this.fillPolygon([ add(B,E), add(B, [-2*D[0] - D[1], -2*D[1] + D[0]]),
-                                         add(B, [-2*D[0] + D[1], -2*D[1] - D[0]]) ]);
+               this.line(A,subtract(B,E));
+               this.fillPolygon([ add(B,E), add(B, [-2*D[0] - D[1], -2*D[1] + D[0]]),
+                                            add(B, [-2*D[0] + D[1], -2*D[1] - D[0]]) ]);
 
-            // IF THE USER HAS CLICKED ON A LINK, REMOVE THE LINK
+               // IF THE USER HAS CLICKED ON A LINK, REMOVE THE LINK
 
-            let pointToLineDistanceSquared = (p, a, b) => {
-               let ax = a[0] - p[0], ay = a[1] - p[1];
-               let bx = b[0] - p[0], by = b[1] - p[1];
-               let dx = bx - ax, dy = by - ay;
-               if (ax * dx + ay * dy > 0 || bx * dx + by * dy < 0)
-                  return Math.min(ax * ax + ay * ay, bx * bx + by * by);
-               let aa = ax * ax + ay * ay;
-               let ad = ax * dx + ay * dy;
-               let dd = dx * dx + dy * dy;
-               return aa - ad * ad / dd;
-            }
+               let pointToLineDistanceSquared = (p, a, b) => {
+                  let ax = a[0] - p[0], ay = a[1] - p[1];
+                  let bx = b[0] - p[0], by = b[1] - p[1];
+                  let dx = bx - ax, dy = by - ay;
+                  if (ax * dx + ay * dy > 0 || bx * dx + by * dy < 0)
+                     return Math.min(ax * ax + ay * ay, bx * bx + by * by);
+                  let aa = ax * ax + ay * ay;
+                  let ad = ax * dx + ay * dy;
+                  let dd = dx * dx + dy * dy;
+                  return aa - ad * ad / dd;
+               }
 
-            if (bgClick && pointToLineDistanceSquared(bgClick,A,B) < .0001)
-               for (let j = 0 ; j < S[n].srcId.length ; j++)
-                  if (S[n].srcId[j] == src.id) {
-                     S[n].srcId.splice(j,1);
-                     bgClick = undefined;
-                     break;
-                  }
+               if (bgClick && pointToLineDistanceSquared(bgClick,A,B) < .0001)
+                  for (let j = 0 ; j < S[n].srcId.length ; j++)
+                     if (S[n].srcId[j] == src.id) {
+                        S[n].srcId.splice(j,1);
+                        bgClick = undefined;
+                        break;
+                     }
 
-            if (src.remove || S[n].remove)
+               if (src.remove || S[n].remove)
                octx.restore();
+            }
          }
       }
 
@@ -1146,24 +1154,24 @@ function Diagram() {
                         S_value[dstCards[0].id].set_I(I);
                      }
 
-		     // SEND PARAMETER VALUES TO VR VIA WEBRTC
+                     // SEND PARAMETER VALUES TO VR VIA WEBRTC
 
-		     if (isFirstPlayer() && state._I.length > 0 && state.srcFile && frame % 3 == 0) {
-			let dataStr = '';
-			for (let i = 0 ; i < 3 ; i++)
-			   dataStr += (100*(.5+.5*state._I[i])>>0) + ',';
+                     if (isFirstPlayer() && state._I.length > 0 && state.srcFile && frame % 3 == 0) {
+                        let dataStr = '';
+                        for (let i = 0 ; i < 3 ; i++)
+                           dataStr += (100*(.5+.5*state._I[i])>>0) + ',';
 
-			if (dataStr != state.sentDataStr || frame % 90 == 0) {
-			   state.sentDataStr = dataStr;
+                        if (dataStr != state.sentDataStr || frame % 90 == 0) {
+                           state.sentDataStr = dataStr;
 
-			   if (useWebRTC)
-		              channel.send({ type: 'I', data: dataStr });
-			   else {
-			      let dataFile = state.srcFile.replace(/.cg/,'_data.cg');
-			      saveSrcFile(dataFile, dataStr);
+                           if (useWebRTC)
+                              channel.send({ type: 'I', data: dataStr });
+                           else {
+                              let dataFile = state.srcFile.replace(/.cg/,'_data.cg');
+                              saveSrcFile(dataFile, dataStr);
                            }
-			}
-		     }
+                        }
+                     }
                   }
 
                   // PROCEDURALLY EVALUATE THE CARD CONTENTS
@@ -1318,7 +1326,7 @@ function Diagram() {
                   let m = ( 'PI,abs,acos,asin,atan,atan2,ceil,cos,'
                           + 'exp,floor,log,max,min,mod,pow,random,'
                           + 'round,sign,sin,sqrt,trunc'
-			  ).split(',');
+                          ).split(',');
                   let v = [
                      '_I'        , card.state._I,    // CARD'S INPUT PARAMETERS
                      'hasOutLink', hasOutLink,         // IS THERE A DESTINATION CARD?
