@@ -632,7 +632,7 @@ editor: function(state,t,p,hasFocus) {
       dirty = true;
    }
 
-   state.textSize = .0275;
+   state.textSize = .04;
    let s = state.cardSize,
        w = 1.2 * state.textSize / s,
        h = 2 / Math.max(1, state.lines.length);
