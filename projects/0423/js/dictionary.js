@@ -36,7 +36,7 @@ spline: (state,t,p,hasFocus) => {
    state.noClipping = true;
 
    state.draw.lineWidth(.005).drawRect([-1,-1],[1,1])
-             .fillColor('#ffffff40').fillRect([-1,-1],[1,1])
+             .fillColor(isGreenScreen ? '#ffffff' : '#ffffff40').fillRect([-1,-1],[1,1])
 
    if (! state.data) {
       state.data = [[-1,0],[-1/3,0],[1/3,0],[1,0]];
@@ -157,7 +157,7 @@ curve: (state,t,p,hasFocus) => {
       }
    }
 
-   state.draw.fillColor('#ffffff40').fillRect([-1,.3 ],[1,.7 ])
+   state.draw.fillColor(isGreenScreen ? '#ffffff' : '#ffffff40').fillRect([-1,.3 ],[1,.7 ])
              .lineWidth(.003).drawColor('#000000').drawRect([-1,.3],[1,.7]);
    state.draw.lineWidth(.003);
    for (let n = 0 ; n < state.keys.length ; n++) {
@@ -209,7 +209,7 @@ trackpad: (state,t,p,hasFocus) => {
    state._O[1] = y;
 
    state.draw.lineWidth(.01).drawRect([-1,-1],[1,1])
-             .fillColor('#ffffff40').fillRect([-1,-1],[1,1])
+             .fillColor(isGreenScreen ? '#ffffff' : '#ffffff40').fillRect([-1,-1],[1,1])
              .lineWidth(.03)
              .line([-1,y],[1,y])
              .line([x,-1],[x,1])
@@ -526,7 +526,7 @@ cube: function(state,t,p,hasFocus) {
 },
 
 editor: function(state,t,p,hasFocus) {
-   state.bgColor = '#ffffff80';
+   state.bgColor = isGreenScreen ? '#ffffff' : '#ffffff80';
    let dirty = false;
 
    let rowLength = row => row < 0 || row >= state.lines.length ? 0 : state.lines[row].length;
