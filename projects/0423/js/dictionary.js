@@ -102,7 +102,7 @@ curve: (state,t,p,hasFocus) => {
    }
 
    if (state.keys === undefined) {
-      state.keys = [[-1,.5,0],[1,.5,0]];
+      state.keys = [[-1,.5,1],[1,.5,1]];
       state.n = -1;
    }
 
@@ -133,7 +133,7 @@ curve: (state,t,p,hasFocus) => {
 
    if (state.mouseState == 'release') {
       if (state.n < 0) {
-         state.keys.push([p[0], y(p[1]), 0]);
+         state.keys.push([p[0], y(p[1]), 1]);
          state.keys.sort((a,b) => a[0] - b[0]);
       }
       else if (state.mouseClick)
