@@ -586,11 +586,16 @@ if (webrtcClient) {
       // waiting to see echoed back), it predates that action - applying it would
       // stomp our own optimistic local change with the master's stale value.
       // Skip it; the next broadcast (after the master catches up) will be current.
-      // (Always 0 <= 0 on the master itself, which never sends actions.)
-      const myAck = state.ackSeq ? state.ackSeq[webrtcClient.getMyClientId()] : undefined;
-      if ((myAck || 0) < webrtcClient.actionSeq) {
-         console.log('[Sync] Ignoring stale state update (ack', myAck, '< sent', webrtcClient.actionSeq, ')');
-         return;
+      // Only applies to updates that actually carry ackSeq (i.e. broadcastState()
+      // in this file) - diagrams push their own state directly via
+      // sendStateUpdate({SS}) with no ackSeq, and must always be applied; they
+      // have their own separate per-slot conflict handling (window.SS_hold).
+      if (state.ackSeq) {
+         const myAck = state.ackSeq[webrtcClient.getMyClientId()] || 0;
+         if (myAck < webrtcClient.actionSeq) {
+            console.log('[Sync] Ignoring stale state update (ack', myAck, '< sent', webrtcClient.actionSeq, ')');
+            return;
+         }
       }
 
       // Apply state updates from other clients
