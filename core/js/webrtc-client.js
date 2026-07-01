@@ -443,13 +443,20 @@ class WebRTCClient {
   // Send action to master client (secondary clients use this)
   sendAction(action) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN && !this.isMasterClient) {
-      this.actionSeq++;
-      this.ws.send(JSON.stringify({
-        type: 'action',
-        to: this.masterClientId,
-        action: action,
-        seq: this.actionSeq
-      }));
+      const message = { type: 'action', to: this.masterClientId, action: action };
+
+      // Only 'keyUp' actions affect fields broadcastState() tracks (slideIndex,
+      // sceneID, etc.) - only those need the ack-seq guard in onStateUpdate.
+      // penDown/penUp/penMove fire continuously (every mousemove) and don't
+      // touch those fields at all; counting them here would keep resetting the
+      // master's broadcast debounce and starve ackSeq from ever catching up,
+      // permanently blocking state updates instead of just closing one race.
+      if (action.type === 'keyUp') {
+        this.actionSeq++;
+        message.seq = this.actionSeq;
+      }
+
+      this.ws.send(JSON.stringify(message));
     }
   }
 
