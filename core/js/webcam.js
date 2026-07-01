@@ -1,5 +1,9 @@
 let webcam = document.createElement('video');
 webcam.autoplay = true;
+// This element only feeds the canvas frame pipeline (see webcam.update below) -
+// it's never meant to be heard. Left unmuted, it plays the local mic straight
+// out the speakers whenever webcam.srcObject is set to the WebRTC local stream.
+webcam.muted = true;
 webcam.style.position = 'absolute';
 webcam.style.top = '-2000px';
 
