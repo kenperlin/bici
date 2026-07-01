@@ -100,6 +100,44 @@ app.get('/api/load/:name', (req, res) => {
   }
 });
 
+// Mint short-lived TURN credentials via Cloudflare Realtime, so WebRTC peer connections
+// can fall back to a relay when direct P2P (STUN-only) fails due to NAT/firewall (see
+// WEBRTC_SETUP.md). The TURN API token stays server-side; the browser only ever
+// receives a credential that expires in TURN_TTL_SECONDS.
+const CF_TURN_KEY_ID = process.env.CF_TURN_KEY_ID;
+const CF_TURN_API_TOKEN = process.env.CF_TURN_API_TOKEN;
+const TURN_TTL_SECONDS = 4 * 60 * 60; // 4 hours - comfortably longer than any single call
+
+app.get('/api/turn-credentials', async (req, res) => {
+  if (!CF_TURN_KEY_ID || !CF_TURN_API_TOKEN) {
+    // Not configured - client falls back to STUN-only.
+    return res.json({ iceServers: [] });
+  }
+
+  try {
+    const response = await fetch(
+      `https://rtc.live.cloudflare.com/v1/turn/keys/${CF_TURN_KEY_ID}/credentials/generate-ice-servers`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${CF_TURN_API_TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ ttl: TURN_TTL_SECONDS })
+      }
+    );
+
+    if (!response.ok)
+      throw new Error(`Cloudflare TURN API returned ${response.status}`);
+
+    const data = await response.json();
+    res.json({ iceServers: data.iceServers || [] });
+  } catch (err) {
+    console.error('TURN credential fetch failed:', err);
+    res.json({ iceServers: [] });
+  }
+});
+
 // Report this machine's LAN addresses, so a web page served from here can tell
 // a peer on another device how to reach this server (e.g. for the channel relay).
 app.get('/api/netinfo', (req, res) => {

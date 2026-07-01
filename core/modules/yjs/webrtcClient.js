@@ -1,5 +1,7 @@
-// WebRTC Configuration
-export const configuration = {
+// Fallback STUN-only configuration, used until (or unless) the server hands us
+// TURN credentials. STUN alone can't traverse symmetric NAT / restrictive firewalls,
+// which is why two peers on different real-world networks can fail to connect at all.
+const fallbackConfiguration = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' }
@@ -13,6 +15,7 @@ export class WebRTCClient {
     this.myClientId = null;
     this.roomId = null;
     this.roomFull = false;
+    this.configuration = fallbackConfiguration;
     this.peerConnections = new Map();
     this.remoteStreams = new Map();
     this.onRemoteStreamAdded = null;
@@ -56,6 +59,10 @@ export class WebRTCClient {
         });
       });
 
+      // Fetch TURN credentials (if the server has a provider configured) before
+      // signaling starts, so createPeerConnection() always has the final config.
+      await this.fetchIceServers();
+
       // Connect to signaling server
       this.connectToSignalingServer();
 
@@ -81,6 +88,26 @@ export class WebRTCClient {
 
       error.userMessage = userMessage;
       throw error;
+    }
+  }
+
+  // Ask the server for TURN credentials (server.js proxies Cloudflare Realtime so the
+  // TURN API token never reaches the browser). Falls back to STUN-only on any failure
+  // or if the server has no TURN provider configured.
+  async fetchIceServers() {
+    try {
+      const response = await fetch('/api/turn-credentials');
+      if (!response.ok) throw new Error(`status ${response.status}`);
+
+      const data = await response.json();
+      if (Array.isArray(data.iceServers) && data.iceServers.length > 0) {
+        this.configuration = { iceServers: [...data.iceServers, ...fallbackConfiguration.iceServers] };
+        console.log('[WebRTC] TURN credentials acquired, ICE config includes relay fallback');
+      } else {
+        console.log('[WebRTC] No TURN provider configured on server, using STUN-only');
+      }
+    } catch (error) {
+      console.warn('[WebRTC] Could not fetch TURN credentials, falling back to STUN-only:', error.message);
     }
   }
 
@@ -262,7 +289,7 @@ export class WebRTCClient {
   }
 
   createPeerConnection(clientId) {
-    const pc = new RTCPeerConnection(configuration);
+    const pc = new RTCPeerConnection(this.configuration);
 
     console.log(`[WebRTC] Creating peer connection with ${clientId}`);
 

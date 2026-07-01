@@ -169,9 +169,24 @@ For deployment across the internet:
    - Use a reverse proxy (nginx, Caddy)
    - Get SSL certificate (Let's Encrypt)
 
-2. **TURN Server** (optional): For users behind strict firewalls
-   - Add TURN server configuration to `core/js/webrtc-client.js`
-   - Example services: Twilio, Xirsys, or self-hosted coturn
+2. **TURN Server** (recommended): STUN alone can't traverse symmetric NAT or
+   restrictive firewalls, which is common for two people on different real-world
+   networks (as opposed to same-LAN testing). Without TURN, the peer connection can
+   fail outright and each person just sees their own video with no way to recover.
+
+   The server has built-in support for minting short-lived TURN credentials via
+   [Cloudflare Realtime](https://developers.cloudflare.com/realtime/turn/) (free tier:
+   1000 GB/month). To enable it:
+   1. Create a Cloudflare account and go to **Realtime > TURN** in the dashboard.
+   2. Create a TURN Key to get a Key ID and API Token.
+   3. Set these environment variables on your server/host (e.g. Render dashboard):
+      - `CF_TURN_KEY_ID`
+      - `CF_TURN_API_TOKEN`
+   4. Restart the server. The client calls `/api/turn-credentials` on init and
+      automatically merges the TURN servers into its ICE configuration.
+
+   If these env vars aren't set, `/api/turn-credentials` returns an empty list and
+   the client silently falls back to STUN-only (current behavior).
 
 ## Troubleshooting
 
@@ -200,7 +215,9 @@ If you see "Room is full" notification:
 
 1. Check firewall settings
 2. Verify STUN servers are accessible
-3. For strict NAT/firewalls, add TURN server
+3. For strict NAT/firewalls, configure a TURN server (see "TURN Server" above) -
+   check the browser console for `[WebRTC] ICE connection failed` and look at
+   `pc.iceConnectionState` to confirm this is the cause
 4. Check browser compatibility (Chrome, Firefox, Safari, Edge supported)
 
 ### Performance Issues
@@ -300,7 +317,6 @@ Potential additions (not implemented):
 - User authentication
 - Group rooms (3+ people)
 - Mobile app
-- TURN server integration for better firewall traversal
 
 ## Credits
 

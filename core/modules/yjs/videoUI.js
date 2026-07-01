@@ -9,6 +9,7 @@ export class VideoUI {
     // Create off-screen video element for remote stream
     this.remoteVideo = document.createElement('video');
     this.remoteVideo.autoplay = true;
+    this.remoteVideo.playsInline = true;
     this.remoteVideo.style.position = 'absolute';
     this.remoteVideo.style.top = '-2000px';
 
@@ -75,13 +76,19 @@ export class VideoUI {
       this.toggleAudioBtn.classList.toggle('disabled', !this.isAudioEnabled);
     });
 
-    // Setup WebRTC callbacks
+    // Setup WebRTC callbacks. Chain onto whatever was already assigned (e.g. the
+    // "Peer connected" status handler in yjs.js) instead of overwriting it, since
+    // WebRTCClient only supports a single callback per event.
+    const prevOnAdded = this.webrtcClient.onRemoteStreamAdded;
     this.webrtcClient.onRemoteStreamAdded = (clientId, stream) => {
       this.addRemoteVideo(clientId, stream);
+      if (prevOnAdded) prevOnAdded(clientId, stream);
     };
 
+    const prevOnRemoved = this.webrtcClient.onRemoteStreamRemoved;
     this.webrtcClient.onRemoteStreamRemoved = (clientId) => {
       this.removeRemoteVideo(clientId);
+      if (prevOnRemoved) prevOnRemoved(clientId);
     };
 
     this.webrtcClient.onConnectionStatusChanged = (connected) => {
@@ -98,11 +105,32 @@ export class VideoUI {
 
     // Set the remote video stream (only support one remote peer for now)
     this.remoteVideo.srcObject = stream;
+    this.playRemoteVideo();
 
     // Show the panel if hidden when remote video connects
     if (!this.isPanelVisible) {
       this.showPanel();
     }
+  }
+
+  // Browsers block autoplay of unmuted media without a user gesture on the page.
+  // The <video autoplay> attribute alone silently fails in that case, so remoteVideo.readyState
+  // never advances and hasRemoteVideo() stays false forever, hiding the peer's video permanently.
+  // Play muted first (always allowed), then unmute on the next click/keypress.
+  playRemoteVideo() {
+    this.remoteVideo.play().catch(err => {
+      console.warn('[WebRTC] Remote video autoplay blocked, retrying muted:', err.name);
+      this.remoteVideo.muted = true;
+      this.remoteVideo.play().catch(e => console.error('[WebRTC] Remote video play failed even muted:', e));
+
+      const unmute = () => {
+        this.remoteVideo.muted = false;
+        document.removeEventListener('click', unmute);
+        document.removeEventListener('keydown', unmute);
+      };
+      document.addEventListener('click', unmute, { once: true });
+      document.addEventListener('keydown', unmute, { once: true });
+    });
   }
 
   hasRemoteVideo() {

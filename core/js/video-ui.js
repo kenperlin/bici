@@ -17,6 +17,7 @@ class VideoUI {
     // Create off-screen video element for remote stream
     this.remoteVideo = document.createElement('video');
     this.remoteVideo.autoplay = true;
+    this.remoteVideo.playsInline = true;
     this.remoteVideo.style.position = 'absolute';
     this.remoteVideo.style.top = '-2000px';
 
@@ -107,11 +108,32 @@ class VideoUI {
     // Set the remote video stream (only support one remote peer for now)
     this.remoteVideo.srcObject = stream;
     this.hasRemoteVideo = true;
+    this.playRemoteVideo();
 
     // Show the panel if hidden when remote video connects
     if (!this.isPanelVisible) {
       this.showPanel();
     }
+  }
+
+  // Browsers block autoplay of unmuted media without a user gesture on the page.
+  // The <video autoplay> attribute alone silently fails in that case, so remoteVideo.readyState
+  // never advances and the 3D scene falls back to showing the local webcam forever.
+  // Play muted first (always allowed), then unmute on the next click/keypress.
+  playRemoteVideo() {
+    this.remoteVideo.play().catch(err => {
+      console.warn('[WebRTC] Remote video autoplay blocked, retrying muted:', err.name);
+      this.remoteVideo.muted = true;
+      this.remoteVideo.play().catch(e => console.error('[WebRTC] Remote video play failed even muted:', e));
+
+      const unmute = () => {
+        this.remoteVideo.muted = false;
+        document.removeEventListener('click', unmute);
+        document.removeEventListener('keydown', unmute);
+      };
+      document.addEventListener('click', unmute, { once: true });
+      document.addEventListener('keydown', unmute, { once: true });
+    });
   }
 
   // Update method to draw remote video to canvas (like webcam.update)
