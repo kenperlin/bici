@@ -423,7 +423,8 @@ wss.on('connection', (ws, req) => {
             masterClient.send(JSON.stringify({
               type: 'action',
               from: clientId,
-              action: data.action
+              action: data.action,
+              seq: data.seq
             }));
           }
           break;

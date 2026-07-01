@@ -582,6 +582,17 @@ pen.setContext(ctx);
 // Setup state synchronization after all variables are initialized
 if (webrtcClient) {
    webrtcClient.onStateUpdate = (fromClientId, state) => {
+      // If this snapshot doesn't yet reflect an action we've sent (and are still
+      // waiting to see echoed back), it predates that action - applying it would
+      // stomp our own optimistic local change with the master's stale value.
+      // Skip it; the next broadcast (after the master catches up) will be current.
+      // (Always 0 <= 0 on the master itself, which never sends actions.)
+      const myAck = state.ackSeq ? state.ackSeq[webrtcClient.getMyClientId()] : undefined;
+      if ((myAck || 0) < webrtcClient.actionSeq) {
+         console.log('[Sync] Ignoring stale state update (ack', myAck, '< sent', webrtcClient.actionSeq, ')');
+         return;
+      }
+
       // Apply state updates from other clients
       if (state.slideIndex !== undefined) {
          slideIndex = state.slideIndex;
@@ -631,10 +642,16 @@ if (webrtcClient) {
    };
 
    // Handle actions from secondary clients (master only)
-   webrtcClient.onActionReceived = (fromClientId, action) => {
-      console.log('Master received action:', action.type, 'from:', fromClientId);
+   webrtcClient.onActionReceived = (fromClientId, action, seq) => {
+      console.log('Master received action:', action.type, 'from:', fromClientId, 'seq:', seq);
       // Process the action and update state
       processAction(action, fromClientId);
+
+      // Remember which action of this client's we've now applied, so our broadcast
+      // can tell them whether it reflects this action or is still a stale snapshot
+      // from before it (see onStateUpdate below).
+      if (seq !== undefined)
+         lastAppliedSeq[fromClientId] = seq;
 
       // Broadcast the new state to all clients
       broadcastState();
@@ -644,6 +661,11 @@ if (webrtcClient) {
 // Track ownership of drag and move modes (master only)
 let dragOwner = null;
 let moveOwner = null;
+
+// Highest action seq (per secondary client) that this master's state currently
+// reflects. Included in broadcasts so a secondary can detect and ignore a state
+// snapshot that predates an action it already sent (see onStateUpdate below).
+let lastAppliedSeq = {};
 
 // Helper to sync pen.strokes to Yjs (master only)
 let syncPenStrokesTimer = null;
@@ -775,6 +797,7 @@ let broadcastState = () => {
          isShift: window.isShift,
          fontSize: fontSize,
          // penStrokes now synced via Yjs instead of WebRTC
+         ackSeq: lastAppliedSeq,
          timestamp: Date.now()
       });
    }, 50);

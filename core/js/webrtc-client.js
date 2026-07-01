@@ -30,6 +30,11 @@ class WebRTCClient {
     this.isMasterClient = false;
     this.masterClientId = null;
     this.connectedClients = [];
+
+    // Monotonic counter for actions sent by a secondary client, so the master can
+    // tell it which of those actions its state broadcasts already reflect (see
+    // onStateUpdate in main.js). Stays 0 on the master, which never sends actions.
+    this.actionSeq = 0;
   }
 
   async init() {
@@ -194,7 +199,7 @@ class WebRTCClient {
           // Handle action from secondary client (master only)
           console.log('Received action from:', data.from, data.action);
           if (this.isMasterClient && this.onActionReceived) {
-            this.onActionReceived(data.from, data.action);
+            this.onActionReceived(data.from, data.action, data.seq);
           }
           break;
         }
@@ -438,10 +443,12 @@ class WebRTCClient {
   // Send action to master client (secondary clients use this)
   sendAction(action) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN && !this.isMasterClient) {
+      this.actionSeq++;
       this.ws.send(JSON.stringify({
         type: 'action',
         to: this.masterClientId,
-        action: action
+        action: action,
+        seq: this.actionSeq
       }));
     }
   }
