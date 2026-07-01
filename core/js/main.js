@@ -658,8 +658,14 @@ if (webrtcClient) {
       if (seq !== undefined)
          lastAppliedSeq[fromClientId] = seq;
 
-      // Broadcast the new state to all clients
-      broadcastState();
+      // Only 'keyUp' actions can change a field broadcastState() tracks (slideIndex,
+      // sceneID, etc.) - pen/codeArea actions sync via Yjs instead. Calling
+      // broadcastState() here unconditionally means a continuous stream of
+      // penMove actions (fired on every mousemove while dragging) keeps resetting
+      // its debounce timer, so it never actually fires while dragging continues -
+      // starving ackSeq and permanently blocking state updates on the other side.
+      if (action.type === 'keyUp')
+         broadcastState();
    };
 }
 
