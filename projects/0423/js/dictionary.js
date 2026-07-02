@@ -214,8 +214,8 @@ trackpad: (state,t,p,hasFocus) => {
              .line([-1,y],[1,y])
              .line([x,-1],[x,1])
              .setFont(.2, 'Courier')
-             .text('x=' + round2(state._O[0]), [-.5,.5])
-             .text('y=' + round2(state._O[1]), [ .5,.5]);
+             .text('x=' + round2(state._O[0]), [-.5,-.05])
+             .text('y=' + round2(state._O[1]), [ .5,-.05]);
 
    return [];
 },
@@ -313,7 +313,7 @@ sliderX: (state,t,p,hasFocus) => {
    return [
       {draw: [ [ -1, 0 ], [ 1, 0 ] ]},
       {draw: [ [ x, -1 ], [ x, 1 ] ]},
-      {text: round2(state._O[0]), pos: [x-.05,.05], justify: [1,.5]},
+      {text: round2(state._O[0]), pos: [x-.05,.05], justify: [1,-.05]},
    ];
 },
 
@@ -331,8 +331,8 @@ sliderY: (state,t,p,hasFocus) => {
    return [
       {draw: [ [ 0, -1 ], [ 0, 1 ] ]},
       {draw: [ [ -1, y ], [ 1, y ] ]},
-      (y*y > 1 ? {text: round2(state._O[0]), scale: 5, pos: [0  ,y+.1], justify: [.5,1] }
-               : {text: round2(state._O[0]), scale: 5, pos: [-.2,y+.1], justify: [1 ,1] }),
+      (y*y > 1 ? {text: round2(state._O[0]), scale: 5, pos: [0  ,y+.1], justify: [.5,.45] }
+               : {text: round2(state._O[0]), scale: 5, pos: [-.2,y+.1], justify: [1 ,.45] }),
    ];
 },
 
@@ -386,8 +386,8 @@ sliders: function(state,t,p,hasFocus) {
       let x = Math.max(-1, Math.min(1, state._O[n]));
       S.push({fill: [[-1,y],[x,y],[x,y-h],[-1,y-h],[-1,y]], color: '#e0e0e0'});
       S.push({draw: [[-1,y],[1,y],[1,y-h],[-1,y-h],[-1,y]], lineWidth: isIn && n==i ? .004 : .002});
-      S.push({text: '@' + n, pos: [-.98,y], justify: [0,1.75], scale: .9});
-      S.push({text: round2(state._O[n]), pos: [-.05,y-1.15*h], scale: .9});
+      S.push({text: '@' + n, pos: [-.98,y], justify: [0,1.2], scale: .9});
+      S.push({text: round2(state._O[n]), pos: [-.05,y-1.15*h], scale: .9, justify: [.5,-.05]});
    }
    
    let y = state.flip ? 1 : 1 - (N-1)*h;
@@ -396,8 +396,8 @@ sliders: function(state,t,p,hasFocus) {
    S.push({fill: [[0,y],[1,y],[1,y-h],[0,y-h],[0,y]],
           color: i == -1 && p[0]>0 && state.mouseState == 'drag' ? '#6080e0' : '#a0c0ff'});
    if (N > 2)
-      S.push({text: 'del', pos: [-.5,y-h-.23/N], scale: .9});
-   S.push({text: 'add', pos: [ .5,y-h-.23/N], scale: .9});
+      S.push({text: 'del', pos: [-.5,y-h-.23/N], scale: .9, justify: [0,-.05]});
+   S.push({text: 'add', pos: [ .5,y-h-.23/N], scale: .9, justify: [0,-.05]});
    S.push({draw: [[-1,y],[0,y],[0,y-h],[-1,y-h],[-1,y]], lineWidth: isIn&&i==-1&&p[0]<0&&N>2 ? .004 : .002});
    S.push({draw: [[ 0,y],[1,y],[1,y-h],[ 0,y-h],[ 0,y]], lineWidth: isIn&&i==-1&&p[0]>0      ? .004 : .002});
 
@@ -457,8 +457,8 @@ timeline: function(state,t,p,hasFocus) {
              .line([-1,.5],[state.isLoop ? .93 : 1,.5])
              .line([x,.5-.2],[x,.5+.2])
              .setFont(.2, 'Courier')
-             .text(a + ' secs', [0,.5], .5, .6)
-             .text(b + ' secs', [0,.5], .5, 1.7);
+             .text(a + ' secs', [0,.5], .5, 0.05)
+             .text(b + ' secs', [0,.5], .5, 1.15);
    if (state.isLoop)
          state.draw.drawColor('#000000').arc([1,.5],.05);
       else
@@ -495,7 +495,7 @@ timer: function(state,t,p,hasFocus) {
 
    let text = '' + ((10*state._O[0]>>0)/10);
    if (text.indexOf('.') < 0) text += '.0';
-   S.push({ text: text, pos: [0,.5] });
+   S.push({ text: text, pos: [0,.5], justify: [.5,-.05] });
 
    return S;
 },
@@ -513,7 +513,6 @@ cube: function(state,t,p,hasFocus) {
    this.M.perspective(0,0,-5);
    this.M.turnX(state.p[1]);
    this.M.turnY(-state.p[0]);
-   //this.M.scale(.9);
 
    let C = cubeVertices, P = [];
    for (let i = 0 ; i < C.length ; i++)
@@ -853,7 +852,7 @@ editor: function(state,t,p,hasFocus) {
    for (let row = 0 ; row < state.nLines ; row++) {
       let text = state.lines[row];
       let nLines = state.lines.length;
-      let justify = state.isClosed ? [0, 1.56 + nLines/800] : [0,1];
+      let justify = state.isClosed ? [0, 1.05 + nLines/800] : [0,.5];
       S.push({text: text, pos: [-1,1-(row+.6)*h], justify: justify, size: state.textSize, color: '#000000'});
       let nChars = text.length + (i + text.length >= state.selectionStart &&
                                   i + text.length <= state.selectionEnd ? 1 : 0);

@@ -33,14 +33,14 @@ let addDiagramProperties = (diagram, ctx) => {
 
    diagram.mxp = mxp;
 
-   diagram.identity  = ()      => { M.identity()      ; return diagram; }
-   diagram.move      = (x,y,z) => { M.translate(x,y,z); return diagram; }
-   diagram.pop       = ()      => { M.restore  ()     ; return diagram; }
-   diagram.push      = ()      => { M.save     ()     ; return diagram; }
-   diagram.scale     = (x,y,z) => { M.scale    (x,y,z); return diagram; }
-   diagram.turnX     = a       => { M.turnX    (a)    ; return diagram; }
-   diagram.turnY     = a       => { M.turnY    (a)    ; return diagram; }
-   diagram.turnZ     = a       => { M.turnZ    (a)    ; return diagram; }
+   diagram.identity  = ()      => { M.identity()     ; return diagram; }
+   diagram.move      = (x,y,z) => { M.move    (x,y,z); return diagram; }
+   diagram.pop       = ()      => { M.restore ()     ; return diagram; }
+   diagram.push      = ()      => { M.save    ()     ; return diagram; }
+   diagram.scale     = (x,y,z) => { M.scale   (x,y,z); return diagram; }
+   diagram.turnX     = a       => { M.turnX   (a)    ; return diagram; }
+   diagram.turnY     = a       => { M.turnY   (a)    ; return diagram; }
+   diagram.turnZ     = a       => { M.turnZ   (a)    ; return diagram; }
    diagram.getMatrix = () => M.m();
 
    diagram.lineWidth = lw => { ctx.lineWidth = lw * w/2; return diagram; }
@@ -224,7 +224,8 @@ let addDiagramProperties = (diagram, ctx) => {
       ctx.fillStyle = ctx.strokeStyle;
       for (let i = 0 ; i < n ; i++) {
          let dx = ctx.measureText(lines[i]).width * h_justify;
-         ctx.fillText(lines[i], A[0] - dx, A[1] + (i - n * (1-v_justify) + .1411) * lh);
+         //ctx.fillText(lines[i], A[0] - dx, A[1] + (i - n * (1-v_justify) + .1411) * lh);
+         ctx.fillText(lines[i], A[0] - dx, A[1] + (i - n * (1-v_justify) + .7) * lh);
       }
       ctx.fillStyle = saveFillStyle;
       return diagram;

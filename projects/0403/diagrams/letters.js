@@ -113,7 +113,7 @@ function Diagram() {
 	 let x = tiles[n].x-r/2, y = tiles[n].y-r/2, c = String.fromCharCode(65 + tiles[n].value);
          this.fillColor('#00000040').fillRect([x,y],[x+r,y+r],e);
          this.fillColor('#ffc08040').fillRect([x+e/3,y+e/3],[x+r-e/3,y+r-e/3],e/2);
-         this.drawColor('#000000'  ).text(c, [x+.5*r,y+.5*r]);
+         this.drawColor('#000000'  ).text(c, [x+.5*r,y+.35*r]);
       }
    }
 }

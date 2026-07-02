@@ -436,9 +436,10 @@ let initSlides = () => {
 	       });
 	    }
 	    else {
+	       diagram.width = D.w;
+	       diagram.height = D.h;
 	       overlayCanvas.style.pointerEvents = 'none';
 	       addDiagramProperties(diagram, ctx);
-	       diagram.setSize(D.w, D.h);
             }
 	    if (diagram.init)
 	       diagram.init();

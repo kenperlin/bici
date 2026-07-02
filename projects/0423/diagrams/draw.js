@@ -1029,7 +1029,7 @@ function Diagram() {
             }
 
             if (! S_value[card.id]) {
-               this.setFont(.95 * s).text(card.text, [lo[0] + s/3, hi[1] - s], 0, 1);
+               this.setFont(.95 * s).text(card.text, [lo[0] + s/3, hi[1] - s], 0, .45);
                if (isClipping)
                   octx.restore();
             }
@@ -1271,7 +1271,7 @@ function Diagram() {
                   }
                   else if (item.text) {
                      this.drawColor(item.color ?? color);
-                     let j = item.justify ?? [.5,.5];
+                     let j = item.justify ?? [.5,-.05];
                      this.setFont(item.size ?? (item.scale ?? 1)*s, 'Courier').text(item.text, mf(item.pos), j[0],j[1]);
                   }
                   else if (item.color)
@@ -1370,14 +1370,14 @@ function Diagram() {
             octx.restore();
       }
 
-      // IF USING A PEN, DISPLAY THE PEN TIP IN FRONT OF EVERYTHING ELSE
+      // IF USING A PEN, DISPLAY THE PEN TIP IN FRONT OF EVERYTHING ELSE (DISABLED FOR NOW)
 /*
       if (penSize > 0)
          this.drawColor(penColor + '40').dot(pen.pos, .002 * penSize);
 */
       // SHOW THE TEXT STRING OR USER'S LATEST SPOKEN WORDS AT THE BOTTOM LEFT OF THE SCREEN
 
-      this.setFont(.02).drawColor(penColor + '60').text(textString, [-.9807,-.63], 0);
+      this.setFont(.02).drawColor(penColor + '60').text(textString, [-.9807,-.63], 0, -.45);
 
       // INDICATE WHETHER THE PEN IS BEING TRACKED
 

@@ -6,6 +6,7 @@ function Diagram() {
    this.onDrag = (x,y) => { lx = 2*x-1; ly = 2*y + 1; }
    this.onUp   = (x,y) => { isDown = 0; }
    this.update = ctx => {
+
       ctx.fillStyle = 'white';
       ctx.fillRect(0,0,this.width,this.height);
 
