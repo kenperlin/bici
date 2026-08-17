@@ -226,11 +226,11 @@ webcam.update = () => {
       for (let col = 0 ; col < 640 ; col++, n += 4)
          if (data[n+3] == 253)
 	    data[n] = data[n+1] = data[n+2] = 64;
-
+*/
    if (! webcam.isWebcam)
       for (let n = 0 ; n < data.length ; n++)
-         data[n] = 255;
-*/
+         data[n] = 0;
+
    if (isGreenScreen) {
       wctx.fillStyle = '#00ff00';
       wctx.fillRect(0,0,640,480);

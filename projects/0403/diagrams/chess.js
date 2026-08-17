@@ -24,11 +24,16 @@ function Diagram() {
 
    this.update = () => {
       let side = isFirstPlayer() ? 0 : 1;
-
+/*
       let colw = row => .123 * h / (.85 + .4 * row / 8);
       let rowh = row => colw(row) / 4;
       let colx = (col,row) => 2 * (col - 4) * colw(row);
       let rowy = row => .4 - 2 * (h - (row + 5.0) * rowh(row));
+*/
+      let colw = row => .1 * h / (.85 + .4 * row / 8);
+      let rowh = row => colw(row) / 4;
+      let colx = (col,row) => 2 * (col - 4) * colw(row);
+      let rowy = row => .6 - 2 * (h - (row + 5.0) * rowh(row));
 
       let mouse = this.input.mouse;
 
